@@ -1,0 +1,177 @@
+<template>
+    <div class="participantlayout" style="margin-bottom:20px;">
+        <template if:true={addFeedback}>
+            <!-- <div style="padding-top:20px;font-size:14px;font-weight:bold;margin-left:2%">                
+                Feedback Details    
+            </div> -->
+            <br/>
+
+            <div class="button-container">
+                <lightning-button label="Add New" onclick={handleCreate} variant="brand"></lightning-button>
+                <button class="slds-button slds-button_icon slds-button_icon-border refresh-button" title="Refresh" onclick={fetchRefreshFeedback}>
+                    <svg class="slds-button__icon" aria-hidden="true">
+                        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                    </svg>
+                </button>
+            </div>
+            
+            
+            <template if:true={staffFeedbackData}>
+                <div class="slds-grid">
+                    <div style="margin-left:-1%;margin-right:2%;width:100%;margin-top:-1%">
+                        <table class="slds-table" style="table-layout: fixed;">
+                            <thead>
+                                <tr>
+                                    <th class="slds-cell-wrap th">Staff Name</th>
+                                    <th  class="slds-cell-wrap th">Comments</th>
+                                    <th  class="slds-cell-wrap th">Rating</th>
+                                    <th  class="slds-cell-wrap th">User Name</th>
+                                    <th  class="slds-cell-wrap th">Time</th>                         
+                                    <th  class="slds-cell-wrap th">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={Listofdata_Pagination} for:item="acc">
+                                    <tr key={acc.Id} class="tr1">
+                                        <td class="slds-cell-wrap"> {acc.staffName}</td>
+                                        <td class="slds-cell-wrap description">{acc.comments}</td>
+                                        <td class="slds-cell-wrap">{acc.starRating}</td>                                      
+                                        <td class="slds-cell-wrap">{acc.userName}</td>
+                                        <td class="slds-cell-wrap">{acc.time}</td>                             
+                                        <td>
+                                            <a href="javascript:void(0)" data-id={acc.Id} data-staffid={acc.staffId}
+                                                    onclick={handleEdit} title="Edit"><i class="material-icons edit-icon">edit_document</i></a>  
+                                        <!-- <a href="javascript:void(0)" data-id={attachment.Id} 
+                                                    onclick={handleEdit} title="Edit Repository"><lightning-icon icon-name="action:edit" size="xx-small" title="Edit"></lightning-icon></a>&nbsp;       -->                                     
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!--Pagination Start-->
+                <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;width:95%;margin-left:2%">
+                    <!-- RECORDS PER PAGE -->
+                    <div class="slds-col">
+                        <div class="slds-list_inline ">
+                            <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+                            <label class="slds-text-color_weak" for="recordsPerPage"></label><!--slds-p-horizontal_x-small-->
+                            <div class="slds-select_container">
+                                <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                    <template for:each={pageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>{option}</option>
+                                    </template> 
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- PAGE NAVIGATION -->
+                    <div class="slds-align_absolute-center" style="height:5rem;">
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button><!--class="slds-p-horizontal_x-small" -->
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                        &nbsp;
+                        <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                        &nbsp;
+                        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                    </div>
+                    <!-- TOTAL RECORDS -->
+                    <div class="slds-clearfix">
+                        <div class="slds-float_right">
+                            <span class="slds-badge"> Total Records: {totalRecords}</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <template if:true={staffFeedbackNoData}>
+                <div class="no-data">
+                    <p>No records found</p>
+                </div>
+            </template>
+        </template>
+        
+        <template if:true={isOpenModal}>
+            <div class="blur-overlay"></div>
+            <div class="right-align" style="width:40%;">
+                <!-- <div style="margin-left:85%;margin-bottom:2%;margin-top:3%;" >
+                    <lightning-button label="Back" variant="brand" onclick={handleBack}></lightning-button>                    
+                </div> -->
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <p style="font-weight: bold;font-size:140%; margin: 0; padding: 3% 0 0 3%;">Add Feedback</p>
+                
+                    <div style="display: flex; align-items: center; gap: 10px;margin-right:3%;margin-top:2%;">
+                        <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     -->
+                    </div>
+                </div>
+                <div class="slds-p-around_medium"><!--style="margin-top: 1%;"-->
+                    <lightning-record-edit-form object-api-name="Feedback__c" onsuccess={handleSuccess} onsubmit={handleSubmit} record-id={recordId}>
+                        <lightning-messages></lightning-messages>
+                        <div class="container-box custom-scroll">
+                            <div class="slds-grid slds-wrap" style="padding-top:20px;">
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>First Name</span>
+                                        <lightning-input-field field-name="First_Name__c" value={userFName} disabled="true" variant="label-hidden"></lightning-input-field>                                        
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Last Name</span>
+                                        <lightning-input-field field-name="Last_Name__c" value={userLName} disabled="true" variant="label-hidden"></lightning-input-field>
+                                    </div>
+                                </div>
+                                <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Staff</span>
+                                        <lightning-input-field field-name="Staff__c" variant="label-hidden"></lightning-input-field> 
+                                    </div>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                       <div class="floating-label">
+                         <span class="label-text-drop"><span style="color:red">*</span>Staff</span>
+                             <lightning-combobox  data-id="staff" name="selectedStaff" class="StaffFacility" data-mandatory="mandatory" variant="label-hidden" options={staffOptions} value={selectedStaff} onchange={handleStaffChange} disabled={isdisablefields} required onclick={handleStartDateChange} 
+                                  ></lightning-combobox>
+                         </div>
+                        </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Rating</span>
+                                        <!-- <label class="slds-form-element__label" style="margin-left:25px;">Rating</label> -->
+                                        <div class="star-rating" style="margin-left:2%; margin-top:-10px;"><!--style="margin-left:20px;"-->
+                                            <template for:each={stars} for:item="star">
+                                                <span key={star.index} 
+                                                    class={star.class} 
+                                                    data-index={star.index} 
+                                                    onclick={handleStarClick} data-mandatory="mandatory">
+                                                    ★
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label" style="height: 62px;">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Comments</span>                                        
+                                    <lightning-input-field field-name="Comments__c" variant="label-hidden"></lightning-input-field>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>     
+                        <div class="slds-align_absolute-center">
+                                <lightning-button label="Cancel" variant="brand-outline" onclick={hideModalBox} class="slds-m-around_small"></lightning-button>
+                                <lightning-button type="submit" variant="brand" label="Submit" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                
+                            </div>                  
+                                        
+                                           
+                    </lightning-record-edit-form>  
+                </div>
+            </div>
+        </template>
+        <template if:true={showSpinner}>
+            <lightning-spinner alternative-text="Loading page....." size="medium"> Your page is loading</lightning-spinner>
+        </template>
+    </div>
+</template>
