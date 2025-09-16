@@ -1,0 +1,229 @@
+<template>
+     <div class="main-container">
+        <template if:true={isTitleMenuFlag}>
+            <div style="display: flex; align-items: center; justify-content: space-between;"> 
+                <p style="font-weight: bold; padding: 1% 1% 1% 1%;font-size:140% "> Bank Feed - {companyname}</p>     
+            </div>
+            <div class="menu-container">
+                <div class={bankFeedClass} onclick={handleBankFeed}>Bank Feed</div>
+                <div class={spendMoneyClass} onclick={handleSpendMoney}>Spend Money</div>
+                <div class={receiveMoneyClass} onclick={handleReceiveMoney}>Receive Money</div>
+            </div>
+        </template>
+        <template if:true={isBankFeedFlag}>
+            <div class="slds-grid slds-wrap" style="margin-bottom:20px;  padding-top:2%;">
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Search</span>
+                        <lightning-input  type="text"  placeholder="Search Description "  variant="label-hidden"  value={searchTerm} oninput={handleCSVSearch}></lightning-input>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Sales/Purchases</span>
+                        <lightning-combobox  name="entryType"  variant="label-hidden" options={entryOptions} value={entryType}  onchange={handleChange}
+                            ></lightning-combobox>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Entities Name</span>
+                        <lightning-combobox  name="entityName"  variant="label-hidden" options={entryNameOptions} value={selectedEntityName}  onchange={handleChange}
+                        ></lightning-combobox>
+                    </div>
+                </div>   
+                 <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label-new">
+                        <span class="label-text-drop">Due Date</span>
+                        <lightning-input type="date"  name="PostDate" variant="label-hidden" value={postDate} onchange={handleChange} ></lightning-input>
+                    </div>
+                </div>  
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label-new1">
+                        <span class="label-text-drop">Account List</span>
+                        <div class="dropdown">
+                            <input type="text"  class="dropdown-input" placeholder="Search Name or Number" value={selectedOptionAL} 
+                              onclick={toggleDropdownAccountList} oninput={handleSearch}/>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label-new1">
+                        <span class="label-text-drop">Tax Code</span>
+                            
+                        <div class="dropdown" data-id="taxDropdown">
+                            <button type="button" onclick={toggleDropdown} class="dropdown-button">{selectedOptionTax}</button>
+                            <div if:true={isDropdownOpen} data-id="taxTable">
+                                <table>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Description</th>
+                                        <th>Rate</th>
+                                    </tr>
+                                    <template for:each={taxCodes} for:item="taxCode">
+                                        <tr key={taxCode.id} data-value={taxCode.label} data-value2={taxCode.rate} onclick={handleSelectionTax}>
+                                            <td>{taxCode.code}</td>
+                                            <td>{taxCode.description}</td>
+                                            <td>{taxCode.rate}</td>
+                                        </tr>
+                                    </template>
+                                </table>
+                            </div>
+                        </div>
+                    </div> 
+                </div>  
+               
+                <div class="slds-size_1-of-4 slds-col slds-p-around_small">   
+                    <div class="floating-label">     
+                        <input type="file"  onchange={handleCSVUpload} accept=".csv"  style="display: none;">
+                        <button type="button" onclick={triggerFileInput} class="file-upload-button">
+                            &#8684; Upload File
+                        </button>
+                        <div class="slds-text-body_small">{fileName}
+                            <template if:true={showSpinner}>
+                                <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                                    </lightning-spinner>
+                            </template>
+                        </div>
+                        <template if:true={isattachError}>
+                            <p style="color:red">File Size Can not exceed 512MB </p>  
+                        </template>
+                    </div>
+                </div>
+
+                
+            </div> 
+            
+      <div class="slds-grid slds-grid_align-spread">
+        <!-- First Custom Table Section (First Table) -->
+        <div class="slds-col">
+        <div class="table-border min-height">
+            <!-- <div style="margin-left:95%">
+                <a onclick={toggleSecondTableVisibility}>
+                    <lightning-icon icon-name="action:edit" size="xx-small" title="Edit"></lightning-icon>
+                </a>
+            </div> -->
+
+            <!-- Show table if data is available -->
+            <template if:false={isDataEmpty}>
+                <table class="slds-table slds-table_cell-buffer" style="table-layout:fixed; width:98%; margin-left: 1%; ">
+                    <thead>
+                        <tr>
+                            <!-- Master Checkbox for Select All -->
+                            <th class="slds-cell-wrap th" style="width:10%;">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isAllSelected}
+                                    onchange={handleSelectAll}
+                                />
+                            </th>
+                            <th class="slds-cell-wrap th" style="width:20%;">Date</th>
+                            <th class="slds-cell-wrap th" style="width:20%;">Amount</th>
+                            <th class="slds-cell-wrap th">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Loop over the data and display rows -->
+                        <template for:each={data} for:item="row">
+                            <tr key={row.Id} class="tr1">
+                                <!-- Individual Checkbox for Selection -->
+                                <td>
+                                    <input 
+                                        type="checkbox" 
+                                        data-id={row.Id} 
+                                        data-name={row.Name} 
+                                        onchange={handleRadioSelection}
+                                        checked={row.isSelected}
+                                    />
+                                </td>
+                                <td class="slds-cell-wrap">{row.Date}</td>
+                                <td class="slds-cell-wrap">{row.Amount}</td>
+                                <td class="slds-cell-wrap">{row.Description}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+
+            <!-- Show "No records available" when data is empty -->
+            <template if:true={isDataEmpty}>
+                <p>No records available.</p>
+            </template>
+
+              <div class="slds-align_absolute-center" style="height:5rem;">
+                    <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button><!--class="slds-p-horizontal_x-small" -->
+                    <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                    &nbsp;
+                    <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                    &nbsp;
+                    <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                    <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                </div>
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix" style=" margin-right:1%;">
+                    <div class="slds-float_right" style=" margin-top:-4%;">
+                        <span class="slds-badge"> Total Records: {totalRecords}</span>
+                    </div>
+                </div>
+            </div>
+           
+        </div>
+    
+      </div>
+      <div style="display: flex;justify-content: flex-end; align-items: center; gap: 10px;margin-right:0.5%;">     
+            <lightning-button variant="brand" label="Submit" title="Submit" onclick={handleSubmit} > </lightning-button>
+           
+      </div>
+    
+    <!-- Finish Button -->
+    <!-- <div>
+        <lightning-button label="Finish" onclick={handleInsertChartOfAccount} variant="brand" style="float:right;margin-top: 30px;"></lightning-button>
+    </div> -->
+
+        <div style="padding-bottom: 100px;"></div>
+        </template>
+        <template if:true={isSpendMoneyFlag}>
+            <div class=" sub-container custom-scroll">
+                <!--  <c-tesseract-apps-banking-spend-money orgid={orgid}></c-tesseract-apps-banking-spend-money>  -->  <!--onaddexpenses={handleExpenseFlag} onbackfromexpenses={handleBackFromExpense}-->
+            </div>
+           
+
+        </template>
+        <template if:true={isReceiveMoneyFlag}>
+           
+        </template>
+        <div if:true={showtable} data-id="accountListTable">
+            <div class="dropdown-table-container1">
+                <table class="dropdown-table">
+                    <thead>
+                        <tr>
+                            <th>Account Number</th>
+                            <th>Ledger Item Name</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- <template for:each={ledgerItems} for:item="item">
+                            <tr key={item.id} data-value={item.itemName} data-accno={item.accNo} data-id={item.id} onclick={handleSelection}>
+                                <td>{item.accNo}</td>
+                                <td>{item.itemName}</td>
+                            </tr>
+                        </template> -->
+                        <template for:each={FilteredLedgerItems} for:item="item">
+                            <tr key={item.id} 
+                                data-accno={item.accNo} 
+                                data-value={item.itemName} 
+                                data-id={item.id} 
+                                onclick={handleSelection}>
+                                <td>{item.accNo}</td>
+                                <td>{item.itemName}</td>
+                                <td>{item.category}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+       
+    </div> 
+</template>
