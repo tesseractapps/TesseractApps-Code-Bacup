@@ -1,0 +1,209 @@
+<template>
+
+    <header class="header">
+        <div class="search-section">
+                <div class="floating-label">
+                        <span class="label-text-drop">Search</span>
+                <lightning-input
+                    type="Search"
+                    variant="label-hidden"
+                    placeholder="Search Staff Name"
+                    value={searchStaff}
+                    onchange={handleSearchStaffChange}
+                    oninput={handleSearchStaffChange}
+
+                ></lightning-input>
+                </div>
+    </div>
+    </header>
+
+    <div class="content-wrapper">
+        <!-- Scrollable Table Section -->
+        <div class="table-container slds-p-around_medium custom-scroll">
+            <table class="slds-table slds-table_cell-buffer fixed-table">
+                <thead>
+                    <tr>
+                        <th class="slds-text-align_left">Staff Name</th>
+                        <th class="slds-text-align_left">Facility</th>
+                        <th class="slds-text-align_left">Gender</th> 
+                        <th class="slds-text-align_left">Email Address</th>
+                        <th class="slds-text-align_left">Status</th>
+                        <th class="slds-text-align_left">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={paginatedData} for:item="staff">
+                        <tr key={staff.staffId} class="tr1">
+                            <td>{staff.staffNickName}</td>                        
+                            <td>{staff.staffFacility}</td>
+                            <td>{staff.staffGender}</td>
+                            <td>{staff.staffEmail}</td>
+                            <td>{staff.staffStatus}</td>
+                            <td>
+                                <a href="javascript:void(0);" class="slds-text-link" onclick={onClickUserAccount} data-id={staff.staffId}>Create User Account</a>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination" style="padding-top: 0.5em;width:95%;margin-left:2%">
+        <div class="slds-col">
+            <div class="slds-list_inline">
+                <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+                <div class="slds-select_container">
+                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="slds-align_absolute-center" style="height:5rem;">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+        </div>
+        <div class="slds-clearfix">
+            <div class="slds-float_right">
+                <span class="slds-badge"> Total Records: {totalRecords}</span>
+            </div>
+        </div>
+    </div>
+
+    <template if:true={createUserModule}>
+        <div class="blur-overlay"></div>
+        <div class="right-align1" style="width:50%;">
+            <!-- <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5% 1% 0 1.5%;">
+                 <h3 style="font-weight: bold; font-size: 140%; margin: 0;">Edit Profile</h3>
+                <lightning-button label="Back" variant="brand" onclick={handleeditClose}></lightning-button>
+            </div> -->
+    
+            <!-- <lightning-button label="Back" variant="brand" onclick={handleClose} style="DISPLAY: FLEX; JUSTIFY-CONTENT: END; PADDING-RIGHT: 1%;"></lightning-button> -->
+    
+     <div class="container-box">
+         <div  class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+           <span>User Details</span> 
+            <span  style="cursor: default;">{sectionIcons.staffDetails1}</span>     
+         </div>
+         <div class="section-content" data-section="staffDetails1">
+         </br>
+         <template if:true={sectionFlags.staffDetails1}>
+            <div class="slds-grid slds-wrap">
+
+        <!-- First Name -->
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Name</span>
+                <lightning-input type="text" name="FirstName" variant="label-hidden"
+                    value={staffFullName} onchange={handleUserFirstNameChange} disabled>
+                </lightning-input>
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Email</span>
+                <lightning-input type="text" name="Email" variant="label-hidden"
+                    value={staffEmailAddress} onchange={handleUserFirstNameChange} disabled>
+                </lightning-input>
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop"><span style="color:red">*</span>Role</span>
+                <lightning-combobox label="Type of User"  variant="label-hidden"  value={selectedRole} options={filteredRoleOptions} 
+                    onchange={handlerolechange} required>
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop"><span style="color:red">*</span>User Type</span>
+                    <lightning-combobox label="User Type"  variant="label-hidden"  value={selectedUserType} options={UserTypeValues} 
+                        onchange={handleUserTypeChange} disabled={isUserTypeDisabled} required>
+                    </lightning-combobox>
+            </div>
+        </div>
+    
+        <!-- Last Name -->
+        <!-- <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Last Name</span>
+                <lightning-input type="text" name="LastName" variant="label-hidden"
+                    value={formData.user.LastName} onchange={handleUserLastNameChange}>
+                </lightning-input>
+            </div>
+        </div>  -->
+    
+        <!-- Username (Disabled) -->
+        <!-- <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Username</span>
+                <lightning-input type="text" name="Username" variant="label-hidden"
+                    value={formData.user.Username} disabled>
+                </lightning-input>
+            </div>
+        </div> -->  
+    
+        <!-- Status Checkbox -->
+        <!-- <div class="slds-size_1-of-2 slds-p-around_small">
+            <label style="display: flex; gap: 2%; padding: 3% 0 0% 10%;">
+                <span>Status</span>
+                <lightning-input type="checkbox" checked={formData.staff.Status__c} variant="label-hidden" 
+                    onchange={handleUserStatusChange}>
+                </lightning-input> 
+            </label>  
+        </div> -->
+       <!--  <div class="slds-size_1-of-2 slds-p-around_small">
+        <div class="floating-label">
+            <span class="label-text-drop">Role</span>
+            <lightning-combobox 
+                label="Role" 
+                variant="label-hidden" 
+                value={formattedUserRole} 
+                options={filteredRoleOptions} 
+                onchange={handlerolechange}
+                required>
+            </lightning-combobox>
+        </div>
+        </div> -->
+    
+        <!-- <div class="slds-size_1-of-2 slds-p-around_small">
+        <div class="floating-label">
+            <span class="label-text-drop"><span style="color:red">*</span>User Type</span>
+            <lightning-combobox 
+              label="User Type" 
+              variant="label-hidden" 
+              value={usertypename} 
+              options={UserTypeValues} 
+              onchange={handleUserTypeChange} 
+              disabled={isUserTypeDisabled} 
+              required>
+            </lightning-combobox>
+          </div>
+        </div> -->
+        </div>
+    
+    </template>
+    </div>
+    </div>
+    <div class="slds-align_absolute-center slds-m-around_small">
+        <lightning-button label="Cancel" variant="brand-outline" onclick={handleClose} ></lightning-button>
+        <lightning-button type="submit" variant="brand" onclick={handlesavebutton} label="Submit" class="slds-m-left_small"></lightning-button>
+        
+    </div>
+    </div>
+     
+    </template>
+</template>
