@@ -1,0 +1,436 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 06-12-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template><br/>
+    <div class="participantlayout" style="margin-bottom:20px;">
+        <div class="slds-grid">
+            <div style="width:72%;" class="slds-border_right"> 
+                <lightning-card title="Funds Tracker">        
+                    <template if:true={displayFundTracker}>
+                        <lightning-record-view-form record-id={clientId} object-api-name={objectApiName}>
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-size_1-of-2">
+                                    <div class="slds-m-right_medium slds-m-left_medium">
+                                        <lightning-output-field field-name="Total_Approved_Amounts__c"></lightning-output-field>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-2">
+                                    <div class="slds-m-left_large">
+                                        <lightning-output-field field-name="Total_Spent_Funds__c"></lightning-output-field>
+                                    </div>
+                                </div>
+
+                                <div class="slds-size_1-of-2">
+                                    <div class="slds-m-right_medium slds-m-left_medium">
+                                        <lightning-output-field field-name="Total_Available_Funds__c"></lightning-output-field>
+                                    </div>
+                                </div> 
+                            </div>
+                        </lightning-record-view-form>
+                    </template>
+                </lightning-card>
+                
+                <template if:true={displayFundTracker}>
+                    <lightning-card title="Approved Services">
+                        <lightning-button variant="brand" label="Add New Fund" title="Add New Fund" slot="actions"
+                            onclick={handleFundSpent} class="slds-float_right" ></lightning-button>
+                        
+                        <template if:false={createAddNew}>
+                            <template if:true={newAddFundTracker}>    
+                                <div class="slds-grid slds-wrap" style="padding:1%;">                
+                                <!-- <lightning-datatable data={accList} columns={columns} key-field="Id" hide-checkbox-column="false" column-width-mode="fixed" 
+                                onrowaction={handleRowActions}>
+                                </lightning-datatable> -->
+                                 <table class="slds-table slds-table_cell-buffer" style="table-layout: fixed;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:20%;">Service Type</th>
+                                            <th>Approved Date</th>
+                                            <th>Approved Fund</th>
+                                            <th>Spent</th>
+                                            <th style="align-items:center;">Available Funds</th>
+                                            <th style="align-items:center;">Status</th>
+                                            <th style="align-items:center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={accList} for:item="acc">
+                                            <tr key={acc.id} class="tr1">
+                                                <td class="description" title={acc.registrationGroup}>{acc.registrationGroup}</td>
+                                                <td>{acc.approvedDate}</td>
+                                                <td>{acc.amountApproved}</td>
+                                         
+                                                <td>{acc.spentAmount}</td>
+                                                <td>{acc.availableFunds}</td>
+                      
+                                                
+                                                <td>{acc.status}</td>
+                                                <td>
+                                                     <!-- <lightning-icon data-accid={acc.id} data-state={acc.state} data-fundname={acc.registrationGroup} data-approveddate={acc.approvedDate} icon-name="action:edit" data-name="edit" alternative-text="Edit" onclick={handleRowActions} size="xx-small" style="cursor:pointer;color:white;background:#0099DE; margin-right:2%;"></lightning-icon> -->
+                                               <a href="javascript:void(0)"  data-accid={acc.id} data-state={acc.state} data-fundname={acc.registrationGroup} data-approveddate={acc.approvedDate}  data-name="edit" title="Edit" onclick={handleRowActions} style="text-decoration: none;">
+                                               <i class="material-icons edit-icon" >edit_document</i>
+                                               </a>
+                                             </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table> 
+                                </div>
+                            </template>
+                            
+                        </template>
+                        <template if:true={paginationVisible}>
+                         <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;padding:1%;">
+                            <!--RECORDS PER PAGE-->
+                            <div class="slds-col">
+                                <div class="slds-list_inline slds-p-bottom_xx-small">
+                                    <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                                    <div class="slds-select_container">
+                                        <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                            <template for:each={pageSizeOptions} for:item="option">
+                                                <option key={option} value={option}>{option}</option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--PAGE NAVIGATION-->
+                            <div class="slds-align_absolute-center" style="height:5rem">
+                                <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+                                <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+                                &nbsp;
+                                <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                                &nbsp;
+                                <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                                <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                            </div>
+                            <!--TOTAL RECORDS-->
+                            <div class="slds-clearfix">
+                                <div class="slds-float_right">
+                                    <span class="slds-badge"> Total Records: {totalRecords}</span>
+                                </div>
+                            </div>
+                         </div>
+                        </template>
+                        <!--Spinner Starting-->
+                        <div if:true={showLoadingSpinner}>
+                            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                        </div>
+                    </lightning-card>
+                </template>
+                  
+            </div>
+            <div style="width:28%" >
+                <c-pie-chart-lwc client-id={clientId}></c-pie-chart-lwc>
+            </div>
+        </div>
+    </div>
+    <template if:true={createAddNew}>
+        <div class="blur-overlay"></div>
+        <div class="right-align" style="width:75%;">
+          
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <p style="font-weight: bold;font-size:140%; margin: 0; padding: 3% 0 0 3%;">{headeringName}</p>
+            
+                <!-- <div style="display: flex; align-items: center; gap: 10px;margin-right:3%;margin-top:2%;">
+                     <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     
+                </div> -->
+             </div>
+ 
+            <div class="slds-p-around_medium">
+                <lightning-record-edit-form object-api-name="Funds_Tracker__c" onsuccess={handleSuccess} onsubmit={handleSubmit} onerror={handleError} record-id={recordId}>
+                <!-- <lightning-messages></lightning-messages> -->
+                
+                <div class="container-box custom-scroll">
+
+                        <div class="slds-grid slds-wrap"  style="padding: 20px 0px 20px 0px;">
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Plan Type</span> 
+                                    <lightning-input-field field-name="Plan_Type__c" variant="label-hidden"></lightning-input-field>                                       
+                                </div>
+                            </div>
+                            <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Service Type</span> 
+                                    <lightning-input-field field-name="Registration_Group__c" name="serviceType" variant="label-hidden" data-name="serviceTypeName" onchange={handleServiceChange}></lightning-input-field>                                       
+                                </div>
+                            </div> -->
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Service Type</span>
+                                    <lightning-combobox class="ServiceTypeValue" name="serviceType" variant="label-hidden" options={filteredServiceTypeOptions} value={serviceTypeName} onchange={handleServiceChange}
+                                    ></lightning-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Amount</span> 
+                                    <lightning-input-field field-name="Amount_approved__c" variant="label-hidden"></lightning-input-field>                                       
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Approved Date</span> 
+                                    <lightning-input-field field-name="Approved_Date__c" name="approvedDate" variant="label-hidden" data-name="approvedDate" onchange={handleServiceChange} ></lightning-input-field>                                       
+                                </div>
+                            </div>  
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Status</span> 
+                                    <lightning-input-field field-name="Status__c" variant="label-hidden"></lightning-input-field>                                       
+                                </div>
+                            </div>
+                           
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>State</span> 
+                                    <lightning-combobox variant="label-hidden" options={stateOptions} value={stateValue} onchange={handleServiceStateChange} 
+                                    ></lightning-combobox>
+                                </div>
+                            </div> 
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label" style="height: 62px;">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Description</span> 
+                                    <lightning-input-field field-name="Description__c" variant="label-hidden" required="true"></lightning-input-field>                                       
+                                </div>
+                            </div>                                         
+                        </div>                        
+
+                        <template if:true={NdisServiceGroupName}>
+                            <div style="padding:1.5%;">
+                                <table>
+                                  <thead>
+                                      <tr>
+                                          <!-- Add a header for checkboxes -->
+                                          <th >Select</th>
+                                          <!-- <th style="width:5%;text-align:left"><lightning-input type="checkbox" checked={selectAllChecked} onchange={handleSelectAll}></lightning-input></th> -->
+                                          <th  >Support Item Name</th>
+                                          <th >Support Item Number</th>
+                                          <th >Amount</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <!-- Iterate through `serviceGroupName` to display rows -->
+                                      <template for:each={serviceGroupName} for:item="row">
+                                          <tr key={row.Id} class="tr1">
+                                              <!-- Checkbox for selection -->
+                                              <td  style="text-align: center; vertical-align: middle;padding-top: 5px;box-sizing: border-box;">
+                                                  <input 
+                                                      type="checkbox"  
+                                                      data-id={row.Id} 
+                                                      data-name={row.Name} 
+                                                      onchange={handleCheckboxSelection}
+                                                      checked={row.isSelected} 
+                                                      />
+                                              </td>
+                                              <td >{row.Support_Item_Name__c}</td>
+                                              <td>{row.Support_Item_Number__c}</td>
+                                              <td>{row.amount}</td>
+                                          </tr>
+                                      </template>
+                                  </tbody>
+                              </table>                                
+                            </div><br/>
+                            
+                            <template if:true={paginationVisible}>
+                                <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;padding:1%;">
+                                   <!--RECORDS PER PAGE-->
+                                   <div class="slds-col">
+                                       <div class="slds-list_inline slds-p-bottom_xx-small">
+                                           <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                                           <div class="slds-select_container">
+                                               <select class="slds-select" id="recordsPerPage1" onchange={handleRecordsPerPage}>
+                                                   <template for:each={pageSizeOptions1} for:item="option">
+                                                       <option key={option} value={option}>{option}</option>
+                                                   </template>
+                                               </select>
+                                           </div>
+                                       </div>
+                                   </div>
+       
+                                   <!--PAGE NAVIGATION-->
+                                   <div class="slds-align_absolute-center" style="height:5rem">
+                                       <lightning-button disabled={bDisableFirst1} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage1}></lightning-button>
+                                       <lightning-button disabled={bDisableFirst1} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage1}></lightning-button>
+                                       &nbsp;
+                                       <span class="slds-badge">Showing {pageNumber1} &nbsp;of&nbsp; {totalPages1} &nbsp;&nbsp;Page(s)</span>
+                                       &nbsp;
+                                       <lightning-button disabled={bDisableLast1} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage1} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                                       <lightning-button disabled={bDisableLast1} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage1} icon-position="right"></lightning-button>
+                                   </div>
+                                   <!--TOTAL RECORDS-->
+                                   <div class="slds-clearfix">
+                                       <div class="slds-float_right">
+                                           <span class="slds-badge"> Total Records: {totalRecords1}</span>
+                                       </div>
+                                   </div>
+                                </div>
+                            </template>                            
+                        </template><br/>
+
+                        
+                    
+                </div>  
+            </br>     
+                <div class="slds-align_absolute-center" >
+                             <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>&nbsp;&nbsp;&nbsp;
+                            <lightning-button type="submit" variant="brand" label={buttonName} disabled={saveDisabled}></lightning-button>
+                           
+                        </div>
+                            <!-- modal footer start-->
+                
+                </lightning-record-edit-form>  
+            </div>
+        </div>
+    </template>
+    <!-- <template if:true={showSpinner}>
+        <lightning-spinner alternative-text="Uploading the file......" size="medium">
+        </lightning-spinner>
+    </template> -->
+    <template if:true={isEdit}> 
+        <div class="blur-overlay"></div>                          
+        <div class="right-align" style="width:70%;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <p style="font-weight: bold;font-size:150%; margin: 0; padding: 2% 0 0 2%;">Update Funds Tracker</p>
+                
+                    <div style="display: flex; align-items: center; gap: 10px;margin-right:4%;">
+                        <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     -->
+                    </div>
+                </div>
+                <div class="slds-p-around_medium">
+                    <lightning-record-edit-form object-api-name="Funds_Tracker__c" onsuccess={handleSuccess} onsubmit={handleSubmit} record-id={recordId}>
+                        <!-- <lightning-messages></lightning-messages> -->
+                        <div class="container-box custom-scroll">
+                            <div class="slds-grid slds-wrap"  style="padding: 20px 0px 20px 0px;">
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Plan Type</span> 
+                                        <lightning-input-field field-name="Plan_Type__c" variant="label-hidden"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Service Type</span> 
+                                        <lightning-input-field field-name="Registration_Group__c" variant="label-hidden" disabled="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Amount</span> 
+                                        <lightning-input-field field-name="Amount_approved__c" variant="label-hidden"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Approved Date</span> 
+                                        <lightning-input-field field-name="Approved_Date__c" variant="label-hidden" disabled="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop">Status</span> 
+                                        <lightning-input-field field-name="Status__c" variant="label-hidden"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>State</span> 
+                                        <lightning-combobox variant="label-hidden" options={stateOptions} value={stateValue} onchange={handleServiceStateChange}
+                                        ></lightning-combobox>
+                                    </div>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label" style="height: 62px;">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Description</span> 
+                                        <lightning-input-field field-name="Description__c" variant="label-hidden"></lightning-input-field>                                       
+                                    </div>                                    
+                                </div> 
+                            </div>
+                        <br/>
+                        <template if:true={NdisServiceGroupName}>
+                            <div   class="servicetable" style="padding-left: 1%;">
+                                <table   >
+                                  <thead  >
+                                      <tr>
+                                         
+                                          <th >Select</th>
+                                          <th  >Support Item Name</th>
+                                          <th >Support Item Number</th>
+                                          <th >Amount</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                     
+                                      <template for:each={serviceGroupName} for:item="row">
+                                          <tr key={row.Id} class="tr1">
+                                             
+                                              <td  style="text-align: center; vertical-align: middle;padding-top: 5px;box-sizing: border-box;">
+                                                  <input 
+                                                      type="checkbox"  
+                                                      data-id={row.Id} 
+                                                      data-name={row.Name} 
+                                                      onchange={handleCheckboxSelection}
+                                                      checked={row.isSelected} 
+                                                      />
+                                              </td>
+                                              <td >{row.Support_Item_Name__c}</td>
+                                              <td>{row.Support_Item_Number__c}</td>
+                                              <td>{row.amount}</td>
+                                          </tr>
+                                      </template>
+                                  </tbody>
+                              </table>                                
+                            </div>                            
+                        </template><br/>
+                        <template if:true={paginationVisible}>
+                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;padding:1%;">
+                               <!--RECORDS PER PAGE-->
+                               <div class="slds-col">
+                                   <div class="slds-list_inline slds-p-bottom_xx-small">
+                                       <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                                       <div class="slds-select_container">
+                                           <select class="slds-select" id="recordsPerPage2" onchange={handleRecordsPerPage}>
+                                               <template for:each={pageSizeOptions1} for:item="option">
+                                                   <option key={option} value={option}>{option}</option>
+                                               </template>
+                                           </select>
+                                       </div>
+                                   </div>
+                               </div>
+   
+                               <!--PAGE NAVIGATION-->
+                               <div class="slds-align_absolute-center" style="height:5rem">
+                                   <lightning-button disabled={bDisableFirst1} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage1}></lightning-button>
+                                   <lightning-button disabled={bDisableFirst1} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage1}></lightning-button>
+                                   &nbsp;
+                                   <span class="slds-badge">Showing {pageNumber1} &nbsp;of&nbsp; {totalPages1} &nbsp;&nbsp;Page(s)</span>
+                                   &nbsp;
+                                   <lightning-button disabled={bDisableLast1} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage1} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                                   <lightning-button disabled={bDisableLast1} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage1} icon-position="right"></lightning-button>
+                               </div>
+                               <!--TOTAL RECORDS-->
+                               <div class="slds-clearfix">
+                                   <div class="slds-float_right">
+                                       <span class="slds-badge"> Total Records: {totalRecords1}</span>
+                                   </div>
+                               </div>
+                            </div>
+                        </template>  
+                   </div>
+                    <div class="slds-align_absolute-center slds-m-around_small">
+                        <button class="slds-button slds-button_outline-brand" onclick={hideModalBox}>Cancel</button>&nbsp;&nbsp;
+                        <lightning-button type="submit" variant="brand" label="Update"></lightning-button>
+                        
+                    </div>
+                    </lightning-record-edit-form>  
+                </div>
+         
+        </div>                      
+    </template>
+</template>

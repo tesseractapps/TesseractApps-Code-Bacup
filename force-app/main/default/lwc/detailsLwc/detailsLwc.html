@@ -1,0 +1,541 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 06-04-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>   
+    <!-- <div class="container">   -->
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <!-- Left side: Staff Details -->
+        <p style="font-weight: bold;font-size:140%;margin-top:1%;padding-left: 1%;"> Participant</p>            
+        <div style="display: flex; align-items: center; gap: 10px; padding-right:1.5%; ">
+            <lightning-button label="Back" variant="brand" onclick={navigateToParticipant}></lightning-button>
+           <template if:false={noimage}>
+            <img 
+                src={image} 
+                alt="Info Icon" 
+                width="45px" 
+                height="45px" 
+                class="image"
+                onclick={toggleHeader}>
+            </template>
+            <template if:true={noimage}>
+         <div class="material-avatar-fallback" onclick={toggleHeader}>
+        <i class="material-icons person">account_circle</i>
+        </div>
+        </template>
+        </div>
+    </div>
+
+    <template if:true={header}>
+        <div >
+
+        <div>
+            <div class="participantlayout">
+            <template if:true={participantlogin}>
+            </template>
+            <template for:each={clientData} for:item="clientData">
+                <div class="grid"  key={clientData.Id}>                  
+                    <!-- First Grid Item -->
+                    <div class="grid-item">
+                        <template if:true={clientData.Picture__c}>
+                        <img src={clientData.Picture__c} alt="Photo">
+                        </template>
+                        <template if:false={clientData.Picture__c}>
+                      <div class="material-avatar-fallback" onclick={toggleHeader} style="WIDTH:70px;HEIGHT:70px;">
+                      <i class="material-icons person" style="font-size:60px;">account_circle</i>
+                     </div>
+                </template>
+                        <div class="text-container">
+                            <p><b>{clientData.First_Name__c}<br>{clientData.Last_Name__c}</b><br>{clientData.Gendar__c}&nbsp;{clientData.Age__c}</p>                            
+                        </div>                        
+                    </div>
+                    
+                    <!-- Second Grid Item -->
+                    <div class="grid-item2" style="border-right-style: solid;">
+                        <div class="status-row" >
+                            <p><b>Status:</b>
+                                <span if:true={clientData.Status__c}>&nbsp;&nbsp;Active</span>
+                                <span if:false={clientData.Status__c}>&nbsp;&nbsp;Inactive</span>
+                            </p>
+                        </div>
+                        <div class="status-row">
+                            <p><b>Facility:</b>&nbsp;&nbsp;{clientData.Facility__r.Name}</p>
+                        </div>
+                        <div class="status-row">
+                            <p><b>Contact:</b>&nbsp;&nbsp;{clientData.Contact_Number__c}</p>
+                        </div>
+                        <div class="status-row">
+                            <p><b>Address:</b>&nbsp;&nbsp;{clientData.AddressData__c}</p>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Third Grid Item -->
+                    <div style="margin-top:10px;"><div class="assignments"><h5><b>Emergency Contact</b></h5></div>
+                
+                    <div class="grid-item4" style="margin-top:5px;">
+                        <lightning-avatar variant="circle" src={primary} initials="P" fallback-icon-name="standard:person_account" alternative-text="Primary Contact"></lightning-avatar>
+        
+                        <div class="text-container">
+                            <p style="padding:10px;">{clientData.Primay_Contact_First_Name__c}&nbsp;{clientData.Primay_Contact_Last_Name__c}<br>{clientData.Primary_Contact_Number__c}</p>
+                            
+                            
+                        </div>
+                    </div>
+                    <div class="grid-item4" style="margin-top:5px;">
+                        <lightning-avatar variant="circle" src={secondary} initials="S" fallback-icon-name="standard:person_account" alternative-text="Secondary Contact" ></lightning-avatar>
+        
+                        <div class="text-container">
+                            <p style="padding:10px;">{clientData.Secondary_Contact_First_Name__c}&nbsp;{clientData.Secondary_Contact_Last_Name__c}<br>{clientData.Secondary_Contact_Number__c}</p>
+                        </div>
+                    </div>
+                    </div>                  
+                </div>
+                </template>
+            </div>
+        </div>
+        </div>
+    </template>
+    <div>
+        <div class="slds-grid slds-var-m-left_x-large slds-var-m-right_xx-large" style="margin-top:20px;font-weight:bold;margin-left:1%;">
+            <div class={journelClass} data-name="ClientJournel" onclick={handleClick}
+                style="cursor:pointer;text-align:center;font-color:white;">
+                Participant Journal
+            </div>
+            <template if:false={isStaff}>
+                <div class={detailsClass} data-name="details" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Details
+                </div>         
+                <div class={fundClass} data-name="fundtranfer" onclick={handleClick}
+                    style="cursor:pointer;text-align:center;">
+                    Funds Tracker
+                </div>
+               <!--  <div class={ParticipantAvailabiltyClass} data-name="ParticipantAvailabilty" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Participant Availabilty
+                </div> -->
+                <template if:true={isExec}>
+                    <div class={serviceClass} data-name="ServiceandSupportPlan" onclick={handleClick}
+                        style="cursor:pointer;text-align:center">
+                        Services
+                    </div>
+                </template>
+            </template>            
+            <div class={attachClass} data-name="attachment" onclick={handleClick}
+                style="cursor:pointer;text-align:center">
+                Attachments
+            </div>
+            <div class={fundsClass} data-name="ParticipantForms" onclick={handleClick}
+                style="cursor:pointer;text-align:center">
+                Forms
+            </div>
+            <template if:true={isFeedback}>
+                <div class={servClass} data-name="feedback" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Feedback
+                </div>
+            </template>
+            <template if:false={isStaff}>
+                <div class={scheduleClass} data-name="schedule" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Schedule
+                </div>
+            </template>
+            <div class={riskClass} data-name="risk" onclick={handleClick}
+                style="cursor:pointer;text-align:center">
+                Risk Profile
+            </div>
+        </div>
+
+    </div>
+
+    <template if:true={ClientJournel}>
+        <div class="participantlayoutSnapshot custom-scroll">
+
+
+
+    <div class="card1">
+        <div class="section">
+            <p><strong>Status:</strong> {status}</p>
+            <p><strong>Risk Index:</strong> {riskIndex}</p>
+        </div>
+
+        <!-- Wrapper that defines scroll but styled to look like it's part of .card -->
+        <div class="scroll-area">
+            <div class="scroll-row">
+                <div class="scroll-column">
+                    <p><strong>Medication:</strong></p>
+                    <lightning-formatted-rich-text value={medicationshtml}></lightning-formatted-rich-text>
+                </div>
+                <div class="scroll-column">
+                    <p><strong>Allergies:</strong></p>
+                    <lightning-formatted-rich-text value={allergieshtml}></lightning-formatted-rich-text>
+                </div>
+                <div class="scroll-column">
+                    <p><strong>Notes:</strong></p>
+                    <lightning-formatted-rich-text value={noteshtml}></lightning-formatted-rich-text>
+                </div>
+                <lightning-icon icon-name="action:edit" alternative-text="edit" size="xx-small" title="edit" class="custom-icon-edit1" onclick={participantJournalmodelPop}></lightning-icon>
+            </div>
+        </div>
+
+        
+    </div>
+
+
+
+
+            
+            </br>
+
+            <template if:true={participantpopup}>
+                <div class="blur-overlay"></div>
+                <div class="right-align1 fade-in" style="width:45%;">  
+                    <!-- Header -->
+                     
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2%; margin-right: 2%; margin-left: 2%;">
+                        <p style="font-weight: bold; font-size: 140%;">{clientFullName} - Snapshot</p>
+                        <!-- <lightning-button label="Back" variant="brand" onclick={handleCloseparticipantpopup}></lightning-button> -->
+                    </div>
+
+                    <div class="container-box1">
+                        <div  class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+                            <span>Details</span>    
+                        </div>
+                        <div class="section-content" data-section="staffDetails1">
+                            <div class="right-content custom-scroll">
+                            <template if:true={sectionFlags.staffDetails1}>
+                                <div class="slds-grid slds-wrap">
+                                    <!-- Status Field -->
+                                    <div class="slds-size_1-of-1 slds-p-around_small">
+                                        <div class="slds-p-around_medium">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">
+                                                    <span class="slds-text-title_bold">Status</span>
+                                                </label>
+                                                <div class="slds-form-element__control">
+                                                    <div class="slds-grid slds-gutters slds-align_absolute-center">
+                                                        
+                                                        <!-- Available Checkbox -->
+                                                        <div class="slds-col">
+                                                            <lightning-input 
+                                                                type="checkbox" 
+                                                                label="Available" 
+                                                                checked={isAvailable} 
+                                                                onchange={handleAvailableChange}>
+                                                            </lightning-input>
+                                                        </div>
+
+                                                        <!-- Unavailable Checkbox -->
+                                                        <div class="slds-col">
+                                                            <lightning-input 
+                                                                type="checkbox" 
+                                                                label="Unavailable" 
+                                                                checked={isUnavailable} 
+                                                                onchange={handleUnavailableChange}>
+                                                            </lightning-input>
+                                                        </div>
+
+                                                        <!-- Unavailable Until Button -->
+                                                        <div class="slds-col">
+                                                            <div class="floating-label1">
+                                                                <span class="label-text-drop"><span style="color:red">*</span>Unavailable Until</span>
+                                                                    <lightning-input 
+                                                                        type="date" 
+                                                                        value={unavailableUntilDate}
+                                                                        onchange={handleUnavailableUntilChange}
+                                                                        disabled={disableUnavailabledate}
+                                                                        variant="label-hidden">
+                                                                    </lightning-input>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Risk Index Field -->
+                                    <div class="slds-size_1-of-1" style="PADDING-LEFT: 4%; PADDING-RIGHT:3%">
+                                        <div class="floating-label1">
+                                            <span class="label-text-drop">Risk Index</span>
+                                            <lightning-input
+                                                type="text" 
+                                                variant="label-hidden" 
+                                                onchange={handleField1Change}
+                                                value={riskIndex}
+                                                disabled>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Medications Field -->
+                                    <div class="slds-size_1-of-1" style="PADDING-LEFT: 2%; PADDING-RIGHT:1%">
+                                        <div style="padding: 2%;">
+                                            <span>Medications</span>
+                                            <lightning-textarea 
+                                                name="medications" 
+                                                variant="label-hidden" 
+                                                onchange={handleAddShiftChange}
+                                                value={medications}  
+                                                disabled={disablePostInsertButtons}>
+                                            </lightning-textarea>
+                                        </div>
+                                    </div>                                   
+
+                                    <!-- Allergies Field -->
+                                    <div class="slds-size_1-of-1" style="PADDING-LEFT: 2%; PADDING-RIGHT:1%">
+                                        <div style="padding: 2%;">
+                                            <span>Allergies</span>
+                                            <lightning-textarea 
+                                                name="allergies" 
+                                                variant="label-hidden" 
+                                                onchange={handleAddShiftChange}  
+                                                disabled={disablePostInsertButtons}
+                                                value={allergies}>
+                                            </lightning-textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notes Field -->
+                                    <div class="slds-size_1-of-1" style="PADDING-LEFT: 2%; PADDING-RIGHT:1%">
+                                        <div style="padding: 2%;">
+                                            <span>Notes</span>
+                                            <lightning-textarea 
+                                                name="notes" 
+                                                variant="label-hidden" 
+                                                onchange={handleAddShiftChange}  
+                                                disabled={disablePostInsertButtons}
+                                                value={notes}>
+                                            </lightning-textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            </div>
+                            </div>
+                            <!-- Save/Cancel Buttons -->
+                            <div class="slds-align_absolute-center slds-m-around_small" style="padding-bottom: 0.5rem;">
+                                <lightning-button 
+                                    label="Cancel" 
+                                    variant="brand-outline" 
+                                    onclick={handleCloseparticipantpopup} 
+                                    >
+                                </lightning-button>
+                                <lightning-button 
+                                    type="submit" 
+                                    variant="brand" 
+                                    onclick={handlesavebuttonforParticipantPopup} 
+                                    label="Update"
+                                    disabled={isSaveDisabled} class="slds-m-left_small">
+                                </lightning-button>
+                                
+                            </div>
+                        
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={isVisible}>
+                <lightning-button variant="brand" label="Create Task" name="createTask" title="Create Task"
+                    onclick={handleClick}
+                    class="slds-m-right_xx-large slds-float_right slds-m-bottom_small"></lightning-button>
+                </template>
+                
+                <template if:true={isVisible}>    
+                <lightning-button variant="brand" label="Add New" name="addNew" title="Add New" onclick={handleClick}
+                    class="slds-m-right_x-small slds-float_right slds-m-bottom_medium"></lightning-button><br/>
+                </template>
+            <br />
+            <template if:true={iscreateNew}>
+                <div class="slds-size_6-of-6 slds-m-top_x-large slds-grid">
+                    <div class="slds-size_3-of-6 ">
+                        <div class="slds-m-left_xx-large slds-m-right_large" style="font-weight:bold;">Description</div>
+                    </div>  
+                    <div class="slds-size_1-of-6 ">
+                        <div class="slds-m-right_large slds-align_absolute-center" style="font-weight:bold;">Notes Type</div>
+                    </div>                  
+                    <div class="slds-size_1-of-6 ">
+                        <div class="slds-m-right_large slds-align_absolute-center" style="font-weight:bold;">Created by</div>
+                    </div>                    
+                    <div class="slds-size_1-of-6">
+                        <div class=" slds-m-right_large slds-align_absolute-center" style="font-weight:bold;">Last Modified on</div>
+                    </div>                    
+                </div>
+                <template for:each={clientJournelList} for:item="journel">
+                    <div class="slds-size_6-of-6 slds-m-top_medium slds-grid" key={journel.Id}>
+                        <div class="slds-size_3-of-6">
+                            <div if:true={journel.journelDescription}>
+                                <lightning-button icon-name="utility:edit" variant="base" title="Edit"
+                                    data-id={journel.Id} data-name={journel.Description__c} data-notestype={journel.Care_Notes__c} onclick={handleEdit}
+                                    class="slds-float_right slds-m-bottom_xx-large slds-m-right_large">
+                                </lightning-button>
+                            </div>                            
+                            <div class="slds-m-left_x-large slds-m-right_large slds-box" style="border-radius: 12px">
+                                {journel.Description__c}
+                            </div>
+                        </div>  
+                           
+                        <div class="slds-size_1-of-6 ">                      
+                            <div class="slds-m-right_large slds-align_absolute-center">{journel.Care_Notes__c}</div>                            
+                        </div>
+                                               
+                        <div class="slds-size_1-of-6 ">
+                            <div class="slds-m-right_large slds-align_absolute-center">
+                                <!-- <img src={journel.CreatedBy.SmallPhotoUrl} height="30" width="30px" style="border-radius: 50%;"/> -->
+                                 <template if:true={journel.picture}>
+                                    <!-- <lightning-avatar class="custom-avatar" variant="circle" src={journel.picture} initials="AW" fallback-icon-name="standard:person_account" alternative-text="image" style="margin-right:0.4rem;" ></lightning-avatar> -->
+                                    <img src={journel.picture}  style="border-radius: 50%;height:45px;width:45px"/>
+                                 </template>  
+                            </div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            {journel.createdname}
+                        </div>
+                        <div class="slds-size_1-of-6 ">
+                            <div class="slds-m-right_large slds-align_absolute-center">
+                                <lightning-formatted-date-time value= {journel.LastModifiedDate} year="numeric" month="numeric" day="numeric" hour="2-digit"
+                                        minute="2-digit"></lightning-formatted-date-time>
+                            </div>
+                        </div>
+                                               
+                    </div>
+                </template>            
+            </template>
+
+            <template if:true={addNew}>
+                <div class="blur-overlay"></div>
+                <div class="right-align-create-journal" style="width: 50%;padding:14px;">
+                    <div style="display: flex;justify-content: space-between;flex-wrap: nowrap;align-items: center;flex-direction: row; MARGIN-BOTTOM: 10PX;">
+                        <p style="font-weight: bold; font-size: 140%; margin: 0; padding: 2% 0 0 2%;">Create Journal</p>
+                        <div style="display: flex; align-items: center; gap: 10px; ">
+                            <!-- <lightning-button label="Back" variant="brand" onclick={closeAddJournel}></lightning-button>                     -->
+                        </div>
+                    </div>
+                <div class="right-content-create-journal custom-scroll">
+                    <div class="container custom-scroll" style="padding:1%;">
+                        <div class="slds-grid slds-gutters slds-wrap slds-p-around_medium" >
+                            <!-- Notes Type -->
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Notes Type</span>
+                                    <lightning-combobox name="journelProgress" value={jNoteType} disabled={notesflag}
+                                        placeholder="Select Notes Type" options={options} onchange={handleChange} required="true"
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                
+                            <!-- Description -->
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="floating-label" style="height: 62px;">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Description</span>
+                                    <lightning-textarea required="true" name="journeldescription" value={description}
+                                        onchange={onchangeJournel} onfocus={handleFocus} placeholder="Enter your text here or start speaking..."
+                                        variant="label-hidden">
+                                    </lightning-textarea>
+                                </div>
+                                <div class="slds-p-top_medium">
+                                    <lightning-icon icon-name={iconName} alternative-text={altText} onclick={toggleListening}
+                                        if:true={showMuteIcon} class="slds-button slds-button_icon mute-icon"
+                                        style="margin-left:5px;" size="small">
+                                    </lightning-icon>
+                                    <lightning-icon icon-name="utility:clear" alternative-text="Clear Text" onclick={clearText}
+                                        if:true={showClearIcon} class="slds-button slds-button_icon clear-icon"
+                                        size="small">
+                                    </lightning-icon>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Buttons -->
+                       
+                    </div>
+                    </div>
+                     <div class="slds-align_absolute-center" style="height: 3rem;"> 
+                        <lightning-button slot="footer" label="Cancel" class="slds-m-right_medium" variant="brand-outline"
+                                onclick={closeAddJournel}>
+                            </lightning-button>
+                            <lightning-button slot="footer" label={buttonlabel} class="slds-m-right_small" variant="brand"
+                                onclick={handleSave}>
+                            </lightning-button>
+                            
+                        </div>
+                </div>
+                             
+            </template>  
+                      
+            <template if:true={createTask}>
+                <div class="blur-overlay"></div>
+                <div class="right-align-create-task" style="width:40%;">
+                    <div>
+                        <!-- <lightning-button label="Back" onclick={closeTask} variant="brand"
+                                class="slds-m-left_small" style="position: absolute;right: 3%;top:3%;"></lightning-button> -->
+                        <c-task-create></c-task-create>
+                        <div class="slds-grid slds-align_absolute-center" style="padding-bottom: 10px;">
+                            <lightning-button slot="footer" label="Cancel" onclick={closeTask} variant="brand-outline"
+                                ></lightning-button>
+                            <lightning-button slot="footer" label="Save" onclick={createTaskParent} variant="brand"
+                                class="slds-m-left_small"></lightning-button>
+                            
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <!-- <template if:true={assignClient}>
+        <div class="slds-p-around_medium container">
+            <h5 style="font-weight:bold;margin-bottom:10px;margin-left:10px;">Participant Assigning</h5>
+            <lightning-button style="margin-left:95%;margin-top:-20px;" variant="brand" label="Back" onclick={handleBack}></lightning-button>
+            <lightning-dual-listbox name="staff" class="list-box"
+                           label="Select Staff"
+                           source-label="Available"
+                           selected-label="Selected" required="true"
+                           options={staffOptions} value={selectedRoles}
+                           onchange={handleStaffChange}></lightning-dual-listbox>
+            <lightning-input class="slds-size_1-of-4 slds-m-around_small" label="Participant Name" required="true" value={clientName}></lightning-input>
+            <div style="margin-left:40%;margin-top:10px;width:55%;">
+                <lightning-button type="submit" variant="brand" label="Submit" style="margin-left: 1%;"></lightning-button>&nbsp;&nbsp;
+                <lightning-button label="Cancel" variant="brand" onclick={closeAddJournel} class="slds-m-around_small"></lightning-button>
+            </div>                
+        </div>
+    </template> -->
+<div class="subtabs custom-scroll">
+    <template if:true={detailsFlag}>
+        <c-client-detail client-id={clientId} onparticipantupdated={refreshParent}></c-client-detail>
+    </template>
+    <template if:true={fundTranfer}>
+        <c-client-fund-tranfer client-id={clientId}></c-client-fund-tranfer>
+    </template>
+    <template if:true={serviceSupportFlag}>
+        <c-service-support-plan servicerecord-id={servicerecordId} client-id={clientId}></c-service-support-plan>
+    </template>
+    <template if:true={Formsflag}>
+        <c-form-render client-id={clientId}></c-form-render>
+        <!-- <c-participant-form client-id={clientId}></c-participant-form> -->
+    </template>
+    <template if:true={attachment}>
+        <c-client-attachment client-id={clientId}></c-client-attachment>
+         <!-- <c-tesseract-apps-rejected-shifts ></c-tesseract-apps-rejected-shifts> -->
+    </template>
+    <template if:true={feedback}>
+        <c-feedback-lwc client-id={clientId}></c-feedback-lwc>
+    </template>
+     <template if:true={scheduleFlag}>
+        <!-- <c-participant-schedule-lwc client-id={clientId}></c-participant-schedule-lwc> -->
+        <c-participant-availability-lwc client-id={clientId} state={state}></c-participant-availability-lwc>
+    </template> 
+    <template if:true={riskFlag}>
+        <c-tesseract-apps-risk-management-lwc client-id={clientId}></c-tesseract-apps-risk-management-lwc>
+        <!-- <c-risk-management-lwc client-id={clientId}></c-risk-management-lwc> -->
+    </template>    
+    <template if:true={ParticipantAvailabiltyFlag}>
+       <!--  <c-participant-schedule-lwc client-id={clientId}></c-participant-schedule-lwc> -->
+          <!-- <c-participant-availability-lwc client-id={clientId} state={state}></c-participant-availability-lwc> -->
+    </template>
+   </div>
+</template>
