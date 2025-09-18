@@ -1,0 +1,540 @@
+<template>
+    <div class="main-container custom-scroll">
+    <div if:false={signInSignOut}>
+        
+    </div>  
+    <div class="container-box" style="margin-top:1%;">     
+        
+                <span style="font-size: medium;font-weight:bold;">Shift Details</span>
+                <div style="float:right; " class="slds-size_1-of-4">
+                        <span style="margin-right:10px;">
+                            <lightning-button-icon icon-name="utility:left" onclick={navigateToPrevious}></lightning-button-icon>
+                        </span>
+                        <span style="margin-right:10px;">
+                            <lightning-button label="Today" onclick={navigateToToday}></lightning-button>
+                        </span>
+                        <span>  
+                            <lightning-button-icon icon-name="utility:right" onclick={navigateToNext}></lightning-button-icon>
+                        </span>
+                        <span style="float: right;"> 
+                            <lightning-input label="Date" type="date" name="select-date" variant="label-hidden" value={datePickerString}
+                                    onchange={navigateToDay} style="width:130px;">
+                            </lightning-input>
+                        </span> 
+                </div>
+                <!-- <div style="width:1200px;height:auto; margin-top:30px;"> 
+                    <lightning-datatable key-field="Id" data={signinList} columns={columns} column-width-mode="fixed"  onrowselection={handleSelected} max-row-selection="1" ></lightning-datatable>
+                </div> -->
+                <template if:false={noRecordsFlag}>
+                <div style="margin-top:1.5%;">
+                    <table class="slds-table slds-table_cell-buffer">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th class="description">Location</th>
+                                <th>Date</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Role</th>
+                                <th>{facilityPreferredName}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={signinList} for:item="list">
+                                <tr key={list.Id} class="tr1">
+                                    <td>
+                                        <lightning-input type="radio" name="rowSelection" data-id={list.Id} onchange={handleSelected}></lightning-input>
+                                    </td>
+                                    <td class="description">{list.Shift_Locations__c}</td>
+                                    <td>{list.uidate}</td>
+                                    <td >{list.Start_time_Formula__c}</td>
+          
+                                    <td>{list.End_time_formula__c}</td>
+                                    <td>{list.Role_formula__c}</td>
+                                    <td>{list.Add_Shift__r.Facility__r.Name}</td>
+                                    
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    
+                </div>
+                
+                <div class="slds-grid slds-wrap" style="margin:1% 0 0 5%">
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">
+                        <b style="font-size: medium">Location:&nbsp;</b>{Location}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">                   
+                        <b style="font-size: medium">Start Time:&nbsp;</b>{startTime}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">                   
+                        <b style="font-size: medium">End Time:&nbsp;</b>{endtime}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">                   
+                        <b style="font-size: medium">Date:&nbsp;</b>{DateShift}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">
+                        <b style="font-size: medium">Role:&nbsp;</b>{role}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">
+                        <b style="font-size: medium">{facilityPreferredName}:&nbsp;</b>{facility}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">
+                        <b style="font-size: medium">{participantPreferredName}:&nbsp;</b>{participant}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left">
+                        <b style="font-size: medium">Status:&nbsp;</b>{status}
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left" >
+                       <span style="white-space: normal; word-wrap: break-word;"><b style="font-size: medium">Shift Notes:&nbsp;</b>{shiftNotes} </span> 
+                    </div>
+                    <div class="slds-size_1-of-2 slds-m-bottom_medium slds-text-align_left" >
+                      
+                    </div>
+                    <div class="slds-grid slds-wrap slds-m-top_medium" >
+                        <lightning-button label="Checklist" variant="brand" onclick={HandlegetCheckLIst} style="margin-right: 1rem;"  ></lightning-button>
+                        <lightning-button label="Activity Log" variant="brand" onclick={HandleActivityLog} style="margin-right: 1rem;" ></lightning-button>
+                        <!-- <lightning-button label="Sign in" variant="brand" onclick={handleSigninTime} style="margin-right: 1rem;" disabled={bDisable}></lightning-button>
+                        <lightning-button label="Sign out" variant="brand" onclick={handleSignOutTime} disabled={signoutDisable} style="margin-right: 1rem;"></lightning-button> -->
+                        <template if:true={isSigninVisible}>
+                            <lightning-button label="Sign in" variant="brand" onclick={handleSigninTime} style="margin-right: 1rem;" disabled={bDisable}></lightning-button>
+                        </template>
+                        <template if:true={isBreakinVisible}> 
+                            <lightning-button label="Break in" name="breakIn" variant="brand" onclick={handleBreakTime} style="margin-right: 1rem;" disabled={breakInDisable}></lightning-button>
+                        </template>
+                        
+                        <template if:true={isBreakoutVisible}>
+                            <lightning-button label="Break out" name="breakout" variant="brand" onclick={handleBreakTime} disabled={breakOutDisable} style="margin-right: 1rem;"></lightning-button>
+                        </template>
+                        <template if:true={isSignoutVisible}>
+                            <lightning-button label="Sign out" variant="brand" onclick={handleSignOutTime} disabled={signoutDisable} style="margin-right: 1rem;"></lightning-button>
+                        </template>
+                        <lightning-input type="checkbox" label="Request Sign in" name="signIn" onchange={handleSignInReQUest} style="margin-right: 1rem;" disabled={requestSignDisbale}></lightning-input>
+                        <lightning-input type="checkbox" label="Request Sign out" name="signOut" onchange={handleSignOutReQUest} checked={requestSignOut} style="margin-right: 1rem;" disabled={requestSignOutDisbale}></lightning-input>
+                    </div>
+
+                       
+                    
+                </div>
+                </template>
+                <template if:true={noRecordsFlag}>
+                    <div class="no-data">
+                        <p>No records found</p>
+                    </div>
+                </template>
+                
+                    <template if:true={shiftnotesTemplate}>
+                        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+                        <div class="slds-modal__container"  style="max-width:25%;">
+                            <header class="slds-modal__header" style="background: #002A52;">
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate modal-title" 
+                                    style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                                <!-- <lightning-button-icon icon-name="utility:close" alternative-text="Close" variant="bare" size="medium"
+                                    onclick={handleShiftNotesTemplateClose} class="custom-close-icon" 
+                                    style="position: absolute; top: 10px; right: 15px; --slds-c-icon-color-foreground: white;">
+                                </lightning-button-icon> -->
+                            </header>
+                
+                            <div class="slds-modal__content slds-p-around_medium modal-content" id="modal-content-id-1">
+                                
+                                <!-- Activity Section -->
+                                <template if:true={isShowActivityinReview}>
+                                    <div class="container-box">
+                                        <div class="toggle-bar">
+                                           <b> <span>Activity:</span></b> 
+                                        </div>
+                                        <div class="slds-theme_default slds-m-bottom_small reviewActivity">
+                                            <template if:true={finalReviewActivity}>
+                                                <template for:each={finalReviewActivity} for:item="activity">
+                                                    <div key={activity.Id}>
+                                                        <p>{activity.serialNumber}. {activity.Notes__c}</p>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                              
+                                <template if:true={isShowChecklsitinReview}>
+                                    <div class="container-box">
+                                        <div class="toggle-bar">
+                                           <b><span>Checklist:</span> </b> 
+                                        </div>
+
+                                        <div class="checklist-container">
+                                            <template for:each={checklistData} for:item="check">
+                                                <div key={check.Id} class="checklist-item">
+                                                    <template if:true={check.isCompleted}>
+                                                        <lightning-icon icon-name='action:approval' alternative-text='approval' size='xx-small' title='Completed' class="icon-approved"></lightning-icon>
+                                                    </template>
+                                                    <template if:false={check.isCompleted}>
+                                                        <lightning-icon icon-name='utility:circle' alternative-text='circle' size='medium' title='circle'></lightning-icon>
+    
+                                                    </template>
+                                                    <span class="mandatory-mark" if:true={check.isMandatory}>* </span>
+                                                    <span class="checklist-description">{check.description}</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                   
+                                </template>
+                                <template if:true={isExtentedShift}>
+                                            <div style="justify-content: flex-end;margin-top: 18PX">
+                                                <div style="text-align:center"> 
+                                                    <p>Your late sign out will be recorded as an extended shift.</p>
+                                                    
+                                                                                    <p>
+                                                                                     Do you wish to continue? 
+                                                                                   </p>
+                                                  </div>
+                                                  <div class="button-container1">
+                                                    <template if:true={isExtentedShift}>
+                                                        <lightning-button label="No,Sign Out" variant="brand" onclick={handleeditClose}
+                                                        class="slds-m-around_small" style="margin-left:2rem;"></lightning-button>
+                                                        <lightning-button label="Review Extension" variant="brand" onclick={handleExtendedShiftReview} class="slds-m-around_small" ></lightning-button>
+                                                        
+                                                    </template>
+                                                </div>
+                                            </div>
+                                     
+                                </template>
+                                <template if:true={extendedShiftDetailsFlag}>
+                                    <div class="shift-container">
+                                        <!-- Shift Details Section -->
+                                        <div class="shift-details">
+                                            <b>Shift End Time:&nbsp;</b>{endtime} <br>
+                                            <b>Shift Duration(hh:mm):&nbsp;</b>{AddShiftDuartion} <br>
+                                            <b>Extended Duration(hh:mm):&nbsp;</b>{extendedDurationFormatted} <br>
+                                        </div>
+                                
+                                        <!-- Comment Box Section -->
+                                        <div class="comment-box">
+                                            <lightning-textarea 
+                                                name="ExtendedComments" 
+                                                label="Comments:" 
+                                                variant="label-hidden"
+                                                placeholder="Comments"
+                                                value={extendedComments} 
+                                                onchange={handleReasons}>
+                                            </lightning-textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <template if:false={sleepoverTemplate}>
+                                        <div class="button-container1">
+                                            <lightning-button label="Cancel" variant="brand" onclick={handleShiftNotesTemplateClose}
+                                            class="slds-m-around_small" style="margin-left:2rem;"></lightning-button>
+                                            <lightning-button label="Yes,Sign Out" variant="brand" onclick={handleeditClose} class="slds-m-around_small" ></lightning-button>
+                                            
+                                        </div> 
+                                    </template>
+                                     
+                                </template>
+                                     
+                                <div if:true={sleepoverTemplate}>
+                                    <template if:true={LoghoursButtontemplate}>
+                                        <div style="margin-left: 11PX;text-align:center">
+                                            <b><h1> Were you occupied with work during the sleepover shift? </h1> </b>
+                                        </div>
+                                    </template>
+                                    
+                                  
+                                    <template if:true={logSleepoverHours}>
+                                        <div class="slds-m-around_medium">
+                                            <!-- Use SLDS Grid for Side-by-Side Layout -->
+                                            <div class="slds-grid slds-gutters slds-wrap">
+                                                <!-- Hours Dropdown (Half Width) -->
+                                                <div class="slds-col slds-size_1-of-2">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">Select Hours</span>
+                                                        <lightning-combobox
+                                                        variant="label-hidden" 
+                                                        value={selectedHours}
+                                                        options={generateHoursOptions}
+                                                        onchange={handleHoursChange}>
+                                                    </lightning-combobox>
+                                                </div>
+                                                    
+                                                </div>
+                                    
+                                                <!-- Minutes Dropdown (Half Width) -->
+                                                <div class="slds-col slds-size_1-of-2">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">Select Minutes</span>
+                                                        <lightning-combobox
+                                                        variant="label-hidden" 
+                                                        label="Select Minutes"
+                                                        value={selectedMinutes}
+                                                        options={generateMinutesOptions}
+                                                        onchange={handleMinutesChange}>
+                                                    </lightning-combobox>
+                                                    </div>
+                                                   
+                                                </div>
+                                            </div>
+                                    
+                                            <!-- Display Converted Hours -->
+                                            <p class="slds-m-top_medium">
+                                                <strong>Night Shift Hours(hh:mm): </strong> {SleepoverShiftFormattedHours} </br> 
+                                               <!--  <strong>Final Shift Hours: </strong> {FinalShiftDuartion} -->
+                                            </p>
+                                            <div  style="margin-top: 10px;" >
+                                                <lightning-textarea name="nightShiftHourComents"  variant="label-hidden"  placeholder="Comments"  validity={nightShiftHourComments} onchange={handleReasons}  ></lightning-textarea>
+                                            </div>
+                                            
+                                        </div>
+                                    </template>
+                                    <div  class="button-container1">
+                                        <template if:true={LoghoursButtontemplate}> 
+                                            <lightning-button label="Yes,Log Work Hours" variant="brand" onclick={handleSleepoverLogHours} class="slds-m-around_small" style="margin-left:2rem;"></lightning-button>
+                                            <lightning-button variant="brand" label="No,Sign Out" onclick={handleeditClose}
+                                            class="slds-m-around_small"></lightning-button>
+                                        </template>
+                                        <template if:true={sleepOverFinalLogOut}> 
+                                            <lightning-button label="Sign Out" variant="brand" onclick={handleeditClose} class="slds-m-around_small" style="margin-left:2rem;"></lightning-button>
+                                            <lightning-button variant="brand" label="Cancel" onclick={handleShiftNotesTemplateClose}
+                                            class="slds-m-around_small"></lightning-button>
+                                        </template>
+                                       
+                                    </div>
+                                </div>
+                                <template if:true={addShiftNotes}>
+                                        <div style="justify-content: flex-end;margin-top: 18PX">
+                                            <div style="text-align:center">
+                                                <h1 >Are you sure you want to sign Out?</h1>
+                                            </div>
+                                                    
+                                                <div class="button-container1">
+                                                    <lightning-button label="Cancel" variant="outline" onclick={handleShiftNotesTemplateClose} class="slds-m-around_small"></lightning-button>
+                                                    <lightning-button label="Yes, Sign Out" variant="brand" onclick={handleeditClose}  class="slds-m-around_small"></lightning-button>
+                                                    
+                                                </div>
+                                            </div>
+                                </template>
+                                                          
+                                
+                            </div>
+                            </div>
+                        </section>
+                        <div class="slds-backdrop slds-backdrop_open"></div>
+                    </template>
+
+                 
+                
+                      
+        </div>
+                     <template if:false={noRecordsFlag}>
+                    <div class="container-box">
+                        <div class="toggle-bar">
+                            <span>Reimbursement</span> 
+                        </div>    
+                    <div class="slds-grid slds-gutters" style="padding:1%;">
+                        <div class="slds-col" style=" margin-left:10px;width:100px;height:180px;padding:50px;background: var(--medium-Light-Grey, #DFDCE3);">
+                            <span > <lightning-input type="file" label="Upload Attachment"  variant="brand" disabled={attachDisable}
+                                onchange={onFileUpload} ></lightning-input>
+                            </span>
+                        </div>
+
+                        <div class="slds-col">
+                            <span>
+                                <!-- <lightning-input type="number"  step=".01" value={others} label="Mileage in Km's" name="others" onchange={handleChange}></lightning-input> -->
+                                <lightning-combobox name="vehicle" label="Type of Vehicle" value={vehicleValue} placeholder="Select Type of Vehicle" options={vehicleOptions} onchange={handleChange}></lightning-combobox>
+                                <lightning-input type="number"  step=".01" value={amount} label="Amount" name="Amount" onchange={handleChange}  max-row-selection="1"></lightning-input>
+                            </span>
+                        </div>
+                        <div class="slds-col">
+                            <span >
+                                <lightning-input type="number"  step=".01" value={others} label="Mileage in Km's" name="others" onchange={handleChange}></lightning-input>
+                                <lightning-textarea name="comment" label="Comments:" onchange={handleChange} value={comments} required="true"></lightning-textarea> 
+                            </span>    
+                            <span style="float:right;margin-top:37px;"> <lightning-button variant="brand" label="Send for Approval" title="Send for Approval" onclick={onSubmitForApproval} disabled={attachDisable} class="slds-m-left_large">
+                            </lightning-button>
+                        
+                            </span>
+                        </div>
+                    </div>      
+                        <br/><br/>
+                <div class="slds-text-body_small">{fileName}
+                            <template if:true={showSpinner}>
+                                <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                                    </lightning-spinner>
+                            </template>
+                        </div>               
+                    </div>
+                    </template>
+        </div>
+        <template if:true={signInRequesttemplate}>
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+            class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+            <div class="slds-modal__container modal-container" style="max-width:25%;" >
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                    <!-- <lightning-button-icon icon-name="utility:close" alternative-text="Close" variant="bare" size="medium"
+                        onclick={handleShiftNotesTemplateClose} class="custom-close-icon" 
+                        style="position: absolute; top: 10px; right: 15px; --slds-c-icon-color-foreground: white;">
+                    </lightning-button-icon> -->
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content" >
+                    <div class="slds-m-around_small" style="text-align:center">
+                                <div >
+                                    <p style="text-align: center;">Are you sure you want to request sign in?</p>
+                                </div> 
+                            <div class="slds-m-top_medium">
+                                 <lightning-button label="No" variant="brand" onclick={handleShiftNotesTemplateClose} class="slds-m-around_small"></lightning-button>               
+                                <lightning-button label="Yes" variant="brand" onclick={HandleFinalRequestSignIn} class="slds-m-around_small"></lightning-button>
+                                
+                            </div>       
+                        </div>
+                </div>
+
+            </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        <template if:true={signOutRequesttemplate}>
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+            class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+            <div class="slds-modal__container modal-container" style="max-width:25%;" >
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                    <!-- <lightning-button-icon icon-name="utility:close" alternative-text="Close" variant="bare" size="medium"
+                        onclick={handleShiftNotesTemplateClose} class="custom-close-icon" 
+                        style="position: absolute; top: 10px; right: 15px; --slds-c-icon-color-foreground: white;">
+                    </lightning-button-icon> -->
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content" >
+                    <div class="slds-m-around_small" style="text-align:center">
+                                <div >
+                                    <p style="text-align: center;">Are you sure you want to request sign out?</p>
+                                </div> 
+                            <div class="slds-m-top_medium">
+                                 <lightning-button label="No" variant="brand" onclick={handleShiftNotesTemplateClose} class="slds-m-around_small"></lightning-button>               
+                                <lightning-button label="Yes" variant="brand" onclick={HandleFinalRequestSignOut} class="slds-m-around_small"></lightning-button>
+                                
+                            </div>       
+                        </div>
+                </div>
+
+            </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        <template if:true={isShowActivity}>
+                        <div class="blur-overlay">
+                        </div>
+                        <div class="right-align1" style="width:40%;">
+                          <!-- <div style="display:flex;justify-content: flex-end;padding-right:1%;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div> -->
+                            <div class="container-box">
+                                    <div  class="toggle-bar"  style="cursor: pointer;">
+                                    <span>Activity</span>
+                                    </div>
+                                        <template if:true={activitydata}>
+                                            <template for:each={activitydata} for:item="activity">
+                                                <div key={activity.Id} class="activity-card" >
+                                                    <div class="left-strip">
+                                                    <div class="content">
+                                                        <div class="title">{activity.Notes__c}</div>
+                                                    </div>
+                                                        <!-- <div class="time">{activity.Time}</div> -->
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </template>
+
+                                    <div class="slds-grid" >
+                                        <div class="slds-grid slds-size_11-of-12" >
+                                        <lightning-textarea  variant="label-hidden" value={shiftActivity} onchange={handleActivityChange}  disabled={disableActivityandChecklist} 
+                                        onfocus={handleFocus} placeholder="Enter your text here or start speaking..."  style="padding: 20px 20px 20px 20px;width:100%"></lightning-textarea></div>
+                                        <div class="slds-grid slds-grid_vertical  slds-size_1-of-12  slds-p-top-large">
+                                            <div class="slds-p-top_medium">
+                                                <lightning-icon icon-name={iconName} alternative-text={altText} onclick={toggleListening}
+                                                    if:true={showMuteIcon} class="slds-button slds-button_icon mute-icon"
+                                                    size="small">
+                                                </lightning-icon>
+                                            </div>
+                                            <div class="slds-m-top_small">
+                                                <lightning-icon icon-name="utility:clear" alternative-text="Clear Text" onclick={clearText}
+                                                    if:true={showClearIcon} class="slds-button slds-button_icon clear-icon"
+                                                    size="small">
+                                                </lightning-icon>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-align_absolute-center slds-m-around_small">
+                                <lightning-button label="Cancel" variant="brand-outline" onclick={handleeditCloseCheckList}
+                                class="slds-m-around_small"></lightning-button>
+                                <lightning-button label="Add" variant="brand" 
+                                class="slds-m-around_small" onclick={handleAddActivity} disabled={disableActivityandChecklist}></lightning-button>
+                                
+                            </div>
+                            </div>
+                            
+
+                            </div>
+                     </div>        
+               </template>
+           <template if:true={isShowChecklsit}>
+                       
+                            <div class="blur-overlay"></div>
+                                  <div class="right-align1" style="width:40%;">
+                                <!-- <div style="display:flex;justify-content: flex-end;padding-right:1%;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div> -->
+                 
+                            <div class="container-box">
+                                <div  class="toggle-bar"  style="cursor: pointer;">
+                                  <span>Checklist</span>
+                                </div>
+                              
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout slds-table_resizable-cols">
+                                        <thead>
+                                            <tr>
+                                                
+                                                <th>Description</th>
+                                                <th>Mandatory</th>
+                                                <th>Completed</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={checklistData} for:item="item">
+                                                <tr key={item.id} class="tr1">
+                                                    <td class="description">{item.description}</td>
+                                                    <td>
+                                                        <template if:true={item.isMandatory}>
+                                                            <lightning-badge label="Yes"></lightning-badge>
+                                                        </template>
+                                                        <template if:false={item.isMandatory}>
+                                                            <lightning-badge label="No"></lightning-badge>
+                                                            
+                                                        </template>
+                                                    </td>
+                                                    <td>
+                                                        <lightning-input 
+                                                            type="checkbox" 
+                                                            data-id={item.id} 
+                                                            checked={item.isCompleted}
+                                                            onchange={handleCheckboxChange}
+                                                            disabled={disableActivityandChecklist}
+                                                            >
+                                                        </lightning-input>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                        
+                                </div>
+                                    <div class="slds-align_absolute-center slds-m-around_small">
+                                        <lightning-button label="Cancel" variant="brand-outline" onclick={handleeditCloseCheckList}
+                                        class="slds-m-around_small"></lightning-button>
+                                        <lightning-button  label="Update" variant="brand" 
+                                        class="slds-m-around_small" onclick={handleCheckListUpdate} disabled={disableActivityandChecklist}></lightning-button>
+                                      
+                                    </div>
+                                  
+                               
+                            </div>
+                    </div>        
+                </template>
+</template>
