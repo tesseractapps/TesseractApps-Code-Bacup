@@ -1,0 +1,546 @@
+<template>
+    <div class="main-container">
+        <!-- Header Navigation -->
+        <!-- <div class="header-nav"> -->
+            <!-- <div class="tab-container">
+                <button class={approvalsTabClass} onclick={handleTabChange} data-tab="approvals">
+                    Approvals
+                </button>
+                <button class={submissionsTabClass} onclick={handleTabChange} data-tab="submissions">
+                    Submissions
+                </button>
+            </div> -->
+            <template if:true={isHomeApprovals}>
+                <div class="menu-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+
+                    <!-- Tabs -->
+                    <div style="display: flex;">
+                        <div class={approvalsTabClass} onclick={handleTabChange} data-tab="approvals">
+                            Approvals
+                        </div>
+                        <div class={submissionsTabClass} onclick={handleTabChange} data-tab="submissions">
+                            Submissions
+                        </div>
+                    </div>
+
+                    <!-- Date Navigation -->
+                    <div class="date-navigation" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <lightning-button-icon 
+                            icon-name="utility:chevronleft" 
+                            onclick={navigateToPrevious}
+                            class="nav-button">
+                        </lightning-button-icon>
+
+                        <lightning-button 
+                            label="Today" 
+                            onclick={navigateToToday}
+                            class="today-button">
+                        </lightning-button>
+
+                        <lightning-button-icon 
+                            icon-name="utility:chevronright" 
+                            onclick={navigateToNext}
+                            class="nav-button">
+                        </lightning-button-icon>
+
+                        <div class="date-picker">
+                            <lightning-input 
+                                type="date" 
+                                value={selectedDate}
+                                variant="label-hidden"
+                                label="" 
+                                onchange={handleDateChange}>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </template>
+
+        <!-- Approvals Tab Content -->
+         <template if:true={showApprovals1}>
+            <template if:true={showApprovals}>
+                <div class="content-section">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+                    </template>
+                    
+                    <template if:true={hasReimbursements}>
+                        <div class="data-table-container custom-scroll table-size">
+                            <table class="reimbursement-table">
+                                <thead>
+                                    <tr>
+                                        <th>Res No</th>
+                                        <th>Profile</th>
+                                        <th>Staff Name</th>
+                                        <th>Shift Date</th>
+                                        <th>Mileage in KM's</th>
+                                        <th>Type of Vehicle</th>
+                                        <th>Cost per KM</th>
+                                        <th>Mileage Amount</th>
+                                        <th>Amount</th>
+                                        <th>Total Amount</th>
+                                        <th>Status</th>
+                                        <th>Approved Date</th>
+                                        <th>View</th>
+                                        <template if:true={isAdmin}>
+                                            <th>Action</th>
+                                        </template>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={reimbursementList} for:item="reimbursement">
+                                        <tr key={reimbursement.Id} class="table-row">
+                                            <td class="res-number">{reimbursement.Name}</td>
+                                            <td class="profile-cell">
+                                                <div class="profile-image">
+                                                    <template if:true={reimbursement.profileImage}>
+                                                        <img src={reimbursement.profileImage} alt="Profile" />
+                                                    </template>
+                                                    <template if:false={reimbursement.profileImage}>
+                                                        <lightning-icon
+                                                            icon-name="action:user"
+                                                            variant="error"
+                                                            size="small"
+                                                            class="avatar-small fallback-icon"
+                                                            style="background: #02275b; justify-content: center; display: flex;">
+                                                        </lightning-icon>
+                                                    </template>
+                                                </div>
+                                            </td>
+                                            <td class="staff-name">{reimbursement.staffName}</td>
+                                            <td>{reimbursement.shiftDate}</td>
+                                            <td>{reimbursement.mileage}</td>
+                                            <td>
+                                                <span class={reimbursement.vehicleTypeClass}>
+                                                    {reimbursement.vehicleType}
+                                                </span>
+                                            </td>
+                                            <td>{reimbursement.costPerKm}</td>
+                                            <td>{reimbursement.mileageAmount}</td>
+                                            <td>{reimbursement.amount}</td>
+                                            <td>{reimbursement.totalAmount}</td>
+                                            <td>
+                                                <span class={reimbursement.statusClass}>
+                                                    {reimbursement.status}
+                                                </span>
+                                            </td>
+                                            <td>{reimbursement.approvedDate}</td>
+                                            <td>
+                                                <template if:true={reimbursement.hasFile}>
+                                                    <a href="javascript:void(0)" data-file-url={reimbursement.Amazon_file_URL__c} data-record-id={reimbursement.Id}  
+                                                        onclick={handleView} name="view_details"  title="View"
+                                                            style="text-decoration: none;">
+                                                        <i class="material-icons view-icon" data-record-id={reimbursement.Id}>visibility</i>
+                                                    </a>
+                                                </template>
+                                            </td>
+                                            <template if:true={isAdmin}>
+                                                <td>
+                                                    <lightning-button
+                                                        label="Action"
+                                                        onclick={handleApproveAction}
+                                                        data-record-id={reimbursement.Id}
+                                                        data-status={reimbursement.status}
+                                                        variant="brand"
+                                                        class="action-button">
+                                                    </lightning-button>
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    
+                    <template if:false={hasReimbursements}>
+                        <div class="no-data">
+                            <p>No reimbursements found for the selected date.</p>
+                        </div>
+                    </template>
+                </div>
+            </template>
+         </template>
+
+        <!-- Submissions Tab Content -->
+        <template if:true={showSubmissions}>
+            <div class="slds-card" style="margin:1.5rem">
+                <!-- Tab Navigation -->
+                <div class="slds-tabs_default">
+                    <ul class="slds-tabs_default__nav" role="tablist">
+                        <li class={rejectedTabClass} role="presentation">
+                            <a class="slds-tabs_default__link"
+                            href="javascript:void(0);"
+                            role="tab"
+                            aria-selected={isRejectedActive}
+                            onclick={handleRejectedClick}>
+                                Rejected Submissions
+                            </a>
+                        </li>
+                        <li class={previousTabClass} role="presentation">
+                            <a class="slds-tabs_default__link"
+                            href="javascript:void(0);"
+                            role="tab"
+                            aria-selected={isPreviousActive}
+                            onclick={handlePreviousClick}>
+                                Previous Submissions
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content (Shared Table) -->
+                    <template if:true={rejectedSubmission}>
+                        <div class="slds-tabs_default__content slds-show" role="tabpanel">
+                            <!-- Data Table -->
+                            <div class="slds-card__body slds-card__body_inner">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Select">Select</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Staff Name">Staff Name</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Shift Date">Shift Date</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Login Time">Login Time</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Logout Time">Logout Time</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Mileage Others">Mileage Others</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Amount">Amount</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Comments">Comments</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate" title="Approver Comments">Approver Comments</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={submissionList} for:item="submission">
+                                            <tr key={submission.id} class="slds-hint-parent">
+                                                <td data-label="Select">
+                                                    <lightning-input type="radio"
+                                                                    name="submissionSelect"
+                                                                    value={submission.ShiftwithStaff__r.Id}
+                                                                    onchange={handleRowSelection}>
+                                                    </lightning-input>
+                                                </td>
+                                                <td data-label="Staff Name">
+                                                    <div class="slds-truncate" title={submission.ShiftwithStaff__r.Staff__r.NameToDisplay__c}>{submission.ShiftwithStaff__r.Staff__r.NameToDisplay__c}</div>
+                                                </td>
+                                                <td data-label="Shift Date">
+                                                    <div class="slds-truncate" title={submission.formattedDate}>{submission.formattedDate}</div>
+                                                </td>
+                                                <td data-label="Login Time">
+                                                    <div class="slds-truncate" title={submission.Shift_login_time_Formula__c}>{submission.Shift_login_time_Formula__c}</div>
+                                                </td>
+                                                <td data-label="Logout Time">
+                                                    <div class="slds-truncate" title={submission.Shift_log_out_time_formula__c}>{submission.Shift_log_out_time_formula__c}</div>
+                                                </td>
+                                                <td data-label="Mileage Others">
+                                                    <div class="slds-truncate" title={submission.Mileage_Others__c}>{submission.Mileage_Others__c}</div>
+                                                </td>
+                                                <td data-label="Amount">
+                                                    <div class="slds-truncate" title={submission.Amount__c}>{submission.Amount__c}</div>
+                                                </td>
+                                                <td data-label="Comments">
+                                                    <div class="slds-truncate" title={submission.Comments__c}>{submission.Comments__c}</div>
+                                                </td>
+                                                <td data-label="Approver Comments">
+                                                    <div class="slds-truncate" title={submission.Approver_Comments__c}>{submission.Approver_Comments__c}</div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={PreviousSubmission}>
+                        <div class="rosterlayout custom-datatable" style="min-height: auto;">    
+                            <table class="slds-table slds-table_cell-buffer">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th class="description">Location</th>
+                                        <th>Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Role</th>
+                                        <th>Facility Name</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={signinList1} for:item="list">
+                                        <tr key={list.Id} class="tr1">
+                                            <td>
+                                                <lightning-input type="radio" name="rowSelection" data-id={list.Id}  data-logout={list.Log_Out_Date_Time__c}  onchange={HandleSignInrowSelection}></lightning-input>
+                                            </td>
+                                            <td class="description">{list.Shift_Locations__c}</td>
+                                            <td>{list.formattedDate}</td>
+                                            <td >{list.Start_time_Formula__c}</td>
+                    
+                                            <td>{list.End_time_formula__c}</td>
+                                            <td>{list.Role_formula__c}</td>
+                                            <td>{list.Facility_Names__c}</td>
+                                            
+                                            
+                                                <!-- <td>
+                                                
+                                                    <lightning-icon data-id={docdata.Id} data-staff={docdata.Staff__c} name="edit" icon-name="action:edit" alternative-text="Edit" onclick={handleRowActions} size="xx-small" style="cursor:pointer;color:white;background:#0099DE; margin-right:2%;"></lightning-icon>
+                                                    <lightning-icon data-id={docdata.Id} data-staff={docdata.Staff__c} name="delete" icon-name="action:delete" alternative-text="Delete" onclick={handleRowActions} size="xx-small" style="cursor:pointer;color:white;margin-right:2%;"></lightning-icon>
+                                                    <lightning-icon data-id={docdata.Id} data-url={docdata.View_File__c} name="view_details" icon-name="action:preview" alternative-text="Edit" title="Edit"
+                                                    onclick={handleRowActions}  size="xx-small" variant="inverse" style="cursor:pointer;color:white;background:#0099DE;">
+                                                </lightning-icon>
+                                                
+                                            </td>  -->
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>        
+                            <!-- <lightning-datatable key-field="Id" data={signinList} columns={SubmissionColums} 
+                                column-width-mode="auto" onrowselection={HandleSignInrowSelection}  
+                                max-row-selection="1" style="width: 100%;"></lightning-datatable> -->
+                        </div>
+                    </template>
+
+                    <template if:true={shiftselected}>
+                        <div class="rosterlayout">  
+                            <!--  <h2 class="slds-m-bottom_medium" style="font-size: medium"><b>Reimbursement</b></h2> -->
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-3">
+                                    <lightning-combobox
+                                        name="vehicle"
+                                        label="Type of Vehicle"
+                                        value={vehicleValue}
+                                        placeholder="Select Type of Vehicle"
+                                        options={vehicleOptions}
+                                        onchange={handleChange}>
+                                    </lightning-combobox>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <lightning-input
+                                        type="number"
+                                        step=".01"
+                                        value={others}
+                                        label="Mileage in Km's"
+                                        name="others"
+                                        onchange={handleChange}>
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <lightning-input
+                                        type="number"
+                                        step=".01"
+                                        value={amount}
+                                        label="Amount"
+                                        name="Amount"
+                                        onchange={handleChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>                            
+                            <div class="slds-grid slds-gutters">
+                                <!-- Comments Field -->
+                                <div class="slds-col slds-size_1-of-3">
+                                    <lightning-textarea
+                                        name="comment"
+                                        label="Comments:"
+                                        value={comments}
+                                        onchange={handleChange}
+                                        required="true">
+                                    </lightning-textarea>
+                                </div>
+                                <!-- File Upload -->
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="floating-label">
+                                        <input type="file" id="fileInput" onchange={onFileUpload} accept=".jpg, .jpeg, .png, .gif" name="file" style="display: none;">
+                                        <button type="button" onclick={triggerFileInput} class="file-upload-button">
+                                            &#8684; Upload File
+                                        </button>
+                                        <div class="slds-text-body_small">
+                                            {fileName}
+                                            <template if:true={showSpinner}>
+                                                <lightning-spinner alternative-text="Uploading the file..." size="medium"></lightning-spinner>
+                                            </template>
+                                        </div>
+                                        <template if:true={isattachError}>
+                                            <p style="color:red">File size cannot exceed 512MB</p>
+                                        </template>
+                                    </div>
+                                </div>
+                                <!-- Submit Button -->
+                                <div class="slds-col slds-size_1-of-3">
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Send for Approval"
+                                        title="Send For Approval"
+                                        onclick={onSubmitForApproval}
+                                        disabled={attachDisable}
+                                        class="slds-m-left_large"
+                                        style="float:right; margin-top: 50px;">
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Modal for File Preview -->
+        <template if:true={isModalOpen}>
+            <div class="slds-p-around_medium">
+            <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                        onclick={closeModal} style="float:right;margin-bottom:5px;"></lightning-button>
+            
+            <iframe src={currentUrl} width="100%" height="750vh" ></iframe>
+            </div>
+            
+        </template>
+
+        <template if:true={showSpinner}>
+            <lightning-spinner alternative-text="Processing..." size="large"></lightning-spinner>
+        </template>
+    </div>
+    <!-- Modal for Approval Process -->
+        <template if:true={showApprovalModal}>
+            <div class="blur-overlay"></div>
+            <div class="right-align" style="width:50%;">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 3% 0 0 3%;">Approval Process</h3>
+                    <lightning-button class="slds-m-left_small" label="Back" onclick={handleClose} variant="brand" style="padding-right: 3.5%;padding-top:2%;"></lightning-button>
+                </div>
+                <div class="seperator">
+                    <div class=" slds-p-around_medium">
+                        <lightning-record-edit-form object-api-name="Reimbursement__c" record-id={reimbursementId} onsuccess={handleSuccess} onsubmit={handleSubmit}>
+                            <lightning-messages></lightning-messages>
+
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <!-- <div class="slds-m-right_medium slds-m-left_medium">
+                                        <lightning-output-field field-name="ShiftDate__c"></lightning-output-field>
+                                    </div> -->
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Shift Date</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="ShiftDate__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Submitted Date</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Submitted_Date__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Login Time</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Shift_login_time_Formula__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Logout Time</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Shift_log_out_time_formula__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Cost per Km</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Cost_per_KM__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Mileage Amount</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Mileage_Amount__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Amount</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Amount__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Total  Amount</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Total_Amount__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Comments</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Comments__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Approval Status</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-input-field field-name="Approval_Status__c" variant="label-hidden" disabled={isButtonDisabled} onchange={handleApprovalStatus}></lightning-input-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Approver Comments</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-input-field field-name="Approver_Comments__c" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                            </div>
+                            <div class="slds-align_absolute-center slds-m-around_small">
+                                <lightning-button label="Cancel" variant="brand-outline" onclick={handleClose} class="slds-m-around_small"></lightning-button>
+                                <lightning-button label="Submit" variant="brand" type="submit" class="slds-m-around_small"></lightning-button>
+                                
+                            </div>
+                        </lightning-record-edit-form>
+                    </div>
+                </div>
+            </div>
+        </template>
+</template>
