@@ -1,0 +1,868 @@
+<template>
+
+    <div class="main-container">
+        <template if:true={homeflag}>
+            
+            <div class="slds-grid slds-wrap slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium"
+                style="margin-left: 1%; margin-right: 1%;">
+
+                <!-- Left Section: Title and Combobox -->
+                <div class="slds-col slds-size_1-of-2 slds-grid slds-grid_vertical-align-center">
+                    <p style="font-weight: bold; font-size: 120%; margin: 0;font-family: 'Roboto', sans-serif;">Assessment Year</p>
+                    
+                    <lightning-combobox
+                        variant="label-hidden"
+                        class="slds-m-left_medium"
+                        name="Assessment year"
+                        placeholder="Select Year"
+                        value={selectedYear}
+                        options={yearOptions}
+                        onchange={handleYearChange}>
+                    </lightning-combobox>
+                
+                </div>
+            
+                <!-- Right Section: Filter, Search, and Button -->
+                <div class="slds-col slds-size_1-of-2 slds-grid slds-grid_align-end slds-grid_vertical-align-center" style="padding-top: 1%;">
+                    <span class="filter-text slds-m-right_small" style="font-family: 'Roboto', sans-serif;">Filter By</span>
+                    <lightning-icon 
+                        icon-name="utility:filterList" 
+                        size="x-small" 
+                        alternative-text="Filter" 
+                        class="filter-icon slds-m-right_small" 
+                        onclick={togglePopover}>
+                    </lightning-icon>
+
+                    
+            <div class="floating-label" style="padding-right: 1%;">
+                        <span class="label-text-drop">Search</span>
+                    <lightning-input
+                        variant="label-hidden"
+                        type="search"
+                        value={searchStaff}
+                        onchange={handleSearchChange}
+                        oninput={handleSearchChange}
+                        onkeyup={handleKeyup}>
+                    </lightning-input>
+            </div>
+                    
+
+                
+            
+                    <!-- <lightning-button
+                        label="Create New Goal"
+                        style="font-family: 'Roboto', sans-serif;"
+                        variant="brand"
+                        onclick={handleNewGoal}>
+                    </lightning-button> -->
+                    <button class="custom-create-btn" onclick={handleNewGoal} title="Create New Goal">
+                        Create New Goal
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar" if:true={isPopoverVisible}>
+                <div class="close-btn" onclick={closePopover}>&times;</div>
+                <div class="sidebar-content">
+
+                    <h5 class="month-header">Months</h5> 
+                    <div class="box-facility-role" style="margin-bottom:10px;">
+                        <template if:true={monthOptions}>
+                            <lightning-checkbox-group label="" name="months" options={monthOptions} value={monthValue}
+                                onchange={handleCheckBoxChange}>
+                            </lightning-checkbox-group>
+                        </template>
+                    </div>
+                    
+                    <!-- Role Type -->
+                    <h5 class="role-header">Select Role Type</h5> 
+                    <div class="box-facility-role">
+                        <template if:true={OrgNisationRoles}>
+                            <lightning-checkbox-group label="" name="progress" options={OrgNisationRoles} value={chosenRole}
+                                onchange={handleCheckBoxChange}>
+                            </lightning-checkbox-group> 
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <template if:true={orgadmin}>
+                <!-- <div class="container-table-new"> -->
+                  <!-- <template if:true={performanceTableFlag}> -->
+                    <div class="listview custom-scroll">
+                    <table class="slds-table slds-table_cell-buffer table1">
+                        <thead>
+                            <tr>
+                                <th class="slds-text-align_left">Staff Name</th>
+                                <th class="slds-text-align_left">Role</th>
+                                <th class="slds-text-align_left">Reviewer</th>
+                                <th class="slds-text-align_left">Review Period From</th>
+                                <th class="slds-text-align_left">Review Period To</th>
+                                <th class="slds-text-align_left">Status</th>
+                                <th class="slds-text-align_left">Outcome</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredPerformanceData} for:item="performance">
+                                <tr key={performance.Id} class="tr">
+                                    <td>
+                                        <a href="javascript:void(0);" onclick={handleStaffView} data-id={performance.Id} style="color: blue;">
+                                            {performance.fullName}
+                                        </a>
+                                    </td>
+
+                                    <td class="role">{performance.staffRole}</td>
+                                    <td>{performance.reviewerName}</td>
+                                    <td>{performance.formattedReviewFrom}</td>
+                                    <td>{performance.formattedReviewTo}</td>
+                                    <td>{performance.status}</td>
+                                    <td>{performance.outcome}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    </div>
+                <template if:true={paginationVisible}>
+                <!--Pagination Start-->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination" style="padding-top: 0.5em;width:95%;margin-left:2%">
+                        <!-- RECORDS PER PAGE -->
+                        <div class="slds-col">
+                            <div class="slds-list_inline ">
+                                <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+                                <label class="slds-text-color_weak" for="recordsPerPage"></label><!--slds-p-horizontal_x-small-->
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                        <template for:each={pageSizeOptions} for:item="option">
+                                            <option key={option} value={option}>{option}</option>
+                                        </template> 
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- PAGE NAVIGATION -->
+                        <div class="slds-align_absolute-center" style="height:5rem;">
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button><!--class="slds-p-horizontal_x-small" -->
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                            &nbsp;
+                            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                            &nbsp;
+                            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                        </div>
+                        <!-- TOTAL RECORDS -->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge"> Total Records: {totalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <!-- </div> -->
+            </template>
+
+        </template>
+           
+        <template if:true={goalNewForm}>
+          <div class="blur-overlay"></div>
+            <div class="right-align" style="width:80%;">
+                <div style="padding: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 0;">
+                        <p style="font-weight: bold; font-size: 140%; margin: 0; font-family: 'Roboto', sans-serif; text-align: center;">
+                            Goal Creation & Details
+                        </p>
+                        <!-- <lightning-button label="Back" variant="brand" onclick={handleClose}></lightning-button> -->
+                        
+                    </div>
+                    
+                    <lightning-record-edit-form object-api-name="Performance__c" record-id={recordId} onsubmit={SubmitAll} onsuccess={handleSuccessPerformance}  data-recrdform="performanceGoalForm"><lightning-messages> </lightning-messages> <!-- onsubmit={SubmitAll} -->
+                        <div class="right-content custom-scroll">
+                        <div class="container-box">
+                          <!-- <div  class="toggle-bar" onclick={handleSectionToggle} data-id="performanceDetails">
+                              <span>Create goal</span>
+                              <span style="cursor: default;">{sectionIcons.performanceDetails}</span>
+            
+                          </div> -->
+                          <div  class="toggle-bar" onclick={handleSectionToggle} data-id="performanceDetails" style="cursor: pointer;">
+                            <span>Create goal</span>
+                            <span >{sectionIcons.performanceDetails}</span>      
+                          </div>
+                          <div class="section-content" data-section="performanceDetails">
+                          <template if:true={sectionFlags.performanceDetails}>
+                            <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                <!-- Staff -->
+                                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                    <div class="floating-label-new">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Staff Name</span>
+                                        <lightning-combobox name="staff" variant="label-hidden" value={selectedStaffId} options={staffOptions} required="true" onchange={handleStaffChange} disabled={isStaffDisabled}></lightning-combobox>
+                                    </div>
+                                </div>
+                            
+                                <!-- Reviewer -->
+                                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                    <div class="floating-label-new">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Reviewer</span>
+                                        <lightning-combobox name="reviewer" variant="label-hidden" value={reviewerId} options={reviewerOptions} required="true" onchange={handleReviewerChange}></lightning-combobox>
+                                    </div>
+                                </div>
+                            
+                                <!-- Review Period From -->
+                                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                    <div class="floating-label-new">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Review Period From</span>
+                                        <lightning-input-field field-name="Review_Period_From__c" variant="label-hidden" value={reviewFromDate} required="true"  onchange={handleChangePerform}></lightning-input-field>   <!--min={todayDate}-->
+                                    </div>
+                                    <div if:true={dateErrorMessageFrom} style="color: red;">{dateErrorMessageFrom}</div>
+                                </div>
+                            
+                                <!-- Review Period To -->
+                                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                    <div class="floating-label-new">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Review Period To</span>
+                                        <lightning-input-field field-name="Review_Period_To__c" variant="label-hidden" value={reviewToDate} required="true" onchange={handleChangePerform}></lightning-input-field>
+                                    </div>
+                                    <div if:true={dateErrorMessageTo} style="color: red;">{dateErrorMessageTo}</div>
+                                </div>
+                            
+                                <!-- Milestone Setting Meeting -->
+                                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                    <div class="floating-label-new">
+                                        <span class="label-text-drop">Milestone Setting Meeting</span>
+                                        <lightning-input-field field-name="Goal_setting_meeting_conducted_with_Staf__c" variant="label-hidden" value={goalSettingMeeting}></lightning-input-field>
+                                    </div>
+                                </div>
+                            
+                                <!-- Mid Year Review Required -->
+                                <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                    <div class="slds-grid slds-wrap">
+                                        <div class="slds-size_1-of-1">
+                                            <label style="display: flex; gap: 5%; padding-top: 2.5%;">
+                                                <lightning-input-field field-name="Mid_Year_Reveiw_Required__c" value={isMidYearReviewRequired} variant="label-hidden" onchange={handleMidYearReviewChange}></lightning-input-field>
+                                                <span>Mid Year Review Required</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                                <!-- Mid Year Review Date -->
+                                <template if:true={isMidYearReviewRequired}>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Mid Year Review Date</span>
+                                            <lightning-input-field field-name="Mid_Year_Reveiw_Date__c" variant="label-hidden" value={midYearReviewDate}></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            
+                            <div class="slds-small-size_1-of-1 slds-medium-size_1-of-2  slds-p-around_small">
+                                <a href="javascript:void(0)" onclick={toggleDetails}>{showHideLink}</a>
+                            </div>
+                            <template if:true={isDetailsVisible}>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Staff Email</span>
+                                            <lightning-input-field field-name="Staff_Email__c" variant="label-hidden" value={staffEmail} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Facility</span>
+                                            <lightning-input-field field-name="Facility__c" variant="label-hidden" value={facility} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Role</span>
+                                            <lightning-input-field field-name="Role__c" variant="label-hidden" value={staffRole} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Date of Joining</span>
+                                            <lightning-input-field field-name="Date_Of_Joining__c" variant="label-hidden" value={dateOfJoining} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Level</span>
+                                            <lightning-input-field field-name="Level__c" variant="label-hidden" value={levelId} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <!-- <div class="slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Library Goal</span>
+                                            <lightning-input-field field-name="Library_Goal__c" variant="label-hidden" value={libraryGoalId} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div> -->
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Reviewer Email</span>
+                                            <lightning-input-field field-name="Reviewer_Email__c" variant="label-hidden" value={reviewerEmail} disabled="True"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="container-box" style="margin-top: 1%;">
+
+                                <!-- <h3 style="font-weight:bold;  padding: 10px;"> Create Goal</h3> -->
+                                  
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Library Goal</span>
+                                            <lightning-combobox name="libraryGoal" variant="label-hidden" value={libraryGoalId} options={libraryGoalOptions} required="true"  onchange={handleLibraryGoal}></lightning-combobox>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Actual Weightage of the Goal</span>
+                                            <lightning-input type="text" name="goalActualWeightage" variant="label-hidden" required="true" value={goalActualWeightage} onchange={handleChange} disabled="True"></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Goal Name</span>
+                                            <lightning-input type="text" name="goalName" variant="label-hidden" value={goalName} required="true" onchange={handleChange}></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Priority</span>
+                                            <lightning-combobox name="priority" variant="label-hidden" value={priority}  options={priorityOptions} required="true" onchange={handleChange}></lightning-combobox>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Start Date</span>
+                                            <lightning-input type="date" name="startDate" value={startDate} onchange={handleChange} variant="label-hidden" required="true"  placeholder="Select a date"></lightning-input>    <!--min={todayDate}-->
+                                        </div> 
+                                        <div if:true={dateErrorMessageStart} style="color: red;">{dateErrorMessageStart}</div> 
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>End Date</span>
+                                            <lightning-input type="date" name="endDate" variant="label-hidden" value={endDate} required="true" onchange={handleChange}></lightning-input>
+                                        </div>
+                                        <div if:true={dateErrorMessageEnd} style="color: red;">{dateErrorMessageEnd}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Target Date</span>
+                                            <lightning-input type="date" name="targetDate" value={targetDate} onchange={handleChange} variant="label-hidden" required="true"></lightning-input>
+                                        </div>
+                                        <div if:true={dateErrorMessageTarget} style="color: red;">{dateErrorMessageTarget}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Related Link</span>
+                                            <lightning-input type="url" name="relatedLink" variant="label-hidden" value={relatedLink} onchange={handleChange}></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-textarea">
+                                            <span class="label-text-drop">Description</span>
+                                            <lightning-textarea name="description" variant="label-hidden" value={description} onchange={handleChange}></lightning-textarea>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-textarea">
+                                            <span class="label-text-drop">Success Criteria</span>
+                                            <lightning-textarea name="successCriteria" variant="label-hidden" value={successCriteria} onchange={handleChange}></lightning-textarea>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-textarea">
+                                            <span class="label-text-drop">Conversation Notes</span>
+                                            <lightning-textarea name="conversationNotes" variant="label-hidden" value={conversationNotes} onchange={handleChange}></lightning-textarea>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="slds-grid slds-wrap">
+                                            <div class="slds-size_1-of-1">
+                                                <label style="display: flex;gap:5%;padding-top:2.5%">
+                                                    <lightning-input  type="checkbox" variant="label-hidden"  name="isPrivate" checked={isPrivate}  onchange={handlePriorityChange}></lightning-input>
+                                                      <span>Private</span>
+                                                </label>
+                                               
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 
+        
+                                    <div class="slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small ">
+                                        <div class="date-input-container">
+                                            <label class="floating-label">
+                                                <span class="label-text">Conversation Notes</span>
+                                                <input type="longtextarea" class="styled-date-input" name="conversationNotes" value={conversationNotes}  onchange={handleChange}  />
+                                            </label>
+                                        </div>
+                                    </div> -->
+                                    
+                                        <!-- <div class="slds-float_right" style="display: flex; justify-content: flex-end; ">
+                                            <lightning-button label="Add Goal" variant="brand" onclick={handleAddGoal} style="width: 150px;"></lightning-button>
+                                        </div>
+                                     -->
+                                     <!-- <div class="slds-grid" style="justify-content: flex-end; margin-left: 92%;">
+                                        <lightning-button label="Add Goal" variant="brand" onclick={handleAddGoal} style="width: 150px;"></lightning-button>
+                                    </div>
+                                     -->
+                                     <!-- <div class="slds-grid slds-grid_align-end slds-large-size_1-of-1 slds-medium-size_1-of-1 slds-small-size_1-of-1">
+                                        <lightning-button label="Add Goal" variant="brand" onclick={handleAddGoal} style="width: 150px;"></lightning-button>
+                                    </div> -->
+                                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 10px;">
+                                        <p style=" margin: 0;  text-align: center;">
+                                           
+                                        </p>
+                                        <lightning-button label="Add Goal" variant="brand" onclick={handleAddGoal}></lightning-button>
+                                        
+                                    </div>
+                                </div>
+                            
+                            </div>
+                          </template>
+                          </div>
+                        </div>
+                   
+                        
+                    <!-- Dynamic Goal Fields -->
+                     
+                     
+                    <div class="container-box">
+
+                        <!-- <h3 style="font-weight:bold;  padding: 10px;"> Create Goal</h3> -->
+                           <div  class="toggle-bar" onclick={handleSectionToggle} data-id="manageGoalDetails">
+                             <span>Manage Goals</span>
+                             <span style="cursor: default;">{sectionIcons.manageGoalDetails}</span>
+                           </div>
+                           <div class="section-content" data-section="manageGoalDetails">
+                            <template if:true={sectionFlags.manageGoalDetails}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                               <!-- <div class="container-table "> -->
+                                <div class="container-table-new">
+                                    <div class="slds-grid slds-wrap" style="padding: 0 20px 20px 20px;">
+                                        <table class="slds-table slds-table_cell-buffer table2">
+                                            <thead>
+                                                <tr>
+                                                    <th>Goal Name</th>
+                                                    <th>Private</th>
+                                                    <th>Start Date</th>
+                                                    <th>End Date</th>
+                                                    <th>Target Date</th>
+                                                    <th>Priority</th>
+                                                    <th>Actual Weightage</th>
+                                                    <th>Action</th>
+                                                    
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={goals} for:item="goal">
+                                                    <tr key={goal.key} class="tr">
+                                                        <td>{goal.goalName}</td>
+                                                        <td>{goal.isPrivate}</td>
+                                                        <td>{goal.formatStartDate}</td>
+                                                        <td>{goal.formatEndDate}</td>
+                                                        <td>{goal.formatTargetDate}</td>
+                                                        <td>{goal.priority}</td>
+                                                        <td>{goal.goalActualWeightage}</td>
+                                                        <td>
+                                                            <lightning-icon  icon-name="action:delete" alternative-text="Delete Goal "  onclick={handleDeleteGoal} data-key={goal.key}  size="xx-small" class={deleteIconClass}></lightning-icon>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                
+                                </div>
+                                </div>
+                            </template>
+                           </div>
+                    </div>
+                    </div>
+                    <div class="slds-align_absolute-center ">
+                        <lightning-button label="Cancel" variant="Brand-Outline" onclick={handleClose} class="slds-m-around_small"></lightning-button>
+                        <!-- <lightning-button label="Save" variant="brand" onclick={handleSave} class="slds-m-around_small"></lightning-button>  -->
+                        <lightning-button variant="brand" type="submit" label="Submit"></lightning-button><!-- onclick={SubmitAll} -->
+                        
+                    </div>  
+                </lightning-record-edit-form>
+                </div>
+            </div>
+        </template>
+
+        <template if:true={staffDetailedView}>
+            <div class="blur-overlay"></div>
+           <div class="right-align" style="width:80%;">
+                <div style=" padding: 10px;" >
+
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-top: 1%; padding-bottom:1%; ;">
+                        <span style="font-weight: bold; font-size: 140%; margin: 0; ">
+                            Assessment Year - 2024 to 2025
+                        </span>
+                        <lightning-button label="Back" variant="brand" onclick={handleStaffClose}></lightning-button>
+                    </div>
+                    
+                    <div class="right-content custom-scroll">
+                    <div class="container-box">
+                        <lightning-record-view-form object-api-name="Performance__c" record-id={performanceId}>
+                            <div class="slds-grid slds-wrap slds-grid_align-left" style="padding: 20px 0px 20px 0px;">
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Staff__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Staff</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" style="pointer-events:none;">
+                                            <lightning-output-field field-name="Staff__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Role__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Role</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long role-new" >    <!-- title={roleTooltipText} -->
+                                            <lightning-output-field field-name="Role__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Reviewer__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Reviewer</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long  text-overflow" style="pointer-events:none;">
+                                            <lightning-output-field field-name="Reviewer__c" variant="label-hidden"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">        
+                                    <lightning-output-field field-name="Review_Period_From__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Review Period From</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Review_Period_From__c" variant="label-hidden" class="text-overflow"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Review_Period_To__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Review Period To</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Review_Period_To__c" variant="label-hidden" class="text-overflow"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                               
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Date_Of_Joining__c"></lightning-output-field>
+                                </div> -->
+                               
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long"> Date of Joining</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Date_Of_Joining__c" variant="label-hidden" class="text-overflow"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Goal_setting_meeting_conducted_with_Staf__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Milestone Setting Meeting</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Goal_setting_meeting_conducted_with_Staf__c" variant="label-hidden" class="text-overflow"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                 <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small">
+                                    <lightning-output-field field-name="Mid_Year_Reveiw_Required__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Mid Year Reveiw Required</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long">
+                                            <lightning-output-field field-name="Mid_Year_Reveiw_Required__c" variant="label-hidden" class="text-overflow"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                                <!-- <div class="slds-size_1-of-3 slds-p-around_xx-small"> 
+                                    <lightning-output-field field-name="Mid_Year_Reveiw_Date__c"></lightning-output-field>
+                                </div> -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                    <label class="labelClass" style="display: flex; align-items: left;">
+                                        <div class="label-text-long">Mid Year Reveiw Date</div>
+                                        <div class="label-separator">:</div>
+                                        <div  class="label-field-long">
+                                            <lightning-output-field field-name="Mid_Year_Reveiw_Date__c" variant="label-hidden" class="text-overflow"></lightning-output-field>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </lightning-record-view-form>
+                        <div class="slds-grid slds-var-m-left_x-large slds-var-m-right_x-large" style="font-weight:bold;margin-top:10px;">
+                    
+                            <div class={selectedClassPerformanceGoals} data-name="goals" title="Goals" alt="Goals" name="goals" src={goals} onclick={handlePerformanceGoal}
+                                style="cursor:pointer;text-align:center" > 
+                                Goals                             
+                            </div> 
+                            
+                            <div class={selectedClassPerformanceAwards} data-name="awards" title="Awards" alt="Awards" name="awards" src={awards} onclick={handlePerformanceAwards}
+                                style="cursor:pointer;text-align:center" > 
+                                Awards                             
+                            </div>                            
+                            <div class={selectedClassPerformanceOverall} data-name="overall" title="Overall Report" alt="overall" name="overall" src={overall} onclick={handlePerformanceOverall}
+                                style="cursor:pointer;text-align:center" > 
+                                Overall&nbsp;&&nbsp;Report                           
+                            </div> 
+                        </div>
+                    </div>
+                <div class="container-box">
+                    <template if:true={goalFlag}>
+                      
+                        <table class="slds-table slds-table_cell-buffer table2" style=" table-layout:fixed;" >
+                            <thead>
+                                <tr>
+                                    <th class="slds-text-align_left">Goals Selected</th>
+                                    <th class="slds-text-align_left">Description</th>
+                                    <th class="slds-text-align_left">Goal Weightage</th>
+                                    <th class="slds-text-align_left">Staff Comments</th>
+                                    <th class="slds-text-align_left">Staff Weightage</th>
+                                    <th class="slds-text-align_left">Reviewer Comments</th>
+                                    <th class="slds-text-align_left">Reviewer Weightage</th>
+                                    <th class="slds-text-align_left" style="width: 8%;">Action</th>
+                                    
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={goalList} for:item="goal">
+                                    <tr key={goal.Id} class="tr">
+                                        <td>
+                                            <!-- <a href="javascript:void(0);" onclick={handlegoalsView} data-id={goal.Id} style="color: blue;">
+                                                {goal.GoalName}
+                                            </a> -->
+                                            {goal.GoalName}
+                                        </td>
+                                        <td class="description" style="width: 6%;">{goal.Description}</td>
+                                        <td>{goal.actualWeightage}</td>
+                                        <!-- <td>{goal.staffComments}</td>
+                                            <td>{goal.staffAssignedWeightage}</td> -->
+                                        <td class="description" style="width: 6%;">
+                                            <template if:true={goal.isEditable}>
+                                                <lightning-input
+                                                    type="text"
+                                                    value={goal.Staff_Comments__c}
+                                                    onchange={handleStaffField}
+                                                    data-id={goal.Id}
+                                                    data-field="Staff_Comments__c"
+                                                    style="padding-bottom: 8%;"
+                                                ></lightning-input>
+                                            </template>
+                                            <template if:false={goal.isEditable}>
+                                                {goal.Staff_Comments__c}
+                                            </template>
+                                        </td>
+                    
+                                        <!-- Staff Assigned Weightage (editable based on condition) -->
+                                        <td>
+                                            <template if:true={goal.isEditable}>
+                                                <lightning-input
+                                                    type="number"
+                                                    value={goal.Staff_Assigned_Weightage__c}
+                                                    onchange={handleStaffField}
+                                                    data-id={goal.Id}
+                                                    data-field="Staff_Assigned_Weightage__c"
+                                                    style="padding-bottom: 8%;"
+                                                ></lightning-input>
+                                            </template>
+                                            <template if:false={goal.isEditable}>
+                                                {goal.Staff_Assigned_Weightage__c}
+                                            </template>
+                                        </td>
+                    
+                                        <td class="description" style="width: 6%;">
+                                            <template if:true={goal.isReviewerEditable}>
+                                                <lightning-input
+                                                    type="text"
+                                                    value={goal.Reviewer_Comments__c}
+                                                    onchange={handleReviewerField}
+                                                    data-id={goal.Id}
+                                                    data-field="Reviewer_Comments__c"
+                                                    style="padding-bottom: 8%;"
+                                                ></lightning-input>
+                                            </template>
+                                            <template if:false={goal.isReviewerEditable}>
+                                                {goal.Reviewer_Comments__c}
+                                            </template>
+                                        </td>
+                                        <td>
+                                            <template if:true={goal.isReviewerEditable}>
+                                                <lightning-input
+                                                    type="number"
+                                                    value={goal.Reviewer_Assigned_Weightage__c}
+                                                    onchange={handleReviewerField}
+                                                    data-id={goal.Id}
+                                                    data-field="Reviewer_Assigned_Weightage__c"
+                                                    style="padding-bottom: 8%;"
+                                                ></lightning-input>
+                                            </template>
+                                            <template if:false={goal.isReviewerEditable}>
+                                                {goal.Reviewer_Assigned_Weightage__c}
+                                            </template>
+                                        </td>
+                                        <!-- <template if:true={hideorShowEdit}> -->
+                                            <td style="display: flex;align-items:center;">
+                                               
+                                               <!--  <lightning-icon  icon-name="action:add_file" alternative-text="Save Goal"  onclick={handleSaveGoal} data-id={goal.Id} size="xx-small"  class={saveIconClass} style="cursor:pointer;color:white;background-color:#0099DE;"></lightning-icon> &nbsp; -->
+                                                <!-- <lightning-icon  icon-name="action:edit" alternative-text="Edit Goal "  onclick={handleEditGoal} data-id={goal.Id} size="xx-small" class={editIconClass} style="cursor:pointer;color:white;background-color:#0099DE;"></lightning-icon> -->
+                                                 <a href="javascript:void(0)"  data-id={goal.Id} onclick={handleSaveGoal} title="Save" style="text-decoration: none;">
+                                                <i class="material-icons edit-icon">save</i>
+                                                </a>
+                                                <a href="javascript:void(0)"  data-id={goal.Id} onclick={handleEditGoal} title="Edit" style="text-decoration: none;">
+                                               <i class="material-icons edit-icon">edit_document</i>
+                                               </a>
+                                                <!-- Edit Icon -->
+                                                <!-- <div class={editIconClass} data-id={goal.Id} onclick={handleEditGoal}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" class="icon">
+                                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm3 1.4H5v-1.4L15.06 5.34l1.4 1.4L6 18.65zM19.78 6.37l-2.15-2.15a.5.5 0 0 0-.7 0L15.65 5.5l3.75 3.75 1.28-1.28a.5.5 0 0 0 0-.7z"></path>
+                                                    </svg>
+                                                </div> -->
+
+                                                <!-- Save Icon -->
+                                                <!-- <div class={saveIconClass} data-id={goal.Id} onclick={handleSaveGoal}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" class="icon">
+                                                        <path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H7V5h10v14zM9 12h6v2H9zm0-4h6v2H9z"></path>
+                                                    </svg>
+                                                </div> -->
+
+
+                                            </td>
+                                        <!-- </template> -->
+
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        
+                        <template if:true={buttonVisible}>
+                             <div class="slds-float_right slds-m-around-x_small" style="position:relative; padding-top: 1%; padding-bottom: 1%;">    <!-- style="margin-left:95%" -->
+                                <lightning-button label="Finish" variant="brand" onclick={handleFinisConfirm}  disabled={isFinishDisabled} > </lightning-button>
+                            </div>
+                        </template>
+                        
+                       
+                    </template> 
+                    <template if:true={finishConfirmFlag}>
+                        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                            class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+                        
+                            <div class="slds-modal__container modal-container" style="max-width:25%;">
+                               <header class="slds-modal__header" style="background: #002A52;">
+                                    
+                                    <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                                </header> 
+                                <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+                                    <div class="slds-m-around_small" style="text-align:center">
+                                        <!-- <div><h1>Are you sure you want to proceed with this finish?<br>Note: Please ensure that if you click finish there is no edit option after finish.</h1></div> -->
+                                        <div><p style="text-align: center;">Are you sure you want to Finish? <br>Note: Clicking 'Finish' means no more edits can be made.</p></div>
+                                        <div class="button-container slds-m-top_medium">
+                                            <lightning-button label="No" variant="Brand-Outline" onclick={handleNoFinish}
+                                            class="slds-m-around_small"></lightning-button>
+                                            <lightning-button label="Yes" variant="brand"  onclick={handleYesFinish} class="slds-m-around_small" ></lightning-button>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <div class="slds-backdrop slds-backdrop_open"></div>
+                    </template>
+                    <template if:true={awardsFlag}>
+                        <table class="slds-table slds-table_cell-buffer table2">
+                            <thead>
+                                <tr>
+                                    <th class="slds-text-align_left">Award Name</th>
+                                    <th class="slds-text-align_left">Issued by</th>
+                                    <th class="slds-text-align_left">Year of Achievement</th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={Awards} for:item="Award">
+                                    <tr key={Award.Id} class="tr">
+                                        <td>
+                                            <!-- <a href="javascript:void(0);" onclick={handleAwardView} data-id={Award.Id} style="color: blue;">
+                                                {Award.awardName}
+                                            </a> -->
+                                            {Award.Awards__c}
+                                        </td>
+                                        <td>{Award.Issued_by__c}</td>
+                                        <td>{Award.yearOfAchievement}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+                 </div>
+</div>
+                </div>
+            </div>
+        </template> 
+   
+        <!-- <template if:true={isMyProfile}>
+            <table class="slds-table slds-table_cell-buffer table1">
+                <thead>
+                    <tr>
+                        <th class="slds-text-align_left">Staff Name</th>
+                        <th class="slds-text-align_left">Role</th>
+                        <th class="slds-text-align_left">Reviewer</th>
+                        <th class="slds-text-align_left">Review Period From</th>
+                        <th class="slds-text-align_left">Review Period To</th>
+                        <th class="slds-text-align_left">Status</th>
+                        <th class="slds-text-align_left">Outcome</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={myProfilePerformanceData} for:item="performance">
+                        <tr key={performance.Id} class="tr">
+                            <td>
+                                <a href="javascript:void(0);" onclick={handleStaffView} data-id={performance.Id} style="color: blue;">
+                                    {performance.fullName}
+                                </a>
+                            </td>
+
+                            <td class="role">{performance.staffRole}</td>
+                            <td>{performance.reviewerName}</td>
+                            <td>{performance.formattedReviewFrom}</td>
+                            <td>{performance.formattedReviewTo}</td>
+                            <td>{performance.status}</td>
+                            <td>{performance.outcome}</td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </template> -->
+    </div>
+</template>

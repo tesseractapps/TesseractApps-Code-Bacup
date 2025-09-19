@@ -1,0 +1,261 @@
+<template>
+    <div class="main-container">
+        <!-- Header with Tabs and Navigation -->
+        <div class="header-section">
+            <div class="tab-container">
+                <button class={myRosterTabClass} onclick={handleMyRosterView}>My Roster</button>
+                <button class={availableShiftsTabClass} onclick={handleAvailableShiftsView}>Available Shifts</button>
+            </div>
+            
+            <div class="navigation-container">
+                <lightning-button-icon 
+                    icon-name="utility:chevronleft" 
+                    onclick={navigateToPrevious}
+                    class="nav-button">
+                </lightning-button-icon>
+                
+                <lightning-button 
+                    label="Today" 
+                    onclick={navigateToToday}>
+                </lightning-button>
+                
+                <lightning-button-icon 
+                    icon-name="utility:chevronright" 
+                    onclick={navigateToNext}
+                    class="nav-button"
+                    disabled={isNextDisabled}>
+                </lightning-button-icon>
+                
+                <lightning-input 
+                    type="date" 
+                    value={datePickerString} 
+                    onchange={navigateToDay}
+                    variant="label-hidden"
+                    class="date-picker">
+                </lightning-input>
+            </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar-container">
+            <!-- Calendar Header -->
+            <div class="calendar-header">
+                <template for:each={weekDays} for:item="day">
+                    <div key={day.key} class={day.cssClass}>
+                        <div style="margin-left: 5%;" class="day-name">{day.name}</div>
+                        <div style="margin-left: 5%;" class="day-date">{day.date}</div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Calendar Body -->
+            <div class="calendar-body custom-scroll">
+                <template for:each={weekDays} for:item="day">
+                    <div key={day.key} class="day-column">
+                       
+                        <template if:true={myroster}>
+                            <template if:false={day.shifts.length}>
+                                <div class="no-shifts">No Shifts</div>
+                            </template>
+                            <template for:each={day.shifts} for:item="shift">
+                                <div key={shift.Id} class={shift.cssClass} style={shift.shiftStyle}>
+                                    <div class="shift-status">{shift.status}</div>
+                                    <template if:true={shift.time}>
+                                        <div class="shift-time">
+                                            <strong>Time:</strong> {shift.time}
+                                        </div>
+                                    </template>
+                                    <template if:true={shift.role}>
+                                        <div class="shift-role-container">
+                                            <div class="shift-role">
+                                                <strong>Role:</strong> {shift.role}
+                                            </div>
+                                            <i class="material-icons reject-button"
+                                                data-id={shift.Id}
+                                                data-status={shift.status}
+                                                data-shiftdate={shift.shiftdate}
+                                                onclick={handleConfirm}
+                                                title="Reject Shift">cancel</i>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- Available Shifts View -->
+                        <template if:true={availableShifts}>
+                            <template if:false={day.availableShifts.length}>
+                                <div class="no-shifts">No Shifts</div>
+                            </template>
+
+                            <template for:each={day.availableShifts} for:item="shift">
+                                <div key={shift.Id} class={shift.cssClass} style={shift.shiftStyle}>
+                                    <!-- Status or Type Label -->
+                                    <div class="shift-status">{shift.shiftType}</div>
+
+                                    <!-- Time -->
+                                    <template if:true={shift.StartEndTime}>
+                                        <div class="shift-time">
+                                            <strong>Time:</strong> {shift.StartEndTime}
+                                        </div>
+                                    </template>
+
+                                    <!-- Role -->
+                                    <template if:true={shift.role}>
+                                        <div class="shift-role-container">
+                                            <div class="shift-role">
+                                                <strong>Role:</strong> {shift.role}
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Facility -->
+                                    <template if:true={shift.Facility}>
+                                        <div class="shift-detail">
+                                            <strong>Facility:</strong> {shift.Facility}
+                                        </div>
+                                    </template>
+
+                                    <!-- Location -->
+                                    <template if:true={shift.Location}>
+                                        <div class="shift-detail">
+                                            <strong>Location:</strong> {shift.Location}
+                                        </div>
+                                    </template>
+
+                                    <div class="shift-action" style="margin-top: 0.5rem; display: flex; justify-content: flex-end;">
+                                        <template if:true={shift.isEOI}>
+                                            <lightning-input
+                                                type="toggle"
+                                                label="Show Interest"
+                                                checked={shift.isinterest}
+                                                data-id={shift.Id}
+                                                data-dur={shift.duration}
+                                                onchange={onChangehandleinterest}
+                                                class="custom-toggle"
+                                                message-toggle-active=""
+                                                message-toggle-inactive="">
+                                            </lightning-input>
+                                        </template>
+                                        <template if:false={shift.isEOI}>
+                                            <lightning-input
+                                                type="toggle"
+                                                label="Accept"
+                                                checked={shift.ischecked}
+                                                data-id={shift.Id}
+                                                data-dur={shift.duration}
+                                                onchange={onChangehandleallocation}
+                                                class="custom-toggle"
+                                                message-toggle-active=""
+                                                message-toggle-inactive="">
+                                            </lightning-input>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Footer with Dynamic Legend - My Roster -->
+        <template if:true={myroster}>
+            <div class="footer-section">
+                <div class="legend">
+                    <template for:each={legendItems} for:item="item">
+                        <div key={item.key} class="legend-item">
+                            <div class="legend-color" style={item.style}></div>
+                            <span>{item.label}</span>
+                        </div>
+                    </template>
+                </div>
+                <div class="total-hours">
+                    <strong>Total Hours: {totalHours}</strong>
+                </div>
+            </div>
+        </template>
+
+        <!-- Footer with Dynamic Legend - Available Shifts -->
+        <template if:true={availableShifts}>
+            <div class="footer-section">
+                <div class="legend">
+                    <template for:each={legendItems} for:item="item">
+                        <div key={item.key} class="legend-item">
+                            <div class="legend-color" style={item.style}></div>
+                            <span>{item.label}</span>
+                        </div>
+                    </template>
+                </div>
+                <div class="footer-note">
+                    <strong>Note: All accepted Shifts will add in My Roster</strong>
+                </div>
+            </div>
+        </template>
+
+        <!-- Loading Spinner -->
+        <template if:true={showSpinner}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </template>
+
+        <!-- Reject Confirmation Modal -->
+        <template if:true={RejectedFlag}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header modal-header">
+                        <h2 class="slds-text-heading_medium">Please Confirm</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>Are you sure you want to reject this shift?</p>
+                        <div class="modal-buttons">
+                            <lightning-button 
+                                label="No" 
+                                variant="neutral" 
+                                onclick={handleRejectedClose}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Yes" 
+                                variant="brand" 
+                                onclick={handleComments}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- Comments Modal -->
+        <template if:true={CommentsFlag}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header modal-header">
+                        <h2 class="slds-text-heading_medium">Add Comments</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>Please add reason to reject this shift</p>
+                        <lightning-textarea 
+                            value={comments} 
+                            onchange={handleCommentsChange}
+                            placeholder="Enter your reason...">
+                        </lightning-textarea>
+                        <div class="modal-buttons">
+                            <lightning-button 
+                                label="Cancel" 
+                                variant="neutral" 
+                                onclick={handleRejectedClose}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Submit" 
+                                variant="brand" 
+                                onclick={handleRejected}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>
