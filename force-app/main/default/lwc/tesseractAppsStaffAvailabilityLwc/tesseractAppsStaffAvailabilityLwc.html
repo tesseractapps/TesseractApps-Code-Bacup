@@ -1,0 +1,313 @@
+<template>
+
+    <div class="calendar-container">
+        <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <!-- Left-aligned title -->
+            <p style="font-weight: bold; font-size: 140%; margin: 0;">My Availability</p>
+        
+            <!-- Right-aligned buttons -->
+            <div>
+                <lightning-button-icon
+                    icon-name="utility:chevronleft"
+                    onclick={prevMonth}
+                    style="background: white; color: red; border-radius: 5px;"
+                    alternative-text="Previous Month">
+                </lightning-button-icon>
+        
+                <lightning-button
+                    style="margin: 0 5px;"
+                    label={monthAndYear}
+                    onclick={navigateToToday}>
+                </lightning-button>
+        
+                <lightning-button-icon
+                    icon-name="utility:chevronright"
+                    onclick={nextMonth}
+                    style="background: white; border-radius: 5px;"
+                    alternative-text="Next Month">
+                </lightning-button-icon>
+            </div>
+        </div>        
+        <div class="calendar-grid">
+            <template for:each={daysOfWeek} for:item="day">
+                <div class="day-name" key={day}>{day}</div>
+            </template>
+            <template for:each={calendarDays} for:item="day">
+                <!-- <div key={day.key} class={day.class} title={day.tooltip}>
+                    <div class={date}>{day.date}</div>
+                    <template if:true={day.services}>
+                        <div class="service-summary">
+                            
+                                {day.firstServiceName}
+            <template if:true={day.hasMore}>
+                <a class="service-link" data-date={day.dateStr} onclick={handleServiceClick}> &nbsp;+{day.moreCount} more </a>
+            </template>
+                           
+                        </div>
+                    </template>
+                </div> -->
+                <div key={day.key} class={day.class} title={day.tooltip}>
+                    <!-- Main content area -->
+                    <div class="main-content">
+                        <div class="left-info">
+                            <!-- <template if:true={day.holidayName}>
+                                <div class="holiday-name">{day.holidayName}</div>
+                            </template> -->
+                            <!-- <template if:true={day.holidayName}> -->
+                               <!--  <div class="holiday-name">Holiday</div> --> <!-- <div class="holiday-name">{day.holidayName}</div> -->
+                            <!-- </template>  -->
+                            <!-- <template if:true={day.availabilitySlots}>
+                                
+                                <div class="service-name description" style="font-weight: bold;">{day.firstStaffName}</div>
+                                <div class="service-time description">{day.firstTime}</div>
+                            
+                            </template> -->
+                            <template for:each={day.visibleSlots} for:item="entry">
+                                <div key={entry.name}>
+                                    <div class="service-name description" style="font-weight: bold;font-size:12px;text-align:left;">{entry.shiftType}</div>
+                                    
+                                    
+                                    <div><a  class="service-time description" data-id={entry.id} data-starttime={entry.startTime} data-endtime={entry.endTime}
+                                        data-startdate={entry.startDate} data-shifttype={entry.shiftType} style="font-size:10px;text-align:left;" onclick={handleEditClick}>{entry.timeRange}</a></div>
+                                
+                                </div>
+                            </template>
+                        </div>
+                        <div style="font-weight: bold;">{day.date}</div>
+                    </div>
+            
+                    <!-- Bottom footer: +more and icon -->
+                    <div class="bottom-bar">
+                        <div if:true={day.date}>
+                        <template if:true={day.hasMore}>
+                            <a class="more-link" data-date={day.dateStr} style="font-style: italic;" onclick={handleServiceClick}> more</a></div><!-- +{day.moreCount} -->
+                        </template>
+                       <!--  <template if:false={day.hasMore}>
+                            <a class="more-link" data-date={day.dateStr} onclick={handleServiceClick}>Available</a></div>
+                        </template> -->
+                    </div>
+                    <div if:true={day.date}>
+                        <div  if:true={day.noService}>
+                            <lightning-icon 
+                                icon-name="action:new" 
+                                data-date={day.dateStr} 
+                                alternative-text="Add" 
+                                size="xx-small" 
+                                class="add-icon" 
+                                
+                                style="position: absolute;bottom: 38%;right: 43%;transform: scale(0.65);"
+                                onclick={handleAddDescription}>
+                            </lightning-icon>
+                        </div>
+                        <div  if:false={day.noService}>
+                            <lightning-icon 
+                                icon-name="action:new" 
+                                data-date={day.dateStr} 
+                                alternative-text="Add" 
+                                size="xx-small" 
+                                class="add-icon" 
+                                style="position: absolute;bottom: 4px;right: 0px;transform: scale(0.65);"
+                                onclick={handleAddDescription}>
+                            </lightning-icon>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-color today-indicator"></span> Today
+            </div>
+            <div class="legend-item">
+                <span class="legend-color has-service-indicator"></span> Occupied
+            </div>
+            <div class="legend-item">
+                <span class="legend-color no-service-indicator"></span> Available
+            </div>
+            <div class="legend-item">
+                <span class="legend-color holiday-indicator"></span> Holiday
+            </div>
+        </div>
+    </div>
+    <template if:true={isPopoverVisible}>
+        <div class="popup" style={popupStyle}>
+            <span class="close-icon" style="cursor: pointer;" onclick={closePopover}>✖</span>
+            <h3 class="slds-m-bottom_small" style="font-weight:bold;">Available on {selectedDate}</h3>
+            <ol class="styled-list">
+                <template for:each={selectedavailability} for:item="service" for:index="index" >
+                    <li key={service.Id} class="slds-m-bottom_x-small">
+                        <strong>{service.Shift_Type__c}</strong><br/>
+                        <a href="javascript:void(0);" 
+                            data-id={service.Id}
+                            data-starttime={service.startTimeFormatted}
+                            data-endtime={service.endTimeFormatted}
+                            data-startdate={service.Start_Date__c}
+                            data-shifttype={service.Shift_Type__c}
+                            onclick={handleEditClick}>
+                            ({service.startTimeFormatted} - {service.endTimeFormatted})
+                        </a>
+                    </li>
+                </template>
+            </ol>
+        </div>
+    </template>
+
+    <template if:true={editButtonModule}>
+        <div class="blur-overlay"></div>
+        <div class="right-align1 fade-in" style="width:45%;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1% 1% 2% 1%;">
+            <p style="font-weight: bold; font-size: 140%;">{headingLabel}</p>
+            <lightning-button label="Back" variant="brand" onclick={handleClose}></lightning-button>
+        </div>        
+        <div class="container-box">
+            <div  class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1" style="display: flex; justify-content: center; align-items: center;">
+            <!-- <span>{selectedDay}, {selectedDate}/{selectedMonth}/{selectedYear}</span>  -->
+            <!-- <span  style="cursor: default;">{sectionIcons.staffDetails1}</span> --> 
+             <span>{todayDate}</span>    
+            </div>
+            <div class="section-content" data-section="staffDetails1">
+            </br>
+            <template if:true={sectionFlags.staffDetails1}>
+            <div class="slds-grid slds-wrap">
+        
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Shift Type</span>
+                <lightning-combobox label="Shift Type" variant="label-hidden" value={shiftTypeValue} 
+                        options={shiftTypeOptions} onchange={handleShiftTypechange} required>
+                </lightning-combobox>
+            </div>
+        </div>
+    
+        
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            
+        </div>
+        
+        
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Start Time</span>
+                <c-time-picker selected-hour={startTimeSelectedHour} selected-minute={startTimeSelectedMinute} data-ampm="AddShiftStartTimeAMPM" is-am={startTimeAMPM}  displayed-time={AddShiftStartTimeAMPM} onsavetimefromchild={handleStartTimeChange} ></c-time-picker>
+             </div>
+        </div>  
+        
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">End Time</span>
+                <c-time-picker selected-hour={endTimeSelectedHour}   selected-minute={endTimeSelectedMinute} is-am={endTimeAMPM} displayed-time={AddShiftEndTimeAMPM} onsavetimefromchild={handleEndTimeChange} ></c-time-picker>
+            </div>
+        </div> 
+        
+        <div>
+            <label style="display: flex; gap: 2%; padding: 3% 0 0% 10%;">
+                <span>Recurring</span>
+                <lightning-input 
+                    type="checkbox" 
+                    variant="label-hidden" 
+                    checked={AddShiftRecurringCheckboxValue} 
+                    onchange={handleReccuringChange}>
+                </lightning-input>
+            </label>
+        </div>
+        <div class="slds-size_1-of-2 slds-p-around_small">
+        </div>
+            </div>
+    
+        <template if:true={isRecurring}>
+            <div class="slds-grid slds-wrap">
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Recur</span>
+                        <lightning-combobox 
+                            name="typeOfRecurOption"  
+                            class="typeOfRecurOption" 
+                            variant="label-hidden" 
+                            options={recurOptions}  
+                            value={RecurValue} 
+                            onchange={handleRecurChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+              <div class="slds-size_1-of-3 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">Recur Every</span>
+                    <lightning-combobox 
+                        placeholder="Select Recurrence" 
+                        class="recurEvery" 
+                        name="recurEvery" 
+                        variant="label-hidden" 
+                        options={recurEveryOptions}  
+                        value={recurEveryValue} 
+                        onchange={handleRecurEveryChange}>
+                    </lightning-combobox>
+                </div>
+              </div>
+              <div class="slds-size_1-of-3 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">End Date</span>
+                    <lightning-input 
+                        type="date"  
+                        name="recurEndDate" 
+                        class="recurEndDate" 
+                        value={recurEndDate} 
+                        variant="label-hidden" 
+                        onchange={handleRecurEndDateChange}>
+                    </lightning-input>
+                </div>
+              </div>
+              <template if:true={isRecurWeekFlag}>
+              <div class="slds-grid slds-wrap">
+                <template for:each={weekDays} for:item="day">
+                    <div key={day} class="slds-size_1-of-7 slds-p-around_small">
+                        <span>{day}</span>
+                        <lightning-input 
+                            type="checkbox" 
+                            name={day} 
+                            variant="label-hidden" 
+                            class="slds-p-left_small"
+                            onchange={handleCheckboxChange}>
+                        </lightning-input>
+                    </div>
+                </template>
+              </div>
+              <!-- <div class="slds-m-top_medium">
+                <p>Selected Days: {selectedDays}</p>
+            </div> -->
+              </template>
+
+              <template if:true={isRecurmontlyFlag}>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <p class="slds-p-left_small">Set for Day</p>
+                </div>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Recur Every</span>
+                        <lightning-combobox 
+                            name="monthLyOptions" 
+                            class="monthLyOptions" 
+                            variant="label-hidden" 
+                            options={monthLyOptions} 
+                            value={monthOfDay} 
+                            onchange={handleMonthlyOptionChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-2 slds-p-around_small"></div>
+            </template>
+              </div>
+        </template>
+    
+    </template>
+    </div>
+    </div>
+    <div class="slds-align_absolute-center slds-m-around_small">
+        <lightning-button type="submit" variant="brand" onclick={handlesavebutton} label={savebutton} disabled={isSaveDisabled}></lightning-button>
+        <lightning-button label="Cancel" variant="brand-outline" onclick={handleClose} class="slds-m-left_small"></lightning-button>
+    </div>
+    </div>
+        
+    </template>   
+</template>

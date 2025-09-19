@@ -1,0 +1,166 @@
+<template>
+    <lightning-card>
+        <div class="slds-grid slds-gutters" style="width:99%;margin-left:2%;margin-bottom:1%;">
+            <lightning-combobox name="YearType" label="Select Financial Year" value={YearValue} placeholder="Select Year" options={yearOptions} onchange={handleYearChange} style="width: 150px;margin-left:5px;" ></lightning-combobox>
+            <lightning-button label="Back" style="margin-left:80%;margin-top:25px" onclick={HandleBack} variant="brand"> </lightning-button>
+        </div>
+        
+        <div class="slds-m-left_x-large slds-m-right_x-large slds-m-top_x-large" >                            
+            <lightning-datatable class="servTable" key-field="Id" data={accList} columns={staffPayCoulumns} column-width-mode="fixed"  onrowselection={handleRowSelection} >
+               </lightning-datatable>
+        </div>
+       
+        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;">
+            <!--RECORDS PER PAGE-->
+            <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                    <div class="slds-select_container">
+                        <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                            <template for:each={pageSizeOptions} for:item="option">
+                                <option key={option} value={option}>{option}</option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!--PAGE NAVIGATION-->
+            <div class="slds-align_absolute-center" style="height:5rem">
+                <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+                <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+                &nbsp;
+                <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                &nbsp;
+                <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+            </div>
+            <!--TOTAL RECORDS-->
+            <div class="slds-clearfix">
+                <div style="margin-right:30px;">
+                    <span class="slds-badge"> Total Records: {totalRecords}</span>
+                </div>
+            </div>
+            <lightning-button label="Finalise" class="slds-float_right slds-m-right_xx-large slds-m-bottom_large slds-m-top_large slds-m-left_large" onclick={handlePaySettings} disabled={disableFinalised} 
+            variant="brand"> </lightning-button>
+        </div>
+        <template if:true={displayActivity}>
+            <div style="margin-left:40px;margin-top:5px">
+                <a href="javascript:void(0)"  data-name="orgdetails" onclick={showActivity} >Show Activity
+                </a>
+            </div>
+        </template>
+        <template if:false={displayActivity}>
+            <div style="margin-left:40px;margin-top:5px">
+                <a href="javascript:void(0)"  data-name="orgdetails" onclick={closeActivity}  >Hide Activity
+                </a>
+            </div>
+        </template>
+        <template if:true={showActivitytable}>
+           <!--  <div style="margin-left:30px">
+                <lightning-datatable
+                key-field="id"
+                data={activityData}
+                columns={columns}
+                hide-checkbox-column
+                onrowaction={handleRowAction}>
+                </lightning-datatable>
+            </div> --> 
+
+          
+            <table class="slds-table  slds-table_cell-buffer" style="width:100%; margin-left:0%; margin-top:2%;table-layout:fixed;">
+                <thead>
+                    <tr>
+                        <th class="slds-cell-wrap th">Submission Type</th>
+                        <th class="slds-cell-wrap th">Finalise Response</th>
+                        <th class="slds-cell-wrap th">Finalise Ref ID</th>
+                        <th class="slds-cell-wrap th">Finalise Date</th>
+                        <th class="slds-cell-wrap th">Payer Declaration Date</th>
+                        <th class="slds-cell-wrap th" style="width:20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={activityData} for:item="row">
+                        <tr key={row.id}>
+                            <td class="slds-cell-wrap">{row.Type_of_Submission__c}</td>
+                            <td class="slds-cell-wrap description">{row.stpoverallresponse}</td>
+                            <td class="slds-cell-wrap">{row.Finalise_Ref_ID__c}</td>
+                            <td class="slds-cell-wrap">{row.Finalise_Date__c}</td>
+                            <td class="slds-cell-wrap">{row.Payer_Declaration_Date__c}</td>
+                            <td>
+                                <div>
+                                    <a data-action="Show_Pull_Request_Response"  data-id={row.Id} onclick={handleShowResponse}  
+                                    title="Show Response">Show Response</a>&nbsp;
+                                    |&nbsp;
+                                    <a data-action="Show_JSON_Data" data-id={row.Id} onclick={handleShowJsonData}
+                                      title="View Payroll">Show JSON Data</a>&nbsp;
+                                    |&nbsp;<br>
+                                    <a data-action="Get_Pull_Request" data-id={row.Id} onclick={handleGetPullRequest}
+                                      title="View Payroll">Get Pull Request</a>
+                                </div> 
+                                <!-- <lightning-button label="Show Response" onclick={handleShowResponse} data-id={row.id}></lightning-button>
+                                <lightning-button label="Show JSON Data" onclick={handleShowJsonData} data-id={row.id}></lightning-button>
+                                <lightning-button label="Get Pull Request" onclick={handleGetPullRequest} data-id={row.id}></lightning-button> -->
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>     
+        
+        </template>
+       
+        
+        <div if:true={showProgressbar} >
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open ">
+              <div class="slds-modal__container ">
+                <div class="slds-modal__header">
+                    <h1  class="slds-modal__title slds-hyphenate" tabindex="-1">File STP</h1>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium slds-text-align_center" style="font-size: medium; " >
+                    <b>Your file STP is in progress please wait for some time</b>
+                </div>
+                <div if:true={isProgressing} class="slds-modal__content slds-p-around_medium slds-text-align_center">        
+                    <img class="slds-m-around_large" style="max-height: 95px; max-width: 95px"
+                        alt="STP" name="STP" src={STPloading} />
+                </div>      
+              </div>
+              </section>
+              <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+          </div>
+
+          <template if:true={showJsondata}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                  <div class="slds-modal__header">
+                    <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">Response Data</h1>
+                  </div>
+                  <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                   <!--  <p> {payLoad}</p> -->
+                   <template if:false={isShowResponse}>
+                    <p> {payLoad}</p>
+                  </template>
+                  <template if:true={isShowResponse}>
+                    <!-- <p> {finalOutPutResponse}</p> -->
+
+                    <div>
+                        <p><strong>Submission Type:</strong> {submissionType}</p>
+                        <p><strong>Response:</strong> {shortMessage}</p>
+                        <p><strong>STP Ref ID:</strong> {stpRefID}</p>
+                        <p><strong>Reported Date:</strong> {reportedDate}</p>
+                        <p><strong>Declaration Date:</strong> {declarationDate}</p>
+                        <p><strong>Status:</strong> {status}</p>                    
+                    </div>
+                  </template>
+                   
+                  </div>
+                  <div class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" aria-label="Cancel and close" onclick={closeJSonData}>Cancel</button>
+                    <!-- <button class="slds-button slds-button_brand">Save</button> -->
+                  </div>
+                </div>
+              </section>
+              <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+          </template>
+          
+    </lightning-card>
+</template>

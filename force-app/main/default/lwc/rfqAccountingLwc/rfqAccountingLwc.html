@@ -1,0 +1,406 @@
+<template>
+    <div class="container">
+        <template if:true={invoiceflag}>
+        
+            <div style="margin-left:4px;">
+                <h3 slot="title">
+                <!--  <img src={rewards} alt="" width="60px" height="60px" > -->
+                    <span style="font-size: 18.2px;font-weight:bold; margin-bottom:2%;">RFQ Sales Details </span>
+                </h3>
+            </div>
+                <div if:true={isDesktop}> 
+                    <header class="header">
+                        <div class="search-section">
+                            <!-- <div class="floating-label-new  slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                                <span class="label-text-drop1"><span style="color:red">*</span>Company</span>
+                                <lightning-combobox label="Company" variant="label-hidden" name="selectedCompany" value={selectedCompany} options={companyOptions} 
+                                    onchange={handleChangeCompany}  data-field="selectedCompany" required></lightning-combobox>
+                            </div> -->
+                            <div class="floating-label-new  slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                                <span class="label-text-drop1">Start Date</span>
+                                <lightning-input type="date" name="sdate" variant="label-hidden" value={sdate} label="Start Date" onchange={hadleDates}></lightning-input>
+                            </div>
+                            <div class="floating-label-new  slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                                <span class="label-text-drop1">End Date</span>
+                                <lightning-input type="date" value={edate} variant="label-hidden" name="edate" label="End Date" onchange={hadleDates}></lightning-input> <!--disabled={datesFlag}-->
+                            </div>
+                        </div>
+                        <div class="action-section">
+                                <!-- <lightning-button  label="Import CSV" variant="brand" onclick={handleImport} ></lightning-button> -->
+                                <lightning-button label="Create New" onclick={handleInvoicFlag} variant="brand"></lightning-button>
+                                <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={readInvoiceDetails}>
+                                    <svg class="slds-button__icon" aria-hidden="true">
+                                        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                                    </svg>
+                                </button> 
+                        </div>
+                    </header>
+
+                    
+                </div>
+                <!-- form div -->
+                <div class="slds-m-right_small"  style="width: 99%;">
+                    <!-- <template if:true={payRollinvoiceFlag}> -->
+                        <table class="slds-table  slds-table_cell-buffer"  style="width:100%;  margin-top:2%;table-layout:fixed;">
+                        <thead>
+                            <tr>
+                                <th  class="slds-cell-wrap th">RFQ sales</th>
+                                <th  class="slds-cell-wrap th" style="width:30%;">File Reference</th>
+                                <th  class="slds-cell-wrap th">Date Generated</th>
+                                <!-- <th class="slds-cell-wrap th" style="width:15%;">File Name</th> -->
+                                <th  class="slds-cell-wrap th">GST</th>
+                                <th  class="slds-cell-wrap th">Amount</th>
+                                <th  class="slds-cell-wrap th">Status</th>
+                                <th  class="slds-cell-wrap th">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={invoiceTable} for:item="invoice">
+                                <tr key={invoice.Id} class="tr1">
+                                
+                                    <td class="slds-cell-wrap">
+                                        <a href="javascript:void(0)" data-id={invoice.Id} onclick={handleedit}>  {invoice.Name}
+                                        </a>
+                                    </td>
+                                    <td class="slds-cell-wrap description">{invoice.companyName}</td>
+                                    <td class="slds-cell-wrap">{invoice.invoiceDate}</td>
+                                    <!-- <td class="slds-cell-wrap">{invoice.fileName}></td>     -->
+                                    <td class="slds-cell-wrap">${invoice.GST__c}</td>
+                                    <td class="slds-cell-wrap">${invoice.Total_Amount__c}</td>
+                                    <td class="slds-cell-wrap">{invoice.Status__c}</td>
+                                    <td>
+                                        <div>                                        
+                                            <a href={invoice.amazonUrl} data-id={invoice.Id} data-url={invoice.amazonUrl}  
+                                                onclick={handleView} >
+                                                <lightning-icon icon-name="action:preview" size="xx-small" title="View Invoice" style="cursor:pointer;background:#808080;"></lightning-icon>
+                                            </a> &nbsp; 
+                                            <a href="javascript:void(0)" data-id={invoice.Id} onclick={handleDelete}>
+                                                <lightning-icon icon-name="action:delete" size="xx-small" variant="error" title="Delete Invoice"></lightning-icon>
+                                            </a>
+                                            
+                                        </div>
+                                    </td>
+                                </tr>                            
+                            </template>
+                        </tbody>
+                    </table>  
+
+                    <!--Pagination Start-->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em; margin-left:-1%;">
+                        <!--RECORDS PER PAGE-->
+                        <div class="slds-col">
+                            <div class="slds-list_inline slds-p-bottom_xx-small">
+                                <span style="margin-top:5px;margin-left:10px;margin-right:5px;">Page Size:</span>
+                                <label class="slds-text-color_weak" for="recordsPerPage"></label>
+                                <div class="slds-select_container"> 
+                                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                        <template for:each={pageSizeOptions} for:item="option">
+                                            <option key={option} value={option}>{option}</option>
+                                        </template> 
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!--PAGE NAVIGATION-->
+                        <div class="slds-align_absolute-center" style="height:5rem">
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage} ></lightning-button>
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                            &nbsp;
+                            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                            &nbsp;
+                            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                        </div>
+                        <!--TOTAL RECORDS-->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right" style="margin-right:1%;">
+                                <span class="slds-badge"> Total Records: {totalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Pagination End-->
+            
+        </template>
+        <template if:true={invoiceDeleteFlag}>
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+            
+                <div class="slds-modal__container" style="width:10%;">
+                <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+                    
+                    <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Please Confirm</h2>
+                </header> 
+                <div class="slds-modal__content slds-p-around_medium"  style="border-radius:0 0 15px 15px">                                
+                    <div class="slds-m-around_small">
+                        <div><h1>Are you sure you want to delete the invoice ?</h1></div>
+                        <div style="margin-top:10px;align-items:center;">
+                            <lightning-button label="Yes" variant="brand"  onclick={handleYesDelete} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button>
+                            <lightning-button label="No" variant="brand" onclick={handleDeleteclose}
+                            class="slds-m-around_small"></lightning-button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        
+        <template if:true={isInvoiceflag}>
+        <!-- <div style="display: flex; align-items: center; justify-content: space-between;">
+            <p style="font-weight: bold; margin-left:1%; font-size:140% ">Entry</p>
+        </div> -->
+        
+        <!-- <div style="float:right;margin-top:-50px;margin-right:70px;">
+            <lightning-button label="Back" variant="brand" onclick={handleback}></lightning-button>
+                    </div> -->
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 10px;">
+            <p style="font-weight: bold; font-size: 140%; margin: 0; font-family: 'Roboto', sans-serif; text-align: center;">{createEditInvoice} - {companyname}</p>
+            <lightning-button label="Back" variant="brand" onclick={handleback}></lightning-button>
+        
+        </div>           
+        <div class="slds-grid slds-wrap" style="padding-top: 1%;">
+
+            <!-- <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop"><span style="color:red">*</span>Company Name</span>
+                    <lightning-combobox variant="label-hidden" name="company" options={companyOptions} value={companyId}  onchange={handleChange}>   
+                    ></lightning-combobox>
+                </div>
+            </div> -->
+            <!-- <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Entity</span>
+                    <lightning-combobox   name="selectedCardType" variant="label-hidden" options={entityOptions} value={selectedCardType} disabled></lightning-combobox>
+                </div>
+            </div> -->
+            <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop"><span style="color:red">*</span>RFQ Entities Name</span>
+                    <lightning-combobox  name="entityName"  variant="label-hidden" options={entryNameOptions} value={selectedEntityName}  onchange={handleChange}
+                    ></lightning-combobox>
+                </div>
+            </div>
+            <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop"><span style="color:red">*</span>Invoice Date</span>
+                    <lightning-input type="date"  name="InvoiceDate" variant="label-hidden" value={invoiceDate} onchange={handleChange} ></lightning-input>
+                </div>
+            </div>
+
+            <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Due Date</span>
+                    <lightning-input type="date"  name="PostDate" variant="label-hidden" value={postDate} onchange={handleChange} ></lightning-input>
+                </div>
+            </div>
+
+            <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Invoice Number</span>
+                    <lightning-input type="text" name="InvoiceNo" variant="label-hidden" value={invoiceNo} onchange={handleChange}  ></lightning-input>
+                </div>
+            </div>
+
+            <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Include GST</span>
+                    <lightning-combobox  name="IncludeGST" variant="label-hidden" options={gstOptions}   value={gstType}  onchange={handleChange}
+                    ></lightning-combobox>
+                </div>
+            </div>
+            
+            <div class="slds-size_1-of-4 slds-p-around_small">
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Status</span>
+                    <lightning-combobox   name="Status" variant="label-hidden" options={StatusOptions} value={selectedStatus}   onchange={handleChange}> 
+                    ></lightning-combobox>
+                </div>
+            </div>
+
+            
+        </div>
+        <div style="padding-left:1%; padding-right:1%">
+            <table class="slds-table" style="table-layout: fixed;">
+                <thead>
+                    <tr>
+                        <th style="text-align:center;width:5%">S.No</th>
+                        <th style="text-align:center">Description</th>
+                        <th style="text-align:center">Account List</th>
+                        <th style="text-align:center">Quantity</th>
+                        <th style="text-align:center">Unit Price</th>
+                        <th style="text-align:center">Tax</th>
+                        <th style="text-align:center;width:5%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={salesEntryList} for:item="sales"  for:index="index">
+                        <tr key={sales.Id}>
+                            <td style="text-align:center;">{sales.sno}</td>
+                            <td>
+                                <div class="floating-label-new1">
+                                    <span class="label-text-drop1"></span>
+                                    <lightning-input type="textarea" name="description" value={sales.Description__c} onchange={handleInputChange} data-id={sales.Id}
+                                        data-field="Description__c" variant="label-hidden" style="padding-bottom: 8%;"></lightning-input>
+                                </div>
+                                    </td>
+                            <td style="text-align:center;width:4.5%">
+                                <!-- <lightning-combobox name="accountList" variant="label-hidden" data-id={sales.Id}
+                                    value={sales.accountList} onchange={handleAccountList}>
+                                </lightning-combobox> -->
+                                <div class="floating-label-new2">
+                                    <span class="label-text-drop1"></span>
+                                    <div class="dropdown">
+                                        <button type="button" onclick={toggleDropdownAccountList} data-id={sales.Id} class="dropdown-button">{sales.accountList}</button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="floating-label-new1">
+                                    <span class="label-text-drop1"></span>
+                                <lightning-input type="number" name="quantity" data-id={sales.Id} data-field="Quantity__c"
+                                    value={sales.Quantity__c} onchange={handleInputChange} variant="label-hidden">
+                                </lightning-input>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="floating-label-new1">
+                                    <span class="label-text-drop1"></span>
+                                    <lightning-input type="number" name="amount" variant="label-hidden" data-id={sales.Id} data-field="Amount__c"
+                                        value={sales.Amount__c} onchange={handleInputChange}></lightning-input>
+                                </div>
+                            </td>
+                        
+                            <td style="text-align:center;width:4.5%">
+                                <!-- <lightning-combobox variant="label-hidden" name="tax" data-id={sales.Id} data-field="Tax__c"
+                                    value={sales.Tax__c} onchange={handleInputChange}>
+                                </lightning-combobox> -->
+                                <div class="floating-label-new2">
+                                    <span class="label-text-drop1"></span>
+                                    <div class="dropdown">
+                                        <button type="button" onclick={toggleDropdownTax} data-id={sales.Id} class="dropdown-button">{sales.tax}</button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align:center;">
+                                <lightning-icon icon-name="utility:delete" alternative-text="Delete" onclick={handleDeleteRow} data-id={sales.Id} size="x-small" class="slds-icon slds-icon-text-error"></lightning-icon>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <div  class=" slds-grid slds-wrap slds-p-around_small ">
+            <div class="slds-size_1-of-2 slds-theme_default slds-m-bottom_small">
+                <lightning-textarea name="comments" variant="label-hidden"   value={comments} onchange={handleChange}  
+                placeholder="Comments..." style="width: 70%;"></lightning-textarea>
+                <div style="margin-top: 10px;">
+                    <lightning-button label="Add New Line" onclick={addRow} icon-name="utility:add" variant="brand"></lightning-button>
+                </div>
+            </div>
+            
+            <div class="slds-col slds-wrap slds-size_1-of-2 slds-theme_default slds-m-bottom_small slds-text-align_right">
+                <div class="slds-size_1-of-2 slds-p-around_small" style="margin-left: 52%;">
+                    <div class="floating-label-new">
+                        <span class="label-text-drop">Sub Total</span>
+                        <lightning-input type="number"  variant="label-hidden"  name="subTotal"  value={subTotal} onchange={handleChange} disabled ></lightning-input>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-2 slds-p-around_small" style="margin-left: 52%;">
+                    <div class="floating-label-new">
+                        <span class="label-text-drop">Tax Amount</span>
+                        <lightning-input type="number"  variant="label-hidden"   name="TaxAmount"  value={taxAmount} disabled></lightning-input>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-2 slds-p-around_small" style="margin-left: 52%;">
+                    <div class="floating-label-new">
+                        <span class="label-text-drop">Total</span>
+                        <lightning-input type="number" name="totalAmount" variant="label-hidden"  value={totalAmount} disabled ></lightning-input>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <template if:true={showtable}>
+            <div class="dropdown-table-container">
+                <table class="dropdown-table">
+                    <thead>
+                        <tr>
+                            <th>Account Number</th>
+                            <th>Ledger Item Name</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- <template for:each={ledgerItems} for:item="item">
+                            <tr key={item.id} data-value={item.itemName} data-accno={item.accNo} data-id={item.id} onclick={handleSelection}>
+                                <td>{item.accNo}</td>
+                                <td>{item.itemName}</td>
+                            </tr>
+                        </template> -->
+                        <template for:each={ledgerItems} for:item="item">
+                            <tr key={item.id} 
+                                data-accno={item.accNo} 
+                                data-value={item.itemName} 
+                                data-id={item.id} 
+                                onclick={handleSelection}>
+                                <td>{item.accNo}</td>
+                                <td>{item.itemName}</td>
+                                <td>{item.category}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+        <template if:true={showtableTax}>
+            <div style={taxDropdownStyle}>
+                <table class="dropdown-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 2%;">Code</th>
+                            <th style="width: 30%;">Description</th>
+                            <th style="width: 2%;">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={taxCodes} for:item="taxCode">
+                            <tr key={taxCode.id} 
+                                data-code={taxCode.code} 
+                                data-description={taxCode.description} 
+                                data-rate={taxCode.rate} 
+                                data-value={taxCode.label}
+                                onclick={handleSelectionTax}>
+                                <td>{taxCode.code}</td>
+                                <td>{taxCode.description}</td>
+                                <td>{taxCode.rate}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+        <div style="display: flex;justify-content: flex-end; align-items: center; gap: 10px;margin-right:0.5%;">     
+            <lightning-button variant="brand" label={buttonLabel} title="save" onclick={handleSave} > </lightning-button>
+            <lightning-button  variant="outline"  label="Cancel" title="Cancel"  onclick={handleClear}> </lightning-button>
+        </div>
+    
+        </template>
+        <template if:true={isModalOpen}>
+       
+            <div class="slds-p-around_medium">
+                <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                onclick={closeaddPayrollinvoice} style="float:right;margin-bottom:5px;"></lightning-button>
+    
+              <iframe src={currentUrl} width="100%" height="1300px" ></iframe>
+              </div>
+          
+        </template>
+    </div>
+    
+    <template if:true={backFlag}>
+        <c-account-invoice  orgid={orgid}></c-account-invoice>
+    </template>
+</template>

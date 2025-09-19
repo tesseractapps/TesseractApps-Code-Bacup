@@ -1,0 +1,396 @@
+<template>
+    <div class="container">
+
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <template if:true={homeflag}>
+            <p style="font-weight: bold; margin: 0;font-size:140%;padding: 1% 0% 1% 1% ">Leave Management</p>
+            <div style="display: flex; align-items: center; gap: 10px;margin-right:1%;">
+                <lightning-button class="slds-m-left_medium" slot="footer" label="Request for Leave" variant="brand"
+                    onclick={handleleave} style="float:right;margin-bottom:5px;"></lightning-button>
+                    <img 
+                    src={image} 
+                    alt="Info Icon" 
+                    width="45px" 
+                    height="45px" 
+                    class="image" onclick={toggleHeader} >
+                    <!-- style="cursor: pointer; border-radius: 50%; animation: fadeIn 0.3s ease-in-out;"   
+                    
+                    onmouseover={handleMouseOver} 
+                    onmouseout={handleMouseOut} -->
+            </div>
+            </template>
+            <template if:true={leaveflag}><h1 style="font-weight: bold; margin: 0;">Request for Leave</h1>
+            </template>
+           
+        </div>
+       
+        <template if:true={header}>
+            <div >
+            <template for:each={clientData} for:item="clientData">
+            <div class="grid"  key={clientData.Id}>
+              
+                <!-- First Grid Item -->
+                <div class="grid-item">
+                    <img src={clientData.picture__c} alt="Photo">
+                    <div class="text-container">
+                        <p><b>{clientData.Name}<br>{clientData.Last_Name__c}</b><br>{clientData.Gender__c}&nbsp;{clientData.Age__c}</p>
+                        
+                    </div>
+                    
+                </div>
+              
+                <!-- Second Grid Item -->
+                <div class="grid-item2" style="border-right-style: solid;">
+                    <div class="status-row" >
+                        <p><b>Annual Leaves:</b>&nbsp;&nbsp;{clientData.Annual_Leave__c}</p>
+                    </div>
+                    <div class="status-row">
+                      <p><b>Sick Leaves:</b>&nbsp;&nbsp;{clientData.Sick_Leave__c}</p>
+                  </div>
+                  <div class="status-row">
+                    <p><b>Parental Leaves:</b>&nbsp;&nbsp;{clientData.Parental_Leave__c}</p>
+                </div>
+                <div class="status-row">
+                  <p><b>Other Leaves:</b>&nbsp;&nbsp;{clientData.Bereavement_Leave__c}</p>
+              </div>
+                  
+                </div>
+    
+    
+    <!--             <div class="grid-item2">
+                  
+                  <div class="status-row">
+                    <p>Primary:&nbsp;&nbsp;{clientData.Primay_Contact_First_Name__c}&nbsp;{clientData.Primay_Contact_Last_Name__c}</p>
+                </div>
+                <div class="status-row">
+                  <p>Secondary:&nbsp;&nbsp;{clientData.Secondary_Contact_First_Name__c}&nbsp;{clientData.Secondary_Contact_Last_Name__c}</p>
+              </div>
+                
+              </div> -->
+                
+                
+                
+                <!-- Third Grid Item -->
+                <template if:true={ictUserType}>   
+               <div style="margin-top:10px;"><div class="assignments"><h5><b>Approver</b></h5></div>
+         
+                <div class="grid-item4" style="margin-top:5px;">
+                  <lightning-avatar variant="circle" src={primary} initials="P" fallback-icon-name="standard:person_account" alternative-text="Primary Contact"></lightning-avatar>
+    
+                    <div class="text-container">
+                        <p style="padding:10px;">{clientData.Primary_Contact_First_Name__c}&nbsp;{clientData.Primary_Contact_Last_Name__c}<br>{clientData.Primary_Contact_Number__c}</p>
+                        
+                        
+                    </div>
+                </div>
+                <div class="grid-item4" style="margin-top:5px;">
+                  <lightning-avatar variant="circle" src={secondary} initials="S" fallback-icon-name="standard:person_account" alternative-text="Secondary Contact" ></lightning-avatar>
+    
+                    <div class="text-container">
+                        <p style="padding:10px;">{clientData.Secondary_Contact_First_Name__c}&nbsp;{clientData.Secondary_Contact_Last_Name__c}<br>{clientData.Secondary_Contact_Number__c}</p>
+                        
+                        
+                    </div>
+                </div>
+                </div>
+                </template>
+           
+                
+                <!-- Fourth Grid Item -->
+                <!-- <div class="grid-item3">
+                    <div class="assignments">
+                        <h5>Assignments</h5>
+                        <p>Primary</p>
+                        <p>Secondary</p>
+                    </div>
+                </div> -->
+              
+            </div>
+            </template>
+            </div></template>
+            <template if:true={showSpinner}>
+                <lightning-spinner alternative-text="Updating Deatils......" size="large"></lightning-spinner>
+            </template> 
+
+    <!-- <div class="job-details-container">      -->
+    <template if:true={homeflag}>
+        <div class="slds-grid">
+            <!-- <h3 style="font-weight:bold;margin-right:77%;">Leave History</h3>
+          <lightning-button class="slds-m-left_medium" slot="footer" label="Request for Leave" variant="brand"
+                    onclick={handleleave} style="float:right;margin-bottom:5px;"></lightning-button> -->
+                </div>        
+                
+                    <template if:true={leaves}>
+                        <table class="slds-table slds-table_cell-buffer">
+                            <thead>
+                                <tr>
+                                    <th>Type of Leave</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>No.of Days</th>
+                                    <th  class="description">Reason</th>
+                                    <th>Approved by</th>
+                                    <th>View Files</th>
+                                    <th>Comments</th>
+                                    <th>Status</th>
+                                    
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={leaves} for:item="leave">
+                                    <tr key={leave.Id} class="tr1">
+                                        <td>{leave.Type_of_Leave__c}</td>
+                                        <td>{leave.fromdate}</td>
+                                        <td>{leave.Todate}</td>
+                                        <td>{leave.Duration__c}</td>
+                                        <td class="description">{leave.Reason__c}</td>
+                                        <td>{leave.Approved_by__c}</td>
+                                        <td style="padding-left:2%;width:5%;">
+                                            <div if:true={leave.Leave_Document__c}>
+                                            <a  data-url={leave.Leave_Document__c}  onclick={handleView}><lightning-icon icon-name="utility:preview" size="small" title="View file"></lightning-icon></a>
+                                        </div>
+                                        </td>
+                                        <td class="description">{leave.Comments__c}</td>
+                                        <td><label class={leave.Status__c}>{leave.Status__c}</label></td>
+                                    </tr>
+                                </template>
+                                
+                            </tbody>
+                        </table>
+                    </template>  
+            </template>            
+        <template if:true={leaveflag}>
+            <div class="blur-overlay"></div>
+    <div class="right-align" style="width:70%;">
+        
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="font-size:140%;font-weight:bold;margin-top:1%;margin-left:2%;">Request for Leave</h3>
+        <div style="display: flex; align-items: center; gap: 10px;margin-right:2.2%;margin-top:1%;">
+            <lightning-button label="Back" variant="brand" onclick={handleCancel} ></lightning-button> 
+    </div>
+    </div>
+
+        <div class="seperator">
+            <lightning-record-edit-form object-api-name="Leave__c" data-recid="Leave" record-id={leaverecordId} onsuccess={handleSuccess} onsubmit={handleSubmit}>
+              <!-- <h3 style="font-weight:bold;">Request for Leave</h3> -->
+
+              <div class="container-box">
+                
+                <div class="slds-grid slds-wrap">
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>Type of Leave</span>
+                        <lightning-input-field field-name="Type_of_Leave__c" variant="label-hidden"  onchange={handleInput} disabled={isdisablefields} required="true"></lightning-input-field>
+                    </div>
+                    </div>
+                 
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>From</span>
+                        <lightning-input-field field-name="From__c" variant="label-hidden" onchange={handleInput} disabled={isdisablefields} required="true" onclick={handleStartDateChange}></lightning-input-field>
+                    </div>
+                    </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>To</span>
+                        <lightning-input-field field-name="To__c" variant="label-hidden" onchange={handleInput} disabled={isdisablefields} required="true" onclick={handleEndDateChange}></lightning-input-field>
+                    </div>
+                 </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>State</span>
+                        <lightning-input-field field-name="State__c" variant="label-hidden" value={staffState} disabled={isdisablefields} required="true" onchange={handleInput}></lightning-input-field>
+                    </div>
+                    </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Duration</span>
+                        <lightning-input-field field-name="Duration__c" variant="label-hidden" value={duration} disabled=true></lightning-input-field>
+                    </div>
+                 </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Balance</span>
+                        <lightning-input-field field-name="Balance__c" variant="label-hidden" value={balance} disabled=true></lightning-input-field>
+                    </div>
+                    </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Paid Leave</span>
+                        <lightning-input-field field-name="Paid_Leave__c" variant="label-hidden" value={paid} disabled=true></lightning-input-field>
+                    </div>
+                 </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Unpaid Leave</span>
+                        <lightning-input-field field-name="Unpaid_Leave__c" variant="label-hidden" value={unpaid} disabled=true></lightning-input-field>
+                    </div>
+                 </div>
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label-text">
+                        <span class="label-text-drop"><span style="color:red">*</span>Reason</span>
+                        <lightning-input-field field-name="Reason__c" variant="label-hidden" disabled={isdisablefields} required="true"></lightning-input-field>
+                    </div>
+                 </div>
+
+
+                 <template if:true={isstatus}>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Status</span>
+                            <lightning-input-field field-name="Status__c" variant="label-hidden" onchange={handleStatus}></lightning-input-field>
+                        </div>
+                     </div>
+                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Comments</span>
+                            <lightning-input-field field-name="Comments__c" variant="label-hidden"></lightning-input-field>
+                        </div>
+                     </div>
+                    
+                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="slds-m-right_medium slds-m-left_medium" >
+                            <p style="margin-left:3px;color:#5A5A5A;margin-top:5px;">Uploaded File:&nbsp;<a href={Docurl} data-url={Docurl}  
+                                onclick={handleView} style="margin-left: 5px;">View File</a></p>
+                        </div>
+                    </div>
+                </template>
+  
+                    <template if:false={isstatus}>
+                    <!-- <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                          <lightning-input type="file" onchange={onFileUpload} name="Upload File" label="Upload File" style="margin-left:5px;">  
+                          </lightning-input>
+                          <div class="slds-text-body_small">{fileName}</div>
+                          <p if:true={imageerror} style="color: red;">{imageerror}</p>
+                        </div>
+                      </div> -->
+
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="floating-label">
+                            <!-- Hidden file input element -->
+                            <input type="file" id="fileInput" onchange={onFileUpload} accept=".jpg, .jpeg, .png, .gif" name="uploadFile" style="display: none;">
+                            
+                            <!-- Button to trigger the file input -->
+                            <button type="button" onclick={triggerFileInput} class="file-upload-button">
+                                &#8684; Upload File
+                            </button>
+                            <div class="slds-text-body_small">{fileName}</div>
+                            <!-- Display error message if true -->
+                            <p if:true={imageerror} style="color: red;">{imageerror}</p>
+                        </div>
+                    </div>
+                    
+                    </template>
+
+                 <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <input type="file" id="fileInput" onchange={onFileUpload} accept=".jpg, .jpeg, .png, .gif" name="uploadFile" style="display: none;">
+                        <button type="button" onclick={triggerFileInput} class="file-upload-button">
+                            Upload File
+                        </button>
+                        <div class="slds-text-body_small">
+                            Uploaded File: <a href={Docurl} data-url={Docurl} onclick={handleView} style="margin-left: 5px;">View File</a>
+                        </div>
+                    </div>
+                </div> -->
+                
+                
+
+                </div></div>
+
+
+
+
+              
+              <div class="slds-grid slds-m-around_small" style="padding-bottom:1%; ">
+                <!-- Buttons Section -->
+                <div class="slds-col slds-grid" style="justify-content: flex-end; margin-left: 10%;">
+                    <lightning-button type="submit" variant="brand" label="Submit" disabled={saveButtonDisable}></lightning-button>
+                    <lightning-button label="Cancel" variant="Brand-Outline" onclick={handleCancel} class="slds-m-left_small"></lightning-button>
+                </div>
+            
+                <!-- "View Holiday List" Link Section -->
+                <div class="slds-col slds-text-align_right" >
+                    <a href="javascript:void(0);" onclick={handleHolidayClick} style="color: blue; text-decoration: underline;">Public Holidays</a>
+                </div>
+            </div>
+            
+          </lightning-record-edit-form>
+    </div>
+    </div>
+          </template>
+
+          <template if:true={isHolidayModalOpen}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <!-- <template if:true={isFinancialYear}> -->
+                        <div class="slds-grid slds-wrap ">
+                           <h2 class="slds-text-heading_medium slds-p-top_large">
+                               Public Holidays 
+                               <!-- <select onchange={handleYearChange} class="year-dropdown slds-m-left_small" value={selectedYear}>
+                                  <option value="2023-2024">2023-2024</option>
+                                  <option value="2024-2025">2024-2025</option>
+                                  <option value="2025-2026">2025-2026</option>
+                               </select> -->
+                            </h2>
+                            <lightning-combobox
+                               class="slds-m-left_small"
+                               name=" Financial year"
+                               placeholder="Select Year"
+                               value={selectedYear}
+                               options={yearOptions} 
+                               onchange={handleYearChange}>
+                            </lightning-combobox>
+                        </div>
+                        <!-- </template> -->
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={handleCloseModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"></lightning-icon>
+                        </button>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <!-- Table to display holiday information -->
+                        <lightning-card>
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                                <thead>
+                                    <tr>
+                                        <th class="slds-text-align_left">Public Holiday</th>
+                                        <th class="slds-text-align_left"> Date &nbsp;
+                                            <lightning-icon icon-name={dateSortIcon} alternative-text="sort" size="x-small" style="background: white;"  onclick={handleSortDate}></lightning-icon>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={holidayList} for:item="holiday">
+                                        <tr key={holiday.Id}>
+                                            <td>{holiday.Holiday_Name__c}</td>
+                                            <td>{holiday.formattedDate}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </lightning-card>
+                    </div>
+                    <!-- <footer class="slds-modal__footer">
+                        <lightning-button label="Close" onclick={handleCloseModal}></lightning-button>
+                    </footer> -->
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+          <template if:true={isModalOpen}>
+            <div class="hrlayout slds-p-around_medium" style="margin-top:-0.2px;">
+                <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                onclick={closeviewfile} style="float:right;margin-bottom:5px;"></lightning-button>
+              <iframe src={currentUrl} width="100%" height="1300px" ></iframe>
+              </div>
+              
+    </template>
+
+    <!-- </div> -->
+        </div>
+</template>
