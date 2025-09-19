@@ -1,0 +1,247 @@
+<template>
+
+    <div data-id="dropdown-container" >
+        <!-- Minimal trigger button -->
+        <div style="display: flex; justify-content: center;">
+           <button 
+                class="minimal-toggle-button slds-button slds-button_neutral"
+                style="width: 16.5rem; display: flex; align-items: center; justify-content: space-between; padding: 0 0.5rem;"
+                onclick={handleToggleDropdown}
+                aria-haspopup="true"
+                aria-expanded={isOpen}
+            >
+                <!-- Start Icon -->
+                <lightning-icon 
+                    icon-name="utility:builder" 
+                    size="x-small" 
+                    class="button-icon" 
+                    style="flex-shrink: 0;">
+                </lightning-icon>
+
+                <!-- Truncating Label -->
+                <span 
+                    class="description button-text" 
+                    style="flex: 1; margin: 0 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {facilityLabel}
+                </span>
+
+                <!-- End Chevron Icon -->
+                <lightning-icon 
+                    icon-name="utility:chevrondown" 
+                    size="xx-small" 
+                    class={chevronClass} 
+                    style="flex-shrink: 0;">
+                </lightning-icon>
+            </button>
+
+        </div>
+
+        <!-- Clean dropdown menu -->
+        <div class={dropdownClass} style="height:20VH;OVERFLOW:SCROLL;OVERFLOW-X:HIDDEN;" role="menu">
+            <div class="slds-dropdown__list" role="presentation">
+                <template for:each={finalListFacilities} for:item="facility">
+                    <div key={facility.value} class="slds-dropdown__item" role="presentation">
+                        <button 
+                            class="facility-option slds-dropdown__link"
+                            role="menuitem"
+                            data-facility-value={facility.value}
+                            data-facility-label={facility.label}
+                            onclick={handleFacilitySelect}
+                        >
+                            <div class="facility-label">{facility.label}</div>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Header -->
+    <div class="fab-container">
+        <!-- Sub-buttons (slide up) -->
+            <div class="fab-actions" style={fabActionsStyle}>
+            <button class="fab-sub" onclick={handleSaveAndExit} title="Save & Exit">
+                <i class="material-icons blackicon">save</i>
+            </button>
+            <button class="fab-sub" onclick={showAddWidgetModal} title="Add Widget">
+                <i class="material-icons blackicon">add</i>
+            </button>
+            <button class="fab-sub" onclick={handleReset} title="Reset Layout">
+                <i class="material-icons blackicon">settings_backup_restore</i>
+            </button>
+        </div>
+
+        <!-- Main FAB button (stays fixed) -->
+        <button class={fabMainClass} onclick={toggleEditMode} title={fabTitle}>
+            <i class="material-icons whiteicon">{fabIcon}</i>
+        </button>
+    </div>
+        
+    <!-- Dashboard Grid Container -->
+    <div class="dashboard-container">
+        <div class="dashboard-grid custom-scroll" data-grid-container>
+            <!-- Collision Detection Overlay -->
+            <template if:true={isEditMode}>
+                <div class="collision-overlay" data-collision-overlay></div>
+                <div class="grid-guidelines"></div>
+            </template>
+
+            <!-- Render widgets using template iteration -->
+            <template for:each={widgets} for:item="widget" for:index="index">
+                <template if:true={widget.visible}>
+                    <div key={widget.id} 
+                            class={widgetClasses} 
+                            data-id={widget.id} 
+                            data-type={widget.type}
+                            data-original-style={widget.originalStyle}
+                            style={widget.style}>
+                        
+                        <!-- Close Button - Always visible on top-right -->
+                        <template if:true={isEditMode}>
+                            <button class="widget-close-btn" 
+                                    data-id={widget.id}
+                                    onclick={handleDeleteWidget}
+                                    title="Remove Widget">
+                                
+                                    <i class="delete-material-icons whiteicon" style="position: relative;">delete</i>
+                            </button>
+                            
+                            <!-- Enhanced Resize Handles -->
+                            <div class="resize-handle resize-handle-nw" data-direction="nw"></div>
+                            <div class="resize-handle resize-handle-ne" data-direction="ne"></div>
+                            <div class="resize-handle resize-handle-sw" data-direction="sw"></div>
+                            <div class="resize-handle resize-handle-se" data-direction="se"></div>
+                            <div class="resize-handle resize-handle-n" data-direction="n"></div>
+                            <div class="resize-handle resize-handle-s" data-direction="s"></div>
+                            <div class="resize-handle resize-handle-e" data-direction="e"></div>
+                            <div class="resize-handle resize-handle-w" data-direction="w"></div>
+                        </template>
+                        
+                        <!-- Widget Content - Direct chart display -->
+                        <div class="widget-content-full" data-widget-id={widget.id}>
+                            <c-dynamic-widget 
+                                type={widget.type}
+                                widget-id={widget.id}
+                                facility-id={facilityValue}
+                                ongrandchildevent={handleGrandChildEvent}
+                                ontaskedit={handleTaskEdit}
+                                onwidgetrefresh={handleChildEvent}>
+                            </c-dynamic-widget>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+<template if:true={noLayoutAvailable}>
+<div class="slds-text-align_center slds-m-around_medium">
+    <lightning-icon icon-name="utility:info" size="small" alternative-text="Info"></lightning-icon>
+    <p style="font-size: 16px; font-weight: 500; margin-top: 10px;">
+        No layout is saved or customized yet.
+    </p>
+</div>
+</template>
+    </div>
+    </div>
+
+    <!-- Add Widget Modal -->
+    <template if:true={showModal}>
+  
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+                    
+                        <div class="slds-modal__container modal-container" style="max-width:25%;">
+                         <header class="slds-modal__header" style="background: #002A52;">
+                            
+                            <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Add New Widget</h2>
+                        </header> 
+                        <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+                            <div class="slds-m-around_small">
+                                <div class="slds-grid slds-wrap slds-gutters">
+                        <div class="slds-col slds-size_1-of-1">
+                            <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>Select Widget Type</span>
+                            <lightning-combobox
+                                variant="label-hidden"
+                                value={selectedWidgetType}
+                                placeholder="Choose a widget type..."
+                                options={availableWidgetTypes}
+                                onchange={handleWidgetTypeChange}
+                                required>
+                            </lightning-combobox>
+                            </div>
+                        </div>
+                    </div>
+                                <div  style="margin-top:5%;text-align: center;">
+                                     <lightning-button label="Close" variant="brand" onclick={closeModal}
+                                    class="slds-m-around_small"></lightning-button>
+                                    <lightning-button label="Add" variant="brand" onclick={addWidget} disabled={isAddDisabled} class="slds-m-around_small"></lightning-button>
+                                   
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showResetModal}>
+        <section
+            class="slds-modal slds-fade-in-open"
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            aria-labelledby="reset-heading">
+            <div class="slds-modal__container modal-container" style="max-width:25%;">
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">
+                        Reset Dashboard
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content">
+                    <div class="slds-m-around_small" style="text-align:center;">
+                        <p style="font-size: 13px; font-weight: 500;">
+                            Are you sure you want to remove all widgets and reset the dashboard?
+                            <br/>This action cannot be undone.
+                        </p>
+                    </div>
+                    <div class="slds-m-top_medium" style="text-align:center;">
+                        <lightning-button label="Cancel" variant="neutral" onclick={cancelReset} class="slds-m-around_small"></lightning-button>
+                        <lightning-button label="Reset" variant="brand" onclick={confirmReset} class="slds-m-around_small"></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showDeleteConfirmModal}>
+        <section
+            class="slds-modal slds-fade-in-open"
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            aria-labelledby="delete-heading">
+            <div class="slds-modal__container modal-container" style="max-width:25%;">
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">
+                        Remove Widget
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content">
+                    <div class="slds-m-around_small" style="text-align:center;">
+                        <p style="font-size: 13px; font-weight: 500;">
+                            Are you sure you want to remove this widget?
+                            <br/>This action cannot be undone.
+                        </p>
+                    </div>
+                    <div class="slds-m-top_medium" style="text-align:center;">
+                        <lightning-button label="Cancel" variant="neutral" onclick={cancelDeleteWidget} class="slds-m-around_small"></lightning-button>
+                        <lightning-button label="Remove" variant="brand" onclick={confirmDeleteWidget} class="slds-m-around_small"></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>
