@@ -1,0 +1,241 @@
+<template>
+    <template if:true={isHome}>
+        <div class="main-container">
+            <!-- Header Section -->
+            <template if:true={chartofAccountsflag}>
+                <div style="display: flex; align-items: center; justify-content: space-between; ">
+                      <p style="font-weight: bold; padding: 1% 0% 1% 1%;font-size:140% ">  Chart of Accounts - {companyname}</p>
+                    
+                </div>
+                <!-- <div style="display: flex; align-items: center; justify-content: space-between;">
+                  
+                        <lightning-input type="toggle" data-id="statusToggle" label="Active/Inactive" name="input1"  message-toggle-active="" message-toggle-inactive=""
+                            onchange={HandleActiveInactive} checked={isActive} style="float: right; size: 50px; margin-left: 62%;">
+                        </lightning-input>
+                    
+                    <button 
+                    class="slds-button slds-button_icon slds-button_icon-border" 
+                    title="Refresh" 
+                    onclick={fetchReplist} style="margin-right: 1%;">
+                    <svg class="slds-button__icon" aria-hidden="true">
+                        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                    </svg>
+                </button> -->
+                <header class="header">
+                    <div class="search-section">
+                
+                        <div class="floating-label-new  slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                            <span class="label-text-drop1">Start Date</span>
+                            <lightning-input type="date" name="sdate" variant="label-hidden" value={sdate} label="Start Date" onchange={hadleDates}></lightning-input>
+                        </div>
+                        <div class="floating-label-new  slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                            <span class="label-text-drop1">End Date</span>
+                            <lightning-input type="date" value={edate} variant="label-hidden" name="edate" label="End Date" onchange={hadleDates}></lightning-input> <!--disabled={datesFlag}-->
+                        </div>
+                    </div>
+                    <div class="action-section">
+                        <lightning-input type="toggle" data-id="statusToggle" label="Active/Inactive" name="input1"  message-toggle-active="" message-toggle-inactive=""
+                            onchange={HandleActiveInactive} checked={isActive}>
+                        </lightning-input>
+                        
+                        <button 
+                            class="slds-button slds-button_icon slds-button_icon-border" 
+                            title="Refresh" 
+                            onclick={fetchReplist}>
+                            <svg class="slds-button__icon" aria-hidden="true">
+                                <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                            </svg>
+                        </button>
+                    </div>
+                </header>
+                    
+                <div class="listview custom-scroll">
+                    <table class="slds-table slds-table_bordered">
+                        <thead>
+                            <tr>
+                                <th>Account Number</th>
+                                <th>Account Name</th>
+                                <!-- <th>GST %</th>
+                                <th>Tax </th> -->
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Render Account List -->
+                            <template for:each={hierarchyData} for:item="accountList">
+                                <!-- Render Categories if Account List is expanded -->
+                                <template if:true={accountList.expanded}>
+                                    <template for:each={accountList.categories} for:item="category">
+                                        <!-- Category Row -->
+                                        <tr key={category.accountNumber}>
+                                            <td style="padding-left: 30px;">
+                                                <!-- Category Expand/Collapse icon -->
+                                                <lightning-icon 
+                                                    icon-name={category.iconName}
+                                                    alternative-text="Expand/Collapse"
+                                                    size="xx-small"
+                                                    class="slds-m-right_xx-small slds-cursor_pointer"
+                                                    onclick={toggleCategory}
+                                                    data-id={category.accountNumber}>
+                                                </lightning-icon>
+                                                <strong>{category.accountNumber}</strong> <!-- Account Number of Category -->
+                                            </td>
+                                            <td style="padding-left: 30px; font-size: 96%;">
+                                                <strong>{category.accountName}</strong> <!-- Account Name of Category -->
+                                            </td>
+                                            <!-- <td></td>
+                                            <td></td> -->
+                                            <td>{category.amount}</td>
+                                        
+                                        </tr>
+                            
+                                        <!-- Render Subcategories if Category is expanded -->
+                                        <template if:true={category.expanded}>
+                                            <template for:each={category.subCategories} for:item="subCategory">
+                                                <!-- Subcategory Row -->
+                                                <tr key={subCategory.accountNumber}>
+                                                    <td style="padding-left: 60px;">
+                                                        <!-- Subcategory Expand/Collapse icon -->
+                                                        <lightning-icon 
+                                                            icon-name={subCategory.iconName}
+                                                            alternative-text="Expand/Collapse"
+                                                            size="xx-small"
+                                                            class="slds-m-right_xx-small slds-cursor_pointer"
+                                                            onclick={toggleSubCategory}
+                                                            data-category-id={category.accountNumber}
+                                                            data-subcategory-id={subCategory.accountNumber}>
+                                                        </lightning-icon>
+                                                        <strong>{subCategory.accountNumber}</strong> <!-- Account Number of Subcategory -->
+                                                    </td>
+                                                    <td style="padding-left: 60px; font-size: 96%;">
+                                                        <strong>{subCategory.accountName}</strong> <!-- Account Name of Subcategory -->
+                                                    </td>
+                                                    <!-- <td></td>
+                                                    <td></td> -->
+                                                    <td>{subCategory.amount}</td>
+                                                
+                                                </tr>
+                            
+                                                <!-- Render Ledgers if Subcategory is expanded -->
+                                                <template if:true={subCategory.expanded}>
+                                                    <template for:each={subCategory.ledgers} for:item="ledger">
+                                                        <!-- Ledger Row -->
+                                                        <tr key={ledger.accountNumber}>
+                                                            <td style="padding-left: 90px;">
+                                                                <!-- Ledger Expand/Collapse icon -->
+                                                                <lightning-icon 
+                                                                    icon-name={ledger.iconName}
+                                                                    alternative-text="Expand/Collapse"
+                                                                    size="xx-small"
+                                                                    class="slds-m-right_xx-small slds-cursor_pointer"
+                                                                    onclick={toggleLedger}
+                                                                    data-subcategory-id={subCategory.accountNumber}
+                                                                    data-ledger-id={ledger.accountNumber}>
+                                                                </lightning-icon>
+                                                                <strong>{ledger.accountNumber}</strong> <!-- Account Number of Ledger -->
+                                                            </td>
+                                                            <td style="padding-left: 90px; font-size: 96%;">
+                                                                <strong>{ledger.accountName}</strong> <!-- Account Name of Ledger -->
+                                                            </td>
+                                                            <!-- <td></td>
+                                                            <td></td> -->
+                                                            <td>{ledger.amount}</td>
+                                                        </tr>
+                            
+                                                        <!-- Render Ledger Items if Ledger is expanded -->
+                                                        <template if:true={ledger.expanded}>
+                                                            <template for:each={ledger.items} for:item="item">
+                                                                <!-- Ledger Item Row -->
+                                                                <tr key={item.accountNumber}>
+                                                                    <td style="padding-left: 120px;">
+                                                                        <!-- Ledger Item icon (if needed) -->
+                                                                        {item.accountNumber} <!-- Account Number of Ledger Item -->
+                                                                    </td>
+                                                                    <td style="padding-left: 120px;" ondblclick={handleDoubleClick} data-id={item.Id}>
+                                                                    {item.accountName} <!-- Account Name of Ledger Item -->
+                                                                    </td>
+                                                                    <!-- <td></td>
+                                                                    <td></td> -->
+                                                                    <td>{item.amount}</td>
+                                                                </tr>
+                                                            </template>
+                                                        </template>
+                                                    </template>
+                                                </template>
+                                            </template>
+                                        </template>
+                                    </template>
+                                </template>
+                            </template>
+
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            
+        </div>
+    </template>
+    <template if:true={entryDetailedTable}>
+        <div class="main-container">
+            <div style="display: flex; align-items: center; justify-content: space-between;  padding: 0% 0% 1% 0;">
+              
+                <p style="font-weight: bold; font-size: 140%; padding: 0% 0% 0% 1%">Entry Details</p>
+                <lightning-button label="Back" variant="brand" onclick={handleClose}  style="margin-left: 81%; margin-top:1%;"></lightning-button>
+                <button 
+                            class="slds-button slds-button_icon slds-button_icon-border"  style="margin-right: 1%; margin-top:1%;"
+                            title="Refresh" 
+                            onclick={fetchReplist1}>
+                            <svg class="slds-button__icon" aria-hidden="true">
+                                <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                            </svg>
+                        </button>
+            </div>
+            <!-- <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 3% 0 0 3%;">Entry Details</h3>
+    
+                <lightning-button class="slds-m-left_small" label="Back" onclick={handleClose} variant="brand" style="padding-right: 3.5%;padding-top:2%;"></lightning-button>
+            </div> -->
+            <div class="listview custom-scroll">
+            <table class="slds-table slds-table_cell-buffer">
+                <thead>
+                    <tr>
+                        <th class="slds-text-align_left">S.No</th>
+                        <th class="slds-text-align_left">Item Name</th>
+                        <th class="slds-text-align_left">Ledger Name</th>
+                        <th class="slds-text-align_left">Sub Category</th>
+                        <th class="slds-text-align_left">Category</th>
+                        <th class="slds-text-align_left">Entity Name</th>
+                        <th class="slds-text-align_left">Company Name</th>
+                        <!-- <th class="slds-text-align_left">Org Name</th> -->
+                        <th class="slds-text-align_left">Created Date</th>
+                        <!-- <th class="slds-text-align_left">Tax</th> -->
+                        <th class="slds-text-align_left">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={entryData} for:item="entry">
+                        <tr key={entry.Id} class="tr">
+                            <td class="slds-text-align_left">{entry.SNo}</td>
+                            <td class="slds-text-align_left">{entry.ledgerItemName}</td>
+                            <td class="slds-text-align_left">{entry.ledgerName}</td>
+                            <td class="slds-text-align_left">{entry.subCategory}</td>
+                            <td class="slds-text-align_left">{entry.category}</td>
+                            <td class="slds-text-align_left">{entry.entityName}</td>
+                            <td class="slds-text-align_left">{entry.companyName}</td>
+                            <!-- <td class="slds-text-align_left">{entry.orgName}</td> -->
+                            <td class="slds-text-align_left">{entry.createdDate}</td>
+                            <!-- <td class="slds-text-align_left">{entry.tax}</td> -->
+                            <td class="slds-text-align_left">{entry.amount}</td>
+                        </tr>
+                    </template>
+                            
+                </tbody>
+            </table>
+            </div>
+        </div>
+     </template>
+      <!-- create Company-->
+      <!-- <template if:true={createCompanyflag}>
+        <c-create-company-lwc  orgidtrack={orgid}></c-create-company-lwc>
+     </template> -->
+</template>
