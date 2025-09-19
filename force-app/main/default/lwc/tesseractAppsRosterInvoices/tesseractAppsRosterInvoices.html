@@ -1,0 +1,311 @@
+<template>
+    <div style="background: #F3F5F7;" >
+        <template if:true={isModalRelate}>
+        <p style="font-weight: bold; padding: 1% 0% 2% 1%;font-size:140%"> Participant Services</p>
+        <header class="header">
+            <div class="search-section">
+             
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Participant</span>
+                    <lightning-input label="Client ID or Name" onchange={handleSearchInput} type="search" variant="label-hidden" value={searchKey}></lightning-input>
+                </div>
+               
+                <div class="floating-label-new">
+                    <span class="label-text-drop">Start Date</span>
+                    <lightning-input type="date" label="Start Date" name="start" value={startDate} variant="label-hidden" onchange={handleDateChange}></lightning-input>
+                </div>
+                <div class="floating-label-new">
+                    <span class="label-text-drop">End Date</span>
+                    <lightning-input type="date" label="End Date" name="end" value={endDate} variant="label-hidden" onchange={handleDateChange}></lightning-input>
+                </div>
+              
+                <!-- <lightning-button  variant="brand"  label="Participants" title="Participants"  onclick={handleCheckBoxVisible}> </lightning-button> -->
+                <i class="material-icons" title="Participants"  onclick={handleCheckBoxVisible}>filter_alt</i>
+            </div>
+            <div class="action-section">
+              
+                    <lightning-button  variant="brand"  label="Generate Invoice" title="Generate Invoice"  onclick={handleGenerateInvoice} disabled={disableBool} > </lightning-button>
+                    <lightning-button  variant="brand"  label="Back" title="Back"  onclick={HandleBack} style="margin-left: 1px;" > </lightning-button>
+                
+            </div>
+        </header>
+</template>
+       
+        <template if:true={participantCheckBox}> 
+            <div class="sidebar">
+                <div class="close-btn" onclick={handleCheckBoxVisible}>&times;</div>
+                 
+                 <div   style="border-radius: 5px 5px 0 0;">
+                  <h5 class="facility-header">Participant</h5> 
+                       <div class="box-facility-role" style="margin-bottom:10px; PADDING: 0PX 15PX; OVERFLOW-X: HIDDEN; OVERFLOW-Y: AUTO; HEIGHT: 30VH;">
+                        <lightning-checkbox-group label="" name="progress" options={ParticipantOptions} value={partcipantIdList}
+                        onchange={handleServiceStaffchange} ></lightning-checkbox-group>
+                        
+                       </div>
+                  
+                 </div>
+                    
+               </div>
+        </template>
+        <template if:true={isInvoiceflag}>
+            <div>
+              
+                <div style="padding:1%"> 
+                                    
+                    <table class="slds-table slds-table_cell-buffer " style="table-layout: fixed;">
+                        <thead>
+                            <tr>
+                             <th style="width:5%;text-align:left"><lightning-input type="checkbox" onchange={handleSelectAll}></lightning-input></th> 
+                            <!--    <th style="width:5%;text-align:left">Sl no</th> -->
+                                <th style="width:10%;text-align:left">Resource Name</th>
+                                <th style="width:10%;text-align:left" class="description">Participant Name</th>
+                                <th style="width:10%;text-align:left">Service Type</th>
+                                <th style="width:10%;text-align:left" class="description">Available Funds</th>
+                                <th style="width:8%;">Service Date</th>
+                                <th style="width:9%; " class="description" title="Billable Hours">Billable Hours</th>
+                                <th style="width:6%;text-align:left">Unit Price</th>
+                                <th style="width:4%;text-align:left">GST</th>
+                                <th style="width:6%;text-align:left">Amount</th>
+                                <th style="width:8%;text-align:left">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={accList} for:item="acc">
+                                <tr key={acc.Id} class="tr1">
+                                     <td>
+                                        <lightning-input type="checkbox" checked={acc.isChecked} data-id={acc.Id} data-status={acc.Status__c} onchange={handleCheckboxChange}></lightning-input>
+                                    </td> 
+                                   <!--  <td class="description">{acc.slno}</td> -->
+                                    <td class="description" title={acc.Resource_Name__c}>{acc.Resource_Name__c}</td>
+                                    <td class="description" title={acc.participantFullName} >{acc.participantFullName} </td>
+                                    <td class="description" title={acc.Service_Type_Name__c}>{acc.Service_Type_Name__c}</td>
+
+                                    <td>{acc.availableFunds}</td>
+                                    <td>{acc.ServiceDate}</td>
+                                    <td>{acc.Qty__c}</td>
+                                    <td>{acc.unitprice}</td>
+                                    <td>{acc.GST__c}</td>
+                                    <td class="description" title={acc.amount}>{acc.amount}</td>
+                                    <td class="description" title={acc.uistatus}>{acc.uistatus}</td> 
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+    
+                <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;">
+                    <!--RECORDS PER PAGE-->
+                    <div class="slds-col">
+                        <div class="slds-list_inline slds-p-bottom_xx-small">
+                            <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                            <div class="slds-select_container">
+                                <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                    <template for:each={pageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>{option}</option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!--PAGE NAVIGATION-->
+                    <div class="slds-align_absolute-center" style="height:5rem">
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+                        &nbsp;
+                        <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                        &nbsp;
+                        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                    </div>
+                    <!--TOTAL RECORDS-->
+                    <div class="slds-clearfix">
+                        <div class="slds-float_right">
+                            <span class="slds-badge"> Total Records: {totalRecords}</span>
+                        </div>
+                    </div>
+                </div>
+    
+    
+                <div style="padding:1%">
+                    <p style="font-weight: bold;font-size:140%"> Participant Invoices</p>
+                    <table class="slds-table  slds-table_cell-buffer"  style="width:100%;  margin-top:1%;table-layout:fixed;">
+                        <thead>
+                            <tr>
+                                <th  class="slds-cell-wrap th">Sales</th>
+                                <th  class="slds-cell-wrap th" style="width:30%;">File Reference</th>
+                                <th  class="slds-cell-wrap th">Date Generated</th>
+                                <!-- <th class="slds-cell-wrap th" style="width:15%;">File Name</th> -->
+                                <th  class="slds-cell-wrap th">GST</th>
+                                <th  class="slds-cell-wrap th">Amount</th>
+                                <th  class="slds-cell-wrap th">Status</th>
+                                <th  class="slds-cell-wrap th">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={bulkServices} for:item="invoice">
+                                <tr key={invoice.Id} class="tr1">
+                                    <!-- <template if:true={acc.ServiceInvoice}>
+                                        <td class="slds-cell-wrap">
+                                            {acc.Name}
+                                        </td>
+                                        
+                                    </template>
+                                    <template if:false={acc.ServiceInvoice}>
+                                        <td class="slds-cell-wrap">
+                                            <a href="javascript:void(0)" data-id={acc.Id} onclick={handleedit}>  {acc.Name}
+                                            </a>
+                                        </td>
+                                    </template> -->
+                                    <td class="slds-cell-wrap">
+                                        {invoice.Name}
+                                    </td>
+                                    <td class="slds-cell-wrap description">{invoice.fileReference}</td>
+                                    <td class="slds-cell-wrap">{invoice.invoiceDate}</td>
+                                    <!-- <td class="slds-cell-wrap">{invoice.fileName}></td>     -->
+                                    <td class="slds-cell-wrap">${invoice.GST__c}</td>
+                                    <td class="slds-cell-wrap">${invoice.Total_Amount__c}</td>
+                                    <td class="slds-cell-wrap">{invoice.Status__c}</td>
+                                    <td>
+                                        <!-- <div>                                        
+                                            <a href={invoice.amazonUrl} data-id={invoice.Id} data-url={invoice.amazonUrl}  
+                                                onclick={handleView} >
+                                                <lightning-icon icon-name="action:preview" size="xx-small" title="View Invoice" style="cursor:pointer;background:#808080;"></lightning-icon>
+                                            </a> &nbsp; 
+                                            <a href="javascript:void(0)"  data-id={invoice.Id} onclick={handleDeleteConfirmation}  data-participantname={invoice.fileReference}>
+                                                <lightning-icon icon-name="action:delete" size="xx-small" variant="error" title="Delete Invoice"></lightning-icon>
+                                            </a>
+                                            
+                                        </div> -->
+                                        <div>                                        
+                                            <!-- View Icon -->
+                                            <a href={invoice.amazonUrl} 
+                                            data-id={invoice.Id} 
+                                            data-url={invoice.amazonUrl}  
+                                            onclick={handleView} 
+                                            title="View Invoice">
+                                                <i class="material-icons view-icon" 
+                                                style="cursor: pointer;">
+                                                visibility
+                                                </i>
+                                            </a> &nbsp;
+
+                                            <!-- Delete Icon -->
+                                            <a href="javascript:void(0)"  
+                                            data-id={invoice.Id} 
+                                            data-participantname={invoice.fileReference} 
+                                            onclick={handleDeleteConfirmation} 
+                                            title="Delete Invoice">
+                                                <i class="material-icons delete-icon" 
+                                                style="cursor: pointer;">
+                                                delete
+                                                </i>
+                                            </a>
+                                        </div>
+
+                                    </td>
+                                </tr>                            
+                            </template>
+                        </tbody>
+                    </table>  
+                </div>
+                 <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;">
+                <div class="slds-col">
+                    <div class="slds-list_inline slds-p-bottom_xx-small">
+                        <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                        <div class="slds-select_container">
+                            <select class="slds-select"  onchange={handleRecordsPerPageBulk}>
+                                <template for:each={pageSizeOptionsBulk} for:item="option">
+                                    <option key={option} value={option}>{option}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-align_absolute-center" style="height:5rem">
+                    <lightning-button disabled={bDisableFirstBulk} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPageBulk}></lightning-button>
+                    <lightning-button disabled={bDisableFirstBulk} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPageBulk}></lightning-button>
+                    &nbsp;
+                    <span class="slds-badge">Showing {pageNumberBulk} &nbsp;of&nbsp; {totalPagesBulk} &nbsp;&nbsp;Page(s)</span>
+                    &nbsp;
+                    <lightning-button disabled={bDisableLastBulk} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPageBulk} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                    <lightning-button disabled={bDisableLastBulk} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPageBulk} icon-position="right"></lightning-button>
+                </div>
+                <!--TOTAL RECORDS-->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge"> Total Records: {totalRecordsBulk}</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </template>
+       
+        <template if:true={showProgressBar}>
+            <!-- <div style="margin-top: 10%;">
+                <b style="font-size: 22px;text-align:center;margin-left:25%">Please wait a moment. Invoices are being generated...</b>
+                <lightning-progress-bar value={progressValue} size="large"></lightning-progress-bar>
+                <div style="text-align:center;">{progressValue}% Complete</div>
+            </div> -->
+
+            <div class="overlay-logo"></div>
+        
+            <div class="spinner-wrapper">
+                <div class="loader-container">
+                    <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                    <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                </div>
+        
+                <!-- Progress text instead of progress bar -->
+                <p class="progress-text">Please Wait...</p>
+            </div>
+           
+        </template>
+        <template if:true={isShowSpinner}>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+         </template>
+        <template if:true={isModalOpen}>
+    <div style="display: flex; justify-content: space-between; align-items: center;padding-top: 10px;padding-left: 1.5%;padding-right: 1.5%;">
+        <p style="font-weight: bold; font-size: 140%; margin: 0;">Participant Invoice</p>
+        <lightning-button 
+            label="Close" 
+            variant="brand-outline" 
+            onclick={closeaddPayrollinvoice}
+            class="slds-m-left_medium"
+            style="margin-bottom: 5px;">
+        </lightning-button>
+    </div>
+
+    <div class="slds-p-around_medium">
+        <iframe src={currentUrl} width="100%" height="1300px"></iframe>
+    </div>
+</template>
+
+    </div>
+    <template if:true={ServiceWarningMessage}>
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+       
+        <div class="slds-modal__container modal-container" style="max-width:25%;">
+         <header class="slds-modal__header" style="background: #002A52;">
+            
+            <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Delete</h2>
+        </header> 
+        <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+            <div class="slds-m-around_small" style="text-align:center">
+                <div><p style="text-align: center;">Are you sure want to delete the Invoice ?</p></div>
+                <div class="button-container slds-m-top_medium">
+                    
+                    <lightning-button label="No" variant="brand" onclick={closeWarningMessage}
+                    ></lightning-button>
+                    <lightning-button label="Yes" variant="brand" onclick={handleDeleteService} ></lightning-button>
+                </div>
+            </div>
+        </div>
+        </div>
+       </section>
+       <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+   
+    
+</template>

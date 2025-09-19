@@ -1,0 +1,645 @@
+<template>
+    <template if:true={addExpenses}>
+       <!--  <div style="padding-top:20px;font-size:14px;font-weight:bold;margin-left:2%">                
+            Activity Statement Details        
+        </div> -->
+        <!-- <div style="margin-left:16px;margin-top:10px;">
+            <h3 slot="title">
+                <span style="font-size: 18.2px;font-weight:bold;"> Activity Statement Details   </span>
+            </h3>
+        </div> -->
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <p style="font-weight: bold; padding: 1% 0 0 1%; font-size: 140%; ">Activity Statement - {companyname}</p>
+            <!-- <lightning-button label="Back" variant="brand" onclick={handleBack1} style=" margin-top:1%;margin-bottom:1%; margin-right:1%;"></lightning-button>  -->
+        </div>
+        
+        <div style="margin-left: 81.5%; margin-bottom: 2%; display: flex; gap: 5%;">
+            <lightning-button variant="brand" label="Add New" onclick={handleCreate}></lightning-button>
+            <lightning-button variant="brand" label="Back" onclick={handleBack}></lightning-button>
+            <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={fetchActivityStatement}>
+                <svg class="slds-button__icon" aria-hidden="true">
+                    <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                </svg>
+            </button>
+        </div>
+        
+        
+        <template if:true={staffexpensesData}>
+            <div class="slds-grid">
+                <div style="margin-left:2%;margin-right:2%;width:100%;margin-top:-1%">
+                    <table class="slds-table" style="table-layout: fixed;">
+                        <thead>
+                            <tr>
+                                <th class="slds-cell-wrap th">Form Type</th>
+                                <th  class="slds-cell-wrap th">Start Date</th>
+                                <th  class="slds-cell-wrap th">End Date</th>                                  
+                                <th  class="slds-cell-wrap th">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={Listofdata_Pagination} for:item="acc">
+                                <tr key={acc.Id} class="tr1">
+                                    <td class="slds-cell-wrap description"> {acc.formType}</td>
+                                    <td class="slds-cell-wrap">{acc.startDate}</td>                                        
+                                    <td class="slds-cell-wrap">{acc.endDate}</td>                                        
+                                    <td>
+                                        <div>
+                                            <a href={acc.amazonUrl} data-id={acc.Id} data-url={acc.Amazon_URL__c}  
+                                                onclick={handleView} title="View Statement">
+                                                 <i class="material-icons view-icon"  data-id={acc.Id}>visibility</i>
+                                            </a> &nbsp;
+                                            <a href="javascript:void(0)" data-id={acc.Id} data-type={acc.Form_Type__c} 
+                                                onclick={handleEdit} title="View Statement">     <!--target="_blank"-->
+                                                <i class="material-icons edit-icon"  data-id={acc.Id}>edit_document</i>
+                                            </a>
+                                        </div>
+                                        
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!--Pagination Start-->
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;width:95%;margin-left:2%">
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                    <div class="slds-list_inline ">
+                        <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+                        <label class="slds-text-color_weak" for="recordsPerPage"></label><!--slds-p-horizontal_x-small-->
+                        <div class="slds-select_container">
+                            <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                <template for:each={pageSizeOptions} for:item="option">
+                                    <option key={option} value={option}>{option}</option>
+                                </template> 
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- PAGE NAVIGATION -->
+                <div class="slds-align_absolute-center" style="height:5rem;">
+                    <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button><!--class="slds-p-horizontal_x-small" -->
+                    <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                    &nbsp;
+                    <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                    &nbsp;
+                    <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                    <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                </div>
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge"> Total Records: {totalRecords}</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template if:true={staffexpensesNoData}>
+            <div class="slds-m-around_large slds-p-left_x-large" style="color:green;">
+                <b>There is no activity statements</b>
+            </div>
+        </template>
+    </template>
+
+    <template if:true={isOpenModal}>
+        <h3 style="font-weight: bold; margin-top:1%;margin-left:1.2%">Add BAS and IAS</h3>
+
+        <lightning-button style="margin-left:90%;margin-bottom:2%;" variant="brand" label="Back" onclick={handleBack}></lightning-button><br/>
+            <div class="slds-p-around_medium" style="margin-top: 1%;">
+                <lightning-record-edit-form object-api-name="BAS_and_IAS__c" onsuccess={handleSuccess} onsubmit={handleSubmit} record-id={recordId}>
+                    <lightning-messages></lightning-messages>
+                    <div class="slds-grid">
+                        <div class="slds-col slds-size_1-of-1">
+                            <div class="slds-col slds-size_1-of-2" style="margin-left:25%;">
+                                <lightning-input-field field-name="Form_Type__c" name="typeofExpense" required="true" onchange={changeExpense}></lightning-input-field>                                            
+                            </div>
+                            <lightning-messages></lightning-messages>
+                            <div if:true={aBasChild}>
+                                <!-- <lightning-messages></lightning-messages> -->
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>            
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    
+                                </div>
+                            </div>
+                            <div if:true={BIas}>
+                                <!-- <lightning-messages></lightning-messages> -->
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={CBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={DBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={FBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                     <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" value={paygAmountW4} required="true" name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={GBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={IIas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <!-- <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field> -->
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <!-- <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field> -->
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={JIas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={NBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={PBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={QBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={RBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={SBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>                                                 
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>                                                                           
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={TBas}>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>                                                 
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>                                                                           
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={UBas}>
+                                <lightning-messages></lightning-messages>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={VBas}>
+                                <lightning-messages></lightning-messages>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={WBas}>
+                                <lightning-messages></lightning-messages>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={XBas}>
+                                <lightning-messages></lightning-messages>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={YBas}>
+                                <lightning-messages></lightning-messages>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Total_Salary_Wages_and_Other_Payments__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_from_Payments_Shown__c" required="true" name="amount3" value={paygAmountW3} onchange={handleValueChange}></lightning-input-field>                                        
+                                        <lightning-input-field field-name="Total_Amounts_Withheld_W2_W4_W3__c" name="amount5" disabled="true" value={paygTotalAmountW5} onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Amount_Withheld_Where_no_ABN_is_Quoted__c" required="true" name="amount2" value={paygAmountW2} onchange={handleValueChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Other_Amounts_Withheld__c" required="true" value={paygAmountW4} name="amount4" onchange={handleValueChange}></lightning-input-field>
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+                            <div if:true={ZBas}>
+                                <lightning-messages></lightning-messages>
+                                <div class="slds-grid slds-p-around_medium border">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="Start_Date__c" name="start" value={startDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="Client_Name__c" value={orgname} required="true" disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Document_Id__c"></lightning-input-field>
+                                        <lightning-input-field field-name="PAYG_Tax_Withheld__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input-field field-name="End_Date__c" name="end" value={endDate} required="true" onchange={handleStartDateChange}></lightning-input-field>
+                                        <lightning-input-field field-name="TFN__c"></lightning-input-field>
+                                        <lightning-input-field field-name="ABN__c" value={abn} disabled="true"></lightning-input-field>
+                                        <lightning-input-field field-name="Nothing_due_or_Refundable__c" required="true"></lightning-input-field>                                       
+                                    </div>
+                                </div>
+                                <div style="float:right;margin-top:10px;width:55%;">
+                                    <lightning-button type="submit" variant="brand" label="Save" style="margin-left: 1%;" disabled={saveButtonDisable}></lightning-button>&nbsp;&nbsp;
+                                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                                </div>
+                            </div>
+
+                        </div>                     
+                    </div> <br/><br/>
+                    
+                </lightning-record-edit-form>  
+            </div>
+    </template>
+    <template if:true={isPopupOpen}>
+        <div class="slds-p-around_medium">
+            <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+            onclick={handleBack} style="float:right;margin-bottom:5px;"></lightning-button>
+            <iframe src={currentUrl} width="100%" height="1300px" ></iframe>
+        </div>              
+    </template>
+    <template if:true={bIaschild}>
+        <c-b-ias-child-pdf child-record-id={recordId} child-response-data={responseData}></c-b-ias-child-pdf>
+    </template>
+    <template if:true={cBasChild}>
+        <c-c-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-c-bas-child-pdf>
+    </template>
+    <template if:true={dBasChild}>
+        <c-d-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-d-bas-child-pdf>
+    </template>
+    <template if:true={fBasChild}>
+        <c-f-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-f-bas-child-pdf>
+    </template>
+    <template if:true={gBasChild}>
+        <c-g-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-g-bas-child-pdf>
+    </template>
+    <template if:true={iIasChild}>
+        <c-i-ias-child-pdf child-record-id={recordId} child-response-data={responseData}></c-i-ias-child-pdf>
+    </template> 
+    <template if:true={jIasChild}>
+        <c-j-ias-child-pdf child-record-id={recordId} child-response-data={responseData}></c-j-ias-child-pdf>
+    </template>
+    <template if:true={nAnnual}>
+        <c-n-annual-child-pdf child-record-id={recordId} child-response-data={responseData}></c-n-annual-child-pdf>
+    </template>
+     <template if:true={pAnnual}>
+        <c-p-annual-child-pdf child-record-id={recordId} child-response-data={responseData}></c-p-annual-child-pdf>
+    </template>
+    <template if:true={qAnnual}>
+        <c-q-annual-child-pdf child-record-id={recordId} child-response-data={responseData}></c-q-annual-child-pdf>
+    </template>
+    <template if:true={rQuartely}>
+        <c-r-quartely-child-pdf child-record-id={recordId} child-response-data={responseData}></c-r-quartely-child-pdf>
+    </template>
+    <template if:true={sQuartely}>
+        <c-s-quartely-child-pdf child-record-id={recordId} child-response-data={responseData}></c-s-quartely-child-pdf>
+    </template>
+    <template if:true={tQuartely}>
+        <c-t-quartely-child-pdf child-record-id={recordId} child-response-data={responseData}></c-t-quartely-child-pdf>
+    </template>
+    <template if:true={uBasChild}>
+        <c-u-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-u-bas-child-pdf>
+    </template>
+    <template if:true={vBasChild}>
+        <c-v-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-v-bas-child-pdf>
+    </template>
+    <template if:true={wBasChild}>
+        <c-w-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-w-bas-child-pdf>
+    </template>
+    <template if:true={xBasChild}>
+        <c-x-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-x-bas-child-pdf>
+    </template>
+    <template if:true={yBasChild}>
+        <c-y-bas-child-pdf child-record-id={recordId} child-response-data={responseData}></c-y-bas-child-pdf>
+    </template>
+    <template if:true={zAnnual}>
+        <c-z-annual-child-pdf child-record-id={recordId} child-response-data={responseData}></c-z-annual-child-pdf>
+    </template>
+
+    <template if:true={showSpinner}>
+        <lightning-spinner alternative-text="Loading page....." size="medium"> Your page is loading</lightning-spinner>
+    </template>
+
+    <template if:true={backActivityFlag}>
+        <c-tesseract-apps-accounting-reports-lwc></c-tesseract-apps-accounting-reports-lwc>
+    </template>
+</template>
