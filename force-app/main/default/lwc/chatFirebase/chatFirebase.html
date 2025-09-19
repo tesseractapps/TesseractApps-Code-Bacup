@@ -1,0 +1,687 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="overlay-logo"></div>
+    
+        <div class="spinner-wrapper">
+            <div class="loader-container">
+                <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                <img src={imageUrl} alt="T Logo" class="Tlogo" />
+            </div>
+    
+            <!-- Progress text instead of progress bar -->
+            <p class="progress-text">ChaT Loading....</p>
+        </div>
+    </template>
+    <div slot="title" style="font-weight: bold;
+    font-size: 140%;
+    padding: 1% 0% 1% 1%;">
+        ChaT
+    </div>
+    <!-- <lightning-button label="Delete UAT Users" onclick={deleteUATUsersAndRelatedData}></lightning-button> -->
+        <div class="container">
+            <!-- User List Section -->
+            <div class="user-list-container-head custom-scroll">
+                <div class="user-greeting">
+                    <div class="avatar-container">
+                        <template if:true={currentUserAvatar}>
+                            <img src={currentUserAvatar} alt="User Avatar" class="avatar" />
+                        </template>
+                        <template if:false={currentUserAvatar}>
+                            <span class="avatar-placeholder">👤</span>
+                        </template>
+                    </div>
+                    <div class="user-name">
+                        <strong class="greeting-text">Hey!</strong>
+                        <span class="username-text">{currentUserNameAPI}</span>
+                    </div>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="search-bar-container">
+                    <lightning-input
+                        type="search"
+                        placeholder="Search users..."
+                        value={searchQuery}
+                        onchange={handleSearch}
+                        style="width: 89%;"
+                        variant="label-hidden">
+                    </lightning-input>
+                
+                    <!-- Plus Button beside Search Bar -->
+                    <button class="toggle-new-chats" onclick={toggleNewUserPopup}>
+                        <lightning-icon icon-name={toggleIcon} alternative-text="Add New Chat" size="xx-small"></lightning-icon>
+                    </button>
+                    <button class="toggle-new-group" onclick={toggleGroupPopup}>
+                        <lightning-icon icon-name="action:new_group" alternative-text="Create Group" size="xx-small"></lightning-icon>
+                    </button>
+                </div>
+                <div class="user-list-container custom-scroll">
+                    <template if:false={showNewUserPopup}>
+                        <div class="tab-container">
+                            <button class={getChatTabClass} onclick={switchToChats}>Chats</button>
+                            <button class={getGroupTabClass} onclick={switchToGroups}>Groups</button>
+                        </div>
+                    </template>
+                    
+                    <template if:true={isGroupTabActive}>
+                        <template if:false={showNewUserPopup}>
+                    <template if:true={groupChats.length}>
+                        <ul class="group-list">
+                            <template for:each={groupChats} for:item="group">
+                                <li key={group.id} class="group-card" onclick={selectGroupChat} data-id={group.id}>
+                                    <div class="group-card-content">
+                                        <!-- Group Avatar -->
+                                        <div class="group-avatar-container">
+                                            <template if:true={group.avatar}>
+                                                <img src={group.avatar} alt="Group Avatar" class="group-avatar" />
+                                            </template>
+                                            <template if:false={group.avatar}>
+                                                <span class="group-avatar-placeholder">👥</span>
+                                            </template>
+                                        </div>
+                            
+                                        <!-- Group Info -->
+                                        <div class="group-info">
+                                            <strong class="group-name">{group.name}</strong>
+                                            <span class="last-message-group">{group.lastMessage}</span>
+                                        </div>
+                            
+                                        <!-- Last Message Time -->
+                                        <div class="last-message-time-group">{group.lastMessageTime}</div>
+                                    </div>
+
+                                
+                                </li>
+                            </template>
+                            
+                        </ul>
+                    </template>
+                </template>
+                </template>
+                    
+                <!-- Show Existing Chats when showNewUserPopup is FALSE -->
+    <template if:false={showNewUserPopup}>
+        <template if:true={isChatTabActive}>
+        <template if:true={filteredExistingChats.length}>
+            <ul>
+                <template for:each={filteredExistingChats} for:item="user">
+                    <li key={user.id} class="user-card" onclick={selectUser} data-id={user.userId}>
+                        <div class="user-card-content">
+                            <div class="user-details">
+                                <div class="avatar-container">
+                                    <template if:true={user.avatar}>
+                                        <img src={user.avatar} alt="User Avatar" class="avatar" />
+                                    </template>
+                                    <template if:false={user.avatar}>
+                                        <span class="avatar-placeholder">👤</span>
+                                    </template>
+                                </div>
+                                <div class="user-info">
+                                    <strong>{user.name}</strong> <br>
+                                    <span class="last-message">{user.lastMessage}</span>
+                                </div>
+                            </div>
+                            <div class="last-message-time">{user.lastMessageTime}</div>
+                        </div>
+                    </li>
+                    
+                    
+                </template>
+            </ul>
+        </template>
+        <template if:false={filteredExistingChats.length}>
+            <div class="no-chats-container">
+                <p class="no-chats-text">No chats available.</p>
+            </div>
+        </template>
+    </template>
+    </template>
+
+    <!-- Show New User List when showNewUserPopup is TRUE -->
+    <!-- Show New User List when showNewUserPopup is TRUE -->
+<template if:true={showNewUserPopup}>
+    <h3 class="new-user-header">Select a User to Start a Chat</h3>
+    <template if:true={filteredNewChats.length}>
+        <ul class="new-user-list">
+            <template for:each={filteredNewChats} for:item="user">
+                <li key={user.id} class="user-card" data-id={user.userId} onclick={selectNewUser}>
+                    <div class="user-card-content">
+                        <div class="user-details">
+                            <div class="avatar-container">
+                                <template if:true={user.avatar}>
+                                    <img src={user.avatar} alt="User Avatar" class="avatar" />
+                                </template>
+                                <template if:false={user.avatar}>
+                                    <span class="avatar-placeholder">👤</span>
+                                </template>
+                            </div>
+                            <div class="user-info">
+                                <strong>{user.name}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </template>
+        </ul>
+    </template>
+    <template if:false={filteredNewChats.length}>
+        <p>No new users available.</p>
+    </template>
+</template>
+
+<!-- Group Creation Modal -->
+<!-- Group Creation Modal -->
+<template if:true={showGroupPopup}>
+    <div class="modal-overlay-ed">
+        <div class="group-modal-gc">
+            <h3>Create New Group</h3>
+
+            <!-- Group Name Input -->
+            <lightning-input 
+                type="text" 
+                label="Group Name" 
+                value={groupName} 
+                onchange={handleGroupNameChange} 
+                class="group-input">
+            </lightning-input>
+            <lightning-input 
+                type="search" 
+                placeholder="Search users..." 
+                value={searchQuerygc} 
+                onchange={handleSearchgc} 
+                class="search-user-input-gc">
+            </lightning-input>
+
+            <p class="user-selection-title-gc">Select Users:</p>
+
+            <!-- User Selection List -->
+            <ul class="user-selection-list-gc custom-scroll">
+                <template for:each={filteredUsersForGroupgc} for:item="user">
+                    <li key={user.id} class="user-item-gc">
+                        <input 
+                            type="checkbox" 
+                            data-id={user.id} 
+                            onchange={handleUserSelection} 
+                            checked={user.isMandatory} 
+                            disabled={user.isMandatory}
+                            class="user-checkbox-gc">
+                        <div class="user-info-gc">
+                            <span class="user-name-gc">{user.name}</span>
+                            <template if:true={user.isMandatory}>
+                                <span class="admin-badge-gc">(Admin)</span>
+                            </template>
+                        </div>
+                    </li>
+                </template>
+            </ul>
+            <template if:false={filteredUsersForGroupgc.length}>
+                <p class="no-users-found-gc">No users found.</p>
+            </template>
+            <!-- Action Buttons -->
+            <div class="group-modal-buttons-gc">
+                <button class="group-create-button-gc" onclick={createGroupChat}>Create</button>
+                <button class="group-cancel-button-gc" onclick={toggleGroupPopup}>Cancel</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+            </div>
+
+
+
+                <template if:false={filteredUsers}>
+                    <p>No users found.</p>
+                </template>
+            </div>
+
+            
+
+            <!-- Chat Room Section -->
+            <div class="chat-container">
+    
+                <!-- Default Message when No Chat is Selected -->
+                <template if:true={isNoChatSelected}>
+                    <div class="select-user-message">
+                        <lightning-icon icon-name="utility:comments" alternative-text="Chat Icon" size="large" class="chat-icon"></lightning-icon>
+                        <p>Welcome! Select a user or group to begin your conversation.</p>
+                    </div>
+                </template>
+            
+                <!-- ✅ Single Chat Section -->
+                <template if:true={isSingleChatActive}>
+                    <div class="chat-header">
+                        <div class="header-content">
+                            <div class="avatar-container">
+                                <template if:true={selectedUserAvatar}>
+                                    <img src={selectedUserAvatar} alt="User Avatar" class="avatar" />
+                                </template>
+                                <template if:false={selectedUserAvatar}>
+                                    <span class="avatar-placeholder">👤</span>
+                                </template>
+                            </div>
+                            <strong class="user-name">{selectedUserName}</strong>
+                        </div>
+                    </div>
+            
+                    <div class="messages-container custom-scroll" onscroll={handleScroll}>
+                        <template for:each={messages} for:item="msg">
+                            <template if:true={msg.isDateSeparator}>
+                                <div key={msg.id} class="date-separator">{msg.text}</div>
+                            </template>
+                            <template if:false={msg.isDateSeparator}>
+                                <div key={msg.id} class="message-wrapper">
+                                    <div class={msg.senderClass}>
+                                        <p class={msg.className}>
+                                            {msg.text}
+                                            <template if:true={msg.isEdited}>
+                                                <span class="edited-label">(edited)</span>
+                                            </template>
+                                        </p>
+                                    </div>
+                                    <span class={msg.timestampClass}>{msg.createdAt}
+                                        <!-- Message Options Positioned Near Timestamp -->
+                                        <template if:true={msg.isSender}>
+                                            <template if:true={msg.showOptions}>
+                                                <div class="message-options">
+                                                    <template if:true={msg.isEditable}>
+                                                        <button class="edit-message" data-id={msg.id} data-text={msg.text} onclick={openEditModal}></button>
+                                                    </template>
+                                                    <button class="delete-message" data-id={msg.id} onclick={openDeleteModal}></button>
+                                                </div>
+                                            </template>
+                                            
+                                        </template>
+                                    </span>
+
+                                    
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                    
+                    <!-- ✏️ Edit Message Modal (Moved Outside the Loop) -->
+                    <template if:true={showEditModal}>
+                        <div class="modal-overlay-ed">
+                            <div class="edit-message-modal">
+                                <h3>Edit Message</h3>
+                                <textarea class="edit-message-input" oninput={handleEditChange}>{editedText}</textarea>
+                                <div class="modal-buttons">
+                                    <button class="save-edit-button" onclick={saveEditedMessage}>Save</button>
+                                    <button class="cancel-edit-button" onclick={closeEditModal}>Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 🗑 Delete Confirmation Modal (Moved Outside the Loop) -->
+                    <template if:true={showDeleteModal}>
+                        <div class="modal-overlay-ed">
+                            <div class="delete-message-modal">
+                                <h3>Delete Message?</h3>
+                                <p>Are you sure you want to delete this message?</p>
+                                <div class="modal-buttons">
+                                    <button class="confirm-delete-button" onclick={confirmDeleteMessage}>Delete</button>
+                                    <button class="cancel-delete-button" onclick={closeDeleteModal}>Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
+            
+                    <div class="chat-input-container">
+                        <textarea 
+                            class="custom-message-input custom-scroll-textarea" 
+                            placeholder="Type your message..." 
+                            value={messageInput} 
+                            oninput={handleMessageChange} 
+                            onkeypress={handleKeyPress}>
+                        </textarea>
+                        <button class="custom-send-button" onclick={sendMessage} disabled={isSending}>
+                            <span>Send</span>
+                            <img src={sendIconUrl} alt="Send" class="custom-send-icon">
+                        </button>
+                    </div>
+                </template>
+            
+                <!-- ✅ Group Chat Section -->
+                <template if:true={isGroupChatActive}>
+                    <div class="group-chat-header">
+                        <!-- <div class="group-chat-header" onclick={toggleGroupMembers}> -->
+                        <div class="group-title">
+                            <div class="group-avatar-container">
+                                <template if:true={selectedGroupAvatar}>
+                                    <img src={selectedGroupAvatar} alt="Group Avatar" class="group-avatar" />
+                                </template>
+                                <template if:false={selectedGroupAvatar}>
+                                    <span class="avatar-placeholder">👥</span>
+                                </template>
+                            </div>
+                            <strong class="group-name">{selectedGroupName}</strong>
+                        </div>
+                        <div class="group-actions">
+                            <!-- <button class="leave-group-button" onclick={leaveGroupChat} title="Leave Group">
+                                <lightning-icon icon-name="utility:logout" size="small" alternative-text="Leave"></lightning-icon>
+                            </button> -->
+                            <!-- <button class="options-menu" onclick={toggleOptionsMenu}> -->
+                                <!-- <div>
+                                <button class="options-menu" onclick={toggleGroupMembers}>
+                                <lightning-icon icon-name="action:info" size="small" alternative-text="info" style="background-color: #022951;"></lightning-icon>
+                            </button>
+                            <template if:true={showGroupMembers}>
+                                <div class="group-members-container-info">
+                                    <h3>Group Members</h3>
+                                    <ul class="group-members-list">
+                                        <template for:each={processedGroupParticipants} for:item="member">
+                                            <li key={member.id} class="group-member">
+                                                <span class="member-name">{member.name}</span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div> -->
+                        <div class="group-info-container">
+                            <button class="options-menu" onclick={toggleGroupMembers}>
+                                <lightning-icon icon-name="action:info" size="small" alternative-text="info" style="background-color: #022951;"></lightning-icon>
+                            </button>
+                            
+                            <template if:true={showGroupMembers}>
+                                <div class="group-members-popup">
+                                    <h3>Group Members</h3>
+                                    <ul class="group-members-list custom-scroll">
+                                        <template for:each={processedGroupParticipants} for:item="member">
+                                            <li key={member.id} class="group-member">
+                                                <span class="member-name">{member.name}</span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div>
+                        
+
+
+                            <template if:true={isCurrentUserAdmin}>
+                                <button class="options-menu" onclick={toggleEditPopup}>
+                                    <lightning-icon icon-name="action:edit" size="x-small" alternative-text="edit" style="background-color: #022951;"></lightning-icon>
+                                </button>
+                            </template>
+                            
+                            <!-- <div class="options-menu-container">
+                                <button class="options-icon" onclick={toggleOptionsMenu}>
+                                    &#8286;
+                                </button>
+                                <template if:true={showOptionsMenu}>
+                                    <div class="options-dropdown">
+                                        <template if:true={isCurrentUserAdmin}>
+                                            <button class="dropdown-item" onclick={toggleEditPopup}>✏️ Edit Participants</button>
+                                        </template>
+                                        <button class="dropdown-item leave" onclick={leaveGroupChat}>🚪 Leave Group</button>
+                                    </div>
+                                </template>
+                            </div> -->
+                        </div>
+                    </div>
+                    <!-- <template if:true={showGroupMembers}>
+                        <div class="group-members-container">
+                            <h3>Group Members</h3>
+                            <ul class="group-members-list">
+                                <template for:each={processedGroupParticipants} for:item="member">
+                                    <li key={member.id} class="group-member">
+                                        <span class="member-name">{member.name}</span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </template> -->
+                    
+            
+                    <!-- Group Messages -->
+                    <!-- Group Messages -->
+                    <div class="group-messages-container custom-scroll" onscroll={handleGroupScroll}>
+                        <template for:each={messages} for:item="msg">
+                            <template if:true={msg.isDateSeparator}>
+                                <div key={msg.id} class="date-separator">
+                                    {msg.text}
+                                </div>
+                            </template>
+                            
+                            <template if:true={msg.isPoll}>
+                                <div key={msg.id} class={msg.computedClass}>
+                                    <!-- Sender Name & Timestamp (Outside Bubble) -->
+                                    <div class="poll-metadata">
+                                        <span class="poll-sender">{msg.senderName}</span>
+                                        <span class="poll-timestamp">{msg.createdAt}</span>
+                                        <template if:true={msg.isSender}>
+                                            <template if:true={msg.showOptions}>
+                                            <div class="message-options">
+                                            <button class="delete-message" data-id={msg.id} onclick={openGroupDeleteModal}></button>
+                                        </div>
+                                    </template>
+                                        </template>
+                                    </div>
+                                    <template if:false={msg.isPollDeleted}>
+                                    <div class="poll-container">
+                                        <h4 class="poll-question">{msg.pollQuestion}</h4>
+                                        <ul class="poll-options-list">
+                                            <template for:each={msg.pollOptions} for:item="option">
+                                                <li key={option.value} class="poll-option-item">
+                                                    <button class="poll-option-button"
+                                                            data-id={msg.id}
+                                                            data-option={option.value}
+                                                            onclick={votePollOption}
+                                                            disabled={msg.userVoted}>
+                                                        {option.value}
+                                                    </button>
+                                                    <!-- ✅ Show vote count with a tooltip -->
+                                                    <div class="vote-count-container">
+                                                        <span class="vote-label">Votes:</span> <!-- ✅ Label for count -->
+                                                        <span class="vote-count" onmouseover={showVotersList} onmouseout={hideVotersList} data-id={msg.id} data-option={option.value}>
+                                                            {option.votes}
+                                                        </span>
+
+                                                        <!-- ✅ Tooltip for voter names -->
+                                                        <div class="voter-tooltip" if:true={option.showVoters} key={option.value}>
+                                                            <template if:true={option.voters.length}>
+                                                                <ul>
+                                                                    <template for:each={option.voters} for:item="voter">
+                                                                        <li key={voter}>{voter}</li>
+                                                                    </template>
+                                                                </ul>
+                                                            </template>
+                                                            <template if:false={option.voters.length}>
+                                                                <p>No votes yet</p>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                    </template>
+                                    <template if:true={msg.isPollDeleted}>
+                                        <div class="deleted-message-container">
+                                            <p class="deleted-message-text">This poll was deleted</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            
+                            
+                            
+                            
+                            
+                            
+                            <template if:false={msg.isDateSeparator}>
+                                <template if:false={msg.isPoll}>
+                                    <div key={msg.id} class="message-wrapper {msg.senderClass}">
+                                        <template if:true={msg.isSender}>
+                                            <!-- Sender Name on Right for Sent Messages -->
+                                            <span class="message-sender sender-right">{msg.senderName}</span>
+                                        </template>
+                                        <template if:false={msg.isSender}>
+                                            <!-- Sender Name on Left for Received Messages -->
+                                            <span class="message-sender sender-left">{msg.senderName}</span>
+                                        </template>
+                    
+                                        <div class={msg.senderClass}>
+                                            <p class={msg.className}>
+                                                {msg.text}
+                                                <template if:true={msg.isEdited}>
+                                                    <span class="edited-label">(edited)</span>
+                                                </template>
+                                            </p>
+                                        </div>
+                    
+                                        <span class={msg.timestampClass}>{msg.createdAt}
+                                            <template if:true={msg.isSender}>
+                                                <template if:true={msg.showOptions}>
+                                                    <div class="message-options">
+                                                        <template if:true={msg.isEditable}>
+                                                            <button class="edit-message" data-id={msg.id} data-text={msg.text} onclick={openGroupEditModal}></button>
+                                                        </template>
+                                                        <button class="delete-message" data-id={msg.id} onclick={openGroupDeleteModal}></button>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </span>
+                                    </div>
+                                </template>
+                            </template>
+                        </template>
+                    </div>
+                    
+
+<!-- ✏️ Edit Group Message Modal -->
+<template if:true={showGroupEditModal}>
+    <div class="modal-overlay-ed">
+        <div class="edit-message-modal">
+            <h3>Edit Group Message</h3>
+            <textarea class="edit-message-input" oninput={handleGroupEditChange}>{editedGroupText}</textarea>
+            <div class="modal-buttons">
+                <button class="save-edit-button" onclick={saveEditedGroupMessage}>Save</button>
+                <button class="cancel-edit-button" onclick={closeGroupEditModal}>Cancel</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 🗑 Delete Group Message Modal -->
+<template if:true={showGroupDeleteModal}>
+    <div class="modal-overlay-ed">
+        <div class="delete-message-modal">
+            <h3>Delete Group Message?</h3>
+            <p>Are you sure you want to delete this message?</p>
+            <div class="modal-buttons">
+                <button class="confirm-delete-button" onclick={confirmDeleteGroupMessage}>Delete</button>
+                <button class="cancel-delete-button" onclick={closeGroupDeleteModal}>Cancel</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- 📌 Poll Creation Modal -->
+<!-- 📌 Custom Poll Modal -->
+<template if:true={showPollModal}>
+    <div class="custom-poll-overlay">
+        <div class="custom-poll-container">
+            <h3 class="custom-poll-title">Create a Poll</h3>
+            
+            <lightning-input 
+                type="text" 
+                label="Poll Question" 
+                value={pollQuestion} 
+                onchange={handlePollQuestionChange} 
+                class="custom-poll-question-input">
+            </lightning-input>
+            
+            <ul class="custom-poll-options-list">
+                <template for:each={pollOptions} for:item="option">
+                    <li key={option.id} class="custom-poll-option-item">
+                        <input type="text" data-id={option.id} value={option.value} 
+                               oninput={handlePollOptionChange} class="custom-poll-textbox" />
+                        <button data-id={option.id} onclick={removePollOption} class="custom-poll-delete-btn">×</button>
+                    </li>
+                </template>
+            </ul>
+
+            <button class="custom-poll-add-btn" onclick={addPollOption}>+ Add Option</button>
+
+            <div class="custom-poll-buttons">
+                <button class="custom-poll-submit-btn" onclick={sendPollMessage}>Send Poll</button>
+                <button class="custom-poll-cancel-btn" onclick={closePollModal}>Cancel</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template if:true={showEditPopup}>
+    <div class="modal-overlay-ed">
+    <div class="group-modal-gc">
+        <h3>Edit Group Members</h3>
+
+        <ul class="user-selection-list-gc custom-scroll">
+            <template for:each={processedUsersList} for:item="user">
+                <li key={user.id} class="user-item">
+                    <input 
+                        type="checkbox" 
+                        data-id={user.id} 
+                        checked={user.isSelected} 
+                        onchange={handleAdminUserSelection} 
+                        disabled={user.isAdmin}
+                        class="user-checkbox-gc">
+                    
+                    <!-- <span>{user.name}</span>
+                    
+                    <template if:true={user.isAdmin}>
+                        <span class="admin-badge">(Admin)</span>
+                    </template> -->
+
+                    <div class="user-info-gc">
+                        <span class="user-name-gc">{user.name}</span>
+                        <template if:true={user.isAdmin}>
+                            <span class="admin-badge-gc">(Admin)</span>
+                        </template>
+                    </div>
+                </li>
+            </template>
+        </ul>
+
+        <div class="group-modal-buttons-gc">
+            <button class="group-create-button-gc" onclick={saveGroupChanges}>Save</button>
+            <button class="group-cancel-button-gc" onclick={closeEditUserModal}>Cancel</button>
+        </div>
+    </div>
+</div>
+</template>
+
+                    
+            
+                    <div class="chat-input-container">
+                       
+                            <lightning-icon icon-name="action:share_poll" alternative-text="Create Poll" size="medium" onclick={openPollModal} style="cursor: pointer;"></lightning-icon>
+                                             
+                        <textarea 
+                            class="custom-message-input custom-scroll-textarea" 
+                            placeholder="Type your message in group..." 
+                            value={messageInput} 
+                            oninput={handleMessageChange} 
+                            onkeypress={handleKeyPress}>
+                        </textarea>
+                        <button class="custom-send-button" onclick={sendGroupMessage} disabled={isSending}>
+                            <span>Send</span>
+                            <img src={sendIconUrl} alt="Send" class="custom-send-icon">
+                        </button>
+                    </div>
+
+                    
+                    
+                    
+                    
+                </template>
+            </div>
+        </div>
+    
+</template>
