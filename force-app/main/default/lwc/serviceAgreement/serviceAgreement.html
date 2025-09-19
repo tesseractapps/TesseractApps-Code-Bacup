@@ -1,0 +1,306 @@
+<template>  
+   <!-- <lightning-card> -->
+    
+   
+   <div class="slds-float_right slds-float_left">
+    <!-- My Templates button (added first, appears on the left) -->
+    <!-- <lightning-button variant="brand-outline" label="My Templates" onclick={openTemplateModal}
+        class="slds-float_left" style="margin-right:10px;">
+    </lightning-button> -->
+
+    <!-- Add New Service Agreement button -->
+    <lightning-button variant="brand" label="Add New Service Agreement" onclick={handleAgreement}
+        class="slds-float_left" style="margin-right:10px;">
+    </lightning-button>
+
+    <!-- Refresh icon button -->
+    <button class="slds-button slds-button_icon slds-button_icon-border" style="margin-right:10px;" title="Refresh" onclick={RefreshAttachmentsData}>
+        <svg class="slds-button__icon" aria-hidden="true">
+            <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+        </svg>
+    </button>
+</div>
+
+
+   <template if:true={isOpenModal}>
+       <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+           <div class="slds-modal__container">
+            <!-- modal header start -->
+              <header class="slds-modal__header">
+                 <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
+                    <lightning-icon icon-name="utility:close"
+                       alternative-text="close"
+                       variant="inverse"
+                       size="small" ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                 </button>
+                 <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate"> New Service Aggreement</h2>
+              </header>
+          
+              <!-- modal body start -->
+              <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                <lightning-record-edit-form object-api-name="Service_Agreement__c" onsuccess={handleSuccess} onsubmit={handleSubmit} onerror={handleError}>
+                    <lightning-messages></lightning-messages>
+                    <div class="slds-grid">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning-input-field field-name="Name" required="true"></lightning-input-field>
+                            <lightning-input-field field-name="Comments__c"></lightning-input-field>      
+                          </div>
+                          <div class="slds-col slds-size_1-of-2">
+                              <lightning-input-field field-name="User__c" required="true"></lightning-input-field>
+                              <lightning-input-field field-name="Date__c" readonly="true"></lightning-input-field>
+                              <!-- <div  class="slds-col slds-size_1-of-2 slds-p-around_small">  -->
+                                               
+                                 <input type="file" id="fileInput" onchange={onFileUpload} accept=".pdf, .doc, .docx" name="uploadFile" style="display: none;"><!--  ENABLE THIS AFTER IMPLEMENTING WORD IN TSIGN -->
+                                 <!-- <input type="file" id="fileInput" onchange={onFileUpload} accept="application/pdf,.pdf" name="uploadFile" style="display: none;"> DISABLE THIS AFTER IMPLEMENTING WORD IN TSIGN -->
+                                    <button type="button" onclick={triggerFileInput} class="file-upload-button" >
+                                       &#8684; Upload File
+                                    </button>
+                                    <div class="slds-text-body_small">{fileName}</div>
+                                    <template if:true={showSpinner}>
+                                       <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                                          </lightning-spinner>
+                                    </template>
+                                    <template if:true={isattachError}>
+                                       <p style="color:red">File Size Can not exceed 512MB </p>  
+                                    </template>                                                             
+                             <!--  </div> -->
+                                                   
+                          </div>
+                    </div> 
+              <!-- modal footer start-->
+              <div class="slds-align_absolute-center slds-m-around_small">
+                <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                <lightning-button type="submit" variant="brand" label="Save" class="slds-m-around_small" disabled={isSubmitDisabled}></lightning-button><!--  DISABLE isSubmitDisabled AFTER IMPLEMENTING WORD IN TSIGN -->
+                 
+              </div>
+            </lightning-record-edit-form>  
+        </div>
+           </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+     </template>
+     <!-- modal end -->
+     <!--Data table begins-->
+     <!--<template if:true={data}>
+       <lightning-datatable data={data} columns={columns} key-field="id" hide-checkbox-column="true"
+           onrowaction={handleRowActions}></lightning-datatable>
+     </template>-->
+     <br/>
+     <template if:true={data}>
+         <br/>
+         <div>
+           <table class="slds-table slds-table_cell-buffer"
+              style="table-layout:fixed;">
+                 <thead>
+                    <tr>
+                       <th class="slds-cell-wrap"><b>Name</b></th>
+                       <th class="slds-cell-wrap"><b>Size</b></th>
+                       <th class="slds-cell-wrap"><b>Comments</b></th>
+                       <th class="slds-cell-wrap"><b>User</b></th>
+                       <th class="slds-cell-wrap"><b>Date</b></th>
+                       <th class="slds-cell-wrap"><b>Actions</b></th>                                                            
+                    </tr>
+                 </thead>
+                 <tbody>
+                    <template for:each={data} for:item="attachment">
+                        <tr key={attachment.Id} class="tr1">
+                          <td class="slds-cell-wrap">{attachment.Name}</td>
+                          <td class="slds-cell-wrap">{attachment.fileSize}</td>
+                          <td class="slds-cell-wrap description">{attachment.comment}</td>
+                          <td class="slds-cell-wrap">{attachment.UserName}</td>
+                          <td class="slds-cell-wrap">{attachment.Date}</td>
+                          <td style="display: flex; align-items: center;">
+                             
+                              <template if:true={attachment.showPreview}>
+                                <a href={attachment.AmazonURL} data-id={attachment.Id} data-url={attachment.AmazonURL}  
+                                onclick={handleView} title="View Repository"><i class="material-icons view-icon">visibility</i></a>&nbsp;</template>
+                                                               
+                                <a href="javascript:void(0)" data-id={attachment.Id} 
+                                     onclick={hanldeEdit} title="Edit" ><i class="material-icons edit-icon">edit_document</i></a>&nbsp;
+                               
+                                <a href="javascript:void(0)" data-id={attachment.Id} 
+                                     onclick={handleDelete} title="Delete"  ><i class="material-icons delete-icon">delete</i></a>&nbsp;
+                                 <lightning-button 
+                                     variant={attachment.buttonVariant} 
+                                     label={attachment.signatureStatus}
+                                     data-id={attachment.Id} 
+                                     data-url={attachment.AmazonURL}
+                                     data-signature-url={attachment.signatureUrl}
+                                     onclick={handleTsign}
+                                     title="Tsign">
+                                 </lightning-button>
+                              
+                             
+                         </td>
+                            <!--{attachment.File_Name__c}, 
+                            <lightning-formatted-url value={attachment.FileURL__c} target="_blank">{attachment.FileURL__c}</lightning-formatted-url>-->
+                        </tr>
+                    </template>
+                 </tbody>
+              </table>
+            </div>
+    </template>
+     
+     <template if:false={imagelistFlag}>
+         <div class="slds-m-around_large slds-p-left_x-large" style="color:green;">
+            <b>No records of service agreements found.</b>
+         </div>
+       <!--  <div class="slds-grid  slds-grid_align-spread slds-m-left_large" style="padding-top: 0.5em; font-size:15px;">
+           <p style="color: #254ca1;">No records of service agreements found.</p>
+        </div> -->
+     </template>
+     <!--Data table ends-->
+     <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;">
+        <!--RECORDS PER PAGE-->
+        <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+                <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                <div class="slds-select_container">
+                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+  
+        <!--PAGE NAVIGATION-->
+        <div class="slds-align_absolute-center" style="height:5rem">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+        </div>
+        <!--TOTAL RECORDS-->
+        <div class="slds-clearfix">
+            <div class="slds-float_right">
+                <span class="slds-badge"> Total Records: {totalRecords}</span>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Spinner -->
+     <div if:true={showLoadingSpinner}>
+        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+     </div>
+       <template if:true={isEdit}>
+           <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-02" aria-modal="true" aria-describedby="modal-content-id-2" class="slds-modal slds-fade-in-open">
+               <div class="slds-modal__container">
+                <!-- modal header start -->
+                  <header class="slds-modal__header">
+                     <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}>
+                        <lightning-icon icon-name="utility:close"
+                           alternative-text="close"
+                           variant="inverse"
+                           size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                     </button>
+                     <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">Update Service Agreement</h2>
+                  </header>
+              
+                  <!-- modal body start -->
+                  <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                    <lightning-record-edit-form object-api-name="Service_Agreement__c" onsuccess={handleSuccess} onsubmit={handleSubmit} onerror={handleError} record-id={recordId}>
+                        <lightning-messages></lightning-messages>
+                        <div class="slds-grid">
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field field-name="Name" required="true"></lightning-input-field>
+                                <lightning-input-field field-name="Comments__c"></lightning-input-field>      
+                              </div>
+                              <div class="slds-col slds-size_1-of-2"> 
+                                <lightning-input-field field-name="User__c" required="true"></lightning-input-field>
+                              </div>
+                        </div> 
+                  <!-- modal footer start-->
+                  <footer class="slds-align_absolute-center slds-m-around_small">
+                    <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Cancel</button>
+                    <lightning-button type="submit" variant="brand" label="Update" class="slds-m-around_small"></lightning-button>
+                     
+                  </footer>
+                </lightning-record-edit-form>  
+            </div>
+               </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+     </template>
+         <!-- modal end -->
+
+         <template if:true={isModalOpen}>
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+             class="slds-modal slds-fade-in-open slds-modal_large" style="height: 750px;" role="dialog" tabindex="-1">
+            
+              <div class="slds-modal__container">
+                <!-- modal header start -->
+                <header class="slds-modal__header">
+                  <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close"
+                    onclick={closeModal}>
+                    <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"
+                      size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2  class="slds-text-heading_medium slds-hyphenate">View Attachment</h2>
+                </header>
+                <!-- modal body start -->
+                <div class="slds-modal__content slds-p-around_medium">
+                  <iframe src={currentUrl} width="1300px" height="1000px" ></iframe>
+                  </div>
+                  <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Close" onclick={closeModal}></lightning-button>
+                  </footer>
+                <!-- modal footer start-->
+              </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+  <!-- </lightning-card>  -->  
+   
+  
+  <template if:true={isTemplateModalOpen}>
+<div class="template-modal-overlay">
+        <div class="template-modal">
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+        <p style="font-weight: bold; font-size: 140%; padding:1% 0% 1% 1%">My Templates</p>
+         <div class="slds-grid slds-grid_align-end slds-m-top_small">
+    <lightning-button variant="brand" label="Back" onclick={closeTemplateModal} class="slds-m-right_small"></lightning-button>
+    
+</div>
+
+    </div>
+
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered" style="table-layout:fixed;width:98%;margin-left:1%;margin-bottom: 1%;">
+                <thead>
+                    <tr>
+                        <th class="slds-cell-wrap th" style="width: 30%;">Template Name</th>
+                        <th class="slds-cell-wrap th" style="width: 30%;">Document Type</th>
+                        <th class="slds-cell-wrap th" style="width: 30%;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template for:each={templateList} for:item="template">
+                <tr key={template.id} class="tr1">
+                    <td>{template.name}</td>
+                    <td>{template.documentType}</td>
+                    <td>
+
+                                    <lightning-icon icon-name="action:share_file"
+                                                            size="x-small"
+                                                           alternative-text="Use"
+                                                           title="Use"
+                                                           onclick={handleUseTemplate} data-id={template.id} data-url={template.url}
+                                                           style="cursor:pointer;color:white;background:#0099DE;">
+                                    </lightning-icon>&nbsp;
+
+                    </td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+        </div>
+</div>
+</template>
+</template>

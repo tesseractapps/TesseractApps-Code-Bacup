@@ -1,0 +1,577 @@
+public with sharing class RosterCreation {
+    @AuraEnabled
+    public static Map<String, Object> createAddShift(String addshiftData, Boolean isRecurring, String typeOfRecur, Integer recurEvery, String endDate, String shiftDate,
+                                                    List<String> weeklyDays, Integer monthlyDay, String servicesJsonData, String checkListJsonData, Boolean isUpdate, Boolean includeParticipants, List<Date> recurrenceDates) {
+        Map<String, Object> response = new Map<String, Object>();
+        Map<String, RosterAddShiftService.RosterServiceHandler> rosterServiceMap = new Map<String, RosterAddShiftService.RosterServiceHandler>();
+        system.debug('recurrenceDates >>'+recurrenceDates);
+        Boolean addShiftupdateFlag = isUpdate;
+        Boolean shiftWithStaffUpdateFlag = isUpdate; 
+        list<Date> FinalRecurDates= new list<Date>();                                                
+    
+        try {
+           
+            List<RosterAddShiftService.RosterServiceHandler> rosterServices = (List<RosterAddShiftService.RosterServiceHandler>) System.JSON.deserialize(servicesJsonData, List<RosterAddShiftService.RosterServiceHandler>.class);
+            List<Add_Shift__c> addShiftList = new List<Add_Shift__c>();
+            addShiftWrapper addShift = (addShiftWrapper) System.JSON.deserialize(addshiftData, addShiftWrapper.class);
+            system.debug('addShift.shiftDetails.AddShiftType '+addShift.shiftDetails.AddShiftType);
+             system.debug('recurrenceDates '+recurrenceDates);
+           if(isRecurring){
+                list<ShiftwithStaff__c> existingShiftList=[ SELECT Id, Date__c, Start_Time__c, End_Date__c, End_Time__c FROM ShiftwithStaff__c WHERE Attendence__c = true AND Date__c IN :recurrenceDates and
+                                                           staff__c =:addShift.shiftDetails.AddShiftStaffValue];
+               boolean isUpdating=addShiftupdateFlag;
+               boolean firstRecord=true;
+               system.debug('existingShiftList '+existingShiftList);
+               for (Integer i = 0; i < recurrenceDates.size(); i++) {
+                   Date RD = recurrenceDates[i];
+                   Boolean isOverlapping = false;
+                   Date shiftEndDate;
+                   
+                   System.debug('Processing recurrence date: ' + RD);
+                   
+                   // Determine correct end date based on shift type
+                   if (addShift.shiftDetails.AddShiftType == 'Night' || 
+                       addShift.shiftDetails.AddShiftType == 'Sleepover Shift' || 
+                       addShift.shiftDetails.AddShiftType == 'Custom') {
+                           
+                           List<String> timeSplit = addShift.shiftDetails.AddShiftEndTimeAMPM.toLowerCase().split(' ');
+                           List<String> startTimeSplits = addShift.shiftDetails.AddShiftStartTimeAMPM.split(' ');
+                           
+                           if (timeSplit[1] == 'am' && 
+                               (startTimeSplits[1] != 'am' || addShift.shiftDetails.AddShiftType == 'Custom')) {
+                                   shiftEndDate = RD.addDays(1);
+                                   System.debug('Shift spans to next day. New end date: ' + shiftEndDate);
+                               } else {
+                                   shiftEndDate = RD;
+                               }
+                       } else {
+                           shiftEndDate = RD;
+                       }
+                   
+                   DateTime recurStart = DateTime.newInstanceGMT(RD, addShift.shiftDetails.AddShiftStartTime);
+                   DateTime recurEnd = DateTime.newInstanceGMT(shiftEndDate, addShift.shiftDetails.AddShiftEndTime);
+                   
+                   System.debug('Recur Start: ' + recurStart + ', Recur End: ' + recurEnd);
+                   
+                   // Skip overlap check for first date during update
+                   if (isUpdating && i == 0) {
+                       FinalRecurDates.add(RD);
+                       System.debug('Update mode: first date auto-added without overlap check -> ' + RD);
+                       continue;
+                   }
+                   
+                   // Check overlap for all other dates
+                   for (ShiftwithStaff__c ss : existingShiftList) {
+                       if (RD == ss.Date__c) {
+                           DateTime shiftStart = DateTime.newInstanceGMT(ss.Date__c, ss.Start_Time__c);
+                           DateTime shiftEnd = DateTime.newInstanceGMT(ss.End_Date__c, ss.End_Time__c);
+                           
+                           System.debug('Checking overlap with existing shift: ' + shiftStart + ' to ' + shiftEnd);
+                           
+                           if (isShiftOverlap(recurStart, recurEnd, shiftStart, shiftEnd)) {
+                               isOverlapping = true;
+                               System.debug('Overlap found for date: ' + RD + ' — skipping this date.');
+                               break;
+                           }
+                       }
+                   }
+                   
+                   if (!isOverlapping) {
+                       FinalRecurDates.add(RD);
+                       System.debug('No overlap. Date added to FinalRecurDates: ' + RD);
+                   }
+               }
+
+
+               system.debug('FinalRecurDates '+FinalRecurDates);
+                
+                
+            }
+          
+          for (RosterAddShiftService.RosterServiceHandler rsh : rosterServices) {
+                rosterServiceMap.put(rsh.id, rsh);
+                if (isRecurring) {
+                   // Map<String, Object> getRecurOccurrences = RosterCreationRecurringHnadler.getNumberOfRecurrences(typeOfRecur, recurEvery, endDate, shiftDate, weeklyDays, monthlyDay);
+                    //system.debug('getRecurOccurrences >>'+getRecurOccurrences);
+                    if (FinalRecurDates.size()> 0) {
+                        //List<Date> dateList = (List<Date>) getRecurOccurrences.get('RecurrenceDates');
+                        for (Date eachDate : FinalRecurDates) {
+                            system.debug('eachDate >>'+eachDate);
+                            Add_Shift__c shift = createShift(addShift, rsh, addShiftupdateFlag);
+                            shift.Start_Date__c = eachDate;
+                            Datetime dt = Datetime.newInstance(eachDate, Time.newInstance(0, 0, 0, 0));
+                            shift.Day_Name__c = dt.format('EEEE');
+                            shift.Do_you_want_to_set_this_a_recurring_shif__c=true;
+                            if (addShiftupdateFlag) {
+                                addShiftupdateFlag = false;
+                            }
+                            system.debug('shift >>'+shift);
+                            addShiftList.add(shift);
+                        }
+                    }
+                } else {
+                       
+                    Add_Shift__c shift = createShift(addShift, rsh, addShiftupdateFlag);
+                     if (rsh.SplitShift && addShiftupdateFlag==true) {
+                                addShiftupdateFlag = false;
+                            }
+                    shift.Public_holiday__c=addShift.shiftDetails.AddShiftHoliday;
+                    addShiftList.add(shift);
+                }
+            }
+    
+            if (!addShiftList.isEmpty()) {
+                upsert addShiftList;
+                system.debug('addShiftList >>'+addShiftList);
+                response.put('AddShiftSuccess', true);
+                response.put('AddShiftMessage', 'Shifts created successfully.');
+                
+                // Call createOrUpdateShiftWithStaff and get the response
+                String shiftStaffResponse = createOrUpdateShiftWithStaff(rosterServiceMap, addShiftList, checkListJsonData, isUpdate, includeParticipants);
+                Map<String, Object> shiftStaffResponseMap = (Map<String, Object>) JSON.deserializeUntyped(shiftStaffResponse);
+    
+                if (shiftStaffResponseMap.containsKey('isSuccess') && (Boolean) shiftStaffResponseMap.get('isSuccess')) {
+                    response.put('ShiftWithStaffSuccess', true);
+                    response.put('ShiftWithStaffMessage', 'Shifts with staff processed successfully.');
+                     response.put('shiftWithstaffResult',shiftStaffResponseMap.get('shiftwithStaffList'));
+                } else {
+                    response.put('ShiftWithStaffSuccess', false);
+                    response.put('ShiftWithStaffMessage', 'Error processing shift staff: ' + shiftStaffResponseMap.get('shiftWithstaffMessage'));
+                   
+                }
+            } else {
+                response.put('AddShiftSuccess', false);
+                response.put('AddShiftMessage', 'No shifts were created.');
+            }
+    
+            response.put('isSuccess', response.containsKey('AddShiftSuccess') && response.containsKey('ShiftWithStaffSuccess') &&
+                                      (Boolean) response.get('AddShiftSuccess') && (Boolean) response.get('ShiftWithStaffSuccess'));
+            response.put('AddShiftResult',JSON.serialize(addShiftList));
+    
+        } catch (Exception e) {
+            response.put('isSuccess', false);
+            response.put('message', 'Failed to process shifts: ' + e.getMessage());
+        }
+    
+        return response;
+    }
+    public static Boolean isShiftOverlap(DateTime recurStart, DateTime RecurEnd, DateTime ShiftStart, DateTime ShiftEnd){
+        return (recurStart < ShiftEnd && ShiftStart < RecurEnd);
+    }
+
+
+    @AuraEnabled
+    public static Add_Shift__c createShift(addShiftWrapper addShift, RosterAddShiftService.RosterServiceHandler rsh, Boolean addShiftupdateFlag) {
+        Add_Shift__c shift = new Add_Shift__c();
+        
+        if (addShiftupdateFlag == true && addShift.shiftDetails.AddShiftId != null) {
+            system.debug('if addShiftupdateFlag ' + addShiftupdateFlag);
+            system.debug('if condition ' + addShift.shiftDetails.AddShiftId);
+            shift = new Add_Shift__c(Id = addShift.shiftDetails.AddShiftId);  // Only for the first shift
+             // Reset the flag to false after processing
+            // Ensure subsequent shifts are treated as new records
+        } else {
+            system.debug('else condition');
+            shift = new Add_Shift__c();
+        }
+    
+        system.debug('final addShiftupdateFlag ' + addShiftupdateFlag);  // It will now be correctly updated per method call
+        shift.Start_Date__c = addShift.shiftDetails.AddShiftStartDate;
+        shift.Facility__c = addShift.shiftDetails.AddShiftFacilityValue;
+        shift.RefId__c = rsh.id;
+        shift.Quantity__c = addShift.shiftDetails.AddShiftQuantity;
+        if (rsh.SplitShift) {
+            shift.Start_Time__c = rsh.startTime;
+            shift.End_Time__c = rsh.endTime;
+            shift.Start_Time_Text__c = rsh.startTimeAMPM.toLowerCase();
+            shift.End_Time_Text__c = rsh.endTimeAMPM.toLowerCase();
+            shift.Split_Shifts__c = rsh.SplitShift;
+            shift.Split_Shift_Color__c=rsh.splitShiftColor;
+            shift.Split_Shift_Height__c=rsh.splitShiftHeight;
+        } else {
+            shift.Start_Time__c = addShift.shiftDetails.AddShiftStartTime;
+            shift.End_Time__c = addShift.shiftDetails.AddShiftEndTime;
+            shift.Start_Time_Text__c = addShift.shiftDetails.AddShiftStartTimeAMPM.toLowerCase();
+            shift.End_Time_Text__c = addShift.shiftDetails.AddShiftEndTimeAMPM.toLowerCase();
+        }
+        shift.Shift_Type__c = addShift.shiftDetails.AddShiftType;
+        shift.Role__c = addShift.shiftDetails.AddShiftRole;
+        shift.Location__Street__s = addShift.shiftaddress.street;
+        shift.Location__City__s = addShift.shiftaddress.citySuburb;
+        shift.Location__StateCode__s = addShift.shiftaddress.provinceState;
+        shift.Location__PostalCode__s = addShift.shiftaddress.postalcode;
+        Datetime dt = Datetime.newInstance(shift.Start_Date__c, Time.newInstance(0, 0, 0, 0));
+        shift.Day_Name__c = dt.format('EEEE');
+        shift.Location__CountryCode__s = 'AU';
+        shift.Location__Latitude__s=addShift.shiftaddress.latitude;
+        shift.Location__Longitude__s=addShift.shiftaddress.longitude;
+        shift.Is_EOI__c = addShift.shiftDetails.AddShiftEOI;
+        shift.Shift_Notes__c = addShift.shiftDetails.AddShiftNotes;
+        shift.Duration__c = addShift.shiftDetails.AddShiftDuration;
+      
+        shift.Get_Facility__c=addShift.shiftDetails.AddShiftEnterOtherLocation;
+        shift.Participant_Address_checkbox__c=addShift.shiftDetails.AddShiftParticipantAddressCheckbox;
+        return shift;
+    }
+
+
+ @AuraEnabled
+    public static String createOrUpdateShiftWithStaff(Map<String, RosterAddShiftService.RosterServiceHandler> rosterServiceMap, List<Add_Shift__c> addShiftsList, String checkListJsonData, Boolean shiftWithStaffUpdateFlag,boolean includeParticipants) {
+        Map<String, Object> response = new Map<String, Object>();
+          string shiftWithStaffId;
+         map<Id,date> recurringDates=new map<Id,Date>();
+        try {
+            system.debug('roster service Map: ' + rosterServiceMap);
+            system.debug('Add Shift: ' + addShiftsList);
+            List<ShiftwithStaff__c> shiftWithStaffList = new List<ShiftwithStaff__c>();
+            List<Add_Shift_Checklist__c> checklistRecords = new List<Add_Shift_Checklist__c>();
+            List<CheckListWrapper> checkList;
+            if (String.isNotBlank(checkListJsonData)) {
+                checkList = (List<CheckListWrapper>) System.JSON.deserialize(checkListJsonData, List<CheckListWrapper>.class);
+            }
+    		system.debug('check list '+checkList);
+            Set<String> shiftWithStaffIdSet = new Set<String>(); // To avoid duplicates
+            Set<String> checkListIdSet = new Set<String>(); // To avoid checklist duplicates
+    		Boolean addShiftChecklistUpdateFlag = shiftWithStaffUpdateFlag;
+            Boolean servceRecurFlag=shiftWithStaffUpdateFlag;
+            boolean checkListFlag=shiftWithStaffUpdateFlag;
+            
+          
+            for (Add_Shift__c shift : addShiftsList) {
+                ShiftwithStaff__c shiftStaff = new ShiftwithStaff__c();
+                if (addShiftChecklistUpdateFlag && rosterServiceMap.get(shift.RefId__c).shiftWithStaffId != null) {
+                    shiftStaff = new ShiftwithStaff__c(Id = rosterServiceMap.get(shift.RefId__c).shiftWithStaffId);  // Only for the first shift
+                    addShiftChecklistUpdateFlag = false; 
+                    shiftWithStaffId=rosterServiceMap.get(shift.RefId__c).shiftWithStaffId;
+                } else {
+                    shiftStaff = new ShiftwithStaff__c();
+                    shiftStaff.Shift_SCR__c=0;
+                }
+                   // recurringDates.put(shiftStaff.id,shift.Start_Date__c);
+                  	shiftStaff.Recurring_Date__c=shift.Start_Date__c;
+                    shiftStaff.Add_Shift__c = shift.Id;
+                    shiftStaff.Do_you_want_to_set_this_Recurring_Roster__c=shift.Do_you_want_to_set_this_a_recurring_shif__c;
+                    shiftStaff.Staff_Final_Hourly_Rate__c =rosterServiceMap.get(shift.RefId__c).serviceStffaHourlyRate;
+                    shiftStaff.Staff__c = rosterServiceMap.get(shift.RefId__c).StaffId;
+                    shiftStaff.Attendence__c = true;
+                	shiftStaff.Split_Shift_Color__c=shift.Split_Shift_Color__c;
+                	shiftStaff.Split_Shift_Height__c=shift.Split_Shift_Height__c;
+                    shiftStaff.RefId__c = shift.RefId__c;
+                
+                    map<string,object>longShiftDetails =  (Map<String, Object>) JSON.deserializeUntyped(rosterServiceMap.get(shift.RefId__c).LongShiftTimeSlots);
+                    system.debug('longShiftDetails '+longShiftDetails);
+                    if(!longShiftDetails.isEmpty()){
+                        if(longShiftDetails.containsKey('Morning')){
+                          Map<String, Object> morningShift = (Map<String, Object>)longShiftDetails.get('Morning');
+                          String rowShiftType = (String)morningShift.get('rowShiftType');
+                          string startTimeString = (string)(morningShift.get('startTime'));
+                          string endTimeString = (string)(morningShift.get('endTime'));
+                           
+                          if (String.isNotBlank(startTimeString)) {
+                              system.debug('endTimeString >>'+endTimeString);
+                              shiftStaff.Long_Morning_Start_Time__c = convertToTime(startTimeString);
+                              shiftStaff.Long_Morning_End_Time__c=convertToTime(endTimeString); 
+                              shiftStaff.Is_long_Morning__c=true;
+                          } else {
+                              system.debug('endTimeString >>'+endTimeString);
+                              shiftStaff.Long_Morning_Start_Time__c = null;
+                              shiftStaff.Long_Morning_End_Time__c = null;
+                              shiftStaff.Is_long_Morning__c=false;
+                          }
+                          shiftStaff.Long_Morning_Hourly_Rate__c=Decimal.valueof((string)(morningShift.get('hourlyRate')));
+                          String durationStr = String.valueOf(morningShift.get('duration'));
+                          shiftStaff.Long_Morning_Shift_Duartion__c = Decimal.valueOf(durationStr);
+                          system.debug('shiftStaff.Long_Morning_Shift_Duartion__c >>'+ shiftStaff.Long_Morning_Shift_Duartion__c);
+                        } 
+                         if(longShiftDetails.containsKey('Afternoon')){
+                          Map<String, Object> AfternoonShift = (Map<String, Object>)longShiftDetails.get('Afternoon');
+                          String rowShiftType = (String)AfternoonShift.get('rowShiftType');
+                          
+                          string startTimeString = (string)(AfternoonShift.get('startTime'));  
+                          string endTimeString = (string)(AfternoonShift.get('endTime'));
+                          if (String.isNotBlank(startTimeString)) {
+                              system.debug('endTimeString >>'+endTimeString);
+                              shiftStaff.Long_Afternoon_Start_Time__c = convertToTime(startTimeString);
+                              shiftStaff.Long_Afternoon_End_Time__c=convertToTime(endTimeString); 
+                              shiftStaff.Is_Long_Afternoon__c=true;
+                          } else {
+                              system.debug('endTimeString >>'+endTimeString);
+                              shiftStaff.Long_Afternoon_Start_Time__c = null;
+                              shiftStaff.Long_Afternoon_End_Time__c = null;
+                              shiftStaff.Is_Long_Afternoon__c=false;
+                          }
+                          shiftStaff.Long_Afternoon_Hourly_Rate__c=Decimal.valueof((string)(AfternoonShift.get('hourlyRate')));
+                          String durationStr = String.valueOf(AfternoonShift.get('duration'));
+                          shiftStaff.Long_Afternoon_Shift_Duartion__c=Decimal.valueOf(durationStr);
+                        }  
+                         if(longShiftDetails.containsKey('Night')){
+                          Map<String, Object> NightShift = (Map<String, Object>)longShiftDetails.get('Night');
+                          String rowShiftType = (String)NightShift.get('rowShiftType');
+                          
+                          string startTimeString = (string)(NightShift.get('startTime'));
+                          shiftStaff.Long_Night_Start_Time__c=convertToTime(startTimeString);  
+                          string endTimeString = (string)(NightShift.get('endTime'));
+                          shiftStaff.Long_Night_End_Time__c=convertToTime(endTimeString);
+                          if (String.isNotBlank(startTimeString)) {
+                            system.debug('endTimeString >>'+endTimeString);
+                            shiftStaff.Long_Night_Start_Time__c = convertToTime(startTimeString);
+                            shiftStaff.Long_Night_End_Time__c=convertToTime(endTimeString); 
+                            shiftStaff.Is_Long_Night_Shift__c=true;
+                        } else {
+                            system.debug('endTimeString >>'+endTimeString);
+                            shiftStaff.Long_Night_Start_Time__c = null;
+                            shiftStaff.Long_Night_End_Time__c = null;
+                            shiftStaff.Is_Long_Night_Shift__c=false;
+                        } 
+                          shiftStaff.Long_Night_Hourly_Rate__c=Decimal.valueof((string)(NightShift.get('hourlyRate')));
+                          //shiftStaff.Long_Night_Shift_Duartion__c=Decimal.valueof((string)(NightShift.get('duration')));
+                          String durationStr = String.valueOf(NightShift.get('duration'));
+                          shiftStaff.Long_Night_Shift_Duartion__c=Decimal.valueOf(durationStr);
+                        }  
+                         if(longShiftDetails.containsKey('Sleepover Shift')){
+                          Map<String, Object> SleepoverShift = (Map<String, Object>)longShiftDetails.get('Sleepover Shift');
+                          String rowShiftType = (String)SleepoverShift.get('rowShiftType');
+                          
+                          string startTimeString = (string)(SleepoverShift.get('startTime'));
+                          shiftStaff.Long_Sleepover_Start_Time__c=convertToTime(startTimeString);  
+                          string endTimeString = (string)(SleepoverShift.get('endTime'));
+                          shiftStaff.Long_Sleepover_End_Time__c=convertToTime(endTimeString);
+                          if (String.isNotBlank(startTimeString)) {
+                            system.debug('endTimeString >>'+endTimeString);
+                            shiftStaff.Long_Sleepover_Start_Time__c = convertToTime(startTimeString);
+                            shiftStaff.Long_Sleepover_End_Time__c=convertToTime(endTimeString); 
+                            shiftStaff.Is_Long_SleepOver__c=true;
+                        } else {
+                            system.debug('endTimeString >>'+endTimeString);
+                            shiftStaff.Long_Sleepover_Start_Time__c = null;
+                            shiftStaff.Long_Sleepover_End_Time__c = null;
+                            shiftStaff.Is_Long_SleepOver__c=false;
+                        }  
+                          shiftStaff.Long_Sleepover_Allowance__c=Decimal.valueof((string)(SleepoverShift.get('hourlyRate')));
+                          //shiftStaff.Long_Sleepover_Duartion__c=Decimal.valueof((string)(SleepoverShift.get('duration')));
+                          String durationStr = String.valueOf(SleepoverShift.get('duration'));
+                          shiftStaff.Long_Sleepover_Duartion__c=Decimal.valueOf(durationStr);
+                        }  
+                    }
+                        
+                    shiftStaff.Index__c=rosterServiceMap.get(shift.RefId__c).index;
+                    shiftWithStaffList.add(shiftStaff);
+                
+    			system.debug(' chek list '+checkList);
+                if (checkList.size() > 0) {
+                    for (CheckListWrapper item : checkList) {
+                        if (String.isNotEmpty(item.description)) {
+                            Add_Shift_Checklist__c check;
+                            if (checkListFlag && item.checkListId != null) {
+                                check = new Add_Shift_Checklist__c(Id = item.checkListId); 
+                               checkListFlag=(shift.Do_you_want_to_set_this_a_recurring_shif__c ==true || shift.Split_Shifts__c ==true) ? false :true;
+                          
+                                //checkListFlag = false;  // Ensure subsequent shifts are treated as new records
+                            } else {
+                                check = new Add_Shift_Checklist__c();
+                            }
+    
+                            check.Description__c = item.description;
+                            check.Mandatory__c = item.mandatory;
+                            check.Add_Shift__c = shift.Id;
+                            checklistRecords.add(check);
+                            
+                        }
+                    }
+                }
+            }
+    
+            // Handle shift with staff records
+            if (!shiftWithStaffList.isEmpty()) {
+                // Deserialize the JSON response to check for success or failure
+                upsert shiftWithStaffList;
+               if(includeParticipants ==true && addShiftsList[0].Do_you_want_to_set_this_a_recurring_shif__c !=true){
+                    String servicesResponse = RosterAddShiftService.createServices(rosterServiceMap, shiftWithStaffList,servceRecurFlag);
+                   system.debug('servicesResponse  '+servicesResponse);
+                    Map<String, Object> servicesResponseMap = (Map<String, Object>) JSON.deserializeUntyped(servicesResponse);
+
+                    if (servicesResponseMap.containsKey('isSuccess') && (Boolean)servicesResponseMap.get('isSuccess')) {
+                        response.put('isSuccess', true);
+                        response.put('ServicesMessage', 'Service created successfully');
+                    } else {
+                        response.put('isSuccess', false);
+                        response.put('ServiceErrormessage', 'Error in creating services: ' + servicesResponseMap.get('servicemessage'));
+                    } 
+               }
+                system.debug('recuring or not '+addShiftsList[0].Do_you_want_to_set_this_a_recurring_shif__c );
+                if(includeParticipants ==true && addShiftsList[0].Do_you_want_to_set_this_a_recurring_shif__c ==true){
+                    for (ShiftwithStaff__c shift : shiftWithStaffList) { 
+                        
+                    }
+                    system.debug('in esle black '+shiftWithStaffId);
+                    Map<String, Object> recurServiceResponse=   RosterCreationRecuringService.createRecurringServices(shiftWithStaffId, shiftWithStaffList,recurringDates);
+                    if (recurServiceResponse.containsKey('isSuccess') && (Boolean)recurServiceResponse.get('isSuccess')) {
+                        response.put('isSuccess', true);
+                        response.put('ServicesMessage', 'Service created successfully');
+                    } else {
+                        response.put('isSuccess', false);
+                        response.put('ServiceErrormessage', 'Error in creating services: ' + recurServiceResponse.get('ServicesMessage'));
+                    } 
+                }
+               
+            }
+    
+            // Handle checklist records
+            if (!checklistRecords.isEmpty()) {
+                system.debug('chek list recors 2'+checklistRecords);
+                upsert checklistRecords;
+            }
+    
+            response.put('isSuccess', true);
+            response.put('shiftWithstaffMessage', 'Shift with staff processed successfully.');
+            response.put('shiftwithStaffList',JSON.serialize(shiftWithStaffList));
+            
+    
+        } catch (Exception e) {
+            response.put('isSuccess', false);
+            system.debug('Error: ' + e.getMessage());
+            response.put('shiftWithstaffMessage', 'Failed to create shift with staff: ' + e.getMessage());
+        }
+    
+        return JSON.serialize(response);
+    }
+      @AuraEnabled
+    public static boolean getFatigueData(String staffId, String strtTimeText, String startdate) {
+        boolean fatigueBoolean = false; // Default value to prevent null return
+        List<ShiftwithStaff__c> allPreviousShifts = new List<ShiftwithStaff__c>();
+        Time lastLogouttime;
+        
+        // Validate input parameters
+        if (String.isBlank(staffId) || String.isBlank(strtTimeText) || String.isBlank(startdate)) {
+            System.debug('One or more input values are null or empty.');
+            return false;
+        }
+        
+        // Convert string time to Time format
+        Time startTime = AddShiftHandler.getTimeIn24HrFormat(strtTimeText);
+        if (startTime == null) {
+            System.debug('Invalid start time format.');
+            return false;
+        }
+        
+        // Fetch the last shift of the staff member
+        allPreviousShifts = [
+            SELECT Id, Staff__c, Duration__c, Log_Out_Date_Time__c, Add_Shift__r.End_Date__c  
+            FROM ShiftwithStaff__c  
+            WHERE Staff__c = :staffId  AND (Date__c = :Date.valueof(startdate )
+                          OR Date__c = :Date.valueof(startdate ) - 1)
+                     ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        
+        System.debug('Previous shifts: ' + allPreviousShifts);
+        
+        // If no previous shift found, return false
+        if (allPreviousShifts.isEmpty()) {
+            System.debug('No previous shifts found. No fatigue detected.');
+            return false;
+        }
+        
+        ShiftwithStaff__c lastShift = allPreviousShifts[0];
+        
+        // Ensure previous shift has required fields
+        if (lastShift.Log_Out_Date_Time__c == null || lastShift.Add_Shift__r == null || lastShift.Add_Shift__r.End_Date__c == null) {
+            System.debug('Previous shift data incomplete. No fatigue detected.');
+            return false;
+        }
+        
+        lastLogouttime = lastShift.Log_Out_Date_Time__c;
+        
+        // Convert start date and calculate time difference
+        Date shiftDate = Date.valueOf(startdate);
+        DateTime newShiftStartDateTime = DateTime.newInstanceGmt(shiftDate, startTime);
+        DateTime prevShiftLogInDatetime = DateTime.newInstanceGmt(lastShift.Add_Shift__r.End_Date__c, lastLogouttime);
+        
+        System.debug('startTime: ' + startTime);
+        System.debug('lastLogouttime: ' + lastLogouttime);
+        System.debug('previous shift date: ' + lastShift.Add_Shift__r.End_Date__c);
+        System.debug('shiftDate: ' + shiftDate);
+        System.debug('newShiftStartDateTime: ' + newShiftStartDateTime);
+        System.debug('prevShiftLogInDatetime: ' + prevShiftLogInDatetime);
+        
+        // Calculate time difference in hours
+        Decimal timeDifferenceInMillis = Decimal.valueOf(newShiftStartDateTime.getTime() - prevShiftLogInDatetime.getTime());
+        Decimal timeDifferenceInHours = timeDifferenceInMillis / (1000 * 60 * 60); // Convert to hours
+        
+        System.debug('Time Difference in Hours (Corrected): ' + timeDifferenceInHours);
+        
+        // Negative time difference means an invalid shift sequence
+        if (timeDifferenceInHours < 0) {
+            System.debug('Negative time difference detected! No fatigue.');
+            return false;
+        }
+        
+        // If the time difference is <= 8 hours, consider it fatigue
+        if (timeDifferenceInHours <= 8) {
+            fatigueBoolean = true;
+        }
+        
+        return fatigueBoolean;
+    }
+
+     public class checkListWrapper{
+         public string description;
+         public boolean mandatory;
+         public string checkListId;
+    }
+    
+
+    // Wrapper classes
+    public class addShiftWrapper {
+        public addShiftAddressWrapper shiftaddress;
+        public AddShiftBasicDetailsWrapper shiftDetails;
+    }
+   
+
+    public class addShiftAddressWrapper {
+        public String street;
+        public String citySuburb;
+        public String country;
+        public String provinceState;
+        public String postalcode;
+        public Decimal latitude;
+        public Decimal longitude;
+        
+    }
+
+    public class AddShiftBasicDetailsWrapper {
+        public Date AddShiftStartDate;
+        public String AddShiftFacilityValue;
+        public String AddShiftRole;
+        public Time AddShiftStartTime;
+        public String AddShiftStartTimeAMPM;
+        public String AddShiftEndTimeAMPM;
+        public string AddShiftStaffValue;
+        public Time AddShiftEndTime;
+        public String AddShiftType;
+        public String AddShiftNotes;
+        public integer AddShiftQuantity;
+        public boolean AddShiftEOI;
+        public decimal AddShiftDuration;
+        public string AddShiftId;
+        public boolean AddShiftHoliday;
+        public boolean AddShiftEnterOtherLocation;
+        public boolean AddShiftParticipantAddressCheckbox;
+    }
+                                          
+  public static Time convertToTime(String timeString) {
+    timeString = timeString.replace('Z', '');
+    List<String> parts = timeString.split(':');
+
+    return Time.newInstance(
+        Integer.valueOf(parts[0]),
+        Integer.valueOf(parts[1]),
+        Integer.valueOf(parts[2]),
+        0
+    );
+}
+    
+    
+
+   
+}
