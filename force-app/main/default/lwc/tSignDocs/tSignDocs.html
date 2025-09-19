@@ -1,0 +1,286 @@
+<template>
+    <p style="font-weight: bold; font-size: 140%; padding:1% 0% 1% 1%">Documents</p>
+    
+
+    <div class="dropdown-row">
+        <!-- Document Status Dropdown -->
+        <div class="dropdown-groupP">
+            <div class="floating-label">
+                <span class="label-text-drop">Document Status</span>
+            <!-- <label for="documentStatus" class="dropdown-label">Document Status:</label> -->
+            <!-- <select id="documentStatus" class="custom-dropdown" onchange={handleStatusChange}> -->
+                <select id="documentStatus" class="custom-dropdown" onchange={handleStatusChange}>
+                <option value="" disabled selected>Choose an option</option>
+                <option value="draft">Draft Documents</option>
+                <option value="inProgress">In Progress Documents</option>
+                <option value="processed">Processed Documents</option>
+                <option value="all">All Documents</option>
+            </select>
+            </div>
+        </div>
+    
+        <!-- Sort Order Dropdown with Icon -->
+        <div class="dropdown-group">
+            <div class="floating-label">
+                <span class="label-text-drop">Sort Order<lightning-icon icon-name="utility:sort" alternative-text="Sort" size="xx-small" class="sort-icon"></lightning-icon></span>
+
+            <select id="sortOrder" class="custom-dropdown" onchange={handleSortOrderChange}>
+                <option value="desc" selected>Newest</option>
+                <option value="asc">Oldest</option>
+            </select>
+        </div></div>
+
+        <div slot="title" class="custom-logo-title">
+            <img src={logo} alt="Te_sign Logo" class="logo-title-image" />
+        </div>
+    </div>
+    <!-- <template if:true={selectedStatus}>
+        <template if:true={displayedDocuments.length}>
+            <div class="table-container">
+                <h3>{selectedTableTitle}</h3>
+                <lightning-datatable key-field="Id" data={displayedDocuments} columns={filteredColumns} hide-checkbox-column onrowaction={handleRowAction}>
+                </lightning-datatable>
+            </div>
+        </template>
+        <template if:false={displayedDocuments.length}>
+            <p class="no-data-message">No records available for the selected status.</p>
+        </template>
+    </template> -->
+    <template if:true={selectedStatus}>
+        <template if:true={displayedDocuments.length}>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered" style="table-layout:fixed;width:98%;">
+                <thead>
+                    <tr>
+                        <th class="slds-cell-wrap th" style="width: 30%;">File Name</th>
+                        <th class="slds-cell-wrap th" style="width: 8%;">Created Date</th>
+                        <th class="slds-cell-wrap th" style="width: 30%;">First Recipient</th>
+    
+                        <!-- Show Status Column Only if Not Draft -->
+                        <template if:false={isDraftView}>
+                            <th class="slds-cell-wrap th" style="width: 10%;">Status</th>
+                        </template>
+    
+                        <th class="slds-cell-wrap th" style="width: 10%;">Comments</th>
+    
+                        <!-- Show Actions Column Only if Not Draft or In-Progress -->
+                        <template if:false={isDraftView}>
+                            <template if:false={isInProgressView}>
+                                <th class="slds-cell-wrap th" style="width: 10%;">Action</th>
+                            </template>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={displayedDocuments} for:item="document">
+                        <tr key={document.Id} class="tr1">
+                            <td class="slds-cell-wrap">{document.FileName}</td>
+                            <td class="slds-cell-wrap">{document.FormattedCreatedDate}</td>
+                            <td class="slds-cell-wrap">{document.FirstRecipient}</td>
+    
+                            <!-- Show Status Column Only if Not Draft -->
+                            <template if:false={isDraftView}>
+                                <td class="slds-cell-wrap" style="text-align: left; vertical-align: middle;">{document.Status}</td>
+                            </template>
+    
+                            <!-- Comments Column -->
+                            <td style="text-align: left; vertical-align: middle;">
+                                <a href="javascript:void(0);" data-id={document.Id} data-action="comments" onclick={handleRowAction} title="View Comments">
+                                    <lightning-icon icon-name="action:email" size="xx-small" style="cursor:pointer;background:#0099DE;"></lightning-icon>
+                                </a>&nbsp;
+                            </td>
+    
+                            <!-- Show Actions Column Only if Not Draft or In-Progress -->
+                            <template if:false={isDraftView}>
+                                <template if:false={isInProgressView}>
+                                    <td style="text-align: left; vertical-align: middle;">
+                                        <template if:true={document.showViewIcon}>
+                                            <lightning-icon 
+                                                icon-name="action:preview" 
+                                                size="xx-small" 
+                                                alternative-text="View Document" 
+                                                title="View Document"
+                                                style="cursor:pointer;background:#5a595c;"
+                                                data-id={document.Id} 
+                                                data-action="view" 
+                                                onclick={handleRowAction}>
+                                            </lightning-icon>
+                                        </template>
+                                    </td>
+                                </template>
+                            </template>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
+        <template if:false={displayedDocuments.length}>
+            <p class="no-data-message">No records available for the selected status.</p>
+        </template>
+    </template>
+    
+    
+        
+
+       
+    <template if:true={selectedStatus}>
+        <template if:true={displayedDocuments.length}>
+<div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large" style="padding-top: 0.5em;">
+    <!--RECORDS PER PAGE-->
+    <div class="slds-col">
+          <div class="slds-list_inline slds-p-bottom_xx-small">
+             <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+             <div class="slds-select_container">
+                <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                      <template for:each={pageSizeOptions} for:item="option">
+                         <option key={option} value={option}>{option}</option>
+                      </template>
+                </select>
+             </div>
+          </div>
+    </div>
+
+    <!--PAGE NAVIGATION-->
+    <div class="slds-align_absolute-center" style="height:5rem">
+          <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+          <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+          &nbsp;
+          <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+          &nbsp;
+          <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+          <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+    </div>
+    <!--TOTAL RECORDS-->
+    <div class="slds-clearfix slds-m-right_xx-large">
+          <div class="slds-float_right">
+             <span class="slds-badge"> Total Records: {totalRecords}</span>
+          </div>
+    </div>
+    </div> 
+</template>   
+    </template>
+        <!-- PDF Viewer Modal -->
+        <template if:true={showPdfViewer}>
+            <div class="pdf-modal">
+                <div class="modal-header">
+                    <lightning-button-icon icon-name="utility:close" alternative-text="Close"
+                        onclick={closePdfViewer}>
+                    </lightning-button-icon>
+                </div>
+                <iframe src={pdfViewerUrl} class="pdf-iframe"></iframe>
+            </div>
+            <div class="modal-backdrop"></div>
+        </template>
+
+        <template if:true={showChatterModal}>
+            <div class="messenger-modal">
+                <!-- Header Section -->
+                <div class="modal-header">
+                    <h2 class="header-title">Team Conversations</h2>
+                    <span class="close-icon" onclick={closeChatterModal}>&#x2716;</span>
+                </div>
+                
+        
+                <!-- Messages Section -->
+                <div class="messages-container">
+                    <template for:each={messages} for:item="message">
+                        <template if:true={message.isDateDivider}>
+                            <div key={message.date} class="date-divider">{message.date}</div>
+                        </template>
+                        <template if:false={message.isDateDivider}>
+                            <div
+                                key={message.id}
+                                class={message.class}
+                                data-id={message.id}
+                                ondblclick={handleDoubleClick}>
+                                <template if:true={message.repliedTo}>
+                                    <div class="replied-to-message" onclick={scrollToMessage}>
+                                        <span class="replied-from">{message.repliedTo.from}:</span>
+                                        <span class="replied-text">{message.repliedTo.text}</span>
+                                    </div>
+                                </template>
+                                <div class="message-content">
+                                    <span class="text">{message.text}</span>
+                                    <span class="timestamp">
+                                        {message.timestamp}
+                                        <lightning-icon icon-name="utility:check" alternative-text="Saved" size="x-small"></lightning-icon>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+        
+                <!-- Input Section -->
+                <div class="input-container">
+                    <template if:true={replyToMessage}>
+                        <div class="reply-preview">
+                            <span class="reply-preview-text">Replying to: {replyToMessage.text}</span>
+                            <span class="cancel-reply" onclick={cancelReply}>&#x2716;</span>
+                        </div>
+                    </template>
+                    <textarea
+                        class="message-input"
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        oninput={handleMessageInput}
+                        onkeydown={handleKeyDown}>
+                    </textarea>
+                    <img
+                        src={sendIcon}
+                        alt="Send"
+                        class="send-icon"
+                        onclick={sendReply}>
+                </div>
+            </div>
+            <div class="modal-backdrop"></div>
+        </template>
+        
+        
+        
+        
+
+        <!-- Error Message -->
+        <template if:true={error}>
+            <div class="error-message">
+                <p>{error}</p>
+            </div>
+        </template>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="loading-spinner">
+                <lightning-spinner alternative-text="Loading"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:true={isPdfViewerVisible}>
+            <div class="modal-overlay">
+            <section class="pdf-preview-modal">
+                <div class="modal-header">
+                    <h2>PDF Preview</h2>
+                    <lightning-icon
+                        icon-name="action:close"
+                        alternative-text="Close"
+                        onclick={closePdfViewer}
+                        style="background-color: transparent; border: none; box-shadow: none;cursor:pointer"
+                    ></lightning-icon>
+
+                </div>
+        
+                <div class="pdf-canvas-container">
+                    <canvas class="pdf-canvas"></canvas>
+                </div>
+        
+                <div class="modal-footer">
+                    <lightning-button label="Previous" onclick={showPreviousPage} disabled={isPreviousDisabled}></lightning-button>
+<span>Page {currentPage} of {totalPages2}</span>
+<lightning-button label="Next" onclick={showNextPage} disabled={isNextDisabled}></lightning-button>
+
+                </div>
+            </section>
+        </div>
+        </template>
+        
+        
+
+</template>

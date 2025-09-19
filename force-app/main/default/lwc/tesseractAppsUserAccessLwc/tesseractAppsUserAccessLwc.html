@@ -1,0 +1,252 @@
+<template>
+<div class="container">
+    <!-- Main User List Section -->
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <!-- Left side: Staff Details -->
+        <p style="font-weight: bold; padding: 2% 0% 2% 1%;font-size:140% ">User Management</p>
+    
+        <!-- Right side: Back button  -->
+        <div style="display: flex; align-items: center; gap: 10px;margin-right:0.5%;">
+            
+            <lightning-input
+                type="search"
+                variant="label-hidden"
+                placeholder="Search Staff Name"
+                value={searchStaff}
+                class="slds-m-right_small"
+                onchange={handleSearchStaffChange}
+                oninput={handleSearchStaffChange}
+                onkeyup={handleKeyup}
+            ></lightning-input>
+            <!-- onmouseover={handleMouseOver} onmouseout={handleMouseOut} style="cursor: pointer; border-radius: 50%; animation: fadeIn 0.3s ease-in-out;" -->
+        </div>
+    </div>
+
+
+<div >
+<!-- Scrollable Table Section -->
+<div class="table-container slds-p-around_medium">
+        <table class="slds-table slds-table_cell-buffer fixed-table">
+        <thead>
+            <tr>
+                <th class="slds-text-align_left">Staff Name</th>
+                <th class="slds-text-align_left">Gender</th>
+                <th class="slds-text-align_left">Facility</th>
+                <th class="slds-text-align_left">Email Address</th>
+                <th class="slds-text-align_left">Role</th>
+                <th class="slds-text-align_left">User Type</th>
+                <th class="slds-text-align_left">Access Level</th>
+                <th class="slds-text-align_left">Status</th>
+                <th class="slds-text-align_left">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template for:each={paginatedData} for:item="user">
+                <tr key={user.userId}>
+                    <td>{user.firstName} {user.lastName}</td>
+                    <td>{user.staffGender}</td>
+                    <td>{user.staffFacility}</td>
+                    <td>{user.userEmail}</td>
+                    <td>{user.userRole}</td>
+                    <td>{user.userType}</td>
+                    <td>
+                        <a href="javascript:void(0);" class="slds-text-link" onclick={showGrantAccess} data-id={user.userId}>Grant Access</a>
+                    </td>
+                    <td>{user.userStatus}</td>
+                    <td>
+                        <lightning-icon 
+                        icon-name="action:edit" 
+                        alternative-text="Edit" 
+                        title="Edit"
+                        data-id={user.staffId}
+                        onclick={handleActionClick}  
+                        size="xx-small" 
+                        style="cursor:pointer;color:white;background:#0099DE;">
+                        </lightning-icon>
+                    </td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<!-- Pagination Section -->
+<div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;width:95%;margin-left:2%">
+    <div class="slds-col">
+        <div class="slds-list_inline">
+            <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+            <div class="slds-select_container">
+                <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                    <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                    </template>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="slds-align_absolute-center" style="height:5rem;">
+        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button>
+        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+        &nbsp;
+        <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+        &nbsp;
+        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+    </div>
+    <div class="slds-clearfix">
+        <div class="slds-float_right">
+            <span class="slds-badge"> Total Records: {totalRecords}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Grant Access Popup -->
+<template if:true={showModal}>
+    <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" style="width:55%; margin-left:25%;">
+                    
+                        <div class="slds-modal__container" >
+                            <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+                            
+                            <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">User Details</h2>
+                        </header> 
+                        <div class="slds-modal__content slds-p-around_medium"  style="border-radius:0 0 15px 15px">                                
+                            <div class="slds-m-around_small">
+                                <div class="slds-modal__content slds-p-around_medium">
+                                    <p><strong>Role:</strong> {modalData.userRole}</p>
+                                </br>
+                                    <p><strong>User Type:</strong> {modalData.userType}</p>
+                                </br>
+                                <p><strong>All Modules:</strong></p>
+                                <div style="Padding-left: 80px">
+                                    <template for:each={modulesChecked} for:item="module">
+                                        <lightning-input 
+                                            key={module.name}
+                                            type="checkbox" 
+                                            label={module.name} 
+                                            name={module.name} 
+                                            value={module.name} 
+                                            checked={module.checked}
+                                            onchange={handleCheckboxChange}>
+                                        </lightning-input>
+                                    </template>
+                                    
+                                </div>
+                                                    
+                                </div>
+                                <!-- <div style="margin-top: 10px; display: flex; justify-content: center; gap: 8px; align-items: center;"> -->
+                                <div class="slds-grid slds-align_absolute-center slds-m-top_medium">
+                                    <lightning-button label="Save" variant="brand" onclick={handleConfirmReset} class="slds-m-around_small"></lightning-button>
+                                    <lightning-button label="Cancel" variant="Brand-Outline" class="slds-m-around_small" onclick={handleCloseModal}></lightning-button>
+                                </div>                                    
+                            </div>
+                        </div>
+                        </div>
+                    </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<!-- Edit Button PopUp -->
+<template if:true={editButtonModule}>
+    <div class="blur-overlay"></div>
+    <div class="right-align1" style="width:50%;">
+        <!-- <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5% 1% 0 1.5%;">
+             <h3 style="font-weight: bold; font-size: 140%; margin: 0;">Edit Profile</h3>
+            <lightning-button label="Back" variant="brand" onclick={handleeditClose}></lightning-button>
+        </div> -->
+    </br>
+        <lightning-button label="Back" variant="brand" onclick={handleClose} style="DISPLAY: FLEX; JUSTIFY-CONTENT: END; PADDING-RIGHT: 1%;"></lightning-button>
+
+ <div class="container-box">
+     <div  class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+       <span>User Details</span> 
+       <span  style="cursor: default;">{sectionIcons.staffDetails1}</span>     
+     </div>
+     <div class="section-content" data-section="staffDetails1">
+     </br>
+     <template if:true={sectionFlags.staffDetails1}>
+        <div class="slds-grid slds-wrap">
+    <!-- First Name -->
+    <div class="slds-size_1-of-2 slds-p-around_small">
+        <div class="floating-label">
+            <span class="label-text-drop">First Name</span>
+            <lightning-input type="text" name="FirstName" variant="label-hidden"
+                value={formData.user.FirstName} onchange={handleUserFirstNameChange}>
+            </lightning-input>
+        </div>
+    </div>
+
+    <!-- Last Name -->
+    <div class="slds-size_1-of-2 slds-p-around_small">
+        <div class="floating-label">
+            <span class="label-text-drop">Last Name</span>
+            <lightning-input type="text" name="LastName" variant="label-hidden"
+                value={formData.user.LastName} onchange={handleUserLastNameChange}>
+            </lightning-input>
+        </div>
+    </div> 
+
+    <!-- Username (Disabled) -->
+    <div class="slds-size_1-of-2 slds-p-around_small">
+        <div class="floating-label">
+            <span class="label-text-drop">Username</span>
+            <lightning-input type="text" name="Username" variant="label-hidden"
+                value={formData.user.Username} disabled>
+            </lightning-input>
+        </div>
+    </div>  
+
+    <!-- Status Checkbox -->
+    <div class="slds-size_1-of-2 slds-p-around_small">
+        <label style="display: flex; gap: 2%; padding: 3% 0 0% 10%;">
+            <span>Status</span>
+            <lightning-input type="checkbox" checked={formData.staff.Status__c} variant="label-hidden" 
+                onchange={handleUserStatusChange}>
+            </lightning-input> 
+        </label>  
+    </div>
+    <div class="slds-size_1-of-2 slds-p-around_small">
+    <div class="floating-label">
+        <span class="label-text-drop">Role</span>
+        <lightning-combobox 
+            label="Role" 
+            variant="label-hidden" 
+            value={formattedUserRole} 
+            options={filteredRoleOptions} 
+            onchange={handlerolechange}
+            required>
+        </lightning-combobox>
+    </div>
+    </div>
+
+    <div class="slds-size_1-of-2 slds-p-around_small">
+    <div class="floating-label">
+        <span class="label-text-drop"><span style="color:red">*</span>User Type</span>
+        <lightning-combobox 
+          label="User Type" 
+          variant="label-hidden" 
+          value={usertypename} 
+          options={UserTypeValues} 
+          onchange={handleUserTypeChange} 
+          disabled={isUserTypeDisabled} 
+          required>
+        </lightning-combobox>
+      </div>
+    </div>
+    </div>
+
+</template>
+</div>
+</div>
+<div class="slds-align_absolute-center slds-m-around_small">
+    <lightning-button type="submit" variant="brand" onclick={handlesavebutton} label="Submit"></lightning-button>
+    <lightning-button label="Cancel" variant="brand-outline" onclick={handleClose} class="slds-m-left_small"></lightning-button>
+</div>
+</div>
+ 
+</template>
+
+</div>
+</template>

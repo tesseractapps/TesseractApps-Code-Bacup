@@ -1,0 +1,219 @@
+<template>
+  <div class="rosterlayout">
+                      
+        <div style="margin-right:0.1%">
+          <div class="slds-grid  slds-m-bottom_xx-small" style="display: flex; align-items: center;background:#003466;height:50px;border-radius:5px;">
+            <!-- <div class="slds-col" style="display: flex; justify-content:right;background:red;">
+              <img src={employee} alt="Add Staff" width="75px" height="50px" style="margin-right: 1%;">
+           </div> -->
+             
+              <lightning-button-icon icon-name="utility:chevronleft" class="slds-m-right_small"
+                                       onclick={navigateToPrevious} style="background:white;border-radius:5px;margin-left:40%"></lightning-button-icon>
+              <lightning-button label="Today" onclick={navigateToToday}></lightning-button>
+              <lightning-button-icon icon-name="utility:chevronright" class="slds-m-left_small"
+                                       onclick={navigateToNext} style="background:white;border-radius:5px;"></lightning-button-icon>
+                 <lightning-input label="Date" type="date" name="select-date" variant="label-hidden"
+                  class="lwc-datepicker slds-m-left_small" value={datePickerString} onchange={navigateToDay}>
+              </lightning-input>
+              
+         
+        </div>
+        
+        
+        <lightning-accordion allow-multiple-sections-open class="accordionClass" active-section-name={activeSections} >
+          <!--My Roster Start-->
+          <lightning-accordion-section class="strong-text" name="My Roster" label="My Roster" >                
+            
+            <div class="slds-grid slds-align_absolute-center slds-size_1-of-6" style="margin-left:85%;">
+              <div class="color-box" style={dynamicselectedColor1}></div>
+              <lightning-combobox
+              name="roster"
+              placeholder="select color"
+              value={selectedColor1}
+              options={colorOptions}
+              onchange={handleColorChange}
+              style="padding: 5px; border-radius: 5px;">
+          </lightning-combobox>
+          </div>
+              
+              <!--sowm-->
+              <div class="slds-scrollable_x">
+                <!-- <lightning-input  type="color" value={selectedColor1} name="roster" onchange={handleColorChange} style="margin-left:88%" show-input="false"></lightning-input> -->
+                
+                <div class="slds-grid lwc-timeline">
+                  <div class="slds-col">         
+                    <div class="slds-grid">
+                      <template for:each={dates} for:item="date">
+                        <div key={date} class="slds-col">
+                          <div class="slds-grid">
+                            <div class="slds-has-flexi-truncate">
+                              <div
+                                class="slds-p-around_xx-small slds-theme_shade slds-text-align_center slds-text-color_weak slds-text-body_small slds-truncate monthClass">
+                                <b>{date.name}</b>
+                              </div>
+                            </div>                     
+                          </div>
+                          <div class="slds-grid normal-text">  
+                            <template for:each={date.days} for:item="day">  
+                              <div key={day} class={day.class} style="grid-template-columns: repeat(7, 1fr);">                   
+                                <div if:true={day.dayName} style="background:#bfbfbf;width:175px;margin-left:5px;">{day.dayName}&nbsp;{day.label1}</div>
+                             <!--    <div>{day.label1}</div> -->  
+                                <template for:each={day.staffdata} for:item="staff">
+                                  <div key={staff}>
+                                  <div class="slds-col bgcolour1" style={dynamicStyles}> <!--Set BOX related Backround Colour-->
+                                  <div if:true={staff.staff}>             
+                                  <div if:true={staff.staff} class="rosterNameAlignTop" style="font-size: smaller"><b>Name: {staff.staff}</b></div>                                  
+                                  <div if:true={staff.time} class="rosterShiftDetailsLeft" style="font-size: smaller"><b>Time: {staff.time}</b></div>
+                                  <div if:true={staff.role} class="rosterShiftDetailsLeft" style="font-size: smaller"><b>Role: {staff.role}</b></div>
+                                  <!-- <div if:true={staff.location} class="rosterShiftDetailsLeft" style="font-size: smaller">Location: {staff.location}</div> -->
+                                  <!--<div if:true={staff.facility}>facility: {staff.facility}</div>
+                                  <div if:true={staff.visible}> 
+                                  <div class="slds-size_1-of-2 slds-float_left rosterShiftDetailsLeft" style="font-size: smaller">
+                                    Availability :
+                                  </div>
+                                  <div class="slds-size_1-of-2 slds-float_right rosterAlignMarginTop">                          
+                                    <lightning-input data-id={staff.Id} data-name={staff.availability}
+                                    type="toggle" label=""  message-toggle-active="true"
+                                    message-toggle-inactive="false" class="input__toggle"
+                                    checked={staff.availability} ></lightning-input>
+                                  </div>
+                                  </div> -->
+                                  </div>
+                                  </div>
+                                  </div>
+                                </template>
+                              </div>                          
+                            </template>           
+                          </div>
+                        
+                      </div>
+                    </template> 
+                            
+                  </div>
+                  <div class="total-hours-text">
+                    <div></div> 
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div >
+                      <h2 > </br>Total Hours : {totalHours}</h2>
+                    </div>
+                  </div>          
+                </div>
+              </div>
+            </div>
+          
+          </lightning-accordion-section>
+          <!--My Roster End-->
+
+          <!--Available Shifts Start-->        
+          <lightning-accordion-section class="strong-text" name="Available Shifts" label="Available Shifts">          
+              <!-- <div class="slds-grid slds-wrap">
+                <div class="slds-size_1-of-4">
+                </div>
+                <div class="slds-size_1-of-4"></div>
+                  <div class="slds-size_2-of-4 "> 
+                    <div class="slds-grid">
+                      <div class="slds-size_1-of-3 slds-m-left_small"></div>                      
+                      <div class="slds-m-left_small slds-m-top_medium">
+                          <lightning-button-icon icon-name="utility:left" class="slds-m-top_xx-small"
+                            onclick={navigateToPrevious}></lightning-button-icon>
+                          <lightning-button label="Today" onclick={navigateToToday}></lightning-button>
+                          <lightning-button-icon icon-name="utility:right" class="slds-m-top_xx-small"
+                            onclick={navigateToNext}></lightning-button-icon>
+                        </div>                      
+                        <div class="slds-m-left_small">
+                          <lightning-input label="Date" type="date" name="select-date" variant="label-hidden"
+                            class="lwc-datepicker  slds-m-top_medium" value={datePickerString}
+                            onchange={navigateToDay}></lightning-input>
+                        </div>
+                    </div>
+                </div>   
+              </div> -->
+              <!--Month and perweek details-->
+              <div class="slds-grid slds-align_absolute-center slds-size_1-of-6" style="margin-left:85%;">
+                <div class="color-box" style={dynamicselectedColor2}></div>
+                <lightning-combobox
+                name="shifts"
+                placeholder="select color"
+                value={selectedColor2}
+                options={colorOptions}
+                onchange={handleColorChange}
+                style="padding: 5px; border-radius: 5px;">
+            </lightning-combobox>
+            </div>
+
+              <div class="slds-scrollable_x">
+                <div class="slds-grid lwc-timeline">
+                  <div class="slds-col">
+                    <div class="slds-grid">
+                      <template if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                            </lightning-spinner>
+                    </template>
+                      <template for:each={dates} for:item="date">
+                        <div key={date} class="slds-col">
+                          <div class="slds-grid">
+                            <div class="slds-col slds-has-flexi-truncate">
+                              <div
+                                class="slds-p-around_xx-small slds-theme_shade slds-text-align_center slds-text-color_weak slds-text-body_small slds-truncate monthClass">
+                                <b>{date.name}</b>
+                              </div>
+                            </div>
+                          </div>
+                          <!--shift data begin-->
+                          <div class="slds-grid normal-text">  
+                            <template for:each={date.days} for:item="day">                    
+                              <div key={day} class={day.class}>                   
+                                <div if:true={day.dayName} style="background:#bfbfbf;width:175px;margin-left:5px;">{day.dayName}&nbsp;{day.label1}</div>
+                                <!-- <div>{day.label1}</div> -->  
+                                <template for:each={day.shiftdata} for:item="shift">
+                                  <div key={shift} >
+                                  <div class="slds-col">   <!--Set BOX related Backround Colour-->
+                                  <div if:true={shift.Name} class="bgcolourAvailableshifts" style={dynamicStyles2}>             
+                                  <!--<div if:true={shift.Name} class="rosterNameAlignTop" style="font-size: smaller"><b>Name: {shift.Name}</b></div>-->
+                                  <div if:true={shift.role} class="rosterShiftDetailsLeft" style="font-size: smaller"><b>Role: {shift.role}</b></div>                                  
+                                  <div if:true={shift.StartEndTime} class="rosterShiftDetailsLeft" style="font-size: smaller"><b>Time: {shift.StartEndTime}</b></div>
+                                  <div if:true={shift.Facility} class="rosterShiftDetailsLeft" style="font-size: smaller">Facility: {shift.Facility}</div>
+                                  <div if:true={shift.Location} class="rosterShiftDetailsLeft" style="font-size: smaller">Location: {shift.Location}</div>
+                                  <!-- <div if:true={shift.duration} class="rosterShiftDetailsLeft" style="font-size: smaller">Duration: {shift.duration}</div> -->
+                                  <div class="rosterShiftDetailsLeft">  
+                                  <div if:true={shift.isEOI}>                                            
+                                    <lightning-input data-id={shift.Id} data-dur={shift.duration}
+                                    type="toggle" onchange={onChangehandleinterest} label="Show Interest"  message-toggle-active=""
+                                    message-toggle-inactive="" class="input__toggle" checked={shift.isinterest}
+                                     ></lightning-input>
+                                    </div> 
+                                  
+                                     <div if:false={shift.isEOI}>                                               
+                                      <lightning-input data-id={shift.Id} data-dur={shift.duration}
+                                      type="toggle" onchange={onChangehandleallocation} label="Accept"  message-toggle-active=""
+                                      message-toggle-inactive="" class="input__toggle" checked={shift.ischecked}
+                                       ></lightning-input>
+                                   </div>
+                                       
+                               </div>
+                               </div>
+                               </div>
+                               
+                                 
+                                  </div>
+                                </template>
+                              </div>                            
+                          </template>                 
+                        </div>
+
+                          <!-- shiftdata end-->
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            
+          </lightning-accordion-section>
+          <!--Available Shifts End-->
+        </lightning-accordion>
+      </div>
+      </div>
+</template>
