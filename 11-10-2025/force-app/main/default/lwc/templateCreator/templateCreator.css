@@ -1,0 +1,1524 @@
+/* Main container for placeholders and PDF viewer */
+.main-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1rem;
+  position: relative;
+  justify-content: center;
+}
+
+/* Placeholder Selection Container */
+.placeholders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f4f6f9; /* Light gray background */
+  border: 2px solid #d8dde6; /* Subtle border */
+  border-radius: 0.5rem; /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  text-align: center;
+  position: fixed;
+  height: 100%;
+  transform: scale(0.8);
+  top: -3%;
+  right: 0%;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox: Hide scrollbar */
+  -ms-overflow-style: none; /* IE/Edge: Hide scrollbar */
+}
+
+.placeholders::-webkit-scrollbar {
+  display: none;
+}
+
+/* Placeholder Items */
+.placeholder {
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  background-color: #0c78ba; /* Salesforce Blue */
+  color: #ffffff;
+  font-size: 1rem;
+  border-radius: 0.25rem; /* Rounded edges */
+  cursor: grab;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+/* Hover Effect for Placeholder Items */
+.placeholder:hover {
+  background-color: #005fb2; /* Darker blue on hover */
+  transform: scale(1.05); /* Slight zoom-in on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+/* Placeholder with Upload Symbol */
+.placeholder .upload-symbol {
+  font-size: 1.2rem;
+  margin-right: 0.5rem; /* Space between symbol and text */
+  color: #ffffff;
+}
+
+/* Placeholder container after being dropped */
+.placeholder-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f4f6f9;
+  border: 2px dashed #0070d2;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  z-index: 100;
+  width: 150px;
+  height: auto;
+  transition: transform 0.2s;
+}
+
+.placeholder-container:hover {
+  transform: scale(1.05); /* Slight scale-up effect */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.placeholder-container.rearranging {
+  opacity: 0.8; /* Slight transparency while dragging */
+  border-color: #ff8c00; /* Highlight while rearranging */
+}
+
+/* Delete Icon */
+.delete-placeholder {
+  position: absolute;
+  top: -10px; /* Positioned above the placeholder */
+  right: -10px; /* Positioned to the right */
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 200; /* Ensures it appears above the placeholder */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+}
+
+.delete-placeholder:hover {
+  background-color: #d93025; /* Darker red on hover */
+  transform: scale(1.1); /* Slight zoom-in on hover */
+}
+
+/* Placeholder Input (Enter Name) */
+.placeholder-input {
+  width: 100%;
+  border: 1px solid #d8dde6;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.placeholder-input:focus {
+  box-shadow: 0 0 5px rgba(0, 112, 210, 0.8);
+  outline: none;
+  transform: scale(1.02);
+}
+
+/* Placeholder Upload (Signature) */
+.placeholder-upload {
+  background-color: #0c78ba;
+  color: #ffffff;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.placeholder-upload:hover {
+  background-color: #005fb2;
+  transform: scale(1.05);
+}
+
+/* Upload Icon Styling */
+.upload-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+  color: #ffffff;
+  display: inline-block;
+  transform: rotate(-90deg); /* Rotate the arrow upwards */
+  transition: transform 0.3s;
+}
+
+.placeholder-upload:hover .upload-icon {
+  transform: rotate(-90deg) scale(1.1); /* Slight zoom on hover */
+}
+
+/* PDF Viewer */
+.pdf-viewer-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  overflow: hidden; /* Ensure content stays within bounds */
+}
+
+/* PDF canvas */
+.pdf-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Add a wrapper for the loading animation and blur effect */
+.loading-overlay {
+  position: fixed; /* Cover the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px); /* Apply blur effect */
+  background: rgba(
+    255,
+    255,
+    255,
+    0.5
+  ); /* Optional: Add a semi-transparent background */
+  z-index: 9; /* Ensure it sits below the loading animation */
+}
+
+/* Style the loading animation */
+.loading-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute; /* Center it relative to the overlay */
+  top: 45%;
+  left: 55%;
+  transform: translate(-50%, -50%);
+  font-family: Arial, sans-serif;
+  color: #0c78ba;
+  font-size: 1.2rem;
+  z-index: 10; /* Ensure it stays above the blurred background */
+}
+
+.loading-animation .spinner {
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid #0c78ba; /* Salesforce Blue */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.image-container {
+  width: 1024px; /* Set a consistent width */
+  height: 1448px;
+  position: relative;
+  background-color: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* margin-bottom: 1rem; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+}
+
+/* Rearrange Icon */
+.rearrange-placeholder {
+  position: absolute;
+  top: -10px; /* Position on top */
+  left: -10px; /* Position on the left */
+  background-color: #f4f6f9;
+  color: #0070d2;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab; /* Show grab cursor */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 200; /* Ensure it stays above other elements */
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+}
+
+.rearrange-placeholder:hover {
+  background-color: #e1e5ea; /* Lighter background on hover */
+  transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem; /* Space above the pagination */
+  gap: 1rem; /* Spacing between the elements */
+  width: fit-content; /* Automatically adjusts to content size */
+  margin-left: auto;
+  margin-right: auto; /* Centers the pagination */
+  position: relative;
+}
+
+/* Pagination Button Styling */
+.pagination-controls lightning-button {
+  --slds-c-button-neutral-background-color: #ffffff; /* White background */
+  --slds-c-button-neutral-border-color: #d8dde6; /* Light border */
+  --slds-c-button-neutral-color: #0070d2; /* Salesforce Blue for text */
+  --slds-c-button-neutral-background-color-hover: #f4f6f9; /* Light gray on hover */
+  --slds-c-button-neutral-border-color-hover: #0070d2; /* Blue border on hover */
+  padding: 0.5rem 1rem;
+  border-radius: 1rem; /* Rounded edges for buttons */
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Disabled Button Styling */
+.pagination-controls lightning-button[disabled] {
+  --slds-c-button-neutral-background-color: #f4f6f9; /* Gray background */
+  --slds-c-button-neutral-border-color: #d8dde6; /* Light border */
+  --slds-c-button-neutral-color: #999999; /* Disabled text color */
+  cursor: not-allowed;
+}
+
+/* Pagination Text Styling */
+.pagination-controls span {
+  background-color: #f4f6f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem; /* Rounded corners for the text background */
+  font-size: 1rem;
+  font-weight: bold;
+  color: #3e4e63;
+  text-align: center;
+  display: inline-block;
+}
+
+/* Email Badge Styling */
+.email-badge {
+  position: absolute;
+  bottom: -20px; /* Positioned slightly below the placeholder */
+  left: 50%; /* Center align horizontally relative to the placeholder */
+  transform: translateX(-50%); /* Adjust for proper centering */
+  background-color: #0c78ba; /* Salesforce blue */
+  color: #ffffff; /* White text for contrast */
+  font-size: 0.8rem; /* Small, readable font size */
+  font-weight: bold;
+  padding: 2px 8px; /* Padding around the text */
+  border-radius: 12px; /* Rounded edges for the badge */
+  white-space: nowrap; /* Prevent text from wrapping */
+  overflow: hidden; /* Hide overflowing text */
+  text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+  z-index: 200; /* Ensure badge is above other elements */
+}
+
+/* Email Badge Hover Effect */
+.email-badge:hover {
+  background-color: #005fb2; /* Slightly darker blue on hover */
+  cursor: pointer; /* Indicate interactivity (optional) */
+}
+
+/* Email Entry Section */
+.email-entry-section {
+  padding: 0.5rem;
+  background-color: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* Section Heading */
+.email-entry-section h3 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #3e4e63;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* Email Row Styling */
+.email-row {
+  position: relative; /* Enables absolute positioning for the delete badge */
+  margin-bottom: 0.5rem;
+}
+
+/* Email Input Styling */
+.email-row lightning-input {
+  flex: 1;
+  --slds-c-input-border-color: #d8dde6;
+  --slds-c-input-background-color: #ffffff;
+  --slds-c-input-color: #3e4e63;
+  width: 100%;
+  position: relative; /* Ensure alignment with delete badge */
+}
+
+.email-row lightning-input input {
+  padding-right: 2rem; /* Adds space to accommodate delete badge */
+}
+
+.email-row lightning-input:focus {
+  box-shadow: 0 0 3px rgba(0, 112, 210, 0.8);
+  border-color: #0070d2;
+}
+
+/* Delete Button (Cross Badge) */
+.delete-badge {
+  position: absolute; /* Positioned relative to the input field */
+  top: 50%; /* Center vertically */
+  right: -0.5rem; /* Slightly inset from the right edge */
+  transform: translateY(-50%); /* Adjust to middle of the input field */
+  background-color: #ff4d4d; /* Red background */
+  color: #ffffff; /* White cross symbol */
+  font-size: 12px; /* Small font for the cross */
+  font-weight: bold;
+  border: none;
+  border-radius: 50%; /* Circular shape */
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer; /* Indicates interactivity */
+  z-index: 10; /* Ensure it appears above the input field */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+}
+
+/* Delete Button Hover Effect */
+.delete-badge:hover {
+  background-color: #d93025; /* Darker red on hover */
+  transform: scale(1.1); /* Slight zoom effect */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Add Recipient Button Styling */
+.add-recipient-btn {
+  background-color: #0c78ba; /* Salesforce blue */
+  color: #ffffff; /* White text */
+  font-size: 1rem; /* Adjust font size */
+  padding: 0.5rem 1rem; /* Adjust padding */
+  border: none; /* No default border */
+  border-radius: 0.25rem; /* Rounded edges */
+  cursor: pointer; /* Pointer cursor for interaction */
+  display: flex; /* Align icon and text */
+  align-items: center; /* Center align content */
+  justify-content: center; /* Center content horizontally */
+  gap: 0.5rem; /* Space between icon and text */
+  transition:
+    background-color 0.3s,
+    transform 0.2s; /* Smooth hover effect */
+  width: 100%; /* Adjust to fit the container width */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.add-recipient-btn:hover {
+  background-color: #005fb2; /* Darker blue on hover */
+  transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+.add-recipient-btn:active {
+  background-color: #004080; /* Even darker blue on click */
+  transform: scale(0.95); /* Slightly shrink on click */
+}
+
+/* Add Icon Styling */
+.add-recipient-btn .add-icon {
+  font-size: 1rem; /* Size of the icon */
+  font-weight: bold;
+  color: #ffffff; /* White icon color */
+}
+
+/* Input Section Styling */
+.input-section {
+  background-color: #f9fafc; /* Light background color */
+  border: 1px solid #d8dde6; /* Subtle border */
+  border-radius: 0.5rem; /* Rounded corners */
+  padding: 1rem; /* Padding for spacing */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* Input Row: Align inputs and logo */
+.input-row {
+  display: flex;
+  align-items: center; /* Center align items vertically */
+  gap: 1rem; /* Add spacing between items */
+  justify-content: space-between; /* Spread items evenly */
+}
+
+/* Individual Input Styling */
+.input-row lightning-input {
+  flex: 1; /* Allow inputs to take equal space */
+  --slds-c-input-border-color: #d8dde6; /* Match border with container */
+  --slds-c-input-border-radius: 0.5rem; /* Rounded input fields */
+  --slds-c-input-background-color: #ffffff; /* White background for inputs */
+  --slds-c-input-padding: 0.75rem; /* Padding for input fields */
+  margin: 0; /* Remove default margins */
+}
+
+/* Disabled Input Styling */
+.input-row lightning-input[disabled] {
+  --slds-c-input-background-color: #f4f6f9; /* Slightly darker background for disabled input */
+  --slds-c-input-border-color: #d8dde6; /* Keep border consistent */
+  --slds-c-input-color: #9a9a9a; /* Gray text for disabled input */
+  cursor: not-allowed; /* Not-allowed cursor for disabled input */
+}
+
+/* File Input Styling */
+.input-row lightning-input[type="file"] {
+  flex-shrink: 0; /* Prevent shrinking */
+  width: auto; /* Adjust width to fit content */
+  --slds-c-input-file-background-color: #ffffff; /* White background */
+  --slds-c-input-file-border-color: #0070d2; /* Salesforce blue border */
+  --slds-c-input-file-color: #0070d2; /* Blue text */
+  border-radius: 0.5rem; /* Rounded edges */
+  padding: 0.5rem;
+}
+
+/* Logo Container Styling */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px; /* Adjust width for the logo */
+  height: auto; /* Auto height to maintain aspect ratio */
+  flex-shrink: 0; /* Prevent the logo from shrinking */
+  background-color: #f9fafc; /* Same as the container's background color */
+  opacity: 0.5;
+  transition: opacity 0.3s ease-in-out;
+}
+.logo-container:hover .logo-image {
+  opacity: 1; /* Full opacity on hover */
+  filter: drop-shadow(0 0 5px #0c78ba);
+}
+
+/* Logo Image Styling */
+.logo-image {
+  width: 100%; /* Full width within the container */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Ensure logo fits well */
+  border: none; /* Remove any border */
+  box-shadow: none; /* Remove shadow for seamless blending */
+  opacity: 0.35;
+}
+
+/* Custom Logo Title Styling */
+.custom-logo-title {
+  display: flex;
+  align-items: center; /* Vertically center the logo */
+  justify-content: center; /* Horizontally center the logo */
+  height: 100%; /* Make sure it takes the full height of the title slot */
+  padding: 0.5rem; /* Optional: Add padding if needed */
+  background-color: transparent; /* Match the card background */
+}
+
+/* Logo Image Styling */
+.logo-title-image {
+  width: 150px; /* Adjust the logo width */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Ensure proper scaling of the image */
+}
+
+/* Button Container */
+.button-container {
+  display: flex;
+  justify-content: center; /* Center the buttons horizontally */
+  align-items: center; /* Center the buttons vertically */
+  gap: 1rem; /* Add spacing between the buttons */
+  margin: 1rem auto; /* Center container horizontally */
+  padding: 1rem 0; /* Add vertical padding for spacing */
+  width: fit-content; /* Adjust container size to fit the buttons */
+  position: relative;
+}
+
+/* Finish and Save Section */
+.finish-section,
+.save-section {
+  display: flex;
+  justify-content: center; /* Center individual buttons */
+  align-items: center;
+  gap: 10%;
+}
+
+/* Textarea Placeholder */
+.placeholder-textarea {
+  width: 100%;
+  height: 80px; /* Adjust as needed */
+  border: 1px solid #d8dde6;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  padding: 0.5rem;
+  resize: none; /* Prevent resizing */
+}
+
+.placeholder-textarea:focus {
+  box-shadow: 0 0 5px rgba(0, 112, 210, 0.8);
+  outline: none;
+}
+
+/* Dropdown Styling */
+.placeholder-dropdown {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #d8dde6;
+  border-radius: 0.25rem;
+}
+.drag-container {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+.drag-container h3 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #3e4e63;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* Hidden File Name Input */
+input[type="hidden"] {
+  display: none;
+}
+
+/* Upload Button Container */
+.upload-button-container {
+  display: flex;
+  flex-direction: column;
+  border: 2px dashed #d1d5db; /* Light gray dashed border */
+  border-radius: 10px; /* Rounded corners */
+  padding: 40px; /* Increase padding for more height */
+  height: 80vh;
+  text-align: center; /* Center align content */
+  justify-content: center;
+  background-color: #f9fafb; /* Subtle background color */
+  transition: all 0.3s ease; /* Smooth transition for hover effects */
+  width: 80%; /* Width of the container */
+  margin: 20px auto; /* Center the container */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  position: relative;
+}
+
+/* Hover Effect for Upload Button */
+.upload-button-container:hover {
+  border-color: #2563eb; /* Blue border on hover */
+  background-color: #ebf2ff; /* Light blue background on hover */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
+}
+
+/* Label Styling */
+.upload-label {
+  cursor: pointer; /* Pointer cursor for clickable label */
+  display: inline-block; /* Inline block to align content */
+  color: #6b7280; /* Neutral gray text */
+  font-size: 16px; /* Text size */
+  transition: color 0.3s ease; /* Smooth text color transition */
+}
+
+.upload-label:hover {
+  color: #2563eb; /* Blue text on hover */
+}
+
+/* SVG Icon Styling */
+.icon {
+  margin-bottom: 10px; /* Space below icon */
+  fill: none; /* No fill */
+  stroke: #6b7280; /* Neutral gray stroke */
+  transition: stroke 0.3s ease; /* Smooth stroke color transition */
+}
+
+.upload-button-container:hover .icon {
+  stroke: #2563eb; /* Blue stroke on hover */
+}
+
+/* Text Below Icon */
+.upload-label p {
+  margin-top: 8px; /* Space above text */
+  color: inherit; /* Inherit color from label */
+  font-size: 14px; /* Text size */
+}
+
+/* Hidden File Input */
+.file-input {
+  display: none; /* Hide the file input */
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .upload-button-container {
+    padding: 15px; /* Adjust padding for smaller screens */
+    width: 90%; /* Adjust width for smaller screens */
+  }
+
+  .icon {
+    width: 36px; /* Smaller icon */
+    height: 36px;
+  }
+
+  .upload-label p {
+    font-size: 12px; /* Smaller text */
+  }
+}
+
+/* Hide the actual file input */
+.file-input {
+  display: none;
+}
+
+/* Fullscreen Loading Screen */
+.loading-screen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Loading Content Wrapper */
+.loading-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Rotating Loader Circle */
+.loading-circle {
+  width: 50px;
+  height: 50px;
+  border: 6px solid #0c78ba;
+  border-top: 6px solid transparent;
+  border-radius: 50%;
+  animation: rotateLoader 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+/* Loading Text */
+.loading-text {
+  font-size: 1.2rem;
+  color: #0c78ba;
+  font-weight: bold;
+}
+
+/* Success Screen Container */
+.success-screen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Success Content Wrapper */
+.success-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Green Checkmark Animation */
+.checkmark-wrapper {
+  margin-bottom: 1rem;
+}
+
+.checkmark {
+  width: 72px;
+  height: 72px;
+  stroke-width: 2;
+  stroke: #0c78ba;
+  fill: none;
+  stroke-linecap: round;
+  animation: drawCheckmark 1s ease-in-out forwards;
+}
+
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: drawCircle 0.6s ease-in-out forwards;
+}
+
+.checkmark-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: drawCheck 0.4s 0.6s ease-in-out forwards;
+}
+
+/* Success Title */
+.success-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #0c78ba;
+  margin-bottom: 0.5rem;
+}
+
+/* Success Description */
+.success-description {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+/* Close Button */
+.success-close-btn {
+  background-color: #0c78ba;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.success-close-btn:hover {
+  background-color: #045aa6;
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Draw Circle Animation */
+@keyframes drawCircle {
+  from {
+    stroke-dashoffset: 166;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Draw Checkmark Animation */
+@keyframes drawCheck {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Rotating Loader Animation */
+@keyframes rotateLoader {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*recipient modal*/
+
+/* Modal Container */
+.recipient-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Box */
+.recipient-modal {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-out;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+/* Modal Header */
+.recipient-modal-header {
+  background-color: #0c78ba;
+  color: #ffffff;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recipient-modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.recipient-modal-close {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.recipient-modal-close:hover {
+  color: #ff4d4d;
+}
+
+/* Modal Content */
+.recipient-modal-content {
+  padding: 1.5rem;
+  text-align: left;
+}
+
+/* Modal Footer */
+.recipient-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background-color: #f4f6f9;
+  border-top: 1px solid #d8dde6;
+}
+
+/* Cancel Button */
+.recipient-modal-cancel-btn {
+  background-color: #d8dde6;
+  color: #333333;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.recipient-modal-cancel-btn:hover {
+  background-color: #bfc5d2;
+}
+
+/* Confirm Button */
+.recipient-modal-confirm-btn {
+  background-color: #0c78ba;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.recipient-modal-confirm-btn:hover {
+  background-color: #005fb2;
+}
+
+/* Backdrop */
+.recipient-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Backdrop for the confirmation popup */
+.confirmation-popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: backdropFadeIn 0.4s ease-in-out;
+}
+
+/* Popup container */
+.confirmation-popup {
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  border-radius: 15px;
+  padding: 2rem;
+  width: 600px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: popupSlideIn 0.5s ease-out;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative gradient overlay */
+.confirmation-popup::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background: linear-gradient(90deg, #0c78ba, #0c78ba);
+  border-radius: 15px 15px 0 0;
+}
+
+/* Popup header */
+.confirmation-popup-header {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: bold;
+  position: relative;
+}
+
+.confirmation-popup-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #0c78ba;
+}
+
+.close-popup-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-popup-btn:hover {
+  color: #000;
+}
+
+/* Content section */
+.confirmation-popup-content {
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-popup-content p {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+.document-details {
+  text-align: left;
+  margin: 1rem 0;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: #f8f9fa;
+  padding: 1rem;
+}
+
+.document-details h3 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.document-details ul {
+  padding: 0;
+  list-style-type: none;
+  margin: 0;
+}
+
+.document-details li {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+/* Warning text */
+.warning-text {
+  font-size: 0.9rem;
+  color: #000000;
+  margin-top: 1rem;
+}
+
+/* Footer buttons */
+.confirmation-popup-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border: 1px solid #0c78ba;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #0c78ba;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #e0e0e0;
+  color: #333;
+  transform: scale(1.05);
+}
+
+.send-btn {
+  background: linear-gradient(135deg, #0c78ba, #0c78ba);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    transform 0.2s ease;
+}
+
+.send-btn:hover {
+  background: #005fb2;
+  transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popupSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Logo loading format */
+.loader-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+/* Stationary T Logo */
+.Tlogo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  z-index: 3;
+}
+
+/* Breathing Frame (T Logo) */
+.breathing-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  animation: breathingFrame 2s infinite ease-in-out;
+  z-index: 2;
+}
+
+/* Keyframes for breathing effect */
+@keyframes breathingFrame {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+/* Loading text styling */
+.loadingText {
+  font-size: 18px;
+  font-weight: bold;
+  color: #022951;
+  display: flex;
+  gap: 2px;
+  margin-top: 20px;
+  z-index: 3;
+}
+
+/* Style for dots */
+.loadingText span {
+  display: inline-block;
+  opacity: 0;
+  animation: appear 1.5s infinite ease-in-out;
+}
+
+/* Delay for each dot to appear one by one */
+.loadingText span:nth-child(1) {
+  animation-delay: 0.5s;
+}
+.loadingText span:nth-child(2) {
+  animation-delay: 1s;
+}
+.loadingText span:nth-child(3) {
+  animation-delay: 1.5s;
+}
+
+/* Animation for appearing effect */
+@keyframes appear {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Full-screen blurred background overlay */
+.overlay-logo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  z-index: 1; /* Background */
+}
+
+/* Wrapper to center content */
+.spinner-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  position: absolute;
+  top: -4%;
+  left: -4%;
+  z-index: 2;
+}
+
+/* Progress text replacing progress bar with animated gradient */
+.progress-text {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 10px;
+  width: 220px; /* Same width as progress bar */
+  text-align: center;
+  padding: 8px;
+  background: linear-gradient(90deg, #022951, #0099de, #022951);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: gradientText 3s linear infinite;
+}
+
+/* Keyframes for moving gradient effect */
+@keyframes gradientText {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.main-outer-container {
+  width: 98%;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 1%;
+  height: 87vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-inner-container {
+  width: 85%;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 1%;
+  height: 87vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  background-color: #f5f5f5;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 2px;
+  background-color: #f5f5f5;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: #0099de;
+}
+.tr1:nth-child(even) {
+  background: #f1f1f1;
+}
+.tr1:nth-child(odd) {
+  background-color: #ffffff;
+}
+table tr:hover {
+  background-color: #eef4ff;
+}
+.th {
+  background-color: #003466;
+  color: white;
+  font-family: Light 300;
+  font-weight: bold;
+}
+table {
+  border-collapse: separate;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 1%;
+  border-left: 1px solid rgba(0, 41, 70, 0.6);
+  border-top: 1px solid rgba(0, 41, 70, 0.6);
+  border-bottom: 1px solid rgba(0, 41, 70, 0.6);
+  border-radius: 10px;
+  overflow: hidden;
+  border-spacing: 0;
+  width: 98%;
+}
+
+table td {
+  border-right: 1px solid rgba(0, 41, 70, 0.6);
+}
+table th {
+  border-right: 1px solid rgba(0, 41, 70, 0.6);
+}
+
+.template-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.template-modal {
+  background: white;
+  width: 600px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  overflow: visible; /* ✅ allow dropdowns to escape */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-modal1 {
+  background: white;
+  width: 43%;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  overflow: visible; /* ✅ allow dropdowns to escape */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-modal-header {
+  background-color: #003466;
+  color: white;
+  padding: 1rem;
+  position: relative;
+}
+
+.template-modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.template-modal-close {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.template-modal-body {
+  padding: 1rem;
+  max-height: none; /* ✅ no scroll clipping */
+  overflow: visible;
+}
+
+.template-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+/* for 125dpi */
+@media (min-resolution: 101dpi) {
+  .main-outer-container {
+    height: 84vh;
+  }
+  .upload-button-container {
+    height: 76vh;
+  }
+
+  .main-inner-container {
+    width: 81.5%;
+    height: 84vh;
+  }
+
+  .placeholders {
+    top: -2%;
+  }
+}
+
+/* for 150dpi */
+
+@media (min-resolution: 126dpi) {
+  .main-outer-container {
+    height: 81vh;
+  }
+
+  .upload-button-container {
+    height: 72vh;
+  }
+  .main-inner-container {
+    width: 78%;
+    height: 81vh;
+  }
+
+  .placeholders {
+    top: -0.5%;
+  }
+  .template-modal1{
+    width: 50%;
+  }
+}
