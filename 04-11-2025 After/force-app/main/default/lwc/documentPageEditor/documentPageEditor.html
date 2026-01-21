@@ -1,0 +1,1025 @@
+<template>
+  <template if:true={isTemplateCreate}>
+    <div class="main-container">
+      <template if:false={isFileUploaded}>
+        <div class="upload-button-container">
+          <label for="uploadPdf" class="upload-label">
+            <svg
+              class="icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              width="48"
+              height="48"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            <p>Click here to upload a PDF, Word file(Multiple Allowed)</p>
+          </label>
+          <input
+            type="file"
+            id="uploadPdf"
+            accept=".pdf,.docx"
+            multiple
+            onchange={handleFileUploadOrg}
+            class="file-input"
+          />
+        </div>
+
+        <div class="button-wrapper">
+          <lightning-button
+            label="Close"
+            variant="brand"
+            onclick={cancelcreateTemplate}
+          ></lightning-button>
+        </div>
+      </template>
+      <template if:true={pageImages.length}>
+        <div class="listview custom-scroll">
+          <div class="page-grid">
+            <template for:each={pageImages} for:item="page" for:index="index">
+              <div
+                key={page.id}
+                class={page.cardClass}
+                draggable="true"
+                data-id={page.id}
+                data-page-number={page.pageNumber} 
+                ondragstart={handleDragStart}
+                ondragenter={handleDragEnter}
+                ondragleave={handleDragLeave}
+                ondrop={handleDrop}
+                ondragover={allowDrop}
+                onclick={handlePageClick}
+
+              >
+                <!-- Top-right Action Icons -->
+                <div class="card-actions" onclick={stopCardActionClick}>
+                  <button class="zoom-btn" onclick={openZoom} data-id={page.id}>
+                    <i class="material-icons">zoom_in</i>
+                  </button>
+                  <button
+                    class="delete-btn"
+                    onclick={deletePage}
+                    data-id={page.id}
+                  >
+                    <i class="material-icons">delete</i>
+                  </button>
+                </div>
+
+                <!-- Page Image -->
+                <img
+                  src={page.dataUrl}
+                  alt={page.pageNumber}
+                  class="thumbnail"
+                />
+
+                <!-- Page Number -->
+                <div class="label-wrapper">
+                  <p class="page-label">{page.pageNumber}</p>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="button-wrapper">
+          <lightning-button
+            label="Reset"
+            variant="brand-outline"
+            onclick={handleReset}
+            class="slds-m-top_medium"
+          ></lightning-button>
+          <lightning-button
+            label="Proceed"
+            variant="brand"
+            onclick={handleGenerateNewPdf}
+          ></lightning-button>
+        </div>
+      </template>
+
+
+  <!-- Editor Modal -->
+<template if:true={showEditorModal}>
+  <section class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editor-modal-title">
+    <div class="editor-modal__backdrop" onclick={closeEditorModal}></div>
+
+    <div class="editor-modal__container" onclick={stopModalClick}>
+
+
+       <div class="assign-modal-header">
+      <span class="assign-title">Edit Page-{currentEditPage}</span>
+      <button class="assign-close-button" onclick={closeEditorModal}>×</button></div>
+
+      <!-- Body -->
+      <div class="editor-modal__body">
+        <!-- 🔎 Find/Replace row + Regenerate + Refresh -->
+        <div class="fr-row fr-row--one-line">
+  <!-- Find -->
+  <div class="floating-label">
+    <span class="label-text-drop">Find</span>
+    <lightning-input
+      data-ref="find-input"
+      type="text"
+      variant="label-hidden"
+      value={findText}
+      onchange={onFindChange}>
+    </lightning-input>
+  </div>
+
+  <!-- Replace -->
+  <div class="floating-label">
+    <span class="label-text-drop">Replace with</span>
+    <lightning-input
+      data-ref="replace-input"
+      type="text"
+      variant="label-hidden"
+      value={replaceText}
+      onchange={onReplaceChange}>
+    </lightning-input>
+  </div>
+
+  <!-- Actions (snip + regenerate) pinned to the right -->
+  <div class="actions">
+    <!-- Snip Select toggle button -->
+    <button
+      class={viewToggleButtonClass}
+      title={viewToggleTitle}
+      aria-pressed={snipMode}
+      onclick={snipButtonClick}>
+      <i class="material-icons toggle-icon">
+        {viewToggleIcon}
+      </i>
+    </button>
+
+    <lightning-button
+      variant="brand-outline"
+      label="Regenerate page"
+      onclick={regeneratePage}
+      title="Apply find/replace and re-render preview">
+    </lightning-button>
+  </div>
+</div>
+
+
+        <!-- PDF preview (select text with the mouse here) -->
+        <div class="pdf-viewer">
+          <div class="pdf-pages" data-ref="viewer"></div>
+          <!-- <div class="pdf-toolbar">
+            <span class="pdf-hint">
+              Tip: drag to select text; the selection will populate the “Find” field.
+            </span>
+          </div> -->
+        </div>
+        <footer class="editor-modal__footer" style="display:flex;justify-content:flex-end;gap:8px;padding:10px 12px;border-top:1px solid #e5e7eb;">
+  <lightning-button variant="neutral" label="Close" onclick={closeEditorModal}></lightning-button>
+  <lightning-button variant="brand" label="Done" title="Replace the clicked page in the grid" onclick={confirmEditorUpdate}></lightning-button>
+</footer>
+
+      </div>
+    </div>
+  </section>
+</template>
+
+
+
+<template if:true={showInsertDialog}>
+  <section class="mini-insert" role="dialog" aria-modal="true" aria-label="Insert text">
+    <div class="mini-insert__panel" onclick={stopModalClick}>
+      <h3 class="mini-insert__title">Insert text</h3>
+
+    <lightning-textarea
+  data-ref="insert-ta"
+  name="insertText"
+  value={insertText}
+  placeholder="Type the text to place into the selected area"
+  onchange={handleInsertTextChange}>
+</lightning-textarea>
+
+
+      <div class="mini-insert__actions">
+        <lightning-button variant="neutral" label="Cancel" onclick={_cancelInsertDialog}></lightning-button>
+        <lightning-button variant="brand"   label="Insert" onclick={_confirmInsertDialog}></lightning-button>
+      </div>
+    </div>
+  </section>
+</template>
+
+
+      <template if:true={isLoading}>
+        <div class="overlay-logo"></div>
+
+        <div class="spinner-wrapper">
+          <div class="loader-container">
+            <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+            <img src={imageUrl} alt="T Logo" class="Tlogo" />
+          </div>
+
+          <!-- Progress text instead of progress bar -->
+          <p class="progress-text">Setting Up Things,<br />Please Wait...</p>
+        </div>
+      </template>
+    </div>
+
+    <!-- Zoom Modal -->
+    <template if:true={isZoomOpen}>
+      <div class="modal-backdrop" onclick={closeZoom}>
+        <div class={zoomModalClass} onclick={stopPropagation}>
+          <div class="zoom-header">
+            <button class="modal-close-btn" onclick={closeZoom}>×</button>
+          </div>
+          <button
+            class="zoom-nav left"
+            onclick={goToPreviousPage}
+            title="Previous Page"
+          >
+            ❮
+          </button>
+          <div class="zoompic-controls">
+            <template if:true={showZoomOut}>
+              <button class="zoompic-btn" onclick={zoomOut}>−</button>
+            </template>
+            <button class="zoompic-btn" onclick={zoomIn}>＋</button>
+          </div>
+
+          <!-- Zoomed Image Container with drag -->
+          <div class="zoompic-image-wrapper">
+            <img
+              src={zoomedPage.dataUrl}
+              class="zoompic-image"
+              style={zoomStyle}
+              onmousedown={startDragZoom}
+              onmouseup={stopDragZoom}
+              onmouseleave={stopDragZoom}
+              onmousemove={handleDragZoom}
+            />
+          </div>
+
+          <button
+            class="zoom-nav right"
+            onclick={goToNextPage}
+            title="Next Page"
+          >
+            ❯
+          </button>
+          <span class="zoom-page-label">{zoomedPage.pageNumber}</span>
+        </div>
+      </div>
+    </template>
+  </template>
+
+  <template if:true={isTemplateModalOpen}>
+    <div class="main-container">
+      <div class="menu-container">
+        <div class={templatesClass} onclick={handleTemplates}>My Templates</div>
+        <div class={createtemplatesClass} onclick={handleCreatedTemplates}>
+          Created Templates
+        </div>
+      </div>
+      <div class="major-cont custom-scroll">
+        <template if:true={templatesFlag}>
+          <div class="slds-grid slds-grid_align-spread slds-m-top_small">
+            <div style="padding: 1% 0% 0% 1%">
+              <div class="floating-label">
+                <span class="label-text-drop">Search</span>
+                <lightning-input
+                  type="search"
+                  value={searchKeyword}
+                  onchange={handleSearchChange}
+                  placeholder="Search by Name"
+                  class="slds-m-bottom_small"
+                  variant="label-hidden"
+                ></lightning-input>
+              </div>
+            </div>
+            <div class="slds-grid slds-grid_align-end slds-m-top_small">
+              <button
+                class="slds-button slds-button_icon slds-button_icon-border slds-m-right_small"
+                title="Refresh"
+                onclick={refreshTemplates}
+              >
+                <svg class="slds-button__icon" aria-hidden="true">
+                  <use
+                    xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"
+                  ></use>
+                </svg>
+              </button>
+              <lightning-button
+                variant="brand"
+                label="Add Template"
+                title="Add Template(Ctrl + Shift + M)"
+                class="slds-m-right_small"
+                onclick={openAddTemplateModal}
+                disabled={disableAddTemplate}
+              ></lightning-button>
+              <lightning-button
+                variant="brand"
+                label="Create"
+                title="Create(Ctrl + Shift + C)"
+                onclick={createTemplate}
+                class="slds-m-right_small"
+              ></lightning-button>
+            </div>
+          </div>
+
+          <div class="table-scroll-wrapper custom-scroll">
+            <table
+              class="slds-table slds-table_cell-buffer slds-table_bordered"
+              style="table-layout: fixed; width: 98%"
+            >
+              <thead>
+                <tr>
+                  <th class="slds-cell-wrap th" style="width: 30%">
+                    Template Name
+                  </th>
+                  <th class="slds-cell-wrap th" style="width: 30%">
+                    Document Type
+                  </th>
+                  <th class="slds-cell-wrap th" style="width: 30%">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={templateListPaginated} for:item="template">
+                  <tr key={template.id} class="tr1">
+                    <td>{template.name}</td>
+                    <td>{template.documentType}</td>
+                    <td>
+                      <!-- View Icon -->
+                      <a
+                        href="javascript:void(0);"
+                        title="View"
+                        onclick={handleViewTemplate}
+                        data-id={template.id}
+                        class="icon-link"
+                      >
+                        <i class="material-icons1 view-icon">visibility</i> </a
+                      >&nbsp;
+
+                      <!-- Edit Icon -->
+                      <a
+                        href="javascript:void(0);"
+                        title="Edit"
+                        onclick={handleEditTemplate}
+                        data-id={template.id}
+                        data-key={template.awsKey}
+                        class="icon-link"
+                      >
+                        <i class="material-icons1 edit-icon"
+                          >edit_document</i
+                        > </a
+                      >&nbsp;
+
+                      <!-- Delete Icon -->
+                      <a
+                        href="javascript:void(0);"
+                        title="Delete"
+                        onclick={handleDeleteTemplate}
+                        data-id={template.id}
+                        data-key={template.awsKey}
+                        class="icon-link"
+                      >
+                        <i class="material-icons1 delete-icon">delete</i>
+                      </a>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <template if:true={templateListTotalRecords}>
+            <div
+              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_small fixed-pagination"
+            >
+              <!-- PAGE NAVIGATION -->
+              <div class="slds-align_absolute-center" style="height: 5rem">
+                <lightning-button
+                  disabled={disableTemplateFirst}
+                  icon-name="utility:jump_to_left"
+                  label="First"
+                  class="slds-p-horizontal_x-small"
+                  alternative-text="First page"
+                  onclick={handleTemplateFirst}
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableTemplateFirst}
+                  icon-name="utility:chevronleft"
+                  label="Previous"
+                  alternative-text="Previous"
+                  onclick={handleTemplatePrevious}
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge"
+                  >Showing {templatePageNumber} of {templateTotalPages}
+                  Page(s)</span
+                >
+                &nbsp;
+
+                <lightning-button
+                  disabled={disableTemplateLast}
+                  icon-name="utility:chevronright"
+                  label="Next"
+                  alternative-text="Next"
+                  onclick={handleTemplateNext}
+                  class="slds-p-horizontal_x-small"
+                  icon-position="right"
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableTemplateLast}
+                  icon-name="utility:jump_to_right"
+                  label="Last"
+                  alternative-text="Last page"
+                  onclick={handleTemplateLast}
+                  icon-position="right"
+                ></lightning-button>
+              </div>
+
+              <!-- TOTAL RECORDS -->
+              <div class="slds-clearfix">
+                <div class="slds-float_right">
+                  <span class="slds-badge"
+                    >Total Records: {templateListTotalRecords}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+        <template if:true={createtemplatesFlag}>
+          <div class="slds-grid slds-grid_align-spread slds-m-top_small">
+            <div style="padding: 1% 0% 0% 1%">
+              <div class="floating-label">
+                <span class="label-text-drop">Search</span>
+                <lightning-input
+                  type="search"
+                  value={searchCreatedKeyword}
+                  onchange={handleCreatedSearchChange}
+                  placeholder="Search by Name"
+                  class="slds-m-bottom_small"
+                  variant="label-hidden"
+                ></lightning-input>
+              </div>
+            </div>
+            <div class="slds-grid slds-grid_align-end slds-m-top_small">
+              <button
+                class="slds-button slds-button_icon slds-button_icon-border slds-m-right_small"
+                title="Refresh"
+                onclick={refreshTemplates}
+              >
+                <svg class="slds-button__icon" aria-hidden="true">
+                  <use
+                    xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"
+                  ></use>
+                </svg>
+              </button>
+              <lightning-button
+                variant="brand"
+                label="Add Template"
+                title="Add Template(Ctrl + Shift + M)"
+                class="slds-m-right_small"
+                onclick={openAddTemplateModal}
+                disabled={disableAddTemplate}
+              ></lightning-button>
+              <lightning-button
+                variant="brand"
+                label="Create"
+                title="Create(Ctrl + Shift + C)"
+                onclick={createTemplate}
+                class="slds-m-right_small"
+              ></lightning-button>
+            </div>
+          </div>
+
+          <!-- Table + Pagination -->
+          <div class="table-scroll-wrapper custom-scroll">
+            <table
+              class="slds-table slds-table_cell-buffer slds-table_bordered"
+              style="table-layout: fixed; width: 98%"
+            >
+              <thead>
+                <tr>
+                  <th class="slds-cell-wrap th" style="width: 30%">
+                    Template Name
+                  </th>
+                  <!-- <th class="slds-cell-wrap th" style="width: 30%">
+                  Document Type
+                </th> -->
+                  <th class="slds-cell-wrap th" style="width: 30%">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template
+                  for:each={createdTemplateListPaginated}
+                  for:item="template"
+                >
+                  <tr key={template.id} class="tr1">
+                    <td>{template.name}</td>
+                    <!-- <td>{template.documentType}</td> -->
+                    <td>
+                      <!-- View Icon -->
+                      <a
+                        href="javascript:void(0);"
+                        title="View"
+                        onclick={handleViewTemplate}
+                        data-id={template.id}
+                        class="icon-link"
+                      >
+                        <i class="material-icons1 view-icon">visibility</i> </a
+                      >&nbsp;
+
+                      <!-- Edit Icon -->
+                      <!-- <a
+                      href="javascript:void(0);"
+                      title="Edit"
+                      onclick={handleEditTemplate}
+                      data-id={template.id}
+                      class="icon-link"
+                    >
+                      <i class="material-icons1 edit-icon">edit_document</i> </a
+                    >&nbsp; -->
+
+                      <!-- Delete Icon -->
+                      <a
+                        href="javascript:void(0);"
+                        title="Delete"
+                        onclick={handleDeleteTemplate}
+                        data-id={template.id}
+                        class="icon-link"
+                      >
+                        <i class="material-icons1 delete-icon">delete</i>
+                      </a>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <template if:true={templateListTotalRecords}>
+            <div
+              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_small fixed-pagination"
+            >
+              <!-- PAGE NAVIGATION -->
+              <div class="slds-align_absolute-center" style="height: 5rem">
+                <lightning-button
+                  disabled={disableCreatedTemplateFirst}
+                  icon-name="utility:jump_to_left"
+                  label="First"
+                  class="slds-p-horizontal_x-small"
+                  alternative-text="First page"
+                  onclick={handleCreatedTemplateFirst}
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableCreatedTemplateFirst}
+                  icon-name="utility:chevronleft"
+                  label="Previous"
+                  alternative-text="Previous"
+                  onclick={handleCreatedTemplatePrevious}
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                  Showing {createdTemplatePageNumber} of
+                  {createdTemplateTotalPages} Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                  disabled={disableCreatedTemplateLast}
+                  icon-name="utility:chevronright"
+                  label="Next"
+                  alternative-text="Next"
+                  onclick={handleCreatedTemplateNext}
+                  class="slds-p-horizontal_x-small"
+                  icon-position="right"
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableCreatedTemplateLast}
+                  icon-name="utility:jump_to_right"
+                  label="Last"
+                  alternative-text="Last page"
+                  onclick={handleCreatedTemplateLast}
+                  icon-position="right"
+                ></lightning-button>
+              </div>
+
+              <!-- TOTAL RECORDS -->
+              <div class="slds-clearfix">
+                <div class="slds-float_right">
+                  <span class="slds-badge">
+                    Total Records: {createdTemplateTotalRecords}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isLoading1}>
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+      <div class="loader-container">
+        <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+      </div>
+
+      <!-- Progress text instead of progress bar -->
+      <p class="progress-text">Setting Up Things,<br />Please Wait...</p>
+    </div>
+  </template>
+  <template if:true={isTemplateAddModalOpen}>
+    <div class="template-modal-overlay">
+      <div class="template-modal">
+        <!-- Header -->
+        <div class="template-modal-header">
+          <span class="template-modal-title">Create Template</span>
+          <button class="template-modal-close" onclick={closeAddTemplateModal}>
+            &times;
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="template-modal-body">
+          <!-- First Row: Two Fields Side by Side -->
+          <div class="slds-grid slds-gutters">
+            <!-- Document Type -->
+            <div class="slds-col slds-size_1-of-2">
+              <div class="floating-label">
+                <span class="label-text-drop">Document Type</span>
+                <lightning-combobox
+                  name="documentType"
+                  variant="label-hidden"
+                  value={templateDocumentType}
+                  placeholder="Select Document Type"
+                  options={documentTypeOptions}
+                  onchange={handleDocumentTypeChange}
+                >
+                </lightning-combobox>
+              </div>
+            </div>
+
+            <!-- Template Name -->
+            <div class="slds-col slds-size_1-of-2">
+              <div class="floating-label">
+                <span class="label-text-drop">Template Name</span>
+                <lightning-input
+                  variant="label-hidden"
+                  value={templateName}
+                  onchange={handleTemplateNameChange}
+                >
+                </lightning-input>
+              </div>
+            </div>
+          </div>
+
+          <!-- Second Row: Upload File -->
+          <!-- <div class="slds-grid slds-m-top_medium">
+            <div class="slds-col slds-size_1-of-1">
+              <div class="floating-label">
+                <input
+                  type="file"
+                  id="fileInput"
+                  onchange={onFileUpload}
+                  accept=".pdf, .doc, .docx"
+                  name="uploadFile"
+                  style="display: none"
+                />
+                <button
+                  type="button"
+                  onclick={triggerFileInput}
+                  class="file-upload-button"
+                >
+                  &#8684; Upload File
+                </button>
+              </div>
+              <div class="slds-text-body_small slds-m-top_x-small">
+                <template if:true={uploadedFiles.length}>
+                  <ul class="slds-list_dotted">
+                    <template for:each={uploadedFiles} for:item="file">
+                      <li key={file.name}>{file.name}</li>
+                    </template>
+                  </ul>
+                </template>
+              </div>
+            </div>
+          </div> -->
+        <div class="slds-col slds-size_1-of-1">
+        <div class="slds-box slds-m-top_medium drag-drop" ondragover={handleDragOver} ondrop={handleDrop}>
+        <p class="slds-text-align_center">
+            Drag and drop files here<br />
+            <a href="javascript:void(0);"  onclick={triggerFileInput1}>Click to browse</a>
+        </p>
+        <input type="file" class="hidden-file-input"  onchange={onFileUpload1} /><!-- accept=".pdf,.png,.jpg,.jpeg"-->
+       </div>          
+      <template if:true={isFileExpand}>
+              <c-document-office-service
+                  record-id={recordId}
+                  module-path-from-parent="ticket"
+                  onuploadcomplete={handleAwsUploadComplete}
+                  onfiledeleted={handleFileDeleted}
+                  oncancel={handlefilecancel}>
+              </c-document-office-service>
+          </template>
+      <template if:true={isFileExpand1}>
+      <c-convert-word-to-pdf-lwc
+      record-id={recordId}
+      module-path-from-parent="ticket"
+      onuploadcomplete={handleAwsUploadComplete1}>
+    </c-convert-word-to-pdf-lwc>
+    </template>
+         </div>
+        
+        </div>
+
+        <!-- Footer -->
+        <div class="template-modal-footer">
+          <lightning-button
+            variant="brand-outline"
+            label="Cancel"
+            onclick={closeAddTemplateModal}
+          ></lightning-button>
+          <lightning-button
+            variant="brand"
+            label="Submit"
+            onclick={submitTemplate}
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isPopPdfPreviewOpen}>
+    <div class="modal-overlay">
+      <section class="pdf-preview-modal">
+        <div class="modal-header">
+          <h2>PDF Preview</h2>
+          <lightning-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            onclick={closePopPdfViewer}
+            style="background-color: transparent; border: none; cursor: pointer"
+          ></lightning-icon>
+        </div>
+
+        <div class="pdf-title">
+          <div><strong>Template Name:</strong> {popSelectedTemplateName}</div>
+          <div><strong>Document Type:</strong> {popSelectedDocumentType}</div>
+        </div>
+
+        <div class="pop-pdf-image-wrapper custom-scroll">
+          <template for:each={popPreviewPages} for:item="img">
+            <div key={img.pageNumber} class="pop-pdf-page">
+              <img
+                src={img.dataUrl}
+                alt={img.altText}
+                style="width: 100%"
+                onload={handlePopImageLoad}
+                onerror={handlePopImageError}
+              />
+              <div
+                class="slds-text-align_center slds-text-title_caps slds-m-vertical_x-small"
+              >
+                {img.altText}
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+    </div>
+  </template>
+
+  <template if:true={isPdfViewerVisible1}>
+    <div class="modal-overlay">
+      <section class="pdf-preview-modal">
+        <div class="modal-header">
+          <h2>PDF Preview</h2>
+          <lightning-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            onclick={closePdfViewer1}
+            style="background-color: transparent; border: none; cursor: pointer"
+          ></lightning-icon>
+        </div>
+
+        <!-- ✅ Title Section -->
+        <div class="pdf-title">
+          <div><strong>Template Name:</strong> {selectedTemplateName}</div>
+          &nbsp;
+          <div><strong>Document Type:</strong> {selectedDocumentType}</div>
+        </div>
+
+        <iframe
+          src={pdfViewerUrl1}
+          class="pdf-iframe"
+          style="width: 100%; height: 80vh; border: none"
+        ></iframe>
+      </section>
+    </div>
+  </template>
+
+  <template if:true={isCreateOptionsModalOpen}>
+    <div class="template-modal-overlay">
+      <div class="template-modal">
+        <div class="template-modal-header">
+          <span class="template-modal-title"
+            >How would you like to create?</span
+          >
+          <button
+            class="template-modal-close"
+            onclick={closeCreateOptionsModal}
+          >
+            &times;
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="template-modal-body">
+          <div class="popup-options">
+            <lightning-button
+              variant="brand"
+              label="Start from Scratch"
+              onclick={handleStartFromScratch}
+            ></lightning-button>
+            <lightning-button
+              variant="brand-outline"
+              label="Use Existing Templates"
+              onclick={openTemplatePicker}
+            ></lightning-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isTemplatePickerOpen}>
+    <div class="template-modal-overlay">
+      <div class="template-modal-temp">
+        <div class="template-modal-header">
+          <span class="template-modal-title">Select Templates</span>
+          <button class="template-modal-close" onclick={closeTemplatePicker}>
+            &times;
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="template-modal-body-temp custom-scroll">
+          <div style="padding: 1% 0% 0% 1%">
+            <div class="floating-label">
+              <span class="label-text-drop">Search</span>
+              <lightning-input
+                type="search"
+                value={searchKeyword}
+                onchange={handleSearchChange}
+                placeholder="Search by Name"
+                class="slds-m-bottom_small"
+                variant="label-hidden"
+              ></lightning-input>
+            </div>
+          </div>
+          <div class="template-checkboxes">
+            <template for:each={templateListPaginated} for:item="tpl">
+              <div key={tpl.id}>
+                <lightning-input
+                  type="checkbox"
+                  label={tpl.name}
+                  value={tpl.id}
+                  data-url={tpl.AWS_Document__c}
+                  onchange={handleTemplateCheckboxChange}
+                ></lightning-input>
+              </div>
+            </template>
+          </div>
+        </div>
+        <template if:true={templateListTotalRecords}>
+          <div
+            class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_small"
+          >
+            <!-- PAGE NAVIGATION -->
+            <div class="slds-align_absolute-center" style="height: 5rem">
+              <lightning-button
+                disabled={disableTemplateFirst}
+                icon-name="utility:jump_to_left"
+                label="First"
+                class="slds-p-horizontal_x-small"
+                alternative-text="First page"
+                onclick={handleTemplateFirst}
+              ></lightning-button>
+
+              <lightning-button
+                disabled={disableTemplateFirst}
+                icon-name="utility:chevronleft"
+                label="Previous"
+                alternative-text="Previous"
+                onclick={handleTemplatePrevious}
+              ></lightning-button>
+
+              &nbsp;
+              <span class="slds-badge"
+                >Showing {templatePageNumber} of {templateTotalPages}
+                Page(s)</span
+              >
+              &nbsp;
+
+              <lightning-button
+                disabled={disableTemplateLast}
+                icon-name="utility:chevronright"
+                label="Next"
+                alternative-text="Next"
+                onclick={handleTemplateNext}
+                class="slds-p-horizontal_x-small"
+                icon-position="right"
+              ></lightning-button>
+
+              <lightning-button
+                disabled={disableTemplateLast}
+                icon-name="utility:jump_to_right"
+                label="Last"
+                alternative-text="Last page"
+                onclick={handleTemplateLast}
+                icon-position="right"
+              ></lightning-button>
+            </div>
+
+            <!-- TOTAL RECORDS -->
+            <!-- <div class="slds-clearfix">
+                <div class="slds-float_right">
+                  <span class="slds-badge"
+                    >Total Records: {templateListTotalRecords}</span
+                  >
+                </div>
+              </div> -->
+          </div>
+        </template>
+
+        <div class="popup-options">
+          <lightning-button
+            label="Load"
+            variant="brand"
+            onclick={handleLoadSelectedTemplates}
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isPdfMetaModalOpen}>
+    <div class="template-modal-overlay">
+      <div class="template-modal">
+        <div class="template-modal-header">
+          <span class="template-modal-title">Save Generated Template</span>
+          <button class="template-modal-close" onclick={closePdfMetaModal}>
+            &times;
+          </button>
+        </div>
+
+        <div class="template-modal-body">
+          <!-- Template Name -->
+          <div class="slds-m-bottom_medium">
+            <lightning-input
+              label="Template Name"
+              value={templateName}
+              onchange={handleTemplateNameChange}
+              required
+            ></lightning-input>
+          </div>
+
+          <!-- Document Type -->
+          <!-- <div class="slds-m-bottom_medium">
+            <lightning-combobox
+              label="Document Type"
+              value={templateDocumentType}
+              options={documentTypeOptions}
+              onchange={handleDocumentTypeChange}
+            ></lightning-combobox>
+          </div> -->
+        </div>
+
+        <div class="template-modal-footer">
+          <lightning-button
+            variant="brand-outline"
+            label="Cancel"
+            onclick={closePdfMetaModal}
+          ></lightning-button>
+          <lightning-button
+            variant="brand"
+            label="Save & Upload"
+            onclick={saveGeneratedPdf}
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+</template>
