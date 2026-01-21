@@ -1,0 +1,252 @@
+<template>
+    <template if:true={isHome}>
+        <lightning-card title="Sales" icon-name="custom:custom62" >
+
+            <div style="margin-top:3px;">
+                <lightning-button style="margin-right:2%;margin-left:80%;" variant="brand" label="Create New"
+                    title="Create Sales" onclick={handleCreateNewSales}></lightning-button> 
+                <lightning-button label="Back" variant="brand" onclick={handleback}></lightning-button> 
+                      
+            </div>
+            <div class="slds-m-around_large slds-m-top_x-large" > 
+                <div class="slds-m-around_medium"> 
+                                  
+                    <div class="slds-m-right_small" >                    
+                        <table class="slds-table  slds-table_cell-buffer"  style="width:97%; margin-left:2%; margin-top:2%;table-layout:fixed;">
+                            <thead>
+                                <tr>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="name" >Lead Name</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="companyName">Org Name</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="status" style="width:8%;">Status</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="billing">Billing Per User</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="planStartDate">Plan Start Date</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="planEndDate">Plan End Date</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="salesExecName">Sales Exec Name</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="accountManagerName">Account Manager</th>
+                                    <th  class="slds-cell-wrap th" onclick={sortData} data-key="referenceName">Referred by</th>
+                                    <th  class="slds-cell-wrap th">View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={availableIssues} for:item="acc">
+                                    <tr key={acc.Id} class="tr1">
+                                        <td class="slds-cell-wrap description">
+                                            <a href="javascript:void(0)" data-id={acc.Id} data-actionname="Edit" data-casenum={acc.name} onclick={handleRowActions}> {acc.name}
+                            
+                                            </a>                                    
+                                        </td>
+                                        <!-- <td class="slds-cell-wrap ">{acc.name}</td> -->
+                                        <td class="slds-cell-wrap description">{acc.companyName}</td>
+                                        <td class="slds-cell-wrap">{acc.status}</td>
+                                        <td class="slds-cell-wrap">{acc.billing}</td>
+                                        <td class="slds-cell-wrap">{acc.planStartDate}</td>
+                                        <td class="slds-cell-wrap">{acc.planEndDate}</td>
+                                        <td class="slds-cell-wrap description">{acc.salesExecName}</td>
+                                        <td class="slds-cell-wrap description">{acc.accountManagerName}</td>
+                                        <td class="slds-cell-wrap description">{acc.referenceName}</td>
+                                        <td>
+                                            <div>                                        
+                                                <a href={acc.amazonUrl} data-id={acc.Id} data-url={acc.amazonUrl}  
+                                                    onclick={handleView} >
+                                                    <lightning-icon icon-name="action:preview" size="xx-small" title="View"></lightning-icon>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>                            
+                                </template>
+                            </tbody>
+                        </table>            
+                    <!--Pagination Start-->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em; margin-left:20px;">
+                        <!--RECORDS PER PAGE-->
+                        <div class="slds-col">
+                            <div class="slds-list_inline slds-p-bottom_xx-small">
+                                <span style="margin-top:5px;margin-left:10px;margin-right:5px;">Page Size:</span>
+                                <label class="slds-text-color_weak" for="recordsPerPage"></label>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                        <template for:each={pageSizeOptions} for:item="option">
+                                            <option key={option} value={option}>{option}</option>
+                                        </template> 
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!--PAGE NAVIGATION-->
+                        <div class="slds-align_absolute-center" style="height:5rem">
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage} ></lightning-button>
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                            &nbsp;
+                            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                            &nbsp;
+                            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                        </div>
+                        <!--TOTAL RECORDS-->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right" style="margin-right:15px;">
+                                <span class="slds-badge"> Total Records: {totalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Pagination End-->
+                
+    
+                <!-- if there is no facilities -->
+                <template if:true={noRecordsFlag}>
+                    <div class="slds-grid  slds-grid_align-spread slds-m-left_large" style="padding-top: 0.5em; font-size:15px;">
+                        <b style="color: Red"><I> No Leads Registered </I> </b>
+                    </div>
+                </template>
+                </div>
+            </div>
+        </lightning-card>
+    </template>
+   
+    <template if:true={isModalOpen}>        
+        <div class="slds-p-around_medium">
+            <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+            onclick={closeSaleslinvoice} style="float:right;margin-bottom:5px;"></lightning-button>
+
+            <iframe src={currentUrl} width="100%" height="1300px" ></iframe>
+        </div>              
+    </template>
+
+    <template if:true={isOpenModal}>
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+          class="slds-modal slds-fade-in-open slds-modal_medium" role="dialog" tabindex="-1">
+        
+          <div class="slds-modal__container ">
+            <!-- modal header start -->
+            <header class="slds-modal__header">
+              <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close"
+                onclick={hideModalBox}>
+                <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"
+                  size="small"></lightning-icon>
+                <span class="slds-assistive-text">Close</span>
+              </button>
+              <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{headeringName}</h2>
+            </header>
+            <!-- modal body start -->
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+              <lightning-record-edit-form object-api-name="Lead" record-id={recordId} onsuccess={handleSuccess} onsubmit={handleSubmit} >
+                <lightning-messages></lightning-messages>
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Name" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Company" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Billing_Per_user__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Status" value={status} required="true" onchange={handleChangeStatus} ></lightning-input-field>
+                        </div>
+                    </div>                   
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Plan_Start_Date__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Plan_End_Date__c" required="true"></lightning-input-field>
+                        </div>
+                    </div> 
+                    <template if:true={isStatusFlag}>
+                        <div class="slds-size_1-of-2">
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                                <lightning-input-field field-name="Type_of_Organisation__c" value={status} required="true" onchange={handleChangeStatus} ></lightning-input-field>
+                            </div>
+                        </div> 
+                    </template>
+                    
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Email"></lightning-input-field>
+                        </div>
+                    </div> 
+                    <h3 style="width:100%;height:30px" class=" slds-page-header slds-page-header__row slds-section slds-is-open slds-section__title slds-m-right_medium slds-m-left_small">Sales Executive</h3>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Sales_Exec_First_Name__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Sales_Exec_Last_Name__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <h3 style="width:100%;height:30px" class=" slds-page-header slds-page-header__row slds-section slds-is-open slds-section__title slds-m-right_medium slds-m-left_small">Account Manager</h3>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Account_First_Name__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Account_Last_Name__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>
+                    <h3 style="width:100%;height:30px" class=" slds-page-header slds-page-header__row slds-section slds-is-open slds-section__title slds-m-right_medium slds-m-left_small">Referred by</h3>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Referred_by_First_Name__c" required="tue"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-input-field field-name="Referred_by_Last_Name__c" required="true"></lightning-input-field>
+                        </div>
+                    </div>                    
+                    
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium" >
+                            <lightning-input type="file" onchange={onFileUpload} name="uploadFile" label="Upload File" style="margin-left:5px;">  
+                            </lightning-input>
+                            <div class="slds-text-body_small">{fileName}</div>
+                        </div>
+                    </div>
+                    
+                    <template if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                            </lightning-spinner>
+                    </template>
+                    <template if:true={isattachError}>
+                        <p style="color:red">File Size Can not exceed 512MB</p>                                  
+                    </template>  
+                    
+                    
+                    <div if:true={viewfileName}><!-- Uploaded File:&nbsp;<a href={viewfileName} target="_blank">view file</a> -->
+                        <div class="slds-m-right_medium slds-m-left_medium" style="margin-top:20px;">
+                            <label style="margin-right:65px;color:#5A5A5A;font:12px;">Uploaded File</label>
+                            <a href={viewfileName} data-url={viewfileName}  
+                            onclick={handleView}>view file</a>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+                <div class="slds-align_absolute-center slds-m-around_small">
+                    <lightning-button label={buttonName} variant="brand" type="submit" class="slds-m-around_small"></lightning-button>
+                  <lightning-button label="Cancel" variant="brand" onclick={hideModalBox}
+                    class="slds-m-around_small"></lightning-button>
+                </div>
+              </lightning-record-edit-form>
+            </div>
+          </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

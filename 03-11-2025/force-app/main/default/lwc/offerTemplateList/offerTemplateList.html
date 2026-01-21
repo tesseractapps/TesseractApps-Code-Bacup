@@ -1,0 +1,843 @@
+<template>
+    <lightning-card class="custom-card" icon-name="utility:document">
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <img src={logo} alt="Te_sign Logo" width="300px" height="300px" />
+        </div>
+
+        <!-- Loading Animation -->
+        <template if:true={isLoading}>
+            <div class="loading-animation">
+                <div class="spinner"></div>
+                <p>Loading Document, please wait...</p>
+            </div>
+        </template>
+
+        <template if:true={isLoadingpop}>
+            <div class="load-overlay">
+                <div class="load-content">
+                    <div class="loading-animation">
+                        <div class="spinner"></div>
+                        <p>Loading Document, please wait...</p>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        
+        
+
+        <!-- PDF Viewer Section -->
+        <template if:true={imageSrc}>
+            <div class="pdf-viewer-container">
+                <div class="image-container">
+                    <img src={imageSrc} alt="Rendered PDF Page" />
+                    <template for:each={placeholdersForCurrentPage} for:item="placeholder">
+                        <div
+                            key={placeholder.id}
+                            class="placeholder-container"
+                            style={placeholder.style}
+                            data-id={placeholder.id}
+                        >
+                            <!-- FirstName Placeholder -->
+                            <template if:true={placeholder.isName}>
+                                <div class="name-placeholder">
+                                    <template if:true={placeholder.hasImage}>
+                                        <!-- Display the rendered image -->
+                                        <div class="edit-icon" onclick={handleEditPlaceholder} data-id={placeholder.id} title="Edit">
+                                            <lightning-icon icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                                onclick={handleEditOrg}  size="xx-small"
+                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                            </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.FNimageSrc}
+                                            alt="Rendered Name"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <!-- Input Field -->
+                                        <input
+                                            type="text"
+                                            class="placeholder-input"
+                                            placeholder="Enter First Name"
+                                            value={placeholder.value}
+                                            oninput={handleFNameInputChange}
+                                            data-id={placeholder.id}
+                                            aria-label="Enter Name"
+                                        />
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Last Name -->
+                            <template if:true={placeholder.isLastName}>
+                                <div class="name-placeholder">
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon" title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.LNimageSrc}
+                                            alt="Rendered Last Name"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <input
+                                            type="text"
+                                            class="placeholder-input"
+                                            placeholder="Enter Last Name"
+                                            value={placeholder.value}
+                                            oninput={handleLNameInputChange}
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Initials -->
+                            <template if:true={placeholder.isInitials}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon" title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.INimageSrc}
+                                            alt="Rendered Initials"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <select
+                                            class="placeholder-dropdown"
+                                            onchange={handleInitialsInputChange}
+                                            data-id={placeholder.id}
+                                            aria-label="Select Initials"
+                                        >
+                                            <option value="">Select Initials</option>
+                                            <option value="Mr">Mr</option>
+                                            <option value="Mrs">Mrs</option>
+                                            <option value="Miss">Miss</option>
+                                            <option value="Dr">Dr</option>
+                                        </select>
+                                    </template>
+                                    
+                                    
+                                </div>
+                            </template>
+                            <!-- Full Name -->
+                            <template if:true={placeholder.isFullName}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon"  title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.FullNameSrc}
+                                            alt="Rendered Full Name"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <input
+                                            type="text"
+                                            class="placeholder-input"
+                                            placeholder="Enter Full Name"
+                                            value={placeholder.value}
+                                            oninput={handleFullNameInputChange}
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Email -->
+                            <template if:true={placeholder.isEmail}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon"  title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.EmailSrc}
+                                            alt="Rendered Email"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <input
+                                            type="email"
+                                            class="placeholder-input"
+                                            placeholder="Enter Email"
+                                            value={placeholder.value}
+                                            oninput={handleEmailInputChange}
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Contact Number -->
+                            <template if:true={placeholder.isContactNumber}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon" title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.PhoneSrc}
+                                            alt="Rendered Number"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <input
+                                            type="tel"
+                                            inputmode="numeric"
+    pattern="[0-9]*"
+    onkeypress={allowOnlyNumbers}
+                                            class="placeholder-input"
+                                            placeholder="Enter Contact No"
+                                            value={placeholder.value}
+                                            oninput={handlePhoneInputChange}
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Address -->
+                            <template if:true={placeholder.isAddress}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon" title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.AddressSrc}
+                                            alt="Rendered Address"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <textarea
+                                            class="placeholder-input"
+                                            placeholder="Enter Address"
+                                            value={placeholder.value}
+                                            oninput={handleAddressInputChange}
+                                            data-id={placeholder.id}
+                                        ></textarea>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- ABN -->
+                                <template if:true={placeholder.isABN}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                    <div class="edit-icon" title="Edit">
+                                        <lightning-icon
+                                        onclick={handleEditPlaceholder}
+                                        data-id={placeholder.id}
+                                        icon-name="action:edit"
+                                        alternative-text="Edit"
+                                        size="xx-small"
+                                        style="cursor:pointer;color:white;background:#0099DE;"
+                                        ></lightning-icon>
+                                    </div>
+                                    <img
+                                        src={placeholder.AbnSrc}
+                                        alt="Rendered ABN"
+                                        class="rendered-name-image"
+                                        data-id={placeholder.id}
+                                    />
+                                    </template>
+
+                                    <template if:false={placeholder.hasImage}>
+                                    <input
+                                        type="text"
+                                        class="placeholder-input"
+                                        placeholder="Enter ABN"
+                                        value={placeholder.value}
+                                        oninput={handleAbnInputChange}
+                                        data-id={placeholder.id}
+                                        inputmode="numeric"
+                                        pattern="\d{11}"
+                                        maxlength="11"
+                                        aria-label="Enter ABN"
+                                    />
+                                    </template>
+                                </div>
+                                </template>
+
+
+                            <!-- Date -->
+                            <template if:true={placeholder.isDate}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon" title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.DateSrc}
+                                            alt="Rendered Date"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <input
+                                            type="date"
+                                            class="placeholder-input"
+                                            value={placeholder.value}
+                                            oninput={handleDateInputChange}
+                                            data-id={placeholder.id}
+                                        />
+
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Date of Signing -->
+                            <template if:true={placeholder.isDateOfSigning}>
+                                <div>
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="edit-icon" title="Edit">
+                                            <lightning-icon onclick={handleEditPlaceholder} data-id={placeholder.id} icon-name="action:edit" alternative-text="Edit" title="Edit"
+                                             size="xx-small"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                        </div>
+                                        <img
+                                            src={placeholder.DateOfSigningSrc}
+                                            alt="Rendered Date of Signing"
+                                            class="rendered-name-image"
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                    <template if:false={placeholder.hasImage}>
+                                        <input
+                                            type="date"
+                                            class="placeholder-input"
+                                            value={placeholder.value}
+                                            oninput={handleDateOfSigningInputChange}
+                                            data-id={placeholder.id}
+                                        />
+                                    </template>
+                                </div>
+                            </template>
+    
+
+
+
+
+                            <!-- Signature Placeholder -->
+                            <template if:true={placeholder.isSignature}>
+                                <div class="signature-placeholder">
+                                    <!-- If the image is uploaded -->
+                                    <template if:true={placeholder.hasImage}>
+                                        <div class="signature-image-container">
+                                            <img
+                                                src={placeholder.imageSrc}
+                                                alt="Uploaded Signature"
+                                                class="signature-image"
+                                                style="width: 150px; height: 75px;"
+                                            />
+                                        </div>
+                                    </template>
+
+                                    <!-- If the image is not uploaded -->
+                                    <template if:false={placeholder.hasImage}>
+                                        <div class="placeholder-sign" onclick={handleUploadSignature} data-id={placeholder.id}>
+                                            Upload Signature
+                                        </div>
+                                        
+                                    </template>
+                                </div>
+                            </template>
+
+
+                            
+                            
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Save Section
+            <div class="save-section">
+                <lightning-button
+                    label="Save"
+                    onclick={handleSave}
+                    variant="brand"
+                ></lightning-button>
+            </div> -->
+
+            <!-- Pagination Controls -->
+            <div class="pagination-controls">
+                <lightning-button
+                    label="Previous"
+                    icon-name="utility:chevronleft"
+                    onclick={showPreviousPage}
+                    disabled={isFirstPage}
+                ></lightning-button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <lightning-button
+                    label="Next"
+                    icon-name="utility:chevronright"
+                    onclick={showNextPage}
+                    disabled={isLastPage}
+                ></lightning-button>
+            </div>
+        </template>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+            
+        
+                <!-- <button class="preview-confirmation-preview-button" onclick={handlePreviewClick}>
+                    Preview
+                </button> -->
+                <template if:true={imageSrc}>
+                <button class="preview-confirmation-preview-button" onclick={handlePreviewClick}>
+                    Proceed
+                </button></template>
+            
+                <!-- Modal for Preview Confirmation -->
+                <template if:true={isPreviewModalVisible}>
+                    <div class="preview-confirmation-modal-backdrop"></div>
+                    <div class="preview-confirmation-modal">
+                        <div class="preview-confirmation-modal-header">
+                            <h2>Confirm Recipient Details</h2>
+                        </div>
+                        <div class="preview-confirmation-modal-body">
+                            <p>Please confirm the recipient details before submitting the document for signature.</p>
+                        </div>
+                        <div class="preview-confirmation-modal-footer">
+                            <button class="preview-confirmation-cancel-button" onclick={cancelPreview}>Edit Details</button>
+                            <button class="preview-confirmation-proceed-button" onclick={proceedWithPreview}>Proceed</button>
+                            
+                        </div>
+                    </div>
+                </template>
+        
+        </div>
+        <template if:true={isEditModalVisible}>
+            <div class="edit-modal">
+                <div class="edit-modal-header">
+                    <h2>Edit {currentEditingLabel}</h2>
+                    <button class="close-button" onclick={closeEditModal}>✖</button>
+                </div>
+                <div class="edit-modal-body">
+                    <!-- <input
+                        type="text"
+                        class="edit-input"
+                        value={editableText}
+                        oninput={handleModalInputChange}
+                    /> -->
+                    <template if:true={isEditTextInput}>
+    <input
+        type={currentEditingType}
+        class="edit-input"
+        value={editableText}
+        oninput={handleModalInputChange}
+        onkeypress={preventNonNumericInput}
+    />
+</template>
+
+<template if:true={isEditTextArea}>
+    <textarea
+        class="edit-input"
+        oninput={handleModalInputChange}
+    >{editableText}</textarea>
+</template>
+
+<template if:true={isEditDropdown}>
+        <select class="edit-input" onchange={handleModalInputChange} value={editableText}>
+            <option value="">Select Initials</option>
+            <option value="Mr">Mr</option>
+            <option value="Mrs">Mrs</option>
+            <option value="Miss">Miss</option>
+            <option value="Dr">Dr</option>
+        </select>
+    </template>
+
+
+                </div>
+                <div class="edit-modal-footer">
+                    <lightning-button 
+                    class="slds-m-right_small"
+                    variant="brand" 
+                    label="Save" 
+                    onclick={saveEditedText}>
+                </lightning-button>
+
+                <lightning-button 
+                    class="slds-m-left_small"
+                    variant="brand-outline" 
+                    label="Cancel" 
+                    onclick={closeEditModal}>
+                </lightning-button>
+                </div>
+            </div>
+            <div class="edit-modal-backdrop"></div>
+        </template>
+
+        <!-- Modal for selecting upload or draw -->
+<template if:true={isSignatureModalVisible}>
+    <div class="signature-modal-container">
+        <div class="signature-modal-header">
+            <span>Choose Signature Action</span>
+            <button onclick={closeSignatureModal} aria-label="Close Modal">&times;</button>
+        </div>
+        <div class="signature-modal-content">
+            <lightning-button
+                label="Upload Signature"
+                onclick={handleUploadOption}
+                variant="brand"
+            ></lightning-button>
+            <lightning-button
+                label="Draw Signature"
+                onclick={handleDrawOption}
+                variant="neutral"
+            ></lightning-button>
+            <lightning-button
+            label="Enter Name for Signature"
+            onclick={openNameSignatureModal}
+            variant="neutral"
+            ></lightning-button>
+        </div>
+    </div>
+    <div class="signature-modal-backdrop"></div>
+</template>
+
+<!-- Modal for drawing signature -->
+<template if:true={isDrawingModalVisible}>
+    <div class="drawing-modal-container">
+        <div class="drawing-modal-header">
+            <span>Draw Your Signature</span>
+            <button onclick={closeDrawingModal} aria-label="Close Modal">&times;</button>
+        </div>
+        <div class="drawing-modal-content">
+            <canvas
+                class="signature-canvas"
+                width="400"
+                height="200"
+                onmousedown={startDrawing}
+                onmouseup={stopDrawing}
+                onmousemove={draw}
+                style="border: 1px solid #ccc;"
+            ></canvas>
+        </div>
+        <div class="drawing-modal-footer">
+            <lightning-button
+                label="Save"
+                variant="brand"
+                onclick={saveDrawnSignature}
+            ></lightning-button>
+            <lightning-button
+                label="Clear"
+                variant="neutral"
+                onclick={clearCanvas}
+            ></lightning-button>
+        </div>
+    </div>
+    <div class="drawing-modal-backdrop"></div>
+</template>
+
+<!-- Name Signature Modal -->
+<template if:true={isNameSignatureModalVisible}>
+    <div class="signature-modal-container">
+        <div class="signature-modal-header">
+            <span>Enter Name for Signature</span>
+            <button class="close-button" onclick={closeNameSignatureModal}>&times;</button>
+        </div>
+        <div class="signature-modal-body">
+            <!-- Name Input Field -->
+            <input
+                type="text"
+                placeholder="Enter Your Name"
+                oninput={handleNameInput}
+                class="signature-name-input"
+            />
+
+            <!-- Font Previews Section -->
+            <div class="signature-font-previews">
+                <template for:each={styledPreviews} for:item="style">
+                    <div
+                        key={style.id}
+                        class="signature-font-style"
+                        data-id={style.id}
+                        onclick={handleStyleSelection}
+                    >
+                        <canvas data-id={style.id} class="signature-styled-canvas"></canvas>
+                    </div>
+                </template>
+            </div>
+        </div>
+        <div class="signature-modal-footer">
+            <lightning-button
+                label="Cancel"
+                variant="brand"
+                onclick={closeNameSignatureModal}
+            ></lightning-button>
+        </div>
+    </div>
+    <div class="signature-modal-backdrop"></div>
+</template>
+<!-- Comments Bubble -->
+<div class="conversation-bubble-container">
+    <span class="bubble-text">Ask your doubts!</span>
+    <div class="conversation-bubble" onclick={openConversationModal}>
+        <lightning-icon icon-name="utility:chat" size="medium" alternative-text="Open Conversation"></lightning-icon>
+    </div>
+</div>
+
+
+<template if:true={showConversationModal}>
+    <div class="conversation-modal">
+        <div class="message-header">
+            <h2 class="header-title">Ask Your Doubts!</h2>
+            <span class="close-icon" onclick={closeConversationModal}>&#x2716;</span>
+        </div>
+        <div class="messages-container">
+            <template for:each={messages} for:item="message">
+                <template if:true={message.isDateDivider}>
+                    <div key={message.date} class="date-divider">{message.date}</div>
+                </template>
+                <template if:false={message.isDateDivider}>
+                    <div key={message.id} class={message.class}>
+                        <div class="message-content">
+                            <span class="text">{message.text}</span>
+                            <span class="timestamp">
+                                {message.timestamp}
+                                <lightning-icon icon-name="utility:check" alternative-text="Saved" size="x-small"></lightning-icon>
+                            </span>
+                        </div>
+                    </div>
+                </template>
+            </template>
+        </div>
+        <div class="input-container">
+            <textarea
+            class="message-input"
+            placeholder="Enter your message"
+            value={newMessage}
+            oninput={handleMessageInput}
+            onkeydown={handleKeyDown}>
+            </textarea>
+            <img
+                src={sendIcon}
+                alt="Send"
+                class="send-icon"
+                onclick={sendMessage}>
+            
+        </div>
+        
+        
+    </div>
+    <div class="modal-backdrop"></div>
+</template>
+
+
+
+
+
+
+
+
+
+
+<template if:true={isConfirmationPopupVisible}>
+    <div class="custom-modal">
+        <div class="modal-content">
+            <!-- Header -->
+            <div class="modal-header">
+                <h2>PDF Viewer</h2>
+                <!-- <button class="close-button" onclick={closeConfirmationPopup}>X</button> -->
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body custom-scroll">
+                <template if:true={isLoading}>
+                    <div class="loading-container">
+                        <div class="spinner" style="--percentage: calc({loadingPercentage} / 100);">
+                            <div class="spinner-percentage">{loadingPercentage}%</div>
+                        </div>
+                        <p>Hold On,Your Document is getting Ready... {loadingPercentage}%</p>
+                    </div>
+                </template>
+                
+                <template if:false={isLoading}>
+                    <template for:each={confirmationPopupPages} for:item="page">
+                        <div key={page.id} class="preview-image-container">
+                            <img src={page.src} alt={page.alt} class="preview-image" />
+                            <p>{page.alt}</p>
+                        </div>
+                    </template>
+                </template>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <!-- <button onclick={closeConfirmationPopup}>Close Viewer</button> -->
+                <button onclick={handleGeneratePDF}>Submit</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template if:true={showSuccessScreen}>
+    
+    <!-- Success Popup -->
+    <div class="success-screen-container">
+        <div class="success-content">
+            
+            <!-- Green Circle Spinner -->
+            <template if:true={isSpinning}>
+                <div class="spinner-wrapper">
+                    <div class="spinner-circle"></div>
+                    <p>Generating your PDF... Please wait.</p>
+                </div>
+            </template>
+
+            <!-- Green Checkmark -->
+            <template if:false={isSpinning}>
+                <div class="checkmark-wrapper">
+                    
+                    <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                        <path class="checkmark-check" fill="none" d="M14 27l10 10L39 16" />
+                    </svg>
+                </div>
+                <h1 class="success-title">Document Signed Successfully</h1>
+                <p class="success-description">Thank you for signing the document! <br>Your signature has been successfully recorded. You will receive a confirmation email shortly. </p>
+                <div class="logo-success">
+                    <img src={logo} alt="Te_sign Logo" />
+                </div>
+
+                <div class="download-icon-container">
+                    <a href={pdfUrl} target="_blank" download>
+                        <svg class="download-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M19 12l-7 7-7-7"/>
+                        </svg>
+                        <p>Download PDF</p>
+                    </a>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+<template if:true={showFailureScreen}>
+    <!-- Failure Popup -->
+    <div class="failure-screen-container">
+        <div class="failure-content">
+
+            <!-- Red Circle Spinner -->
+            <template if:true={isSpinning}>
+                <div class="spinner-wrapper">
+                    <div class="spinner-circle red-spinner"></div>
+                    <p>Processing your request... Please wait.</p>
+                </div>
+            </template>
+
+            <!-- Red Cross Mark -->
+            <template if:false={isSpinning}>
+                <div class="crossmark-wrapper">
+                    <svg class="crossmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="crossmark-circle" cx="26" cy="26" r="25" fill="none" />
+                        <path class="crossmark-path" fill="none" d="M16 16l20 20M36 16l-20 20" />
+                    </svg>
+                </div>
+                <h1 class="failure-title">Document Signing Failed</h1>
+                <p class="failure-description">An error occurred while processing your document.<br>Please try again later.</p>
+
+                <div class="logo-failure">
+                    <img src={logo} alt="Te_sign Logo" />
+                </div>
+
+                <div class="retry-button-container">
+                    <button class="retry-button" onclick={handleRetry}>Retry</button>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+
+
+
+        <!-- Error Message -->
+        <template if:true={errorMessage}>
+            <div class="error-message">
+                <lightning-icon icon-name="utility:error" alternative-text="Error"></lightning-icon>
+                <p>{errorMessage}</p>
+            </div>
+        </template>
+
+
+        <template if:true={isLinkExpired}>
+            <div class="expired-container">
+                <div class="expired-icon">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L1 21H23L12 2Z" fill="#FFCC00"/>
+                        <path d="M12 8V13" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="12" cy="17" r="1" fill="#333"/>
+                    </svg>
+                </div>
+                <p class="expired-text">
+                    This link has expired. Please contact support for assistance.
+                </p>
+            </div>
+        </template>
+        
+
+        <!-- ✅ Already Submitted Message -->
+        <template if:true={isAlreadySubmitted}>
+            <div class="submitted-container">
+                <div class="submitted-icon">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#D4EDDA"/>
+                        <path d="M7 12L10 15L17 8" stroke="#155724" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <p class="submitted-text">
+                    This document has already been submitted.
+                </p>
+            </div>
+        </template>
+        
+    </lightning-card>
+</template>
