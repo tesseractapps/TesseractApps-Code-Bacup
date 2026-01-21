@@ -1,0 +1,321 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 05-27-2023
+  @last modified by  : Raja Sekhar Reddy
+--> 
+<template> 
+   <div if:true={isHome} class="participantlayout" style="margin-bottom:20px;">
+      <!-- <span style="font-size: medium;">Attachments</span> -->
+      
+      <div class="slds-float_right">
+         <lightning-button variant="brand" label="Add Attachment" onclick={handleAttachment} slot="actions"
+       style="margin-right:10px;"></lightning-button> 
+   
+         <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={RefreshAttachmentsData}>
+            <svg class="slds-button__icon" aria-hidden="true">
+               <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+            </svg>
+         </button>
+      </div>
+
+      <template if:true={isOpenModal}>
+         <div class="blur-overlay"></div>
+         <div class="right-align" style="width:40%;">
+            
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+               <p style="font-weight: bold;font-size:140%; margin: 0; padding: 3% 0 0 3%;">Add Attachment</p>
+           
+               <div style="display: flex; align-items: center; gap: 10px; margin-right:3%;margin-top:2%;">
+                   <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     -->
+               </div>
+            </div>
+
+               <div class="slds-p-around_medium">
+                     <lightning-record-edit-form object-api-name="Attachment__c"  record={defaultRecordValues} onsuccess={handleSuccess} onsubmit={handleSubmit} onerror={handleError} >
+                     <lightning-messages></lightning-messages>
+                     <div class="container-box custom-scroll">
+                        <div class="slds-grid slds-wrap" style="padding-top:20px;">
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Attachment Name</span>
+                                    <lightning-input-field field-name="Name" required="true" variant="label-hidden"></lightning-input-field>
+                              </div>
+                           </div>
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                 <span class="label-text-drop"><span style="color:red">*</span>Type</span>
+                                 <lightning-input-field field-name="Type__c" required="true" variant="label-hidden" onchange={changeExpense}></lightning-input-field>
+                              </div>
+                           </div>
+
+                           <template if:true={textboxFlag}>
+                              <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                 <div class="floating-label">
+                                    <span class="label-text-drop">Other (Please Specify)</span>
+                                 <lightning-input-field field-name="Other_Comments__c" variant="label-hidden" ></lightning-input-field>
+                                 </div>
+                              </div>                           
+                        
+                           </template>
+                           <template if:false={textboxFlag}>
+                              
+                           </template>
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                    <span class="label-text-drop">Date</span>
+                                    <lightning-input-field field-name="Date__c" disabled="true" readonly="true" variant="label-hidden"></lightning-input-field>
+                              </div>
+                           </div>                        
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class={userClass}>
+                                 <span class="label-text-drop"><span style="color:red">*</span>User</span>
+                                 <lightning-input-field field-name="User__c" required="true" value={currentUserId} variant="label-hidden" onchange={handleErrorCss}></lightning-input-field>                                    
+                              </div>
+                           </div>
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label" style="height: 62px;">
+                                    <span class="label-text-drop">Comments</span>
+                                    <lightning-input-field field-name="Comments__c" variant="label-hidden"></lightning-input-field> 
+                              </div>
+                           </div>
+                           <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                 
+                                 <input type="file" id="fileInput" onchange={onFileUpload}  name="uploadFile" style="display: none;"><!-- accept=".jpg, .jpeg, .png, .gif" -->
+                                 <button type="button" onclick={triggerFileInput} class="file-upload-button">
+                                    &#8684; Upload File
+                                 </button>
+                                 <div class="slds-text-body_small">{fileName}
+                                    <template if:true={showSpinner}>
+                                          <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                                             </lightning-spinner>
+                                    </template>
+                                    </div>
+                                    <template if:true={isattachError}>
+                                    <p style="color:red">File Size Can not exceed 512MB </p>  
+                                    </template>
+                              </div>
+                           </div><br/><br/><br/><br/>
+                           <template if:true={isattachError}>
+                              <p style="color:red">File Size Can not exceed 512MB </p>  
+                           </template>                        
+                        </div>
+                        
+                     </div>
+                     <div class="slds-align_absolute-center" style="padding:2%;">
+                           <lightning-button  label="Cancel" onclick={hideModalBox} variant="brand-outline"></lightning-button>
+                           <lightning-button class="slds-m-left_small" type="submit" variant="brand" label="Save"></lightning-button>&nbsp;&nbsp;
+                           
+                           <!-- <button class="slds-button slds-button_outline-brand" onclick={hideModalBox}>Cancel</button><br/><br/> -->
+                        </div>
+                     </lightning-record-edit-form>  
+               </div>
+         </div>
+      </template>     
+    
+    
+      <template if:false={noRecordsFlag}>
+         <br/>
+         <div style="margin-left:-1%;padding-top:2%;">
+           <table
+              class="slds-table slds-table_cell-buffer"
+              style="table-layout:fixed">
+                 <thead>
+                    <tr>
+                       <th class="slds-cell-wrap"><b>Name</b></th>
+                       <th class="slds-cell-wrap"><b>Type</b></th>
+                       <th class="slds-cell-wrap"><b>Size in MB</b></th>
+                       <th class="slds-cell-wrap"><b>Comments</b></th>
+                       <th class="slds-cell-wrap"><b>User</b></th>
+                       <th class="slds-cell-wrap"><b>Date</b></th>
+                       <th class="slds-cell-wrap"><b>Actions</b></th>                                                            
+                    </tr>
+                 </thead>
+                 <tbody>
+                    <template for:each={data} for:item="attachment">
+                        <tr key={attachment.Id} class="tr1">
+                          <td class="slds-cell-wrap">{attachment.Name}</td>
+                          <td class="slds-cell-wrap">{attachment.type}</td>
+                          <td class="slds-cell-wrap">{attachment.fileSize}</td>
+                          <td class="slds-cell-wrap">{attachment.comment}</td>
+                          <td class="slds-cell-wrap">{attachment.UserName}</td>
+                          <td class="slds-cell-wrap">{attachment.Date}</td>
+                          <td>
+                             <div>                              
+                                 <a href={attachment.AmazonURL} data-id={attachment.Id} data-url={attachment.AmazonURL}  
+                                 onclick={handleView}  title="View Attachment"><i class="material-icons view-icon">visibility</i></a>&nbsp;                             
+                                 <template if:true={isStaff}>
+                                    <a href="javascript:void(0)" data-id={attachment.Id}
+                                       onclick={handleEdit} title="View Attachment"><i class="material-icons edit-icon">edit_document</i></lightning-icon></a>&nbsp; 
+                                    <a href="javascript:void(0)" data-id={attachment.Id}
+                                       onclick={handleDelete} title="View Attachment"><i class="material-icons delete-icon">delete</i></a>
+                                 </template>                              
+                              </div> 
+                              
+                           </td>
+                        </tr>
+                    </template>
+                 </tbody>
+              </table>
+
+            </div>
+      </template>
+
+       <template if:true={noRecordsFlag}>
+          <div class="no-data">
+            <p>No records found</p>
+         </div>
+      </template>
+ 
+      <template if:false={noRecordsFlag}>
+      <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em;">
+         <!--RECORDS PER PAGE-->
+         <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+               <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+               <div class="slds-select_container">
+                     <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                           <option key={option} value={option}>{option}</option>
+                        </template>
+                     </select>
+               </div>
+            </div>
+         </div>
+
+         <!--PAGE NAVIGATION-->
+         <div class="slds-align_absolute-center" style="height:5rem">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+         </div>
+         <!--TOTAL RECORDS-->
+         <div class="slds-clearfix">
+            <div class="slds-float_right">
+               <span class="slds-badge"> Total Records: {totalRecords}</span>
+            </div>
+         </div>
+      </div>
+      </template>
+      <!-- Spinner -->
+      <div if:true={showLoadingSpinner}>
+         <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+      </div>
+
+      <template if:true={isEdit}>
+         <div class="blur-overlay"></div>
+         <div class="right-align" style="width:40%;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+               <p style="font-weight: bold;font-size:140%; margin: 0; padding: 3% 0 0 3%;">Update Attachment</p>
+            
+               <div style="display: flex; align-items: center; gap: 10px;margin-right:3%;margin-top:2%">
+                     <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>  -->                   
+               </div>
+            </div>
+               <div class="slds-p-around_medium">
+                  <lightning-record-edit-form object-api-name="Attachment__c" onsuccess={handleSuccess} onsubmit={handleSubmit} record-id={recordId}>
+                     <lightning-messages></lightning-messages>
+                     <div class="container-box">
+                        <div class="slds-grid slds-wrap" style="padding-top:20px;">
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Attachment Name</span>
+                                    <lightning-input-field field-name="Name" required="true" variant="label-hidden"></lightning-input-field>
+                              </div>
+                           </div>
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                 <span class="label-text-drop"><span style="color:red">*</span>Type</span>
+                                 <lightning-input-field field-name="Type__c" required="true" variant="label-hidden" onchange={changeExpense}></lightning-input-field>
+                              </div>
+                           </div>
+                           <template if:true={textboxFlag}>
+                              <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                                 <div class="floating-label">
+                                    <span class="label-text-drop">Other (Please Specify)</span>
+                                 <lightning-input-field field-name="Other_Comments__c" variant="label-hidden" ></lightning-input-field>
+                                 </div>
+                              </div>                           
+                           
+                           </template>
+                           <template if:false={textboxFlag}>
+                              
+                           </template>
+
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                    <span class="label-text-drop">Date</span>
+                                    <lightning-input-field field-name="Date__c" disabled="true" readonly="true" variant="label-hidden"></lightning-input-field>
+                              </div>
+                           </div>                        
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label">
+                                 <span class="label-text-drop"><span style="color:red">*</span>User</span>
+                                 <lightning-input-field field-name="User__c" required="true" variant="label-hidden"></lightning-input-field>                                    
+                              </div>
+                           </div>
+                           <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                              <div class="floating-label" style="height: 62px;">
+                                    <span class="label-text-drop">Comments</span>
+                                    <lightning-input-field field-name="Comments__c" variant="label-hidden"></lightning-input-field> 
+                              </div>
+                           </div>                        
+                        </div>
+                        <div class="slds-align_absolute-center" style="padding:2%;">
+                           <lightning-button  label="Cancel" onclick={hideModalBox} variant="brand-outline"></lightning-button>
+                           <lightning-button  class="slds-m-left_small" type="submit" variant="brand" label="Update"></lightning-button>&nbsp;
+                           
+                        </div>
+                        
+                     </div>
+                  </lightning-record-edit-form>  
+               </div>
+         </div>
+      </template>
+   </div> 
+
+      <template if:true={isModalOpen}>
+         
+
+          <div class="slds-grid slds-grid_align-end">
+      <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                onclick={closeModal} style="margin-right:1%;margin-top: 1%;"></lightning-button>
+                </div>
+                <div style="padding:1%;"><!-- class="main-container-iframe custom-scroll" -->
+      
+         <iframe src={currentUrl} width="100%" height="1200px" ></iframe>
+     
+      </div>
+     </template>
+
+     <template if:true={deleteFlag}>
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                            class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+                        
+                            <div class="slds-modal__container modal-container" style="max-width:25%;">
+                             <header class="slds-modal__header" style="background:#124795;">
+                                
+                                <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Delete</h2>
+                            </header> 
+                            <div class="slds-modal__content slds-p-around_medium modal-content"  >         <!-- style="border-radius:0 0 15px 15px" -->                       
+                                <div class="slds-m-around_small" style="text-align:center">
+                                    <div><p style="text-align: center;">Are you sure you want to delete this file?</p></div>
+                                    <div class="button-container slds-m-top_medium">
+                                        <lightning-button label="No" variant="brand" onclick={handleclose}
+                                        class="slds-m-around_small"></lightning-button>
+                                        <lightning-button label="Yes" variant="brand" onclick={handledeletefile} class="slds-m-around_small" ></lightning-button>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+          </template>
+</template>

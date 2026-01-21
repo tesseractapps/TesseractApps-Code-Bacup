@@ -1,0 +1,209 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 06-16-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>
+       <!--  <h3 slot="title" class="slds-m-left_large">
+             <img src={paysetting} alt="" width="60px" height="60px" >
+           <span style="font-size:14px;font-weight:bold"> Payroll Settings</span> 
+        </h3> -->
+        <!-- <div  slot="title" style="font-weight:bold; padding: 1% 1% 1% 1%; font-size:140%"> -->
+            <!-- <img src={employee} alt="employee" width="45px" height="45px" style="margin-right:0.1%;"> -->
+            <!-- Payroll Settings 
+        </div>  -->
+       <!--  <a>
+            <lightning-icon icon-name="utility:settings"  title="Chart of Accounts" style="float:right;margin-right:5px;color:white;" onclick={HandleOpenChartOfAccount}  ></lightning-icon>
+        </a> -->
+        
+        <template if:true={ispayset}>
+            <div if:true={isDesktop} class="payGrouptable">
+
+                <header class="header">
+                    <div class="search-section">
+                        <div class="floating-label slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                            <span class="label-text-drop"><span style="color:red">*</span>Search Payroll Group Name</span>
+                            <lightning-input name="enter-search" label="Search Payroll Group Name" type="search" variant="label-hidden" onchange={onSearchPayrollSetting}></lightning-input>
+                        </div>
+                        
+                    </div>
+                    <div class="action-section">
+                        <lightning-button label="Create New Pay Group" onclick={handlePaySettings} variant="brand">
+                        </lightning-button>
+                    <lightning-button label="Finalise 2024-2025" onclick={handleFinalised} variant="brand">
+                    </lightning-button>
+                    <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={fetchPayrollSetting}>
+                        <svg class="slds-button__icon" aria-hidden="true">
+                            <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                        </svg>
+                    </button>
+                    </div>
+                </header>
+
+
+                   
+                    <div style="padding-top:1%;">
+                        <table
+                            class="slds-table slds-table_cell-buffer"
+                            style="table-layout:fixed">
+                            <thead >
+                                <tr >
+                                    <th class="slds-cell-wrap th" >Facility Name</th>
+                                    <th class="slds-cell-wrap th" >Group Name</th>
+                                    <th class="slds-cell-wrap th" >Frequency</th>
+                                    <th class="slds-cell-wrap th" >Period</th>
+                                    <th class="slds-cell-wrap th" >Next Pay Date</th>
+                                    <!--<th class="slds-cell-wrap">Status</th>-->
+                                    <th class="slds-cell-wrap th" >Employees</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={payrunSetting} for:item="prun">
+                                    <tr key={prun.Id} class="tr1">
+                                        <td class="slds-cell-wrap">
+                                            <a data-id={prun.Id} data-groupname={prun.Group_Name__c} data-fequency={prun.Frequency__c} href="javascript:void(0)" onclick={openPaysettings}>
+                                                {prun.Facility__r.Name}
+                                            </a>
+                                        </td>
+                                        <td class="slds-cell-wrap">{prun.Group_Name__c}</td>
+                                        <td class="slds-cell-wrap">{prun.Frequency__c}</td>
+                                        <td class="slds-cell-wrap">{prun.Period__c}</td>
+                                        <td class="slds-cell-wrap">{prun.nextDate}</td>
+                                        <!--<td class="slds-cell-wrap">{prun.Status__c}</td>-->
+                                        <td class="slds-cell-wrap">{prun.StaffList__c}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+
+                        </table>
+                    </div>
+               
+                <template if:true={totalRecords}>
+                    <div if:true={visible}>
+                        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+                            style="padding-top: 0.5em;">
+
+                            <!--PAGE NAVIGATION-->
+                            <div class="slds-align_absolute-center" style="height:5rem">
+                                <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left"
+                                    label="First" class="slds-p-horizontal_x-small" alternative-text="first page"
+                                    onclick={firstPage}></lightning-button>
+                                <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft"
+                                    label="Previous" alternative-text="Previous"
+                                    onclick={previousPage}></lightning-button>
+                                &nbsp;
+                                <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+                                    &nbsp;&nbsp;Page(s)</span>
+                                &nbsp;
+                                <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next"
+                                    alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small"
+                                    icon-position="right"></lightning-button>
+                                <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last"
+                                    alternative-text="last page" onclick={lastPage}
+                                    icon-position="right"></lightning-button>
+                            </div>
+
+                            <!--TOTAL RECORDS-->
+                            <div class="slds-clearfix">
+                                <div class="slds-float_right " style="margin-right:25px;">
+                                    <span class="slds-badge"> Total Records: {totalRecords}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template if:true={isaddpayrun}>
+            <div if:true={isDesktop}>
+                <div style="margin-left:93.5%;margin-bottom:10px; margin-top:1%;"><lightning-button   label="Back" variant="brand"
+                    onclick={closeaddPayRun} ></lightning-button></div>
+                <div class="slds-grid slds-wrap" style="margin-left:3px;margin-right:3px;">
+                    
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Group Name</span>
+                            <lightning-input type="text" name="groupName" value={groupName} label="Group Name"
+                            onchange={handleFacilityChange} required="true" variant="label-hidden"></lightning-input>
+                        </div>
+                    </div>
+                    
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Name of the Facility</span>
+                            <lightning-combobox name="facility" label="Name of the Facility" value={selectedFacility}
+                            placeholder="Select Facility" options={facilityNewList} onchange={handleFacilityChange}
+                            required="true"  variant="label-hidden"></lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Frequency</span>
+                            <lightning-combobox name="typeofEmployment" label="Frequency"
+                             onchange={handleFacilityChange}
+                            value={selectedTypeofEmployment} placeholder="Select Type of Employment"
+                            options={employmentTypePicklistValues.data.values} required="true" variant="label-hidden">
+                        </lightning-combobox>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Start Date</span>
+                            <lightning-input type="date" name="sdate" value={sdate} label="Start Date"
+                            onchange={handleFacilityChange} required="true"
+                             variant="label-hidden"></lightning-input>
+                        </div>
+                    </div>
+
+                    
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">End Date</span>
+                            <lightning-input type="date" value={edate} name="edate" label="End Date"
+                            onchange={handleFacilityChange}
+                             disabled="true" variant="label-hidden"></lightning-input>
+                        </div>
+                    </div>
+                    
+                   
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Next Payrun Date</span>
+                            <lightning-input type="date" name="ndate" value={ndate} label="Next Payrun Date" onchange={handleFacilityChange}
+                             required="true" variant="label-hidden"></lightning-input>
+                        </div>
+                    </div>
+                    <hr>
+                    <template if:true={facilitynewValue}>
+                        <div class="slds-m-top_large slds-m-bottom_medium" style="margin-left: 22px;margin-right: 22px;">
+                            <lightning-datatable data={staffrecords} columns={columns} onrowselection={onRowSelection}
+                                key-field="id" class="slds-m-top_large">
+                            </lightning-datatable>
+                        </div>
+                        <template if:true={buttonsONPayroll}>
+                            <div slot="footer" class=" slds-align_absolute-center slds-m-bottom_medium">
+                               
+                                <lightning-button class="slds-m-left_medium" slot="footer" label="Close" variant="brand"
+                                    onclick={closeaddPayRun}></lightning-button>
+                                <lightning-button class="slds-m-left_medium" slot="footer" label="Save" variant="brand"
+                                    onclick={savePayrunSetting}></lightning-button>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </div>
+        </template>
+        <template if:true={isopenPaysettings}>
+           <!--  new value passed to child component by praveen -->
+            <c-paysettings-details payset-id={paysetId} pay-group-name={payGroupName} fequency={fequency} onfinalisedback={handleFinalisedBack}></c-paysettings-details>
+        </template> 
+        <template if:true={isFinalisedFlag}>
+            <c-finalised-lwc onhidepayrunsettings={handleHidePayRunSettings} onfinalisedback={handleFinalisedBack}></c-finalised-lwc>
+        </template>
+       
+  
+</template>
