@@ -1,0 +1,718 @@
+<template>
+    <div class="calendar-container">
+        <div class="calendar-header">
+           <!--  <button onclick={prevMonth}>←</button>
+            <h2>{monthName} {year}</h2>
+            <button onclick={nextMonth}>→</button> -->
+            <lightning-button-icon
+            icon-name="utility:chevronleft"
+            onclick={prevMonth}
+            style="background:white;color:red;border-radius:5px; "
+            alternative-text="Previous Month">
+        </lightning-button-icon>
+    
+        <lightning-button
+            style="margin: 0 5px;"
+            label={monthAndYear}
+            onclick={navigateToToday}>
+        </lightning-button>
+    
+        <lightning-button-icon
+            icon-name="utility:chevronright"
+            onclick={nextMonth}
+            style="background:white;border-radius:5px;"
+            alternative-text="Next Month">
+        </lightning-button-icon>
+        </div>
+        <div class="calendar-grid custom-scroll">
+            <template for:each={daysOfWeek} for:item="day">
+                <div class="day-name" key={day}>{day}</div>
+            </template>
+            <template for:each={calendarDays} for:item="day">
+                <!-- <div key={day.key} class={day.class} title={day.tooltip}>
+                    <div class={date}>{day.date}</div>
+                    <template if:true={day.services}>
+                        <div class="service-summary">
+                            
+                                {day.firstServiceName}
+            <template if:true={day.hasMore}>
+                <a class="service-link" data-date={day.dateStr} onclick={handleServiceClick}> &nbsp;+{day.moreCount} more </a>
+            </template>
+                           
+                        </div>
+                    </template>
+                </div> -->
+                <div key={day.key} class={day.class} title={day.tooltip}>
+                    <!-- Main content area -->
+                    <div class="main-content">
+                        <div class="left-info">
+                             <!-- <template if:true={day.holidayName}> -->
+                                <!-- <div class="holiday-name">Holiday</div> --> <!-- <div class="holiday-name">{day.holidayName}</div> -->
+                            <!-- </template>  -->
+                            <!-- <template if:true={day.services}>
+                                
+                                <div class="service-name description" style="font-weight: bold;">{day.firstServiceName}</div>
+                                <div class="service-time description">{day.firstServiceTime}</div>
+                            
+                            </template> -->
+                            <template for:each={day.entries} for:item="entry">
+                                <div key={entry.name}>
+                                   <!--  <div class="service-name description" style="font-weight: bold;font-size:12px;text-align:left;">{entry.name}</div> -->
+                                     <div class="service-name description" style="font-weight: bold;  text-align:left; display: flex; justify-content: space-between; align-items: center;">
+                                                 <span>{entry.name}</span>
+                                      <template if:true={entry.hyper}>           
+                                            <a href="javascript:void(0)" 
+                                    data-id={entry.id} 
+                                    onclick={handleDeleteFlag} 
+                                    title="Delete"
+                                    style="text-decoration: none;">
+                                    
+                                    <i class="material-icons delete-icon">delete</i>
+                                    </a>
+                                    </template>
+                                    </div>
+                                    <template if:false={entry.hyper}>
+                                    <div class="service-time description" style="text-align:left;">{entry.time}</div>
+                                    </template>
+                                    <template if:true={entry.hyper}>
+                                    <div><a  class="service-time description" data-id={entry.id} style="text-align:left;" onclick={handleEdit}>{entry.time}</a></div>
+                                </template>
+                                </div>
+                            </template>
+                             
+                        </div>
+                        <div style="font-weight: bold;">{day.date}</div>
+                    </div>
+            
+                    <!-- Bottom footer: +more and icon -->
+                    <div class="bottom-bar">
+                        <div if:true={day.date}>
+                        <template if:true={day.hasMore}>
+                            <a class="more-link" data-date={day.dateStr} style="font-style: italic;" onclick={handleServiceClick}><!-- + {day.moreCount} --> more</a>
+                        </template>
+                       <!--  <template if:false={day.hasMore}>
+                            <a class="more-link" data-date={day.dateStr} onclick={handleServiceClick}>Available</a>
+                        </template> -->
+                    </div>
+                        
+                    </div>
+                    <div if:true={day.date}>
+                    <div  if:true={day.noService}>
+                        <lightning-icon
+                            icon-name="utility:add"
+                            data-date={day.dateStr}
+                            size="x-small"
+                            class="add-icon"
+                            style="position: absolute;bottom: 38%;right: 43%;transform: scale(0.65);"
+                            onclick={handleAddDescription}
+                        ></lightning-icon>
+                    </div>
+                    <div  if:false={day.noService}>
+                        <lightning-icon
+                            icon-name="utility:add"
+                            data-date={day.dateStr}
+                            alternative-text="Add"
+                            size="x-small"
+                            class="add-icon"
+                            style="position: absolute;bottom: 4px;right: 0px;transform: scale(0.65);"
+                            onclick={handleAddDescription}
+                        ></lightning-icon>
+                    </div>
+                </div>
+                </div>
+            </template>
+        </div>
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-color today-indicator"></span> Today
+            </div>
+            <div class="legend-item">
+                <span class="legend-color has-service-indicator"></span> Occupied
+            </div>
+            <div class="legend-item">
+                <span class="legend-color no-service-indicator"></span> Available
+            </div>
+            <div class="legend-item">
+                <span class="legend-color holiday-indicator"></span> Holiday
+            </div>
+        </div>
+    </div>
+    <template if:true={isPopoverVisible}>
+        <div class="popup" style="top:40%; left: 40%;" ><!-- style={popupStyle} -->
+            <span class="close-icon" style="cursor: pointer;" onclick={closePopover}>✖</span>
+            <h3 class="slds-m-bottom_small" style="font-weight:bold;">Assigned on {selectedDate}</h3>
+            <ol class="styled-list">
+                <template for:each={selectedServices} for:item="service" for:index="index" >
+                    <li key={service.Id} class="slds-m-bottom_x-small">
+                        <strong>{service.Resource_Name__c}</strong><br/>
+                        {service.Service_Type_Name__c}
+                        ({service.formattedStart} - {service.formattedEnd})
+                    </li>
+                </template>
+            </ol>
+            <h3 class="slds-m-bottom_small" style="font-weight:bold;">Unassigned on {selectedDate}</h3>
+            <ol class="styled-list">
+                <template for:each={selectedavailability} for:item="service" for:index="index" >
+                    <li key={service.Id} class="slds-m-bottom_x-small">
+                        <!-- <strong>{service.Shift_Type__c}</strong><br/> -->
+                         <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>{service.Shift_Type__c}</strong><br/>
+                                     
+                                            <a href="javascript:void(0)" 
+                                    data-id={service.Id} 
+                                    onclick={handleDeleteFlag} 
+                                    title="Delete"
+                                    style="text-decoration: none;">
+                                    
+                                    <i class="material-icons delete-icon">delete</i>
+                                    </a>
+                                    
+                        </div>
+                        <a class="more-link" data-id={service.Id} onclick={handleEdit}> ({service.formattedStart} - {service.formattedEnd})</a>
+                    </li>
+                </template>
+            </ol>
+        </div>
+    </template>
+
+    <template if:true={editButtonModule}>
+        <div class="blur-overlay"></div>
+            <div class="right-align1" style="width: 80%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1% 2%;">
+                    <p style="font-weight: bold; font-size: 140%;">{buttonTitle}</p>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <lightning-button 
+                            label={buttonTitle} 
+                            title={buttonTitle}  
+                            onclick={handlesavebutton}
+                            disabled={isSaveDisabled} 
+                            variant="brand">
+                        </lightning-button>
+                
+                        <lightning-button 
+                            label="Back" 
+                            variant="brand" 
+                            onclick={handleClose}>
+                        </lightning-button>
+                    </div>
+                </div>
+            <div class="slds-grid slds-gutters custom-scroll" style="height: 76vh;overflow-y: auto;">
+        
+            <!-- Column 1 -->
+            <div class="slds-col" style="width: 50%;">
+                <!-- Shift Type -->
+                <div class=" slds-p-horizontal_medium">
+                    <div class="container-box">
+    
+                        <!-- Shift Type Toggle -->
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+                            <span>Shift Type</span>
+                        </div>
+    
+                        <!-- Shift Type Section -->
+                        <div class="section-content" data-section="staffDetails1">
+                            <br/>
+                            <template if:true={sectionFlags.staffDetails1}>
+                                <div class="slds-grid slds-wrap">
+    
+                                    <!-- Date (Today, Disabled) -->
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Date</span>
+                                            <lightning-input 
+                                                type="date" 
+                                                value={todayDate} 
+                                                disabled 
+                                                variant="label-hidden">
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+    
+                                    <!-- Shift Type -->
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Shift Type</span>
+                                            <lightning-combobox 
+                                                label="Shift Type" 
+                                                variant="label-hidden" 
+                                                value={shiftTypeValue} 
+                                                options={shiftTypeOptions} 
+                                                onchange={handleShiftTypechange} 
+                                                required>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+    
+                                    <!-- Start Time -->
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">  
+                                            <span class="label-text-drop"><span style="color:red">*</span>Start Time</span>
+                                            <c-time-picker 
+                                                selected-hour={startTimeSelectedHour}
+                                                selected-minute={startTimeSelectedMinute}
+                                                is-am={startTimeAMPM}
+                                                displayed-time={AddShiftStartTimeAMPM} 
+                                                onsavetimefromchild={handleStartTimeChange}>
+                                            </c-time-picker>
+                                        </div>
+                                    </div>
+    
+                                    <!-- End Time -->
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop"><span style="color:red">*</span>End Time</span>
+                                            <c-time-picker 
+                                                displayed-time={AddShiftEndTimeAMPM}
+                                                selected-minute={endTimeSelectedMinute}
+                                                selected-hour={endTimeSelectedHour}
+                                                is-am={endTimeAMPM}  
+                                                onsavetimefromchild={handleEndTimeChange}>
+                                            </c-time-picker>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recurring -->
+                <div class="slds-p-horizontal_medium">
+                    <div class="container-box">
+    
+                        <!-- Recurring Toggle -->
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+                            <span>Recurring</span>
+                        </div>
+    
+                        <!-- Recurring Section -->
+                        <div class="section-content" data-section="staffDetails1">
+                            <br/>
+                            <template if:true={sectionFlags.staffDetails1}>
+                                <div class="slds-grid slds-wrap">
+    
+                                    <!-- Recurring Checkbox -->
+                                    <div>
+                                        <label style="display: flex; gap: 10px; padding: 3% 0 0% 10%; align-items: center; margin-left: 4px;">
+                                            <lightning-input 
+                                                type="checkbox" 
+                                                variant="label-hidden" 
+                                                checked={AddShiftRecurringCheckboxValue} 
+                                                onchange={handleReccuringChange}>
+                                            </lightning-input>
+                                            <span>Recurring</span>
+                                        </label>
+                                    </div>
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                    </div>
+                                </div>
+    
+                                <div class="slds-grid slds-wrap">
+    
+                                    <!-- Recur Type -->
+                                    <div class="slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Recur</span>
+                                            <lightning-combobox 
+                                                name="typeOfRecurOption"  
+                                                class="typeOfRecurOption" 
+                                                variant="label-hidden" 
+                                                options={recurOptions}  
+                                                value={RecurValue} 
+                                                onchange={handleRecurChange}>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+    
+                                    <!-- Recur Every -->
+                                    <div class="slds-size_1-of-3 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Recur Every</span>
+                                            <lightning-combobox 
+                                                placeholder="Select Recurrence" 
+                                                class="recurEvery" 
+                                                name="recurEvery" 
+                                                variant="label-hidden" 
+                                                options={recurEveryOptions}  
+                                                value={recurEveryValue} 
+                                                onchange={handleRecurEveryChange}>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+    
+                                    <!-- End Date -->
+                                    <div class="slds-size_1-of-3 slds-p-around_small">
+                                        <div class={RerecurEndDateClass}>
+                                            <span class="label-text-drop">End Date</span>
+                                            <lightning-input 
+                                                type="date"  
+                                                name="recurEndDate" 
+                                                class="recurEndDate" 
+                                                value={recurEndDate} 
+                                                variant="label-hidden" 
+                                                onchange={handleRecurEndDateChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+    
+                                    <!-- Weekly Recur -->
+                                    <template if:true={isRecurWeekFlag}>
+                                        <div class="slds-grid slds-wrap">
+                                            <template for:each={weekDays} for:item="day">
+                                                <div key={day} class="slds-size_1-of-7 slds-p-around_small">
+                                                    <span>{day}</span>
+                                                    <lightning-input 
+                                                        type="checkbox" 
+                                                        name={day} 
+                                                        variant="label-hidden" 
+                                                        class="slds-p-left_small" 
+                                                        onchange={handleCheckboxChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+    
+                                    <!-- Monthly Recur -->
+                                    <template if:true={isRecurmontlyFlag}>
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <p class="slds-p-left_small">Set for Day</p>
+                                        </div>
+                                        <div class="slds-size_1-of-3 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Recur Every</span>
+                                                <lightning-combobox 
+                                                    name="monthLyOptions" 
+                                                    class="monthLyOptions" 
+                                                    variant="label-hidden" 
+                                                    options={monthLyOptions} 
+                                                    value={monthOfDay} 
+                                                    onchange={handleMonthlyOptionChange}>
+                                                </lightning-combobox>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-around_small"></div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Services -->
+                <div class="slds-p-horizontal_medium">
+                    <div class="container-box">
+    
+                        
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+                            <span>Add Service</span>
+                        </div>
+    
+                        
+                        <div class="section-content" data-section="staffDetails1" style="height: 46.5vh;">
+                            <br/>
+                            <template if:true={sectionFlags.staffDetails1}>
+                                <div class="slds-grid slds-wrap">
+    
+                                    
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Service Type</span>
+                                            <lightning-combobox 
+                                                label="Shift Type" 
+                                                variant="label-hidden" 
+                                                value={serviceTypevalue} 
+                                                options={serviceTypeOptions} 
+                                                onchange={handleserviceTypchange} 
+                                                required>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+    
+                                    
+                                    <div class="slds-size_1-of-2 slds-p-around_small">
+                                        
+                                    </div>                              
+                                </div>
+                                <template if:true={CatlogTabel}>
+                                    <div class="slds-grid slds-wrap custom-scroll"
+                                        style="padding: 2%; height: 250px; overflow-y: auto;">
+                                        <template if:true={serviceEditGroupName}>
+                                            <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #ccc; border-radius: 8px; overflow: hidden;">
+                                                <thead style="background-color: #f3f3f3;">
+                                                    <tr>
+                                                        <th style="padding: 8px;">Select</th>
+                                                        <th style="padding: 8px;">Support Item Name</th>
+                                                        <th style="padding: 8px;">Support Item Number</th>
+                                                        <th style="padding: 8px;">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={serviceEditGroupName} for:item="row1">
+                                                        <tr key={row1.Id}>
+                                                            <td style="padding: 6px;">
+                                                                <input 
+                                                                    type="radio"  
+                                                                    name="editNdisRadioGroup" 
+                                                                    data-id={row1.Id}
+                                                                    data-amount={row1.amount} 
+                                                                    checked={row1.isSelected}
+                                                                    onchange={HandleEditNdisCheckBox}
+                                                                />
+                                                            </td>
+                                                            <td style="padding: 6px;">{row1.Support_Item_Name__c}</td>
+                                                            <td style="padding: 6px;">{row1.Support_Item_Number__c}</td>
+                                                            <td style="padding: 6px;">{row1.amount}</td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </template>                                    
+                                    </div>
+
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Column 2 -->
+            <div class="slds-col" style="width: 50%;">
+                <!-- Address -->
+                <div class="slds-p-horizontal_medium">
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+                            <span>Address</span>
+                        </div>
+
+                        <div class="section-content" data-section="staffDetails1">
+                            <br/>
+                            <template if:true={sectionFlags.staffDetails1}>
+                                <div class="slds-grid slds-wrap slds-p-around_small">
+                                    <!-- Facility Checkbox -->
+                                    <div class="slds-size_1-of-3 slds-p-horizontal_small">
+                                        <div class="slds-wrap slds-gutters_small">
+                                            <div class="slds-size_1-of-2">
+
+                                            </div>
+                                            <div style="display: flex">
+                                                <lightning-input type="checkbox"
+                                                                variant="label-hidden"
+                                                                name="facilityAddressCheckbox"
+                                                                checked={facilityAddressCheckbox}
+                                                                onchange={AdreesCheckboxChange}
+                                                                disabled={disablePostInsertButtons}>
+                                                </lightning-input>
+                                                <span>{facilityPreferredName}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Participant Checkbox -->
+                                    <!-- <div class="slds-size_1-of-3 slds-p-horizontal_small">
+                                        <div class="slds-grid slds-wrap slds-gutters_small">
+                                            <div class="slds-size_1-of-2">
+                                                
+                                            </div> -->
+                                            <div class="slds-size_1-of-3 slds-grid">
+                                                <lightning-input type="checkbox"
+                                                                name="participantAddressCheckBox"
+                                                                checked={participantAddressCheckBox}
+                                                                onchange={AdreesCheckboxChange}
+                                                                disabled={isDisableParticipantCheckBox}
+                                                                variant="label-hidden">
+                                                </lightning-input>
+                                                <span>{participantPreferredName}</span>
+                                            </div>
+
+                                    <!-- Add New Checkbox -->
+                                    <!-- <div class="slds-size_1-of-3 slds-p-horizontal_small">
+                                        <div class="slds-grid slds-wrap slds-gutters_small">
+                                            <div class="slds-size_1-of-2">
+                                                
+                                            </div -->
+                                                <div class="slds-size_1-of-3 slds-grid">
+                                                <lightning-input type="checkbox"
+                                                                name="addNewAddressCheckBox"
+                                                                checked={addNewAddressCheckBox}
+                                                                variant="label-hidden"
+                                                                onchange={AdreesCheckboxChange}
+                                                                disabled={disablePostInsertButtons}>
+                                                </lightning-input>
+                                                <span>Add New</span>
+                                        </div>
+
+
+                                    <!-- Single Address Input Below All Checkboxes -->
+                                     <template if:true={addNewAddressCheckBox}>
+                                        <div class="slds-size_1-of-1 slds-m-top_medium">
+                                            <lightning-input-address
+                                                address-label="Address"
+                                                street-label="Street"
+                                                city-label="City"
+                                                country-label="Country"
+                                                province-label="Province"
+                                                postal-code-label="Postal Code"
+                                                street={street}
+                                                city={city}
+                                                country={country}
+                                                province={province}
+                                                postal-code={postalCode}
+                                                required
+                                                field-level-help="Please enter your full address."
+                                                onchange={handleAddressChange}
+                                                disabled={disablePostInsertButtons}
+                                                show-address-lookup>
+                                            </lightning-input-address>
+                                        </div>
+                                     </template>
+                                     <template if:false={addNewAddressCheckBox}>
+                                        <template if:true={facilityAddressCheckbox}>
+                                            <div class="slds-theme_default" style="padding-top: 5%;">
+                                            <p><strong>Address:</strong> {street}, {city}, {province}, {postalCode}</p>
+                                            </div>
+                                        </template>
+
+                                        <template if:true={participantAddressCheckBox}>
+                                            <div class="slds-theme_default" style="padding-top: 5%;">
+                                            <p><strong>Address:</strong> {street}, {city}, {province}, {postalCode}</p>
+                                            </div>
+                                        </template>
+                                     </template>
+                                </div>
+
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Preferences -->
+                <div class="slds-p-horizontal_medium">
+                    <div class="container-box">
+                        <!-- Staff Preferences Toggle -->
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1">
+                            <span>Preferred Staff</span>
+                        </div>
+
+                        <!-- Staff Preferences Content -->
+                        <div class="section-content custom-scroll" data-section="staffDetails1" style="height: 40vh; overflow-y:auto;">
+                            <template if:true={sectionFlags.staffDetails1}>
+                            <br>
+                                <!-- Role Selection -->
+                                <div class="slds-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>Role</span>
+                                        <lightning-combobox 
+                                            name="roleOptions"
+                                            class="roleOptions"
+                                            variant="label-hidden"
+                                            options={roleOptions}
+                                            value={roleValue}
+                                            onchange={handleRoleChange}>
+                                        </lightning-combobox>
+                                    </div>
+                                </div>
+
+                                <!-- Staff Table -->
+                                <template if:true={showRolesTable}>
+                                    <div class="slds-card__body slds-p-around_medium">
+                                        <table class="slds-table slds-table_bordered slds-table_cell-buffer" style="table-layout: fixed; border-spacing: 0; border: 1px solid #ccc; border-radius: 8px; overflow: hidden;">
+                                            <thead>
+                                                <tr class="slds-line-height_reset">
+                                                    <th class="slds-text-title_caps" scope="col">Staff Name</th>
+                                                    <th class="slds-text-title_caps descriptiontable" scope="col" style="width: 20%;">Classic Level</th>
+                                                    <th class="slds-text-title_caps" scope="col" style="width: 15%;">SCR</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template if:true={isCreateMode}>
+                                                    <template for:each={staffList} for:item="staff" for:index="index">
+                                                        <tr key={staff.id}
+                                                            draggable="true"
+                                                            data-index={index}
+                                                            ondragstart={handleDragStart}
+                                                            ondragover={handleDragOver}
+                                                            ondrop={handleDrop}
+                                                            ondragend={handleDragEnd}
+                                                            class={staff.dragClass}>
+                                                            <td>
+                                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                                    <lightning-icon 
+                                                                        icon-name="utility:drag_and_drop"
+                                                                        size="x-small"
+                                                                        class="slds-m-right_x-small cursor-grab">
+                                                                    </lightning-icon>
+                                                                    <span class="descriptiontable1">{staff.Name} {staff.LastName}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td class="descriptiontable">{staff.ClassicLevelPoints}</td>
+                                                            <td class="descriptiontable">{staff.SCR}</td>
+                                                        </tr>
+                                                    </template>
+                                                </template>
+                                                <template if:true={isUpdateMode}>
+                                                    <template for:each={staffList} for:item="staff" for:index="index">
+                                                        <tr key={staff.id}
+                                                            draggable="true"
+                                                            data-index={index}
+                                                            ondragstart={handleDragStart}
+                                                            ondragover={handleDragOver}
+                                                            ondrop={handleDrop}
+                                                            ondragend={handleDragEnd}
+                                                            class={staff.dragClass}>
+                                                            <td>
+                                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                                    <lightning-icon 
+                                                                        icon-name="utility:drag_and_drop"
+                                                                        size="x-small"
+                                                                        class="slds-m-right_x-small cursor-grab">
+                                                                    </lightning-icon>
+                                                                    <span class="descriptiontable1">{staff.Name}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td class="descriptiontable">{staff.ClassicLevel}</td>
+                                                            <td class="descriptiontable">{staff.SCR}</td>
+                                                        </tr>
+                                                    </template>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            </div>
+            </div>
+    </template>
+    <template if:true={DeleteFlag}>
+    <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+    
+        <div class="slds-modal__container modal-container" style="max-width:25%;">
+         <header class="slds-modal__header" style="background: #002A52;">
+            
+            <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+        </header> 
+        <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+            <div class="slds-m-around_small" style="text-align:center">
+                <div><p style="text-align: center;">Are you sure you want to delete this schedule?</p></div>
+                <div class="button-container slds-m-top_medium">
+                    <lightning-button label="No" variant="brand" onclick={handleclose}
+                    class="slds-m-around_small"></lightning-button>
+                    <lightning-button label="Yes" variant="brand"  onclick={confirmDelete} class="slds-m-around_small" ></lightning-button>
+                    
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+</template>
