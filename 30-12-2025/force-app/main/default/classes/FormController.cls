@@ -1,0 +1,664 @@
+public without sharing class FormController {
+    @AuraEnabled
+    public static void saveForm(String formName, String formJson, String formType, String orgId) {
+        Dynamic_Form__c form = new Dynamic_Form__c();
+        form.Name__c = formName;
+        form.Form_JSON__c = formJson;
+        form.Form_Type__c = formType;
+        form.Org_Id__c = orgId; // ✅ Save Org ID into the custom field
+        
+        insert form;
+    }	
+
+
+
+    @AuraEnabled
+    public static List<Dynamic_Form__c> getForms(String orgId) {
+        String effectiveOrgId = (orgId != null) ? orgId : UserInfo.getOrganizationId();
+        return [
+            SELECT Id,
+            Name__c,
+            Form_JSON__c,
+            Form_Type__c,
+            CreatedDate,
+            CreatedById,
+            CreatedBy.Name
+            FROM Dynamic_Form__c
+            WHERE Form_Type__c != 'Incident Register'
+            AND Org_Id__c = :effectiveOrgId
+            ORDER BY CreatedDate DESC
+        ];
+    }
+
+
+    @AuraEnabled(cacheable=true)
+    public static List<Dynamic_Form__c> getFormsByClient(Id clientId,String orgId) {
+        try {
+            // ✅ If no clientId is provided, return all forms
+            if (String.isEmpty(clientId)) {
+                return getForms(orgId);
+            }
+
+            // ✅ Retrieve client record to get accessible form IDs
+            Client__c client = [SELECT Accessible_Forms__c FROM Client__c WHERE Id = :clientId LIMIT 1];
+
+            if (String.isEmpty(client.Accessible_Forms__c)) {
+                return new List<Dynamic_Form__c>(); // No forms assigned
+            }
+
+            // ✅ Convert newline-separated form IDs into a List
+            List<String> formIds = client.Accessible_Forms__c.split('\n');
+            System.debug('🔹 Forms Available for Client (' + clientId + '): ' + formIds);
+
+            // ✅ Query only the forms that match the accessible form IDs
+            return [SELECT Id, Name__c, Form_JSON__c, Form_Type__c 
+                    FROM Dynamic_Form__c 
+                    WHERE Id IN :formIds 
+                    ORDER BY CreatedDate DESC];
+
+        } catch (Exception e) {
+            System.debug('❌ Error fetching forms for client: ' + e.getMessage());
+            throw new AuraHandledException('Error retrieving forms: ' + e.getMessage());
+        }
+    }
+
+@AuraEnabled
+public static void saveFormResponse(Id formId, String responseJson, String orgId, String clientId, String formName, String formType) {
+    // ✅ Fetch participant name from Client__c
+    String participantName = '';
+    if (String.isNotBlank(clientId)) {
+        Client__c clientRecord = [
+            SELECT Name 
+            FROM Client__c 
+            WHERE Id = :clientId 
+            LIMIT 1
+        ];
+        participantName = clientRecord != null ? clientRecord.Name : '';
+    }
+
+    // ✅ Create and save the response
+    Dynamic_Form_Response__c response = new Dynamic_Form_Response__c();
+    response.Form_Reference__c = formId;
+    response.Response_JSON__c = responseJson;
+    response.Org_Id__c = orgId;
+    response.Client_Id__c = clientId;
+    response.Name__c = formName;
+    response.Form_Type__c = formType;
+    response.Participant_Name__c = participantName;
+
+    insert response;
+}
+
+
+
+    
+@AuraEnabled
+public static List<Dynamic_Form_Response__c> getFormResponses() {
+    try {
+        return [
+            SELECT Id, Name__c, Form_Type__c, Response_JSON__c, CreatedDate, Client_Id__c, Participant_Name__c,CreatedBy.Name
+            FROM Dynamic_Form_Response__c
+            ORDER BY CreatedDate DESC
+        ];
+    } catch (Exception e) {
+        throw new AuraHandledException('Error retrieving all form responses: ' + e.getMessage());
+    }
+}
+
+/**
+ * ✅ Fetch Form Responses for a Specific Client
+ */
+@AuraEnabled(cacheable=true)
+public static List<Dynamic_Form_Response__c> getFormResponsesByClient(Id clientId) {
+    try {
+        if (clientId == null) {
+            throw new AuraHandledException('Client ID cannot be null.');
+        }
+
+        return [
+            SELECT Id, Name__c, Form_Type__c, Response_JSON__c, CreatedDate, Client_Id__c,Participant_Name__c,CreatedBy.Name
+            FROM Dynamic_Form_Response__c
+            WHERE Client_Id__c = :clientId
+            ORDER BY CreatedDate DESC
+        ];
+    } catch (Exception e) {
+        throw new AuraHandledException('Error retrieving form responses: ' + e.getMessage());
+    }
+}
+
+
+@AuraEnabled
+public static void updateFormResponse(Id responseId, String responseJson) {
+    try {
+        // Fetch the existing form response record
+        Dynamic_Form_Response__c existingResponse = [
+            SELECT Id, Response_JSON__c 
+            FROM Dynamic_Form_Response__c 
+            WHERE Id = :responseId 
+            LIMIT 1
+        ];
+
+        // Update the JSON field with the new data
+        existingResponse.Response_JSON__c = responseJson;
+        update existingResponse;
+
+    } catch (Exception e) {
+        throw new AuraHandledException('Error updating form response: ' + e.getMessage());
+    }
+}
+@AuraEnabled
+public static void deleteFormResponse(Id responseId) {
+    try {
+        // Check if the record exists
+        Dynamic_Form_Response__c response = [
+            SELECT Id FROM Dynamic_Form_Response__c WHERE Id = :responseId LIMIT 1
+        ];
+        
+        // Delete the record
+        delete response;
+    } catch (Exception e) {
+        throw new AuraHandledException('Error deleting form response: ' + e.getMessage());
+    }
+}
+
+ /*  
+@AuraEnabled
+public static List<Map<String, Object>> getParticipantsFilter(List<Id> facilityIds) {
+    try {
+        String userEmail = UserInfo.getUserEmail();
+        Staff__c staffData = [
+            SELECT Id, Name, User_Type__c, Facility__c, Facility__r.Organisation__c
+            FROM Staff__c 
+            WHERE Email_Address__c = :userEmail 
+            LIMIT 1
+        ];
+
+        // Log for debugging
+        System.debug('✅ Logged-in user type: ' + staffData.User_Type__c);
+        System.debug('✅ facilityIds passed: ' + facilityIds);
+
+        List<Client__c> clients = [
+            SELECT Id, Name,Picture__c, Participant_Status__c, Accessible_Forms__c, Facility__c, Facility__r.Name
+            FROM Client__c
+            WHERE Facility__c IN :facilityIds
+            AND Participant_Status__c = 'Active'
+            ORDER BY Name
+        ];
+
+        List<Map<String, Object>> output = new List<Map<String, Object>>();
+
+        for (Client__c client : clients) {
+            Map<String, Object> clientMap = new Map<String, Object>();
+            clientMap.put('Id', client.Id);
+            clientMap.put('Name', client.Name);
+            clientMap.put('Participant_Status__c', client.Participant_Status__c);
+            clientMap.put('Accessible_Forms__c', client.Accessible_Forms__c);
+            clientMap.put('Picture__c', client.Picture__c);
+            clientMap.put('Facility__c', client.Facility__c);
+            clientMap.put('Facility_Name', client.Facility__r != null ? client.Facility__r.Name : null);
+            output.add(clientMap);
+        }
+
+        return output;
+    } catch (Exception e) {
+        throw new AuraHandledException('Error retrieving participants: ' + e.getMessage());
+    }
+}
+*/
+    
+    @AuraEnabled
+public static List<Map<String, Object>> getParticipantsFilter(List<Id> facilityIds) {
+    try {
+        String userEmail = UserInfo.getUserEmail();
+        Staff__c staffData = [
+            SELECT Id, Name, User_Type__c, Facility__c, Facility__r.Organisation__c
+            FROM Staff__c 
+            WHERE Email_Address__c = :userEmail 
+            LIMIT 1
+        ];
+
+        // Log for debugging
+        System.debug('✅ Logged-in user type: ' + staffData.User_Type__c);
+        System.debug('✅ facilityIds passed: ' + facilityIds);
+
+        List<Client__c> clients = [
+            SELECT Id, Name,Picture__c, Participant_Status__c, Accessible_Forms__c, Facility__c, Facility__r.Name
+            FROM Client__c
+            WHERE Facility__c IN :facilityIds
+            AND Participant_Status__c = 'Active'
+            ORDER BY Name
+        ];
+
+        List<Map<String, Object>> output = new List<Map<String, Object>>();
+
+        for (Client__c client : clients) {
+            Map<String, Object> clientMap = new Map<String, Object>();
+            clientMap.put('Id', client.Id);
+            clientMap.put('Name', client.Name);
+            clientMap.put('Participant_Status__c', client.Participant_Status__c);
+            clientMap.put('Accessible_Forms__c', client.Accessible_Forms__c);
+            clientMap.put('Picture__c', client.Picture__c);
+            clientMap.put('Facility__c', client.Facility__c);
+            clientMap.put('Facility_Name', client.Facility__r != null ? client.Facility__r.Name : null);
+            output.add(clientMap);
+        }
+
+        return output;
+    } catch (Exception e) {
+        throw new AuraHandledException('Error retrieving participants: ' + e.getMessage());
+    }
+}
+    
+    @AuraEnabled(cacheable=true)
+public static List<Map<String, Object>> getParticipants(String facilityId) {
+    try {
+        // 🔹 Identify user and role
+        String userEmail = UserInfo.getUserEmail();
+        Staff__c staffData = [
+            SELECT Id, Name, User_Type__c, Facility__c, Facility__r.Organisation__c
+            FROM Staff__c 
+            WHERE Email_Address__c = :userEmail 
+            LIMIT 1
+        ];
+        
+        Boolean isOrgAdmin = staffData.User_Type__c == 'NDIS Org Admin';
+        Id organisationId = staffData.Facility__r.Organisation__c;
+
+        // 🔹 Fetch participants (org-wide if admin, else facility only)
+        List<Client__c> clients;
+        if (isOrgAdmin) {
+            clients = [
+                SELECT Id, Name, Participant_Status__c, Accessible_Forms__c, Facility__c, Facility__r.Name,
+                    Facility__r.Organisation__c,
+                    (SELECT Id, Staff__r.Id, Staff__r.Name, Staff__r.Picture__c, Staff__r.Email_Address__c, 
+                             Staff__r.Facility__c, Staff__r.Facility__r.Name 
+                     FROM Participant_Staff_Associations__r)
+                FROM Client__c
+                WHERE Facility__r.Organisation__c = :organisationId
+                ORDER BY Name
+            ];
+        } else {
+            clients = [
+                SELECT Id, Name, Participant_Status__c, Accessible_Forms__c, Facility__c, Facility__r.Name,
+                    (SELECT Id, Staff__r.Id, Staff__r.Name, Staff__r.Picture__c, Staff__r.Email_Address__c, 
+                             Staff__r.Facility__c, Staff__r.Facility__r.Name 
+                     FROM Participant_Staff_Associations__r)
+                FROM Client__c
+                WHERE Facility__c = :facilityId
+                ORDER BY Name
+            ];
+        }
+
+        List<Map<String, Object>> output = new List<Map<String, Object>>();
+
+        for (Client__c client : clients) {
+            Boolean hasMatchingFacility = false;
+            List<Map<String, String>> staffList = new List<Map<String, String>>();
+
+            if (client.Participant_Staff_Associations__r != null) {
+                for (Participant_Staff_Association__c assoc : client.Participant_Staff_Associations__r) {
+                    if (assoc.Staff__r != null) {
+                        if (isOrgAdmin || assoc.Staff__r.Facility__c == facilityId) {
+                            hasMatchingFacility = true;
+                            Map<String, String> staffMap = new Map<String, String>();
+                            staffMap.put('name', assoc.Staff__r.Name);
+                            staffMap.put('pictureUrl', assoc.Staff__r.Picture__c);
+                            staffMap.put('email', assoc.Staff__r.Email_Address__c);
+                            staffList.add(staffMap);
+                        }
+                    }
+                }
+            }
+
+            Map<String, Object> clientMap = new Map<String, Object>();
+            clientMap.put('Id', client.Id);
+            clientMap.put('Name', client.Name);
+            clientMap.put('Participant_Status__c', client.Participant_Status__c);
+            clientMap.put('Accessible_Forms__c', client.Accessible_Forms__c);
+            clientMap.put('Facility__c', client.Facility__c);
+            clientMap.put('Facility_Name', client.Facility__r != null ? client.Facility__r.Name : null);
+            clientMap.put('staffMembers', staffList);
+            clientMap.put('hasMatchingFacilityStaff', hasMatchingFacility);
+            output.add(clientMap);
+        }
+
+        return output;
+    } catch (Exception e) {
+        throw new AuraHandledException('Error retrieving participants: ' + e.getMessage());
+    }
+}
+
+
+
+    /**
+     * ✅ Fetch all Available Forms (Published Forms)
+     */
+    @AuraEnabled
+public static List<Dynamic_Form__c> getAvailableForms() {
+    try {
+        return [
+            SELECT Id, Name__c, DefaultIncident__c
+            FROM Dynamic_Form__c
+            WHERE Form_Type__c != 'Incident Register'
+            ORDER BY CreatedDate DESC
+        ];
+    } catch (Exception e) {
+        System.debug('❌ Error fetching forms: ' + e.getMessage());
+        throw new AuraHandledException('Error retrieving forms: ' + e.getMessage());
+    }
+}
+
+    /**
+     * ✅ Fetch Accessible Forms for a Specific Participant
+     */
+    @AuraEnabled
+public static List<Dynamic_Form__c> getAccessibleForms(Id participantId) {
+    try {
+        Client__c participant = [
+            SELECT Accessible_Forms__c,Name FROM Client__c WHERE Id = :participantId LIMIT 1
+        ];
+
+        if (String.isEmpty(participant.Accessible_Forms__c)) {
+            return new List<Dynamic_Form__c>(); // No forms assigned
+        }
+
+        // Split newline-separated form IDs
+        List<String> formIds = participant.Accessible_Forms__c.split('\n');
+
+        // Query full form records including Form_JSON__c
+        List<Dynamic_Form__c> forms = [
+            SELECT Id, Name__c, Form_Type__c, Form_JSON__c,CreatedById,
+                   CreatedBy.Name,
+                   CreatedDate
+            FROM Dynamic_Form__c
+            WHERE Id IN :formIds
+            ORDER BY CreatedDate DESC
+        ];
+
+        System.debug('🔹 Accessible Form Records: ' + forms);
+        return forms;
+
+    } catch (Exception e) {
+        System.debug('❌ Error fetching accessible form records: ' + e.getMessage());
+        throw new AuraHandledException('Error retrieving form records: ' + e.getMessage());
+    }
+}
+
+
+
+    @AuraEnabled(cacheable=true)
+    public static List<Dynamic_Form__c> getParticipantForms(Id participantId) {
+        try {
+            if (participantId == null) {
+                throw new AuraHandledException('Participant ID is required.');
+            }
+
+            Client__c participant = [
+                SELECT Accessible_Forms__c FROM Client__c WHERE Id = :participantId LIMIT 1
+            ];
+
+            if (String.isEmpty(participant.Accessible_Forms__c)) {
+                return new List<Dynamic_Form__c>(); // Return empty list if no forms assigned
+            }
+
+            List<String> formIds = participant.Accessible_Forms__c.split('\n');
+
+            return [
+                SELECT Id, Name__c 
+                FROM Dynamic_Form__c 
+                WHERE Id IN :formIds
+            ];
+
+        } catch (Exception e) {
+            System.debug('Error fetching participant forms: ' + e.getMessage());
+            throw new AuraHandledException('Error retrieving participant forms: ' + e.getMessage());
+        }
+    }
+
+    
+@AuraEnabled
+public static void grantAccessToParticipants(List<Id> participantIds, String formId) {
+    System.debug('🔹 Entering grantAccessToParticipants() with Form ID: ' + formId);
+
+    if (String.isBlank(formId)) {
+        throw new AuraHandledException('Form ID cannot be blank.');
+    }
+
+    if (participantIds == null || participantIds.isEmpty()) {
+        throw new AuraHandledException('No participant IDs provided.');
+    }
+
+    // Fetch all relevant participants in one query
+    List<Client__c> participants = [
+        SELECT Id, Accessible_Forms__c
+        FROM Client__c
+        WHERE Id IN :participantIds
+    ];
+
+    for (Client__c participant : participants) {
+        Set<String> existingFormIds = new Set<String>();
+
+        if (String.isNotBlank(participant.Accessible_Forms__c)) {
+            existingFormIds.addAll(participant.Accessible_Forms__c.split('\n'));
+        }
+
+        existingFormIds.add(formId); // ✅ Add new form
+
+        participant.Accessible_Forms__c = String.join(new List<String>(existingFormIds), '\n');
+    }
+
+    update participants;
+
+    System.debug('✅ Successfully granted access to participants.');
+}
+
+@AuraEnabled
+public static void revokeAccessFromParticipants(List<Id> participantIds, String formId) {
+    System.debug('🔹 Entering revokeAccessFromParticipants() with Form ID: ' + formId);
+
+    if (String.isBlank(formId)) {
+        throw new AuraHandledException('Form ID cannot be blank.');
+    }
+    if (participantIds == null || participantIds.isEmpty()) {
+        throw new AuraHandledException('No participant IDs provided.');
+    }
+
+    // Normalize the target key for robust comparison (accept both 15/18)
+    final String key18 = normalize18(formId);
+    final String key15 = (key18 != null && key18.length() >= 15) ? key18.substring(0, 15) : key18;
+
+    // Fetch participants
+    List<Client__c> participants = [
+        SELECT Id, Accessible_Forms__c
+        FROM Client__c
+        WHERE Id IN :participantIds
+        FOR UPDATE
+    ];
+
+    List<Client__c> toUpdate = new List<Client__c>();
+
+    for (Client__c p : participants) {
+        String current = (p.Accessible_Forms__c == null) ? '' : p.Accessible_Forms__c.replace('\r','');
+
+        // Accept newlines, commas, semicolons or spaces as historical delimiters
+        List<String> raw = new List<String>();
+        if (String.isNotBlank(current)) {
+            raw.addAll(current.split('[,;\\n\\t ]+'));
+        }
+
+        // Rebuild with everything EXCEPT the target form id
+        Set<String> kept = new Set<String>();
+        for (String token : raw) {
+            String t = (token == null) ? '' : token.trim();
+            if (t == '') continue;
+
+            String t18 = normalize18(t);
+            String t15 = (t18 != null && t18.length() >= 15) ? t18.substring(0, 15) : t18;
+
+            // Keep only if it does NOT match our target (by 18 OR 15)
+            if (!(t18 == key18 || t15 == key15)) {
+                // Store canonically as 18 where possible
+                kept.add((t18 != null && t18 != '') ? t18 : t);
+            }
+        }
+
+        // Join with newline (same as your grant method)
+        String updated = String.join(new List<String>(kept), '\n');
+        if (updated != current) {
+            p.Accessible_Forms__c = updated;
+            toUpdate.add(p);
+        }
+    }
+
+    if (!toUpdate.isEmpty()) {
+        update toUpdate;
+    }
+
+    System.debug('✅ Successfully revoked access from participants. Updated records: ' + toUpdate.size());
+}
+
+/** Helper: normalize to 18-char Id if possible, otherwise trimmed token. */
+private static String normalize18(String idStr) {
+    if (String.isBlank(idStr)) return null;
+    String s = idStr.trim();
+    // If caller passed a 15-char Id, leave it; if 18, keep 18; if longer token, trim to 18 max
+    if (s.length() > 18) s = s.substring(0, 18);
+    return s;
+}
+
+    
+public class FileUploadResponse {
+    @AuraEnabled public String downloadUrl;
+    @AuraEnabled public String previewUrl;
+}
+
+@AuraEnabled
+public static FileUploadResponse uploadFileToSalesforce(String base64Data, String fileName, String contentType) {
+    ContentVersion cv = new ContentVersion();
+    cv.VersionData = EncodingUtil.base64Decode(base64Data);
+    cv.Title = fileName;
+    cv.PathOnClient = '/' + fileName;
+    insert cv;
+
+    ContentVersion insertedCV = [
+        SELECT Id, ContentDocumentId 
+        FROM ContentVersion 
+        WHERE Id = :cv.Id 
+        LIMIT 1
+    ];
+
+    FileUploadResponse response = new FileUploadResponse();
+
+    // 🔹 Relative paths for both download and preview
+    response.downloadUrl = '/sfc/servlet.shepherd/document/download/' + insertedCV.ContentDocumentId;
+    response.previewUrl = '/sfc/servlet.shepherd/version/renditionDownload?rendition=ORIGINAL_JPG&versionId=' + insertedCV.Id;
+
+    return response;
+}
+    
+    @AuraEnabled(cacheable=true)
+public static String getStaffEmailByName(String nameValue) {
+    Staff__c staff = [
+        SELECT Id, Name, Email_Address__c 
+        FROM Staff__c 
+        WHERE Name = :nameValue 
+        LIMIT 1
+    ];
+    return staff.Email_Address__c;
+}
+
+@AuraEnabled(cacheable=true)
+public static String getFacilityByUserEmail(String userEmail) {
+    Staff__c staff = [
+        SELECT Id, Email_Address__c, Facility__c 
+        FROM Staff__c 
+        WHERE Email_Address__c = :userEmail 
+        LIMIT 1
+    ];
+    return staff.Facility__c;
+}
+
+@AuraEnabled
+public static void sendFormDetailsToStaff(String emailAddress, String formDataHtml) {
+    try {
+        if (String.isNotBlank(emailAddress)) {
+            // Fetch Org-Wide Email
+            List<OrgWideEmailAddress> orgWideEmailList = [
+                SELECT Id, Address 
+                FROM OrgWideEmailAddress 
+                WHERE Address = :System.Label.OrgWideEmailAddress 
+                LIMIT 1
+            ];
+
+            if (orgWideEmailList.isEmpty()) {
+                System.debug('❌ No OrgWideEmailAddress found for label: ' + System.Label.OrgWideEmailAddress);
+                throw new AuraHandledException('Org-Wide Email Address not configured or verified.');
+            }
+
+            OrgWideEmailAddress orgWideEmail = orgWideEmailList[0];
+
+            // Compose Email
+            Messaging.SingleEmailMessage emailMessage = new Messaging.SingleEmailMessage();
+            emailMessage.setToAddresses(new String[] { emailAddress });
+            emailMessage.setSubject('You have been assigned a form response');
+            emailMessage.setHtmlBody(formDataHtml);
+            emailMessage.setOrgWideEmailAddressId(orgWideEmail.Id);
+
+            // Send Email
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { emailMessage });
+
+            System.debug('✅ Email sent successfully to: ' + emailAddress + ' from: ' + orgWideEmail.Address);
+        } else {
+            System.debug('❌ Email address is blank.');
+            throw new AuraHandledException('Email address is empty.');
+        }
+    } catch (Exception e) {
+        System.debug('❌ Apex Exception in sendFormDetailsToStaff: ' + e.getMessage());
+        throw new AuraHandledException('Failed to send email: ' + e.getMessage());
+    }
+}
+
+
+@AuraEnabled(cacheable=true)
+public static List<Client__c> getParticipantsByOrgId(Id orgid) {
+    if (orgId == null) {
+        throw new AuraHandledException('Missing Organisation Id');
+    }
+
+    try {
+        // Step 1: Fetch facility IDs related to the given Organisation
+        List<Facility__c> facilities = [
+            SELECT Id, Name 
+            FROM Facility__c 
+            WHERE Organisation__c = :orgid
+        ];
+
+        if (facilities.isEmpty()) return new List<Client__c>();
+
+        Set<Id> facilityIds = new Set<Id>();
+        for (Facility__c fac : facilities) {
+            facilityIds.add(fac.Id);
+        }
+
+        // Step 2: Fetch clients (participants) assigned to those facilities
+        List<Client__c> clients = [
+            SELECT Id, Name, Participant_Status__c, Facility__c, Facility__r.Name
+            FROM Client__c
+            WHERE Facility__c IN :facilityIds
+            ORDER BY Name
+        ];
+
+        return clients;
+
+    } catch (Exception e) {
+        throw new AuraHandledException('Error fetching participants: ' + e.getMessage());
+    }
+    
+    
+    
+    
+}
+
+
+
+}
