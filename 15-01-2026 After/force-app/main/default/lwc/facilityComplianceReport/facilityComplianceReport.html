@@ -1,0 +1,293 @@
+<template>
+  <div class="dashboard-container slds-p-top_small">
+
+    <!-- METRIC TILES -->
+    <div class="metrics-grid tiles">
+      <div class="metric-card highlight-blue">
+        <div class="metric-title">Total Staff</div>
+        <div class="metric-value">{totalStaff}</div>
+      </div>
+      <div class="metric-card highlight-green">
+        <div class="metric-title">Fully Compliant</div>
+        <div class="metric-value">{fullyCompliant}</div>
+        <div class="sub">All 3 categories</div>
+      </div>
+      <div class="metric-card highlight-orange">
+        <div class="metric-title">Partially Compliant</div>
+        <div class="metric-value">{partiallyCompliant}</div>
+        <div class="sub">Some categories</div>
+      </div>
+      <div class="metric-card highlight-purple">
+        <div class="metric-title">Non Compliant</div>
+        <div class="metric-value">{nonCompliant}</div>
+        <div class="sub">Action required</div>
+      </div>
+    </div>
+
+    <!-- COMPLIANCE BAR (simple placeholder like facility file) -->
+    <!-- <div class="chart-box slds-m-top_large">
+      <div class="chart-title">Compliance Overview</div>
+
+      <div class="bar-row">
+        <span class="label">Fully Compliant</span>
+        <div class="bar green" style={fullBarStyle}></div>
+      </div>
+
+      <div class="bar-row">
+        <span class="label">Partially Compliant</span>
+        <div class="bar orange" style={partialBarStyle}></div>
+      </div>
+
+      <div class="bar-row">
+        <span class="label">Non-Compliant</span>
+        <div class="bar red" style={nonBarStyle}></div>
+      </div>
+    </div> -->
+
+    <!-- FILTERS / SEARCH -->
+    <div class="slds-p-around_small">
+      <div class="slds-grid slds-gutters">
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+          <lightning-input type="search" label="Search" placeholder="Search Staff" value={searchText} onchange={handleSearch}></lightning-input>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+          <lightning-combobox label="Status" value={selectedStatus} options={statusOptions} onchange={handleStatusChange}></lightning-combobox>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+          <lightning-combobox label="Role" value={selectedRole} options={roleOptions} onchange={handleRoleChange}></lightning-combobox>
+        </div>
+        
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="margin-top: 23px;">
+          <lightning-button variant="brand" label="Export Report"  onclick={handleExport}></lightning-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE SECTION -->
+    <div class="table-container slds-m-top_large">
+      <div class="header-wrapper">
+        <table class="staff-table" role="table">
+          <thead>
+            <tr>
+              <th class="table-th">Staff Member</th>
+              <th class="table-th">Role</th>
+              <th class="table-th">Documents</th>
+              <th class="table-th">Training</th>
+              <th class="table-th">Shift Compliance</th>
+              <th class="table-th">Actions</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+
+      <!-- SCROLL ONLY TBODY -->
+      <div class="body-scroll custom-scroll custom-scroll1">
+        <table class="staff-table">
+          <tbody>
+            <template for:each={pagedList} for:item="stf">
+              <tr key={stf.id} class="table-row">
+                <td class="table-td clickable-name" title={stf.name}>
+                  <div>{stf.name}</div>
+                </td>
+
+                <td class="table-td" >
+                  <span class="role-pill" title={stf.role} style="max-width: 100%; text-overflow: ellipsis; overflow: hidden;">{stf.role}</span>
+                </td>
+
+                <td class="table-td">
+                  <span class={stf.documentsClass}>{stf.documents}</span>
+                </td>
+
+                <td class="table-td">
+                  <span class={stf.trainingClass}>{stf.training}</span>
+                </td>
+
+                <td class="table-td">
+                  <span class={stf.shiftClass}>{stf.shift}</span>
+                </td>
+
+                <td class="table-td actions-col">
+                  <a
+                    href="javascript:void(0)"
+                    data-id={stf.id}
+                    onclick={handleViewDetails}
+                  >
+                    <i class="material-icons"></i> View Details
+                  </a>
+                </td>
+              </tr>
+            </template>
+
+            <template if:true={isEmpty}>
+              <tr><td colspan="6" class="table-td no-data">No records found</td></tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGINATION ROW (reusing facilityDocument style) -->
+    <div class="pagination-row">
+      <div class="slds-list_inline slds-p-bottom_xx-small">
+        <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+        <div class="slds-select_container slds-align_absolute-center">
+          <select class="slds-select" id="recordsPerPage" onchange={handlePageSizeChange}>
+            <template for:each={pageSizeOptions} for:item="option">
+              <option key={option} value={option}>{option}</option>
+            </template>
+          </select>
+        </div>
+      </div>
+
+      <div class="slds-align_absolute-center">
+        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" onclick={firstPage}></lightning-button>
+        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" onclick={previousPage}></lightning-button>
+        &nbsp;
+        <span class="slds-badge">Showing {pageNumber} of {totalPages} Page(s)</span>
+        &nbsp;
+        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" onclick={nextPage} icon-position="right"></lightning-button>
+        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" onclick={lastPage} icon-position="right"></lightning-button>
+      </div>
+
+      <div class="slds-clearfix">
+        <div class="slds-float_right">
+          <span class="slds-badge">Total Records: {totalStaff}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <template if:true={showModal1}>
+    <!-- MODAL -->
+    <section
+        role="dialog"
+        tabindex="-1"
+        aria-modal="true"
+        class="slds-modal slds-fade-in-open">
+
+        <div class="slds-modal__container modal-custom">
+
+            <!-- ================= HEADER ================= -->
+            <header class="slds-modal__header headercustom">
+                <h2 class="slds-modal__title slds-text-heading_medium" style="color: white;">
+                    Staff Compliance Details
+                </h2>
+            </header>
+
+            <!-- ================= BODY ================= -->
+            <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                <!-- STAFF INFO -->
+                <div class="slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small">
+                        {modalData.name}
+                    </h3>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        {modalData.email} · {modalData.role}
+                    </p>
+                </div>
+
+                <!-- OVERALL COMPLIANCE -->
+                <div class="slds-box slds-m-bottom_medium">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                        <span class="slds-text-title_bold">
+                            Overall Compliance
+                        </span>
+                        <span class={modalData.overallStatus}>
+                            {modalData.overallStatus}
+                        </span>
+                    </div>
+
+                    <p class="slds-text-body_small">
+                        Overall compliance rate:
+                        <strong>{modalData.overallPercent}%</strong>
+                    </p>
+                </div>
+
+                <!-- DOCUMENTS COMPLIANCE -->
+                <div class="slds-box slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                        <span>Documents Compliance</span>
+                        <span class={modalData.documents.status}>
+                            {modalData.documents.status}
+                        </span>
+                    </div>
+
+                    <lightning-progress-bar
+                        value={modalData.documents.percent}
+                        size="medium">
+                    </lightning-progress-bar>
+
+                    <p class="slds-text-body_small slds-m-top_x-small">
+                        {modalData.documents.text}
+                    </p>
+                </div>
+
+                <!-- TRAINING COMPLIANCE -->
+                <div class="slds-box slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                        <span>Training Compliance</span>
+                        <span class={modalData.training.status}>
+                            {modalData.training.status}
+                        </span>
+                    </div>
+
+                    <lightning-progress-bar
+                        value={modalData.training.percent}
+                        size="medium">
+                    </lightning-progress-bar>
+
+                    <p class="slds-text-body_small slds-m-top_x-small">
+                        {modalData.training.text}
+                    </p>
+                </div>
+
+                <!-- SHIFT / IDENTITY COMPLIANCE -->
+                <div class="slds-box">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                        <span>Shift Compliance</span>
+                        <span class={modalData.shift.status}>
+                            {modalData.shift.status}
+                        </span>
+                    </div>
+
+                    <lightning-progress-bar
+                        value={modalData.shift.percent}
+                        size="medium">
+                    </lightning-progress-bar>
+
+                    <p class="slds-text-body_small slds-m-top_x-small">
+                        {modalData.shift.text}
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- ================= FOOTER ================= -->
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    variant="neutral"
+                    label="Close"
+                    onclick={closeModal}>
+                </lightning-button>
+
+                <!-- <lightning-button
+                    class="slds-m-left_small"
+                    variant="brand"
+                    label="View Staff Profile"
+                    onclick={navigateToProfile}>
+                </lightning-button> -->
+            </footer>
+
+        </div>
+    </section>
+
+    <!-- BACKDROP -->
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+
+</template>
