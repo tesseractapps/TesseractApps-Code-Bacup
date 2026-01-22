@@ -1,0 +1,1214 @@
+<template>
+        <!-- HEADER -->  
+    <div class="dashboard-container slds-p-top_small">
+        <div class="page-header">
+            <div class="title-block">
+                <h1>Shift Compliance Rules</h1>
+                <p class="sub">Configure work hour limits to ensure staff safety and compliance</p>
+            </div>
+            <div class="save-container">
+                <lightning-button 
+                    label="Save Changes"
+                    variant="brand"
+                    onclick={saveSettingsHandler}>
+                </lightning-button>
+            </div>
+        </div>
+
+            <!-- METRIC TILES ROW -->
+            <div class="metrics-grid tiles">
+
+                <!-- Active Rules -->
+                <div class="metric-card active">
+                    <div class="metric-title">Active Rules</div>
+                    <div class="metric-value ">{activeRules}</div>
+                </div>
+
+                <!-- Role-Specific Rules -->
+                <div class="metric-card role">
+                    <div class="metric-title">Role-Specific Rules</div>
+                    <div class="metric-value ">{roleSpecificRules}</div>
+
+                </div>
+            </div>
+        <div class="slds-scrollable_y my-scroll custom-scroll custom-scroll1 ">
+            <!-- RULE: MAXIMUM CONSECUTIVE DAYS -->
+<!-- RULE: MAXIMUM CONSECUTIVE DAYS -->
+<div class="rule-box">
+    <div class="rule-header">
+        <lightning-input 
+            type="toggle" 
+            message-toggle-active=""
+            message-toggle-inactive=""
+            class="small-toggle"
+            checked={maxDays.active}
+            data-rule="maxDays"
+            onchange={toggleRule}>
+        </lightning-input>
+
+        <div>
+            <div class="rule-title">Maximum Consecutive Days</div>
+            <p class="rule-desc">Prevent burnout by limiting consecutive working days</p>
+        </div>
+    </div>
+
+    <!-- SHOW BELOW BLOCK ONLY WHEN main toggle active -->
+    <template if:true={maxDays.active}>
+
+        <div class="sub-row roles-inline">
+            <div class="slds-grid">
+                <lightning-input 
+                    type="toggle"
+                    message-toggle-active=""
+                    message-toggle-inactive=""
+                    class="small-toggle1"
+                    checked={maxDays.applyRoles}
+                    data-rule="maxDays"
+                    data-field="applyRoles"
+                    variant="label-hidden"
+                    onchange={toggleField}>
+                </lightning-input>
+                <label class="apply-roles-label">Apply to specific roles only</label>
+            </div>
+
+            <template if:true={maxDays.applyRoles}>
+                <div class="roles-container">
+
+                    <div class="dropdown-container" lwc:ref="maxDaysDropdown">
+                        
+                        <button 
+                            type="button"
+                            class="dropdown-button1"
+                            onclick={toggleMaxDaysDropdown}
+                            aria-expanded={isMaxDaysOpen}
+                            aria-haspopup="listbox">
+
+                            <span class={maxDaysSelectedClass}>
+                                {maxDaysDisplayText}
+                            </span>
+
+                            <lightning-icon 
+                                icon-name={chevronIcon}
+                                size="x-small"
+                                class="chevron-icon">
+                            </lightning-icon>
+                        </button>
+
+                        <div if:true={isMaxDaysOpen} class="dropdown-menu">
+                            <div class="options-list custom-scroll">
+                                <template for:each={maxDaysRolesUI} for:item="role">
+                                    <div 
+                                        key={role.id} 
+                                        class="option-item"
+                                        data-role-id={role.id}
+                                        onclick={handleMaxDaysRoleSelect}
+                                    >
+                                        <div class="option-label">{role.label}</div>
+                                        <div class="option-controls">
+                                            <span class={role.badgeClass}>{role.statusText}</span>
+                                            <div class="toggle-switch-container">
+                                                <lightning-input
+                                                    type="toggle"
+                                                    checked={role.checked}
+                                                    data-role-id={role.id}
+                                                    onchange={handleMaxDaysToggleActive}
+                                                    variant="label-hidden"
+                                                    message-toggle-active=""
+                                                    message-toggle-inactive=""
+                                                    class="small-toggle">
+                                                </lightning-input>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <lightning-input 
+                class="number-input"
+                type="number"
+                label="Maximum Consecutive Days"
+                value={maxDays.value}
+                data-rule="maxDays"
+                data-field="value"
+                onchange={updateNumber}>
+            </lightning-input>
+        </div>
+
+    </template>
+</div>
+            <div class="rule-box">
+                <div class="rule-header">
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={minHours.active}
+                        data-rule="minHours"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                    <div>
+                        <div class="rule-title">Minimum Hours Between Shifts</div>
+                        <p class="rule-desc">Ensure adequate rest between shifts</p>
+                    </div>
+                </div>
+<template if:true={minHours.active}>
+                <div class="sub-row roles-inline">
+                    <div class="slds-grid">
+                        <lightning-input 
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            class="small-toggle1"
+                            checked={minHours.applyRoles}
+                            data-rule="minHours"
+                            data-field="applyRoles"
+                            variant="label-hidden"
+                            onchange={toggleField}>
+                        </lightning-input>
+
+                        <label class="apply-roles-label">Apply to specific roles only</label>
+                    </div>
+
+                    <template if:true={minHours.applyRoles}>
+                        <div class="roles-container">
+
+                            <div class="dropdown-container" lwc:ref="minHoursDropdown">
+                                
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1"
+                                    onclick={toggleMinHoursDropdown}
+                                    aria-expanded={isMinHoursOpen}
+                                    aria-haspopup="listbox">
+
+                                    <span class={minHoursSelectedClass}>
+                                        {minHoursDisplayText}
+                                    </span>
+
+                                    <lightning-icon 
+                                        icon-name={minHoursChevron}
+                                        size="x-small"
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <div if:true={isMinHoursOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+
+                                        <template for:each={minHoursRolesUI} for:item="role">
+                                            <div 
+                                                key={role.id} 
+                                                class="option-item"
+                                                data-role-id={role.id}
+                                                onclick={handleMinHoursRoleSelect}
+                                            >
+                                                <div class="option-label">{role.label}</div>
+
+                                                <div class="option-controls">
+                                                    <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input
+                                                            type="toggle"
+                                                            checked={role.checked}
+                                                            data-role-id={role.id}
+                                                            onchange={handleMinHoursToggleActive}
+                                                            variant="label-hidden"
+                                                            message-toggle-active=""
+                                                            message-toggle-inactive=""
+                                                            class="small-toggle">
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <lightning-input 
+                        class="number-input"
+                        type="number"
+                        label="Minimum Hours Between Shifts"
+                        value={minHours.value}
+                        data-rule="minHours"
+                        data-field="value"
+                        onchange={updateNumber}>
+                    </lightning-input>
+                </div>
+                </template>
+            </div>
+
+            <!-- RULE: MAXIMUM HOURS PER WEEK -->
+            <!-- <div class="rule-box">
+                <div class="rule-header">
+                    <div>
+                        <div class="rule-title">Maximum Hours Per Week</div>
+                        <p class="rule-desc">Weekly hour limit to prevent overwork</p>
+                    </div>
+
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={maxWeek.active}
+                        data-rule="maxWeek"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                </div>
+
+                <div class="sub-row roles-inline">
+                    <lightning-input 
+                        type="toggle"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={maxWeek.applyRoles}
+                        data-rule="maxWeek"
+                        data-field="applyRoles"
+                        onchange={toggleField}>
+                    </lightning-input>
+
+                    <label class="apply-roles-label">Apply to specific roles only</label>
+                </div>
+                <template if:true={maxWeek.applyRoles}>
+                    <div class="roles-container">
+
+                        <div class="dropdown-container" lwc:ref="maxWeekDropdown">
+
+                           
+                            <button 
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleMaxWeekDropdown}
+                                aria-expanded={isMaxWeekOpen}
+                                aria-haspopup="listbox">
+
+                                <span class={maxWeekSelectedClass}>
+                                    {maxWeekDisplayText}
+                                </span>
+
+                                <lightning-icon 
+                                    icon-name={maxWeekChevron}
+                                    size="x-small"
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                            
+                            <div if:true={isMaxWeekOpen} class="dropdown-menu">
+
+                                <div class="options-list custom-scroll">
+
+                                    <template for:each={maxWeekRolesUI} for:item="role">
+
+                                        <div 
+                                            key={role.id}
+                                            class="option-item"
+                                            data-role-id={role.id}
+                                            onclick={handleMaxWeekRoleSelect}
+                                        >
+
+                                            <div class="option-label">
+                                                {role.label}
+                                            </div>
+
+                                            <div class="option-controls">
+                                                <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                <div class="toggle-switch-container">
+                                                    <lightning-input 
+                                                        type="toggle"
+                                                        checked={role.checked}
+                                                        data-role-id={role.id}
+                                                        onchange={handleMaxWeekToggleActive}
+                                                        variant="label-hidden"
+                                                        message-toggle-active=""
+                                                        message-toggle-inactive=""
+                                                        class="small-toggle">
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </template>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+
+                <lightning-input 
+                    class="number-input"
+                    type="number"
+                    label="Maximum Hours Per Week"
+                    value={maxWeek.value}
+                    data-rule="maxWeek"
+                    data-field="value"
+                    onchange={updateNumber}>
+                </lightning-input>
+            </div> -->
+            <div class="rule-box">
+                <div class="rule-header">
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={maxWeek.active}
+                        data-rule="maxWeek"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                    <div>
+                        <div class="rule-title">Maximum Hours Per Week</div>
+                        <p class="rule-desc">Weekly hour limit to prevent overwork</p>
+                    </div>
+                </div>
+<template if:true={maxWeek.active}>
+                <div class="sub-row roles-inline">
+                    <div class="slds-grid">
+                        <lightning-input 
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            class="small-toggle1"
+                            checked={maxWeek.applyRoles}
+                            data-rule="maxWeek"
+                            data-field="applyRoles"
+                            variant="label-hidden"
+                            onchange={toggleField}>
+                        </lightning-input>
+                        <label class="apply-roles-label">Apply to specific roles only</label>
+                    </div>
+
+                    <template if:true={maxWeek.applyRoles}>
+                        <div class="roles-container">
+
+                            <div class="dropdown-container" lwc:ref="maxWeekDropdown">
+
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1"
+                                    onclick={toggleMaxWeekDropdown}
+                                    aria-expanded={isMaxWeekOpen}
+                                    aria-haspopup="listbox">
+
+                                    <span class={maxWeekSelectedClass}>
+                                        {maxWeekDisplayText}
+                                    </span>
+
+                                    <lightning-icon 
+                                        icon-name={maxWeekChevron}
+                                        size="x-small"
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <div if:true={isMaxWeekOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+
+                                        <template for:each={maxWeekRolesUI} for:item="role">
+                                            <div 
+                                                key={role.id}
+                                                class="option-item"
+                                                data-role-id={role.id}
+                                                onclick={handleMaxWeekRoleSelect}
+                                            >
+                                                <div class="option-label">{role.label}</div>
+
+                                                <div class="option-controls">
+                                                    <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input
+                                                            type="toggle"
+                                                            checked={role.checked}
+                                                            data-role-id={role.id}
+                                                            onchange={handleMaxWeekToggleActive}
+                                                            variant="label-hidden"
+                                                            message-toggle-active=""
+                                                            message-toggle-inactive=""
+                                                            class="small-toggle">
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <lightning-input 
+                        class="number-input"
+                        type="number"
+                        label="Maximum Hours Per Week"
+                        value={maxWeek.value}
+                        data-rule="maxWeek"
+                        data-field="value"
+                        onchange={updateNumber}>
+                    </lightning-input>
+                </div>
+                </template>
+            </div>
+
+            <!-- RULE: MAXIMUM HOURS PER SHIFT -->
+            <!-- <div class="rule-box">
+                <div class="rule-header">
+                    <div>
+                        <div class="rule-title">Maximum Hours Per Shift</div>
+                        <p class="rule-desc">Single shift hour limit</p>
+                    </div>
+
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={maxShift.active}
+                        data-rule="maxShift"
+                        onchange={toggleRule}>
+                    </lightning-input>
+                </div>
+
+                <div class="sub-row roles-inline">
+                    <lightning-input 
+                        type="toggle"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={maxShift.applyRoles}
+                        data-rule="maxShift"
+                        data-field="applyRoles"
+                        onchange={toggleField}>
+                    </lightning-input>
+
+                    <label class="apply-roles-label">Apply to specific roles only</label>
+                </div>
+                <template if:true={maxShift.applyRoles}>
+                    <div class="roles-container">
+
+                        <div class="dropdown-container" lwc:ref="maxShiftDropdown">
+
+                           
+                            <button 
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleMaxShiftDropdown}
+                                aria-expanded={isMaxShiftOpen}
+                                aria-haspopup="listbox">
+
+                                <span class={maxShiftSelectedClass}>
+                                    {maxShiftDisplayText}
+                                </span>
+
+                                <lightning-icon 
+                                    icon-name={maxShiftChevron}
+                                    size="x-small"
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                           
+                            <div if:true={isMaxShiftOpen} class="dropdown-menu">
+
+                                <div class="options-list custom-scroll">
+
+                                    <template for:each={maxShiftRolesUI} for:item="role">
+
+                                        <div 
+                                            key={role.id}
+                                            class="option-item"
+                                            data-role-id={role.id}
+                                            onclick={handleMaxShiftRoleSelect}
+                                        >
+
+                                            <div class="option-label">
+                                                {role.label}
+                                            </div>
+
+                                            <div class="option-controls">
+                                                <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                <div class="toggle-switch-container">
+                                                    <lightning-input 
+                                                        type="toggle"
+                                                        checked={role.checked}
+                                                        data-role-id={role.id}
+                                                        onchange={handleMaxShiftToggleActive}
+                                                        variant="label-hidden"
+                                                        message-toggle-active=""
+                                                        message-toggle-inactive=""
+                                                        class="small-toggle">
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </template>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+                <lightning-input 
+                    class="number-input"
+                    type="number"
+                    label="Maximum Hours Per Shift"
+                    value={maxShift.value}
+                    data-rule="maxShift"
+                    data-field="value"
+                    onchange={updateNumber}>
+                </lightning-input>
+            </div> -->
+            <div class="rule-box">
+                <div class="rule-header">
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={maxShift.active}
+                        data-rule="maxShift"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                    <div>
+                        <div class="rule-title">Maximum Hours Per Shift</div>
+                        <p class="rule-desc">Single shift hour limit</p>
+                    </div>
+                </div>
+<template if:true={maxShift.active}>
+                <div class="sub-row roles-inline">
+                    <div class="slds-grid">
+                        <lightning-input 
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            class="small-toggle1"
+                            checked={maxShift.applyRoles}
+                            data-rule="maxShift"
+                            data-field="applyRoles"
+                            variant="label-hidden"
+                            onchange={toggleField}>
+                        </lightning-input>
+
+                        <label class="apply-roles-label">Apply to specific roles only</label>
+                    </div>
+
+                    <template if:true={maxShift.applyRoles}>
+                        <div class="roles-container">
+
+                            <div class="dropdown-container" lwc:ref="maxShiftDropdown">
+
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1"
+                                    onclick={toggleMaxShiftDropdown}
+                                    aria-expanded={isMaxShiftOpen}
+                                    aria-haspopup="listbox">
+
+                                    <span class={maxShiftSelectedClass}>
+                                        {maxShiftDisplayText}
+                                    </span>
+
+                                    <lightning-icon 
+                                        icon-name={maxShiftChevron}
+                                        size="x-small"
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <div if:true={isMaxShiftOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+
+                                        <template for:each={maxShiftRolesUI} for:item="role">
+                                            <div 
+                                                key={role.id}
+                                                class="option-item"
+                                                data-role-id={role.id}
+                                                onclick={handleMaxShiftRoleSelect}
+                                            >
+                                                <div class="option-label">{role.label}</div>
+
+                                                <div class="option-controls">
+                                                    <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input
+                                                            type="toggle"
+                                                            checked={role.checked}
+                                                            data-role-id={role.id}
+                                                            onchange={handleMaxShiftToggleActive}
+                                                            variant="label-hidden"
+                                                            message-toggle-active=""
+                                                            message-toggle-inactive=""
+                                                            class="small-toggle">
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <lightning-input 
+                        class="number-input"
+                        type="number"
+                        label="Maximum Hours Per Shift"
+                        value={maxShift.value}
+                        data-rule="maxShift"
+                        data-field="value"
+                        onchange={updateNumber}>
+                    </lightning-input>
+                </div>
+                </template>
+            </div>
+
+            <!-- RULE: MANDATORY BREAK REQUIREMENTS -->
+            <!-- <div class="rule-box">
+                <div class="rule-header">
+                    <div>
+                        <div class="rule-title">Mandatory Break Requirements</div>
+                        <p class="rule-desc">Require breaks during long shifts</p>
+                    </div>
+
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={mandatoryBreak.active}
+                        data-rule="mandatoryBreak"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                </div>
+
+                <div class="sub-row roles-inline">
+                    <lightning-input 
+                        type="toggle"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={mandatoryBreak.applyRoles}
+                        data-rule="mandatoryBreak"
+                        data-field="applyRoles"
+                        onchange={toggleField}>
+                    </lightning-input>
+
+                    <label class="apply-roles-label">Apply to specific roles only</label>
+                </div>
+                <template if:true={mandatoryBreak.applyRoles}>
+                    <div class="roles-container">
+
+                        <div class="dropdown-container" lwc:ref="mandatoryBreakDropdown">
+
+                           
+                            <button 
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleMandatoryBreakDropdown}
+                                aria-expanded={isMandatoryBreakOpen}
+                                aria-haspopup="listbox">
+
+                                <span class={mandatoryBreakSelectedClass}>
+                                    {mandatoryBreakDisplayText}
+                                </span>
+
+                                <lightning-icon 
+                                    icon-name={mandatoryBreakChevron}
+                                    size="x-small"
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                           
+                            <div if:true={isMandatoryBreakOpen} class="dropdown-menu">
+
+                                <div class="options-list custom-scroll">
+
+                                    <template for:each={mandatoryBreakRolesUI} for:item="role">
+
+                                        <div 
+                                            key={role.id}
+                                            class="option-item"
+                                            data-role-id={role.id}
+                                            onclick={handleMandatoryBreakRoleSelect}
+                                        >
+
+                                            <div class="option-label">
+                                                {role.label}
+                                            </div>
+
+                                            <div class="option-controls">
+                                                <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                <div class="toggle-switch-container">
+                                                    <lightning-input 
+                                                        type="toggle"
+                                                        checked={role.checked}
+                                                        data-role-id={role.id}
+                                                        onchange={handleMandatoryBreakToggleActive}
+                                                        variant="label-hidden"
+                                                        message-toggle-active=""
+                                                        message-toggle-inactive=""
+                                                        class="small-toggle">
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </template>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+                <div class="form-row">
+                    <lightning-input 
+                        class="number-input"
+                        type="number"
+                        label="Require Break Every (hours)"
+                        value={mandatoryBreak.breakEvery}
+                        data-rule="mandatoryBreak"
+                        data-field="breakEvery"
+                        onchange={updateNumber}>
+                    </lightning-input>
+
+                    <lightning-input 
+                        class="number-input"
+                        type="number"
+                        label="Break Duration (minutes)"
+                        value={mandatoryBreak.breakDuration}
+                        data-rule="mandatoryBreak"
+                        data-field="breakDuration"
+                        onchange={updateNumber}>
+                    </lightning-input>
+                </div>
+            </div> -->
+
+            <div class="rule-box">
+                <div class="rule-header">
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={mandatoryBreak.active}
+                        data-rule="mandatoryBreak"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                    <div>
+                        <div class="rule-title">Mandatory Break Requirements</div>
+                        <p class="rule-desc">Require breaks during long shifts</p>
+                    </div>
+                </div>
+<template if:true={mandatoryBreak.active}>
+                <div class="sub-row roles-inline">
+                    <div class="slds-grid">
+                        <lightning-input 
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            class="small-toggle1"
+                            checked={mandatoryBreak.applyRoles}
+                            data-rule="mandatoryBreak"
+                            data-field="applyRoles"
+                            variant="label-hidden"
+                            onchange={toggleField}>
+                        </lightning-input>
+
+                        <label class="apply-roles-label">Apply to specific roles only</label>
+                    </div>
+
+                    <template if:true={mandatoryBreak.applyRoles}>
+                        <div class="roles-container">
+                            <div class="dropdown-container" lwc:ref="mandatoryBreakDropdown">
+
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1"
+                                    onclick={toggleMandatoryBreakDropdown}
+                                    aria-expanded={isMandatoryBreakOpen}
+                                    aria-haspopup="listbox">
+
+                                    <span class={mandatoryBreakSelectedClass}>
+                                        {mandatoryBreakDisplayText}
+                                    </span>
+
+                                    <lightning-icon 
+                                        icon-name={mandatoryBreakChevron}
+                                        size="x-small"
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <div if:true={isMandatoryBreakOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+                                        <template for:each={mandatoryBreakRolesUI} for:item="role">
+                                            <div 
+                                                key={role.id}
+                                                class="option-item"
+                                                data-role-id={role.id}
+                                                onclick={handleMandatoryBreakRoleSelect}
+                                            >
+                                                <div class="option-label">{role.label}</div>
+
+                                                <div class="option-controls">
+                                                    <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input
+                                                            type="toggle"
+                                                            checked={role.checked}
+                                                            data-role-id={role.id}
+                                                            onchange={handleMandatoryBreakToggleActive}
+                                                            variant="label-hidden"
+                                                            message-toggle-active=""
+                                                            message-toggle-inactive=""
+                                                            class="small-toggle">
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="form-row">
+                        <lightning-input 
+                            class="number-input"
+                            type="number"
+                            label="Require Break Every (hours)"
+                            value={mandatoryBreak.breakEvery}
+                            data-rule="mandatoryBreak"
+                            data-field="breakEvery"
+                            onchange={updateNumber}>
+                        </lightning-input>
+
+                        <lightning-input 
+                            class="number-input"
+                            type="number"
+                            label="Break Duration (minutes)"
+                            value={mandatoryBreak.breakDuration}
+                            data-rule="mandatoryBreak"
+                            data-field="breakDuration"
+                            onchange={updateNumber}>
+                        </lightning-input>
+                    </div>
+                </div>
+                </template>
+            </div>
+
+            <div class="rule-box">
+                <div class="rule-header">
+
+                    <lightning-input 
+                        type="toggle" 
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle"
+                        checked={clockAccuracy.active}
+                        data-rule="clockAccuracy"
+                        onchange={toggleRule}>
+                    </lightning-input>
+
+                    <div>
+                        <div class="rule-title">Clock In/Out Accuracy</div>
+                        <p class="rule-desc">Monitor punctuality and clock in/out compliance</p>
+                    </div>
+
+                </div>
+<template if:true={clockAccuracy.active}>
+                <div class="sub-row roles-inline">
+
+                    <div class="slds-grid">
+                        <lightning-input 
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            class="small-toggle1"
+                            checked={clockAccuracy.applyRoles}
+                            data-rule="clockAccuracy"
+                            data-field="applyRoles"
+                            variant="label-hidden"
+                            onchange={toggleField}>
+                        </lightning-input>
+
+                        <label class="apply-roles-label">Apply to specific roles only</label>
+                    </div>
+
+                    <template if:true={clockAccuracy.applyRoles}>
+                        <div class="roles-container">
+
+                            <div class="dropdown-container" lwc:ref="clockAccuracyDropdown">
+
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1"
+                                    onclick={toggleClockAccuracyDropdown}
+                                    aria-expanded={isClockAccuracyOpen}
+                                    aria-haspopup="listbox">
+
+                                    <span class={clockAccuracySelectedClass}>
+                                        {clockAccuracyDisplayText}
+                                    </span>
+
+                                    <lightning-icon 
+                                        icon-name={clockAccuracyChevron}
+                                        size="x-small"
+                                        class="chevron-icon">
+                                    </lightning-icon>
+
+                                </button>
+
+                                <div if:true={isClockAccuracyOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+
+                                        <template for:each={clockAccuracyRolesUI} for:item="role">
+                                            <div 
+                                                key={role.id}
+                                                class="option-item"
+                                                data-role-id={role.id}
+                                                onclick={handleClockAccuracyRoleSelect}
+                                            >
+                                                <div class="option-label">{role.label}</div>
+
+                                                <div class="option-controls">
+                                                    <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input
+                                                            type="toggle"
+                                                            checked={role.checked}
+                                                            data-role-id={role.id}
+                                                            onchange={handleClockAccuracyToggleActive}
+                                                            variant="label-hidden"
+                                                            message-toggle-active=""
+                                                            message-toggle-inactive=""
+                                                            class="small-toggle">
+                                                        </lightning-input>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </template>
+
+                    <div class="form-row">
+
+                        <lightning-input 
+                            class="number-input"
+                            type="number"
+                            label="Max Late Clock In (minutes)"
+                            value={clockAccuracy.maxLateMinutes}
+                            data-rule="clockAccuracy"
+                            data-field="maxLateMinutes"
+                            onchange={updateNumber}>
+                        </lightning-input>
+
+                        <lightning-input 
+                            class="number-input"
+                            type="number"
+                            label="Allowed Late Instances Per Month"
+                            value={clockAccuracy.allowedLatePerMonth}
+                            data-rule="clockAccuracy"
+                            data-field="allowedLatePerMonth"
+                            onchange={updateNumber}>
+                        </lightning-input>
+
+                    </div>
+
+                </div>
+                </template>
+            </div>
+
+        <div class="rule-box">
+            <div class="rule-header">
+
+                <lightning-input 
+                    type="toggle" 
+                    message-toggle-active=""
+                    message-toggle-inactive=""
+                    class="small-toggle"
+                    checked={attendance.active}
+                    data-rule="attendance"
+                    onchange={toggleRule}>
+                </lightning-input>
+
+                <div>
+                    <div class="rule-title">Shift Attendance Tracking</div>
+                    <p class="rule-desc">Track and limit missed or no-show shifts</p>
+                </div>
+
+            </div>
+<template if:true={attendance.active}>
+            <div class="sub-row roles-inline">
+
+                <div class="slds-grid">
+                    <lightning-input 
+                        type="toggle"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle1"
+                        checked={attendance.applyRoles}
+                        data-rule="attendance"
+                        data-field="applyRoles"
+                        variant="label-hidden"
+                        onchange={toggleField}>
+                    </lightning-input>
+
+                    <label class="apply-roles-label">Apply to specific roles only</label>
+                </div>
+
+                <template if:true={attendance.applyRoles}>
+                    <div class="roles-container">
+
+                        <div class="dropdown-container" lwc:ref="attendanceDropdown">
+
+                            <button 
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleAttendanceDropdown}
+                                aria-expanded={isAttendanceOpen}
+                                aria-haspopup="listbox">
+
+                                <span class={attendanceSelectedClass}>
+                                    {attendanceDisplayText}
+                                </span>
+
+                                <lightning-icon 
+                                    icon-name={attendanceChevron}
+                                    size="x-small"
+                                    class="chevron-icon">
+                                </lightning-icon>
+
+                            </button>
+
+                            <div if:true={isAttendanceOpen} class="dropdown-menu">
+                                <div class="options-list custom-scroll">
+
+                                    <template for:each={attendanceRolesUI} for:item="role">
+                                        <div 
+                                            key={role.id}
+                                            class="option-item"
+                                            data-role-id={role.id}
+                                            onclick={handleAttendanceRoleSelect}
+                                        >
+                                            <div class="option-label">{role.label}</div>
+
+                                            <div class="option-controls">
+
+                                                <span class={role.badgeClass}>{role.statusText}</span>
+
+                                                <div class="toggle-switch-container">
+                                                    <lightning-input
+                                                        type="toggle"
+                                                        checked={role.checked}
+                                                        data-role-id={role.id}
+                                                        onchange={handleAttendanceToggleActive}
+                                                        variant="label-hidden"
+                                                        message-toggle-active=""
+                                                        message-toggle-inactive=""
+                                                        class="small-toggle">
+                                                    </lightning-input>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+
+                <lightning-input 
+                    class="number-input"
+                    type="number"
+                    label="Max Missed Shifts Per Month"
+                    value={attendance.maxMissed}
+                    data-rule="attendance"
+                    data-field="maxMissed"
+                    onchange={updateNumber}>
+                </lightning-input>
+
+                <div class="slds-grid">
+                    <lightning-input
+                        type="toggle"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        class="small-toggle1"
+                        variant="label-hidden"
+                        checked={attendance.requireDocs}
+                        data-rule="attendance"
+                        data-field="requireDocs"
+                        onchange={toggleField}>
+                    </lightning-input>
+
+                    <label class="apply-roles-label">Require excuse/documentation for missed shifts</label>
+                </div>
+
+            </div>
+            </template>
+        </div>
+
+        </div>
+    </div>
+</template>
