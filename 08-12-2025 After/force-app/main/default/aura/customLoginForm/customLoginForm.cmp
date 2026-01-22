@@ -1,0 +1,221 @@
+<aura:component controller="LightningLoginFormController"
+                implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction"
+                access="global">
+
+    <aura:attribute name="showError" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="errorMessage" type="String" access="private"/>
+    <aura:attribute name="startUrl" type="String"/>
+    <aura:attribute name="usernameLabel" type="String" default="Username"/>
+    <aura:attribute name="passwordLabel" type="String" default="Password"/>
+    <aura:attribute name="loginButtonLabel" type="String" default="Sign In"/>
+    <aura:attribute name="expid" type="String"/>
+    <aura:attribute name="forgotPasswordLabel" type="String" default="Forgot your password?"/>
+   
+    <aura:attribute name="selfRegisterLabel" 
+type="String" default="Not a member?"/>
+    <aura:attribute name="forgotPasswordUrl" type="String" default="/ForgotPassword"/>
+    <aura:attribute name="selfRegisterUrl" type="String" default="/SelfRegister"/>
+    <aura:attribute name="isUsernamePasswordEnabled" type="Boolean" access="private"/>
+    <aura:attribute name="isSelfRegistrationEnabled" type="Boolean" access="private"/>
+    <aura:attribute name="communityForgotPasswordUrl" type="String" access="private"/>
+    <aura:attribute name="communitySelfRegisterUrl" type="String" access="private"/>
+    <aura:attribute name="isPasswordVisible" type="Boolean" default="false" access="private"/>
+    
+    <aura:attribute name="password" type="String" default="" access="private"/>
+    <aura:attribute name="isRememberMe" type="Boolean" default="false" access="private"/>
+    <aura:attribute name="usernameValue" type="String" default="" access="private"/>
+    <aura:attribute name="highlightText" type="String" default="Payroll" access="private"/>
+    
+<aura:attribute name="isUsernameFocused" type="Boolean" default="false" access="private"/>
+<aura:attribute name="isPasswordFocused" type="Boolean" 
+default="false" access="private"/>
+ 
+    <aura:attribute name="isLoginView" type="Boolean" default="true" access="private"/>
+    <aura:attribute name="forgotMessage" type="String" access="private"/>
+
+
+    <aura:registerevent name="sitePropagatedStartUrl" type="c:setStartUrl"/>
+    <aura:handler name="init" value="{!this}" action="{!c.initialize}"/>
+    <aura:dependency resource="c:setStartUrl" type="EVENT"/>
+    <aura:handler event="c:setStartUrl" action="{!c.setStartUrl}"/>
+    <aura:handler event="c:setExpId" action="{!c.setExpId}"/>    
+    <aura:dependency resource="c:setExpId" type="EVENT"/>
+
+   
+    <div class="login-container">
+    <div class="login-left">
+        <div class="left-content">
+       
+            <img 
+src="{!$Resource.TesseractLogo}" alt="Logo" class="logo"/>
+            <h1 class="title">
+                The simplest way to manage your<span class="highlight">&nbsp;{!v.highlightText}</span>
+            </h1>
+            <p class="subtitle">Enter your credentials to access your account</p>
+        </div>
+    </div>
+
+    <div class="login-right">
+        
+       
+ <div class="login-card">
+            
+            <aura:if isTrue="{!v.isLoginView}">
+                <h2 class="welcome">Welcome Back</h2>
+                <p class="desc">Continue where you left off by logging in</p>
+           
+                <aura:set attribute="else">
+   
+ <h2 class="welcome">Forgot Password</h2>
+                <p class="desc">Enter your username and we'll send you a verification link.</p>
+            </aura:set>
+            </aura:if>
+
+        
+   
+            <aura:if isTrue="{!v.showError}">
+           
+      <div class="error-message">
+     
+                <ui:outputRichText value="{!v.errorMessage}"/>
+                </div>
+            </aura:if>
+            
+       
+            <aura:if isTrue="{!v.forgotMessage}">
+             
+     <div class="success-message">
+     
+                <ui:outputRichText value="{!v.forgotMessage}"/>
+                </div>
+            </aura:if>
+
+         
+            <aura:renderIf isTrue="{!v.isUsernamePasswordEnabled}">
+
+            <div class="custom-input-wrapper">
+                <span class="material-symbols-outlined left-icon">mail</span>
+                
+                <label for="username" class="floating-label">{!v.usernameLabel}</label>
+                
+                <ui:inputText aura:id="username"
+           
+                  value="{!v.usernameValue}" 
+                            keyup="{!c.onKeyUp}"
+                        
+                  class="slds-input custom-input-style"
+                            label=" " 
+      
+                     labelClass="assistiveText"/> 
+            </div>
+
+                <aura:if isTrue="{!v.isLoginView}">
+                <div class="custom-input-wrapper password-wrapper">
+                   
+    
+                      <span class="material-symbols-outlined left-icon">lock</span>
+
+                        <label for="password" class="floating-label">{!v.passwordLabel}</label>
+
+                        <aura:if isTrue="{!v.isPasswordVisible}">
+                    
+                           <ui:inputText aura:id="password"
+                                        value="{!v.password}" 
+       
+                                        keyup="{!c.onKeyUp}"
+                                        class="slds-input custom-input-style"
+                                        label=" 
+ " 
+            
+                              labelClass="assistiveText"/>
+  
+                            <aura:set attribute="else">
+                          
+                               <ui:inputSecret aura:id="password"
+        
+                                         value="{!v.password}" 
+          
+                                       keyup="{!c.onKeyUp}"
+                                             
+                                     class="slds-input custom-input-style"
+                
+                                 label=" " 
+                                              
+                                 labelClass="assistiveText"/>
+                  
+           </aura:set>
+                        </aura:if>
+
+                        <aura:if isTrue="{!not(empty(v.password))}">
+                    
+                         <span class="material-symbols-outlined right-icon eye-icon" onclick="{!c.togglePassword}">
+         
+                         {!v.isPasswordVisible ?
+ 'visibility_off' : 'visibility'}
+                            </span>
+                        </aura:if>
+                    </div>
+
+                    <div class="options-row">
+     
+                     <div class="remember-checkbox">
+        
+                            <ui:inputCheckbox aura:id="rememberMe" 
+                                        
+                                     class="checkbox"
+                                              value="{!v.isRememberMe}" 
+                                             
+                                 change="{!c.onRememberMeChange}"/>
+   
+                           <label>Remember Me</label>
+          
+                        </div>
+                        <div class="forgot-link">
+         
+                       <a href="javascript:void(0);"
+ onclick="{!c.toggleViewToForgot}">{!v.forgotPasswordLabel}</a>
+                        </div>
+                    </div>
+
+                    <div class="slds-m-top_medium">
+                        <ui:button aura:id="submitButton"
+          
+                           label="{!v.loginButtonLabel}"
+                                   press="{!c.handleLogin}"
+                                   class="signin-btn"/>
+   
+ 
+                    </div>
+                
+                <aura:set attribute="else">
+                    <div class="slds-m-top_medium">
+  
+                     
+                         <ui:button aura:id="resetButton"
+                                   label="Reset Password"
+                                   press="{!c.handleForgotPassword}"
+                        
+                                   class="signin-btn"/>
+                    </div>
+                    <div class="forgot-link" style="text-align:center; margin-top: 1rem;">
+                        <a href="javascript:void(0);"
+onclick="{!c.toggleViewToLogin}">Back to Sign In</a>
+                    </div>
+                </aura:set>
+                </aura:if>
+
+
+                <aura:renderIf isTrue="{!v.isSelfRegistrationEnabled}">
+           
+                 
+                     <a href="{!if(v.communitySelfRegisterUrl == null, v.selfRegisterUrl, v.communitySelfRegisterUrl)}" 
+                       class="signup-link">{!v.selfRegisterLabel}</a>
+                </aura:renderIf>
+
+            </aura:renderIf>
+        </div>
+    </div>
+
+</div>
+
+</aura:component>
