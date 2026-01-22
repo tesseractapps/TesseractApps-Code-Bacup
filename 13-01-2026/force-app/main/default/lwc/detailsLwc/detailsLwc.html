@@ -1,0 +1,1403 @@
+<template>
+  <!-- <div class="container">   -->
+  <div
+    style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+    "
+  >
+    <!-- Left side: Staff Details -->
+    <!-- <p style="font-weight: bold;font-size:140%;margin-top:1%;padding-left: 1%;"> {participantPreferredName} - {participant}</p> -->
+    <div class="slds-grid slds-var-m-right_xx-large" style="font-weight: bold">
+    <template if:false={isPremiumClient}>
+      <template if:false={isStaff}>
+        <div
+          class={detailsClass}
+          data-name="details"
+          onclick={handleClick}
+          style="cursor: pointer; text-align: center"
+        >
+          Details
+        </div>
+        <div
+          class={fundClass}
+          data-name="fundtranfer"
+          onclick={handleClick}
+          style="cursor: pointer; text-align: center">
+          {FundsTracker}
+        </div>
+        <template if:true={isExec}>
+          <div
+            class={serviceClass}
+            data-name="ServiceandSupportPlan"
+            onclick={handleClick}
+            style="cursor: pointer; text-align: center"
+          >
+            Services
+          </div>
+        </template>
+      </template>
+      
+        <template if:true={ndisflag}>
+
+          <div
+            class={journelClass}
+            data-name="ClientJournel"
+            onclick={handleClick}
+            style="cursor: pointer; text-align: center; font-color: white"
+          >
+            Participant Journal
+          </div>
+          <div
+            class={attachClass}
+            data-name="attachment"
+            onclick={handleClick}
+            style="cursor: pointer; text-align: center"
+          >
+            Attachments
+          </div>
+          <template if:true={ndisflag}>
+            <div
+              class={fundsClass}
+              data-name="ParticipantForms"
+              onclick={handleClick}
+              style="cursor: pointer; text-align: center"
+            >
+              Forms
+            </div>
+          </template>
+          <template if:true={isFeedback}>
+            <div
+              class={servClass}
+              data-name="feedback"
+              onclick={handleClick}
+              style="cursor: pointer; text-align: center"
+            >
+              Feedback
+            </div>
+          </template>
+          <template if:false={isStaff}>
+            <div
+              class={scheduleClass}
+              data-name="schedule"
+              onclick={handleClick}
+              style="cursor: pointer; text-align: center"
+            >
+              Schedule
+            </div>
+          </template>
+          <template if:true={ndisflag}>
+            <div
+              class={riskClass}
+              data-name="risk"
+              onclick={handleClick}
+              style="cursor: pointer; text-align: center"
+            >
+              Risk Profile
+            </div>
+          </template>
+        </template>
+     </template>
+      <template if:true={isPremiumClient}>
+
+         <template if:false={isStaff}>
+             <div class={detailsClass}
+              data-name="details"
+              style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+              <!-- VIEW MODE -->
+              <template if:false={isEditingDetails}>
+                  <span data-name="details" onclick={handleClick}>
+                      {tabLabels.details}
+                  </span>
+
+                  <!-- ✎ Edit icon ONLY when Details tab is active -->
+                  <template if:true={isDetailsActive}>
+                     <template if:true={canEditTabs}>
+                      <lightning-icon
+                          icon-name="utility:edit"
+                          size="x-small"
+                          data-tab="details"
+                          onclick={handleEditTab}
+                          class="edit-icon">
+                      </lightning-icon>
+                     </template>
+                  </template>
+              </template>
+
+              <!-- EDIT MODE -->
+              <template if:true={isEditingDetails}>
+                <template if:true={canEditTabs}>
+                  <lightning-input
+                      class="tab-edit-input"
+                      value={tabLabels.details}
+                      data-tab="details"
+                      onchange={handleTabNameChange}
+                      variant="label-hidden">
+                  </lightning-input>
+
+                  <!-- ✔ Tick ONLY during edit mode -->
+                  <lightning-icon
+                      icon-name="utility:check"
+                      size="x-small"
+                      title="Save"
+                      onclick={openScopeModal}
+                      class="save-icon">
+                  </lightning-icon>
+                </template>
+              </template>
+
+             </div>
+             <div class={fundClass}
+              data-name="fundtranfer"
+              style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+              <!-- VIEW MODE -->
+              <template if:false={isEditingFunds}>
+                  <span data-name="fundtranfer" onclick={handleClick}>
+                      {tabLabels.funds}
+                  </span>
+
+                  <!-- ✎ Edit icon ONLY when Funds tab is active -->
+                  <template if:true={isFundsActive}>
+                    <template if:true={canEditTabs}>
+                      <lightning-icon
+                          icon-name="utility:edit"
+                          size="x-small"
+                          data-tab="funds"
+                          onclick={handleEditTab}
+                          class="edit-icon">
+                      </lightning-icon>
+                    </template>
+                  </template>
+              </template>
+
+              <!-- EDIT MODE -->
+              <template if:true={isEditingFunds}>
+                <template if:true={canEditTabs}>
+                  <lightning-input
+                      class="tab-edit-input"
+                      value={tabLabels.funds}
+                      data-tab="funds"
+                      onchange={handleTabNameChange}
+                      variant="label-hidden">
+                  </lightning-input>
+
+                  <!-- ✔ Tick ONLY during edit mode -->
+                  <lightning-icon
+                      icon-name="utility:check"
+                      size="x-small"
+                      title="Save"
+                      onclick={openScopeModal}
+                      class="save-icon">
+                  </lightning-icon>
+                </template>
+              </template>
+
+            </div>
+            <template if:true={isExec}>
+             <div class={serviceClass}
+                    data-name="ServiceandSupportPlan"
+                    style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+                    <!-- VIEW MODE -->
+                    <template if:false={isEditingServices}>
+                        <span data-name="ServiceandSupportPlan" onclick={handleClick}>
+                            {tabLabels.services}
+                        </span>
+
+                        <!-- ✎ Edit icon ONLY when Services tab is active -->
+                        <template if:true={isServicesActive}>
+                          <template if:true={canEditTabs}>
+                            <lightning-icon
+                                icon-name="utility:edit"
+                                size="x-small"
+                                data-tab="services"
+                                onclick={handleEditTab}
+                                class="edit-icon">
+                            </lightning-icon>
+                          </template>
+                        </template>
+                    </template>
+
+                    <!-- EDIT MODE -->
+                    <template if:true={isEditingServices}>
+                      <template if:true={canEditTabs}>
+                        <lightning-input
+                            class="tab-edit-input"
+                            value={tabLabels.services}
+                            data-tab="services"
+                            onchange={handleTabNameChange}
+                            variant="label-hidden">
+                        </lightning-input>
+
+                        <!-- ✔ Tick ONLY during edit mode -->
+                        <lightning-icon
+                            icon-name="utility:check"
+                            size="x-small"
+                            title="Save"
+                            onclick={openScopeModal}
+                            class="save-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+
+              </div>
+            </template>
+            
+           
+              <template if:true={ndisflag}>
+                <div class={fundsClass}
+                    data-name="ParticipantForms"
+                    style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+                    <!-- VIEW MODE -->
+                    <template if:false={isEditingForms}>
+                        <span data-name="ParticipantForms" onclick={handleClick}>
+                            {tabLabels.forms}
+                        </span>
+
+                        <!-- ✎ Edit icon ONLY when Forms tab is active -->
+                        <template if:true={isFormsActive}>
+                          <template if:true={canEditTabs}>
+                            <lightning-icon
+                                icon-name="utility:edit"
+                                size="x-small"
+                                data-tab="forms"
+                                onclick={handleEditTab}
+                                class="edit-icon">
+                            </lightning-icon>
+                          </template>
+                        </template>
+                    </template>
+
+                    <!-- EDIT MODE -->
+                    <template if:true={isEditingForms}>
+                      <template if:true={canEditTabs}>
+                        <lightning-input
+                            class="tab-edit-input"
+                            value={tabLabels.forms}
+                            data-tab="forms"
+                            onchange={handleTabNameChange}
+                            variant="label-hidden">
+                        </lightning-input>
+
+                        <!-- ✔ Tick ONLY during edit mode -->
+                        <lightning-icon
+                            icon-name="utility:check"
+                            size="x-small"
+                            title="Save"
+                            onclick={openScopeModal}
+                            class="save-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+
+                </div>
+            </template>
+      </template>
+       <template if:true={ndisflag}>
+                <div class={journelClass}
+                    data-name="ClientJournel"
+                    style="display:flex; align-items:center; gap:6px;">
+
+                    <!-- VIEW MODE -->
+                    <template if:false={isEditingJournal}>
+                        <span data-name="ClientJournel" onclick={handleClick}>
+                            {tabLabels.journal}
+                        </span>
+
+                        <!-- ✎ Edit icon ONLY when tab is active -->
+                        <template if:true={isJournalActive}>
+                          <template if:true={canEditTabs}>
+                            <lightning-icon
+                                icon-name="utility:edit"
+                                size="x-small"
+                                data-tab="journal"
+                                onclick={handleEditTab}
+                                class="edit-icon">
+                            </lightning-icon>
+                          </template>
+                        </template>
+                    </template>
+
+                    <!-- EDIT MODE -->
+                    <template if:true={isEditingJournal}>
+                      <template if:true={canEditTabs}>
+                        <lightning-input
+                            class="tab-edit-input"
+                            value={tabLabels.journal}
+                            data-tab="journal"
+                            onchange={handleTabNameChange}
+                            variant="label-hidden">
+                        </lightning-input>
+
+                        <!-- ✔ Tick ONLY during edit mode -->
+                        <lightning-icon
+                            icon-name="utility:check"
+                            size="x-small"
+                            title="Save"
+                            onclick={openScopeModal}
+                            class="save-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+
+                </div>
+                 <div class={attachClass}
+                data-name="attachment"
+                style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+                <!-- VIEW MODE -->
+                <template if:false={isEditingAttachments}>
+                    <span data-name="attachment" onclick={handleClick}>
+                        {tabLabels.attachments}
+                    </span>
+
+                    <!-- ✎ Edit icon ONLY when Attachments tab is active -->
+                    <template if:true={isAttachmentsActive}>
+                      <template if:true={canEditTabs}>
+                        <lightning-icon
+                            icon-name="utility:edit"
+                            size="x-small"
+                            data-tab="attachments"
+                            onclick={handleEditTab}
+                            class="edit-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+                </template>
+
+                <!-- EDIT MODE -->
+                <template if:true={isEditingAttachments}>
+                  <template if:true={canEditTabs}>
+                    <lightning-input
+                        class="tab-edit-input"
+                        value={tabLabels.attachments}
+                        data-tab="attachments"
+                        onchange={handleTabNameChange}
+                        variant="label-hidden">
+                    </lightning-input>
+
+                    <!-- ✔ Tick ONLY during edit mode -->
+                    <lightning-icon
+                        icon-name="utility:check"
+                        size="x-small"
+                        title="Save"
+                        onclick={openScopeModal}
+                        class="save-icon">
+                    </lightning-icon>
+                  </template>
+                </template>
+
+            </div>
+         </template>
+       
+         <template if:true={isFeedback}>
+                <div class={servClass}
+                    data-name="feedback"
+                    style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+                    <!-- VIEW MODE -->
+                    <template if:false={isEditingFeedback}>
+                        <span data-name="feedback" onclick={handleClick}>
+                            {tabLabels.feedback}
+                        </span>
+
+                        <!-- ✎ Edit icon ONLY when Feedback tab is active -->
+                        <template if:true={isFeedbackActive}>
+                          <template if:true={canEditTabs}>
+                            <lightning-icon
+                                icon-name="utility:edit"
+                                size="x-small"
+                                data-tab="feedback"
+                                onclick={handleEditTab}
+                                class="edit-icon">
+                            </lightning-icon>
+                          </template>
+                        </template>
+                    </template>
+
+                    <!-- EDIT MODE -->
+                    <template if:true={isEditingFeedback}>
+                      <template if:true={canEditTabs}>
+                        <lightning-input
+                            class="tab-edit-input"
+                            value={tabLabels.feedback}
+                            data-tab="feedback"
+                            onchange={handleTabNameChange}
+                            variant="label-hidden">
+                        </lightning-input>
+
+                        <!-- ✔ Tick ONLY during edit mode -->
+                        <lightning-icon
+                            icon-name="utility:check"
+                            size="x-small"
+                            title="Save"
+                            onclick={openScopeModal}
+                            class="save-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+
+                </div>
+        </template>
+            <div class={scheduleClass}
+                data-name="schedule"
+                style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+                <!-- VIEW MODE -->
+                <template if:false={isEditingSchedule}>
+                    <span data-name="schedule" onclick={handleClick}>
+                        {tabLabels.schedule}
+                    </span>
+
+                    <!-- ✎ Edit icon ONLY when Schedule tab is active -->
+                    <template if:true={isScheduleActive}>
+                      <template if:true={canEditTabs}>
+                        <lightning-icon
+                            icon-name="utility:edit"
+                            size="x-small"
+                            data-tab="schedule"
+                            onclick={handleEditTab}
+                            class="edit-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+                </template>
+
+                <!-- EDIT MODE -->
+                <template if:true={isEditingSchedule}>
+                  <template if:true={canEditTabs}>
+                    <lightning-input
+                        class="tab-edit-input"
+                        value={tabLabels.schedule}
+                        data-tab="schedule"
+                        onchange={handleTabNameChange}
+                        variant="label-hidden">
+                    </lightning-input>
+
+                    <!-- ✔ Tick ONLY during edit mode -->
+                    <lightning-icon
+                        icon-name="utility:check"
+                        size="x-small"
+                        title="Save"
+                        onclick={openScopeModal}
+                        class="save-icon">
+                    </lightning-icon>
+                  </template>
+                </template>
+
+            </div>
+          <template if:true={ndisflag}>
+             <div class={riskClass}
+                data-name="risk"
+                style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+
+                <!-- VIEW MODE -->
+                <template if:false={isEditingRisk}>
+                    <span data-name="risk" onclick={handleClick}>
+                        {tabLabels.risk}
+                    </span>
+
+                    <!-- ✎ Edit icon ONLY when Risk tab is active -->
+                    <template if:true={isRiskActive}>
+                      <template if:true={canEditTabs}>
+                        <lightning-icon
+                            icon-name="utility:edit"
+                            size="x-small"
+                            data-tab="risk"
+                            onclick={handleEditTab}
+                            class="edit-icon">
+                        </lightning-icon>
+                      </template>
+                    </template>
+                </template>
+
+                <!-- EDIT MODE -->
+                <template if:true={isEditingRisk}>
+                  <template if:true={canEditTabs}>
+                    <lightning-input
+                        class="tab-edit-input"
+                        value={tabLabels.risk}
+                        data-tab="risk"
+                        onchange={handleTabNameChange}
+                        variant="label-hidden">
+                    </lightning-input>
+
+                    <!-- ✔ Tick ONLY during edit mode -->
+                    <lightning-icon
+                        icon-name="utility:check"
+                        size="x-small"
+                        title="Save"
+                        onclick={openScopeModal}
+                        class="save-icon">
+                    </lightning-icon>
+                  </template>
+                </template>
+
+            </div>
+       </template>
+
+      </template>
+     
+      
+      
+            <template if:true={ndisflag}>
+        <!-- <div
+          class={riskClass}
+          data-name="fundTrackerEdit"
+          onclick={handleClick}
+          style="cursor: pointer; text-align: center"
+        >
+          Funds Tracker Edit
+        </div> -->
+      </template>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <template if:false={noimage}>
+        <img
+          src={image}
+          alt="Info Icon"
+          width="35px"
+          height="35px"
+          class="image"
+          onclick={toggleHeader}
+        />
+      </template>
+      <template if:true={noimage}>
+        <div class="material-avatar-fallback" onclick={toggleHeader}>
+          <i class="material-icons person">account_circle</i>
+        </div>
+      </template>
+      <p style="font-weight: bold">{participant}</p>
+      <!-- <template if:true={detailsFlag}>
+        <lightning-icon
+          icon-name="action:edit"
+          alternative-text="Edit"
+          title="Edit"
+          size="xx-small"
+          onclick={handleParentEdit}
+          style="cursor: pointer; color: white; background: #0099de"
+        >
+        </lightning-icon>
+      </template> -->
+      <lightning-button
+        label="Back"
+        variant="brand"
+        onclick={navigateToParticipant}
+      ></lightning-button>
+    </div>
+  </div>
+
+  <template if:true={header}>
+    <div>
+      <div>
+        <div class="participantlayout">
+          <template if:true={participantlogin}> </template>
+          <template for:each={clientData} for:item="clientData">
+            <div class="grid" key={clientData.Id}>
+              <!-- First Grid Item -->
+              <div class="grid-item">
+                <template if:true={clientData.Picture__c}>
+                  <img src={clientData.Picture__c} alt="Photo" />
+                </template>
+                <template if:false={clientData.Picture__c}>
+                  <div
+                    class="material-avatar-fallback"
+                    onclick={toggleHeader}
+                    style="width: 70px; height: 70px"
+                  >
+                    <i class="material-icons person" style="font-size: 60px"
+                      >account_circle</i
+                    >
+                  </div>
+                </template>
+                <div class="text-container">
+                  <p>
+                    <b
+                      >{clientData.First_Name__c}<br />{clientData.Last_Name__c}</b
+                    ><br />{clientData.Gendar__c}&nbsp;{clientData.Age__c}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Second Grid Item -->
+              <div class="grid-item2" style="border-right-style: solid">
+                <div class="status-row">
+                  <p>
+                    <b>Status:</b>
+                    <span if:true={clientData.Status__c}
+                      >&nbsp;&nbsp;Active</span
+                    >
+                    <span if:false={clientData.Status__c}
+                      >&nbsp;&nbsp;Inactive</span
+                    >
+                  </p>
+                </div>
+                <div class="status-row">
+                  <p>
+                    <b>{facilityPreferredName}:</b
+                    >&nbsp;&nbsp;{clientData.Facility__r.Name}
+                  </p>
+                </div>
+                <div class="status-row">
+                  <p>
+                    <b>Contact:</b>&nbsp;&nbsp;{clientData.Contact_Number__c}
+                  </p>
+                </div>
+                <div class="status-row">
+                  <p><b>Address:</b>&nbsp;&nbsp;{clientData.AddressData__c}</p>
+                </div>
+              </div>
+
+              <!-- Third Grid Item -->
+              <div style="margin-top: 10px">
+                <div class="assignments">
+                  <h5><b>Emergency Contact</b></h5>
+                </div>
+
+                <div class="grid-item4" style="margin-top: 5px">
+                  <lightning-avatar
+                    variant="circle"
+                    src={primary}
+                    initials="P"
+                    fallback-icon-name="standard:person_account"
+                    alternative-text="Primary Contact"
+                  ></lightning-avatar>
+
+                  <div class="text-container">
+                    <p style="padding: 10px">
+                      {clientData.Primay_Contact_First_Name__c}&nbsp;{clientData.Primay_Contact_Last_Name__c}<br />{clientData.Primary_Contact_Number__c}
+                    </p>
+                  </div>
+                </div>
+                <div class="grid-item4" style="margin-top: 5px">
+                  <lightning-avatar
+                    variant="circle"
+                    src={secondary}
+                    initials="S"
+                    fallback-icon-name="standard:person_account"
+                    alternative-text="Secondary Contact"
+                  ></lightning-avatar>
+
+                  <div class="text-container">
+                    <p style="padding: 10px">
+                      {clientData.Secondary_Contact_First_Name__c}&nbsp;{clientData.Secondary_Contact_Last_Name__c}<br />{clientData.Secondary_Contact_Number__c}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <div>
+    <!-- <div class="slds-grid slds-var-m-left_x-large slds-var-m-right_xx-large" style="margin-top:20px;font-weight:bold;margin-left:1%;">
+           
+             <template if:false={isStaff}>
+                <div class={detailsClass} data-name="details" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Details
+                </div>         
+                <div class={fundClass} data-name="fundtranfer" onclick={handleClick}
+                    style="cursor:pointer;text-align:center;">
+                    Funds Tracker
+                </div>
+                <template if:true={isExec}>
+                    <div class={serviceClass} data-name="ServiceandSupportPlan" onclick={handleClick}
+                        style="cursor:pointer;text-align:center">
+                        Services
+                    </div>
+                </template>
+            </template>   
+            <template if:true={ndisflag}>
+            <div class={journelClass} data-name="ClientJournel" onclick={handleClick}
+                style="cursor:pointer;text-align:center;font-color:white;">
+                Participant Journal
+            </div>
+            </template>
+                   
+            <div class={attachClass} data-name="attachment" onclick={handleClick}
+                style="cursor:pointer;text-align:center">
+                Attachments
+            </div>
+            <template if:true={ndisflag}>
+            <div class={fundsClass} data-name="ParticipantForms" onclick={handleClick}
+                style="cursor:pointer;text-align:center">
+                Forms
+            </div>
+            </template>
+            <template if:true={isFeedback}>
+                <div class={servClass} data-name="feedback" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Feedback
+                </div>
+            </template>
+            <template if:false={isStaff}>
+                <div class={scheduleClass} data-name="schedule" onclick={handleClick}
+                    style="cursor:pointer;text-align:center">
+                    Schedule
+                </div>
+            </template>
+            <template if:true={ndisflag}>
+            <div class={riskClass} data-name="risk" onclick={handleClick}
+                style="cursor:pointer;text-align:center">
+                Risk Profile
+            </div>
+            </template>
+        </div> -->
+  </div>
+
+  <template if:true={ClientJournel}>
+    <div class="participantlayoutSnapshot custom-scroll">
+      <div class="card1">
+        <div class="section">
+          <p><strong>Status:</strong> {status}</p>
+          <p><strong>Risk Index:</strong> {riskIndex}</p>
+        </div>
+
+        <!-- Wrapper that defines scroll but styled to look like it's part of .card -->
+        <div class="scroll-area">
+          <div class="scroll-row">
+            <div class="scroll-column">
+              <p><strong>Medication:</strong></p>
+              <lightning-formatted-rich-text
+                value={medicationshtml}
+              ></lightning-formatted-rich-text>
+            </div>
+            <div class="scroll-column">
+              <p><strong>Allergies:</strong></p>
+              <lightning-formatted-rich-text
+                value={allergieshtml}
+              ></lightning-formatted-rich-text>
+            </div>
+            <div class="scroll-column">
+              <p><strong>Notes:</strong></p>
+              <lightning-formatted-rich-text
+                value={noteshtml}
+              ></lightning-formatted-rich-text>
+            </div>
+            <lightning-icon
+              icon-name="action:edit"
+              alternative-text="edit"
+              size="xx-small"
+              title="edit"
+              class="custom-icon-edit1"
+              onclick={participantJournalmodelPop}
+            ></lightning-icon>
+          </div>
+        </div>
+      </div>
+
+      <br />
+
+      <template if:true={participantpopup}>
+        <div class="blur-overlay"></div>
+        <div class="right-align1 fade-in" style="width: 45%">
+          <!-- Header -->
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 2%;
+              margin-right: 2%;
+              margin-left: 2%;
+            "
+          >
+            <p style="font-weight: bold; font-size: 140%">
+              {clientFullName} - Snapshot
+            </p>
+            <!-- <lightning-button label="Back" variant="brand" onclick={handleCloseparticipantpopup}></lightning-button> -->
+          </div>
+
+          <div class="container-box1">
+            <div
+              class="toggle-bar"
+              onclick={handleSectionToggle}
+              data-id="staffDetails1"
+            >
+              <span>Details</span>
+            </div>
+            <div class="section-content" data-section="staffDetails1">
+              <div class="right-content custom-scroll">
+                <template if:true={sectionFlags.staffDetails1}>
+                  <div class="slds-grid slds-wrap">
+                    <!-- Status Field -->
+                    <div class="slds-size_1-of-1 slds-p-around_small">
+                      <div class="slds-p-around_medium">
+                        <div class="slds-form-element">
+                          <label class="slds-form-element__label">
+                            <span class="slds-text-title_bold">Status</span>
+                          </label>
+                          <div class="slds-form-element__control">
+                            <div
+                              class="slds-grid slds-gutters slds-align_absolute-center"
+                            >
+                              <!-- Available Checkbox -->
+                              <div class="slds-col">
+                                <lightning-input
+                                  type="checkbox"
+                                  label="Available"
+                                  checked={isAvailable}
+                                  onchange={handleAvailableChange}
+                                >
+                                </lightning-input>
+                              </div>
+
+                              <!-- Unavailable Checkbox -->
+                              <div class="slds-col">
+                                <lightning-input
+                                  type="checkbox"
+                                  label="Unavailable"
+                                  checked={isUnavailable}
+                                  onchange={handleUnavailableChange}
+                                >
+                                </lightning-input>
+                              </div>
+
+                              <!-- Unavailable Until Button -->
+                              <div class="slds-col">
+                                <div class="floating-label1">
+                                  <span class="label-text-drop"
+                                    ><span style="color: red">*</span
+                                    >Unavailable Until</span
+                                  >
+                                  <lightning-input
+                                    type="date"
+                                    value={unavailableUntilDate}
+                                    onchange={handleUnavailableUntilChange}
+                                    disabled={disableUnavailabledate}
+                                    variant="label-hidden"
+                                    data-id="date"
+                                    required
+                                  >
+                                  </lightning-input>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Risk Index Field -->
+                    <div
+                      class="slds-size_1-of-1"
+                      style="padding-left: 4%; padding-right: 3%"
+                    >
+                      <div class="floating-label1">
+                        <span class="label-text-drop">Risk Index</span>
+                        <lightning-input
+                          type="text"
+                          variant="label-hidden"
+                          onchange={handleField1Change}
+                          value={riskIndex}
+                          disabled
+                        >
+                        </lightning-input>
+                      </div>
+                    </div>
+
+                    <!-- Medications Field -->
+                    <div
+                      class="slds-size_1-of-1"
+                      style="padding-left: 2%; padding-right: 1%"
+                    >
+                      <div style="padding: 2%">
+                        <span>Medications</span>
+                        <lightning-textarea
+                          name="medications"
+                          variant="label-hidden"
+                          onchange={handleAddShiftChange}
+                          value={medications}
+                          disabled={disablePostInsertButtons}
+                        >
+                        </lightning-textarea>
+                      </div>
+                    </div>
+
+                    <!-- Allergies Field -->
+                    <div
+                      class="slds-size_1-of-1"
+                      style="padding-left: 2%; padding-right: 1%"
+                    >
+                      <div style="padding: 2%">
+                        <span>Allergies</span>
+                        <lightning-textarea
+                          name="allergies"
+                          variant="label-hidden"
+                          onchange={handleAddShiftChange}
+                          disabled={disablePostInsertButtons}
+                          value={allergies}
+                        >
+                        </lightning-textarea>
+                      </div>
+                    </div>
+
+                    <!-- Notes Field -->
+                    <div
+                      class="slds-size_1-of-1"
+                      style="padding-left: 2%; padding-right: 1%"
+                    >
+                      <div style="padding: 2%">
+                        <span>Notes</span>
+                        <lightning-textarea
+                          name="notes"
+                          variant="label-hidden"
+                          onchange={handleAddShiftChange}
+                          disabled={disablePostInsertButtons}
+                          value={notes}
+                        >
+                        </lightning-textarea>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- Save/Cancel Buttons -->
+            <div
+              class="slds-align_absolute-center slds-m-around_small"
+              style="padding-bottom: 0.5rem"
+            >
+              <lightning-button
+                label="Cancel"
+                variant="brand-outline"
+                onclick={handleCloseparticipantpopup}
+              >
+              </lightning-button>
+              <lightning-button
+                type="submit"
+                variant="brand"
+                onclick={handlesavebuttonforParticipantPopup}
+                label="Update"
+                disabled={isSaveDisabled}
+                class="slds-m-left_small"
+              >
+              </lightning-button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template if:true={isVisible}>
+        <lightning-button
+          variant="brand"
+          label="Create Task"
+          name="createTask"
+          title="Create Task"
+          onclick={handleClick}
+          class=" slds-float_right slds-m-bottom_small"
+        ></lightning-button>
+      </template>
+
+      <template if:true={isVisible}>
+        <lightning-button
+          variant="brand"
+          label="Create Journal"
+          name="addNew"
+          title="Create Journal"
+          onclick={handleClick}
+          class="slds-m-right_x-small slds-float_right slds-m-bottom_medium"
+        ></lightning-button
+        ><br />
+      </template>
+      <br />
+      <template if:false={noRecordsFlag}>
+       <template if:true={iscreateNew}>
+  <div class="history-table">
+    <!-- Table header -->
+    
+    <template for:each={clientJournelList} for:item="journal">
+      <!-- Outer card -->
+  
+      <div key={journal.Id} class="journal-card">
+    <div class="history-header">
+      <span class="description">Description</span>
+      <span class="other">Created by</span>
+      <span class="other">Type of Notes</span>
+      <span class="other">Modified on</span>
+    </div>
+        <!-- Original Entry -->
+        <div class="entry original-entry">
+          <div class="entry-header">
+          <span class="badge badge-green">Original Entry</span>
+          <template if:true={journal.journaledit}>
+           <lightning-button
+                    icon-name="utility:edit"
+                    variant="base"
+                    title="Edit"
+                    data-id={journal.Id}
+                    data-name={journal.Description__c}
+                    data-notestype={journal.Care_Notes__c}
+                    onclick={handleEdit}
+                    
+                  >
+              </lightning-button>
+            </template>
+            </div>
+          <div class="history-row">
+            <span class="description"> <lightning-formatted-rich-text value={journal.Description__c}></lightning-formatted-rich-text></span>
+            <span class="other">{journal.CreatedBy.Name}</span>
+            <span class="other">{journal.Care_Notes__c}</span>
+            <span class="other">{journal.createdOnFormatted}</span>
+          </div>
+        </div>
+        <!-- Corrections -->
+        <template if:true={journal.corrections}>
+          <template for:each={journal.corrections} for:item="corr">
+            <div key={corr.label} class="entry correction-entry">
+              <span class="badge badge-blue">{corr.label}</span>
+              <span class="correction-meta">
+                Updated on {corr.modifiedOn} by {corr.createdBy}
+              </span>
+              <span class="correction-reason">
+                <i>Reason: {corr.reason}</i>
+              </span>
+              <div class="history-row">
+                <span class="description"><lightning-formatted-rich-text value={corr.description}></lightning-formatted-rich-text></span>
+                <span class="other">{corr.createdBy}</span>
+                <span class="other">{corr.notes}</span>
+                <span class="other">{corr.modifiedOn}</span>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </template>
+  </div>
+       </template>
+
+      </template>
+      <template if:true={noRecordsFlag}>
+        <div class="no-data">
+          <p>No records found</p>
+        </div>
+      </template>
+
+      <template if:true={addNew}>
+        <div class="blur-overlay"></div>
+        <div
+          class="right-align-create-journal"
+          style="width: 50%; padding: 14px"
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              flex-wrap: nowrap;
+              align-items: center;
+              flex-direction: row;
+              margin-bottom: 10px;
+            "
+          >
+            <p
+              style="
+                font-weight: bold;
+                font-size: 140%;
+                margin: 0;
+                padding: 2% 0 0 2%;
+              "
+            >
+               {Journal}
+            </p>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <!-- <lightning-button label="Back" variant="brand" onclick={closeAddJournel}></lightning-button>                     -->
+            </div>
+          </div>
+          <div class="right-content-create-journal custom-scroll">
+            <div
+              class="container-new-overlap custom-scroll"
+              style="padding: 1%"
+            >
+              <div
+                class="slds-grid slds-gutters slds-wrap slds-p-around_medium"
+              >
+                <!-- Notes Type -->
+                 <template if:false={correctionflag}>
+                <div class="slds-col slds-size_1-of-2">
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Notes Type</span
+                    >
+                    <lightning-combobox
+                      name="journelProgress"
+                      value={jNoteType}
+                      disabled={notesflag}
+                      placeholder="Select Notes Type"
+                      options={options}
+                      onchange={handleChange}
+                      required="true"
+                      variant="label-hidden"
+                      data-id="Note"
+                    >
+                    </lightning-combobox>
+                  </div>
+                </div>
+                </template>
+                 <template if:true={correctionflag}>
+                 <div class="slds-col slds-size_1-of-2">
+                  <div class="floating-label" style="height:62px;">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Reason for Correction</span
+                    >
+                    <lightning-textarea
+                      name="reason"
+                      value={reason}
+                      onchange={handleReasonChange}
+                      placeholder="Enter the reason for correction..."
+                      maxlength="1000"
+                      required="true"
+                      variant="label-hidden"
+                      data-id="reason"
+                    >
+                    </lightning-textarea>
+                  </div>
+                </div>
+                </template>
+
+
+ 
+  
+
+                <!-- Description -->
+                <div class="slds-col slds-size_1-of-2">
+                  <div class="floating-label" style="height:auto">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Description</span
+                    >
+                    <lightning-input-rich-text
+                      required="true"
+                      name="journeldescription"
+                      value={description}
+                      onchange={onchangeJournel}
+                      onfocus={handleFocus}
+                      placeholder="Enter your text here or start speaking..."
+                      variant="label-hidden"
+                      data-id="desc"
+                      maxlength="3000"
+                    >
+                    </lightning-input-rich-text>
+                  </div>
+                   <div class="slds-p-top_medium">
+                    <lightning-icon
+                      icon-name={iconName}
+                      alternative-text={altText}
+                      onclick={toggleListening}
+                      if:true={showMuteIcon}
+                      class="slds-button slds-button_icon mute-icon"
+                      style="margin-left: 5px"
+                      size="small"
+                    >
+                    </lightning-icon>
+                    <lightning-icon
+                      icon-name="utility:clear"
+                      alternative-text="Clear Text"
+                      onclick={clearText}
+                      if:true={showClearIcon}
+                      class="slds-button slds-button_icon clear-icon"
+                      size="small"
+                    >
+                    </lightning-icon>
+                  </div> 
+                </div>
+              </div>
+
+              <!-- Buttons -->
+            </div>
+          </div>
+          <div class="slds-align_absolute-center" style="height: 3rem">
+            <lightning-button
+              slot="footer"
+              label="Cancel"
+              class="slds-m-right_medium"
+              variant="brand-outline"
+              onclick={closeAddJournel}
+            >
+            </lightning-button>
+            <lightning-button
+              slot="footer"
+              label={buttonlabel}
+              class="slds-m-right_small"
+              variant="brand"
+              onclick={handleSave}
+            >
+            </lightning-button>
+          </div>
+        </div>
+      </template>
+
+      <template if:true={createTask}>
+        <div class="blur-overlay"></div>
+        <div class="right-align-create-task" style="width: 40%">
+          <div>
+            <!-- <lightning-button label="Back" onclick={closeTask} variant="brand"
+                                class="slds-m-left_small" style="position: absolute;right: 3%;top:3%;"></lightning-button> -->
+            <c-task-create></c-task-create>
+            <div
+              class="slds-grid slds-align_absolute-center"
+              style="padding-bottom: 10px"
+            >
+              <lightning-button
+                slot="footer"
+                label="Cancel"
+                onclick={closeTask}
+                variant="brand-outline"
+              ></lightning-button>
+              <lightning-button
+                slot="footer"
+                label="Save"
+                onclick={createTaskParent}
+                variant="brand"
+                class="slds-m-left_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- <template if:true={assignClient}>
+        <div class="slds-p-around_medium container">
+            <h5 style="font-weight:bold;margin-bottom:10px;margin-left:10px;">Participant Assigning</h5>
+            <lightning-button style="margin-left:95%;margin-top:-20px;" variant="brand" label="Back" onclick={handleBack}></lightning-button>
+            <lightning-dual-listbox name="staff" class="list-box"
+                           label="Select Staff"
+                           source-label="Available"
+                           selected-label="Selected" required="true"
+                           options={staffOptions} value={selectedRoles}
+                           onchange={handleStaffChange}></lightning-dual-listbox>
+            <lightning-input class="slds-size_1-of-4 slds-m-around_small" label="Participant Name" required="true" value={clientName}></lightning-input>
+            <div style="margin-left:40%;margin-top:10px;width:55%;">
+                <lightning-button type="submit" variant="brand" label="Submit" style="margin-left: 1%;"></lightning-button>&nbsp;&nbsp;
+                <lightning-button label="Cancel" variant="brand" onclick={closeAddJournel} class="slds-m-around_small"></lightning-button>
+            </div>                
+        </div>
+    </template> -->
+  <div class="subtabs custom-scroll">
+    <template if:true={detailsFlag}>
+      <c-client-detail
+        client-id={clientId}
+        onparticipantupdated={refreshParent}
+        participant={participant}
+        individualflag={individualflag}
+        companyflag={companyflag}
+        ndiscreateflag={ndiscreateflag}
+      ></c-client-detail>
+    </template>
+    <template if:true={fundTranfer}>
+      <c-client-fund-tranfer
+        client-id={clientId}
+        onhidefacilityevent={handleHideFacilityEvent}
+        ndisflag={ndisflag}
+      ></c-client-fund-tranfer>
+    </template>
+        <!-- <template if:true={fundTrackerEdit}>
+      <c-client-fund-tranfer
+        client-id={clientId}
+        onhidefacilityevent={handleHideFacilityEvent}
+        ndisflag={ndisflag}
+      ></c-client-fund-tranfer>
+      <c-submission-june
+        client-id={clientId}
+        onhidefacilityevent={handleHideFacilityEvent}
+        ndisflag={ndisflag}></c-submission-june>
+    </template> -->
+    <template if:true={serviceSupportFlag}>
+      <c-service-support-plan
+        servicerecord-id={servicerecordId}
+        client-id={clientId}
+      ></c-service-support-plan>
+    </template>
+    <template if:true={Formsflag}>
+      <c-form-render client-id={clientId}></c-form-render>
+      <!-- <c-participant-form client-id={clientId}></c-participant-form> -->
+    </template>
+    <template if:true={attachment}>
+      <c-client-attachment client-id={clientId}></c-client-attachment>
+      <!-- <c-tesseract-apps-rejected-shifts ></c-tesseract-apps-rejected-shifts> -->
+    </template>
+    <template if:true={feedback}>
+      <c-feedback-lwc client-id={clientId}></c-feedback-lwc>
+    </template>
+    <template if:true={scheduleFlag}>
+      <!-- <c-participant-schedule-lwc client-id={clientId}></c-participant-schedule-lwc> -->
+      <c-participant-availability-lwc
+       individualflag={individualflag}
+        companyflag={companyflag} 
+        ndiscreateflag={ndiscreateflag}
+        client-id={clientId}
+        state={state}
+      ></c-participant-availability-lwc>
+    </template>
+    <template if:true={riskFlag}>
+      <c-tesseract-apps-risk-management-lwc
+        client-id={clientId}
+      ></c-tesseract-apps-risk-management-lwc>
+      <!-- <c-risk-management-lwc client-id={clientId}></c-risk-management-lwc> -->
+    </template>
+    <template if:true={ParticipantAvailabiltyFlag}>
+      <!--  <c-participant-schedule-lwc client-id={clientId}></c-participant-schedule-lwc> -->
+      <!-- <c-participant-availability-lwc client-id={clientId} state={state}></c-participant-availability-lwc> -->
+    </template>
+  </div>
+
+  <template if:true={showScopeModal}>
+      <section role="dialog" class="slds-modal slds-fade-in-open">
+          <div class="slds-modal__container">
+
+              <!-- Header -->
+              <header class="slds-modal__header" style="background-color: #002a52;">
+                  <h2 class="slds-text-heading_medium" style="color: white;">
+                      Confirm Tab Name Change
+                  </h2>
+              </header>
+
+              <!-- Body -->
+              <div class="slds-modal__content slds-p-around_medium">
+                  <p class="slds-m-bottom_small" style="text-align: center;">
+                      Do you want the changes to be applied to:
+                  </p>
+                <div class="radio-center">
+                  <lightning-radio-group
+                      name="scope"
+                      options={scopeOptions}
+                      value={selectedScope}
+                      onchange={handleScopeChange}
+                      type="radio"
+                      >
+                  </lightning-radio-group>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <footer class="slds-modal__footer">
+                  <lightning-button
+                      variant="neutral"
+                      label="Cancel"
+                      onclick={closeScopeModal}>
+                  </lightning-button>
+
+                  <lightning-button
+                      variant="brand"
+                      label="Confirm"
+                      onclick={confirmScopeSave}
+                      class="slds-m-left_small">
+                  </lightning-button>
+              </footer>
+
+          </div>
+      </section>
+
+      <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+</template>
