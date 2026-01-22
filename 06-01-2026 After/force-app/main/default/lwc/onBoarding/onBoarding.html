@@ -1,0 +1,932 @@
+<template>
+
+ <template if:true={hasFacility}>
+<template if:true={issendinvite}>
+
+  <div class="SN-container">
+
+    <!-- LEFT: Upload / Inputs -->
+    <div class="SN-left custom-scroll">
+      <div class="SN-dropzone"
+     title="Click to browse"
+     ondragover={SN_onDragOver}
+     ondragleave={SN_onDragLeave}
+     ondrop={SN_onDrop}>
+
+  <div class="SN-dropzone__cloud">
+    <svg viewBox="0 0 64 64" class="SN-cloudsvg" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 42h28a10 10 0 0 0 0-20c-.5 0-1 .03-1.5.1A14 14 0 0 0 18.4 17 9.5 9.5 0 0 0 18 36.5c0 3 2.5 5.5 5.5 5.5Z"/>
+        <path d="M32 36V24"/><path d="M26 30l6-6 6 6"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="SN-dropzone__text">
+    <div class="SN-dropzone__title">Drag &amp; drop files or <span class="SN-link">Browse</span></div>
+    <div class="SN-dropzone__hint">Supported formats: Excel or CSV</div>
+  </div>
+
+  <!-- Stretch the input over the tile; no programmatic click needed -->
+  <input
+    id="csvInput"
+    class="SN-fileOverlay"
+    type="file"
+    accept=".csv,text/csv,application/vnd.ms-excel"
+    onchange={handleCsvUpload}
+    multiple
+  />
+</div>
+<a href="#" class="SN-link"
+       onclick={downloadSampleCsv}>Download sample CSV</a>
+
+
+     
+      <!-- Divider -->
+      <div class="SN-divider">
+        <span class="SN-divider__line"></span>
+        <span class="SN-divider__or">OR</span>
+        <span class="SN-divider__line"></span>
+      </div>
+
+      <!-- Enter Email -->
+      <div class="SN-emailBlock">
+        <label class="SN-label" for="emailInput">Enter Email</label>
+        <div class="SN-emailRow">
+          <template if:true={inputVisible}>
+  <textarea
+    id="emailInput"
+    class="SN-textarea"
+    value={emailInput}
+    placeholder="Enter one or many (comma, space, or new-line separated)"
+    oninput={handleEmailInput}>
+  </textarea>
+</template>
+
+
+          <button
+            class="SN-btn SN-btn--ghost"
+            type="button"
+            onclick={handleAddEmails}
+          >
+            Add Email
+          </button>
+        </div>
+
+        <template if:true={invalidEmailsText}>
+          <div class="SN-errorList">
+          <div class="SN-errorList__item">{invalidEmailsText}</div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Optional CSV errors list -->
+      <!-- <template if:true={csvErrors.length}>
+        <div class="SN-errorList">
+          <template for:each={csvErrors} for:item="e">
+            <div class="SN-errorList__item" key={e.key}>Row {e.row}: {e.msg}</div>
+          </template>
+        </div>
+      </template> -->
+
+
+
+    </div>
+
+    <!-- RIGHT: Table -->
+    <div class="SN-right">
+  <!-- Header: Back + Tabs (always visible) -->
+  <div class="SN-resultHeader">
+  <!-- Tabs -->
+  <div class="SN-tabs">
+    <button class={tabClassSuccess} data-tab="success" onclick={switchTab}>
+      Successful <span class="SN-tabBadge">{successCount}</span>
+    </button>
+    <button class={tabClassFailed} data-tab="failed" onclick={switchTab}>
+      Failed request <span class="SN-tabBadge">{failedCount}</span>
+    </button>
+  </div>
+
+  <!-- Back at right -->
+  <button class="SN-backBtn" type="button" title="Back" onclick={handleClearInput}>
+    <i class="material-icons">arrow_back</i>
+  </button>
+</div>
+
+
+  <!-- ================= SUCCESS TAB ================= -->
+  <template if:true={isTabSuccess}>
+    <div class="SN-tableWrap">
+      <div class="SN-tableHeader">
+        <div class="SN-th SN-th--check">
+          <input type="checkbox" checked={allSelected} onchange={toggleSelectAll} />
+        </div>
+        <div class="SN-th">Email</div>
+        <div class="SN-th SN-th--md">Role</div>
+        <div class="SN-th SN-th--md">User Type</div>
+        <div class="SN-th SN-th--md">Progress</div>
+        <div class="SN-th SN-th--sm">Action</div>
+      </div>
+
+      <template if:true={rows.length}>
+        <div class="SN-tbody custom-scroll">
+          <template for:each={rows} for:item="r">
+            <div class="SN-tr" key={r.id}>
+              <div class="SN-td SN-td--check">
+                <input
+                  type="checkbox"
+                  data-id={r.id}
+                  checked={r.selected}
+                  onchange={handleRowSelect}
+                />
+              </div>
+
+              <div class="SN-td">
+                <template if:true={r.error}>
+                  <div class="SN-email SN-email--error">{r.email}</div>
+                  <div class="SN-cellError">{r.error}</div>
+                </template>
+                <template if:false={r.error}>
+                  <div class="SN-email">{r.email}</div>
+                </template>
+              </div>
+
+              <div class="SN-td SN-td--md">
+  <div class={r.roleWrapperClass}>
+    <lightning-combobox
+      data-id={r.id}
+      value={r.role}
+      options={filteredRoleOptions}
+      variant="label-hidden"
+      dropdown-alignment="auto"
+      dropdown-class="slds-dropdown_fluid"
+      onchange={handleRoleChange}
+      required>  <!-- ✅ ensure it’s required -->
+    </lightning-combobox>
+
+    <!-- ✅ show a friendly error under the field -->
+    <template if:true={r.roleError}>
+      <div class="SN-cellError">Please select a role</div>
+    </template>
+  </div>
+</div>
+
+
+              <div class="SN-td SN-td--md">
+       <div class={r.userTypeWrapperClass}>
+  <lightning-combobox
+    data-id={r.id}
+    value={r.userType}
+    options={r.userTypeOptions}
+    placeholder={r.userTypePlaceholder}
+    variant="label-hidden"
+    onchange={handleUserTypeChange}
+    disabled={r.isUserTypeDisabled}
+     dropdown-alignment="auto"
+      dropdown-class="slds-dropdown_fluid"
+    required>
+  </lightning-combobox>
+  <template if:true={r.userTypeError}>
+                  <div class="SN-cellError">Please select a user type</div>
+                </template>
+</div>
+
+              </div>
+
+              <div class="SN-td SN-td--md">
+                <div class="SN-progress">
+                  <div class="SN-progress__track"
+                       role="progressbar"
+                       aria-valuemin="0"
+                       aria-valuemax="100"
+                       aria-valuenow={r.progress}>
+                    <div class="SN-progress__bar" style={r.progressStyle}></div>
+                  </div>
+                  <div class="SN-progress__label">{r.progress}%</div>
+                </div>
+              </div>
+
+              <div class="SN-td SN-td--sm">
+                <button
+                  class="SN-iconBtn SN-iconBtn--danger"
+                  type="button"
+                  data-id={r.id}
+                  title="Remove"
+                  aria-label="Delete row"
+                  onclick={handleRemoveRow}>
+                  <i class="material-icons SN-icon">delete</i>
+                  <span class="SN-srOnly">Delete</span>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="SN-footerRow">
+          <!-- Left: Remove Selected -->
+          <div class="SN-footerLeft">
+            <button class="SN-action SN-action--ghost"
+                    type="button"
+                    onclick={handleRemoveSelected}
+                    disabled={disableRemoveSelected}>
+              Remove Selected
+            </button>
+          </div>
+
+          <!-- Right: Cancel + Send -->
+          <div class="SN-footerRight">
+            <button class="SN-action SN-action--muted"
+                    type="button"
+                    onclick={handleClearInput}>
+              Cancel
+            </button>
+            <button class="SN-action SN-action--primary"
+                    type="button"
+                    onclick={handleCreateRecords}
+                    disabled={disableCreate}>
+              Send Invites
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <template if:false={rows.length}>
+        <div class="SN-empty">No emails added yet.</div>
+      </template>
+    </div>
+  </template>
+
+  <!-- ================= FAILED TAB ================= -->
+  <template if:true={isTabFailed}>
+    <div class="SN-tableWrap">
+      <div class="SN-tableHeader">
+        <div class="SN-th">Email</div>
+        <div class="SN-th">Error</div>
+        <div class="SN-th SN-th--sm" style="text-align:right;">
+          <button class="SN-action SN-action--ghost" type="button" onclick={loadFailedFromServer}>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <template if:true={isLoadingFailed}>
+        <div class="SN-empty">Loading failed requests…</div>
+      </template>
+
+      <template if:false={isLoadingFailed}>
+        <template if:true={failedRows.length}>
+          <div class="SN-tbody custom-scroll">
+            <template for:each={failedRows} for:item="fr">
+              <div class="SN-tr" key={fr.key}>
+                <div class="SN-td"><div class="SN-email SN-email--error">{fr.email}</div></div>
+                <div class="SN-td"><div class="SN-cellError">{fr.message}</div></div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template if:false={failedRows.length}>
+          <div class="SN-empty">No failed requests.</div>
+        </template>
+      </template>
+    </div>
+  </template>
+</div>
+
+  </div>
+</template>
+
+
+
+<template if:true={isexistonboard}>
+
+  <!-- Stats row with button on the right -->
+<div class="SN-statsRow">
+  <div class="SN-pills">
+  <!-- Request Sent -->
+  <div class="SN-pill SN-pill--blue">
+    <i class="material-icons SN-pill__icon">mark_email_unread</i>
+    <span class="SN-pill__label">Invited :</span>
+    <span class="SN-pill__count">{pillCounts.sent}</span>
+  </div>
+
+  <!-- Data Received -->
+  <div class="SN-pill SN-pill--orange">
+    <i class="material-icons SN-pill__icon">task_alt</i>
+    <span class="SN-pill__label">Submitted :</span>
+    <span class="SN-pill__count">{pillCounts.received}</span>
+  </div>
+
+  <!-- Reviewed -->
+  <div class="SN-pill SN-pill--green">
+    <i class="material-icons SN-pill__icon">inventory_2</i>
+    <span class="SN-pill__label">Verified :</span>
+    <span class="SN-pill__count">{pillCounts.reviewed}</span>
+  </div>
+
+  <!-- Created -->
+  <div class="SN-pill SN-pill--teal">
+    <i class="material-icons SN-pill__icon">check_circle</i>
+    <span class="SN-pill__label">Onboarded :</span>
+    <span class="SN-pill__count">{pillCounts.created}</span>
+  </div>
+
+  <!-- Total Invites -->
+  <div class="SN-pill SN-pill--muted">
+    <i class="material-icons SN-pill__icon">mail</i>
+    <span class="SN-pill__label">Total Invites :</span>
+    <span class="SN-pill__count">{pillCounts.totalInvites}</span>
+  </div>
+
+  <!-- User Accounts Created -->
+  <!-- <div class="SN-pill SN-pill--purple">
+    <i class="material-icons SN-pill__icon">group</i>
+    <span class="SN-pill__label">User Accounts Created :</span>
+    <span class="SN-pill__count">{pillCounts.usersCreated}</span>
+  </div> -->
+</div>
+
+
+<div class="SN-actions">
+    <!-- Finalize (FIRST) -->
+    <button
+      class="custom-edit-btn"
+      onclick={handleFinalizeOnboarding}
+      disabled={isFinalizeDisabled}
+      title="Finalise Onboarding">
+      <i class="material-icons white-icon">approval_delegation</i>
+      <span>Finalise Onboarding</span>
+    </button>
+
+    <!-- Send Invites (SECOND) -->
+    <button
+      class="custom-edit-btn"
+      onclick={handlesendinvite}
+      title="Send Invites">
+      <i class="material-icons white-icon">arrow_upload_ready</i>
+      <span>Send Invites</span>
+    </button>
+  </div>
+</div>
+
+
+  <template if:true={isLoadingRecords}>
+    <lightning-spinner alternative-text="Loading records"></lightning-spinner>
+  </template>
+
+  <template if:true={onboardings.length}>
+    <div class="facilityboardscroll custom-scroll">
+      <table class="slds-table slds-table_cell-buffer fixed-table onb-table">
+        <thead>
+          <tr>
+             <th class="slds-text-align_left" style="width: 4%;">
+            <template if:true={anyReviewed}>
+              <lightning-input
+                type="checkbox"
+                checked={allReviewedSelected}
+                onchange={handleToggleAllReviewed}
+                title="Select all reviewed">
+              </lightning-input>
+            </template>
+          </th>
+            <th class="slds-text-align_left" style="width: 25%;">Email Address</th>
+            <th class="slds-text-align_left" style="width: 10%;">Role</th>
+            <th class="slds-text-align_left" style="width: 15%;">User Type</th>
+            <th class="slds-text-align_left" style="width: 10%;">Created</th>
+            <th class="slds-text-align_left" style="width: 20%;">Status</th>
+            <th class="slds-text-align_left" style="width: 16%;">Action</th>
+
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={onboardings} for:item="rec">
+            <tr key={rec.Id} class="tr1">
+              <td>
+<template if:true={rec.isReviewed}>
+  <lightning-input
+    type="checkbox"
+    label="Select reviewed"
+    variant="label-hidden"
+    data-id={rec.id}
+    checked={rec._selectedForFinalize}
+    onchange={handleToggleRowReviewed}
+    title="Select this reviewed row for finalization"
+  ></lightning-input>
+</template>
+
+
+              <template if:false={rec.isReviewed}>
+                <!-- keep cell empty for alignment -->
+                <span></span>
+              </template>
+            </td>
+              <td>{rec.email}</td>
+            <td>{rec.displayRole}</td>
+        <td>{rec.userType}</td>
+        <td><lightning-formatted-text value={rec.createdDateDisplay}></lightning-formatted-text></td>
+        <td>
+  <template if:true={rec.isDataReceived}>
+    <span class="status-pill received" title="Data Received" data-id={rec.id}>
+      <i class="material-icons">mark_email_read</i>
+      <span class="pill-text">Submitted</span>
+    </span>
+  </template>
+
+  <template if:true={rec.isRequestSent}>
+    <span class="status-pill sent" title="Request Sent">
+      <i class="material-icons">send</i>
+      <span class="pill-text">Invited</span>
+    </span>
+  </template>
+
+  <template if:true={rec.isCreated}>
+    <span class="status-pill created" title="Created">
+      <i class="material-icons">mark_email_unread</i>
+      <span class="pill-text">Onboarded</span>
+    </span>
+  </template>
+
+  <template if:true={rec.isReviewed}>
+  <span class="status-pill approved"
+        title={rec.reviewTitle}
+        aria-label={rec.reviewTitle}>
+    <i class="material-icons">{rec.needIcon}</i>
+    <span class="pill-text">Verified</span>
+  </span>
+</template>
+
+</td>
+<td>
+  <!-- Request Sent -> Resend Email (link) -->
+  <template if:true={rec.isRequestSent}>
+    <a href="javascript:void(0)"
+       class="SN-link"
+       data-id={rec.id}
+       onclick={ob_resendEmailFromList}>
+      Resend
+    </a>
+  </template>
+
+  <!-- Data Received -> Review (link) -->
+  <template if:true={rec.isDataReceived}>
+    <a href="javascript:void(0)"
+       class="SN-link"
+       data-id={rec.id}
+       onclick={ob_modalOpenDetails}>
+      Verify
+    </a>
+  </template>
+
+  <!-- Reviewed -> Verified (no action, muted text) -->
+  <template if:true={rec.isReviewed}>
+    <span class="SN-link--muted">Onboard</span>
+  </template>
+
+  <!-- Fallback for other states -->
+  <template if:true={rec.isCreated}>
+    <span class="SN-link--muted" title="Created"><i class="material-icons green-color">check_circle</i></span>
+  </template>
+</td>
+
+
+
+            </tr>
+          </template>
+        </tbody>
+      </table>
+
+        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+       style="width:95%;margin-left:2%">
+
+    <!-- LEFT: Page size selector -->
+    <div class="slds-col">
+      <div class="slds-list_inline slds-grid slds-grid_vertical-align-center">
+        <span class="slds-m-right_small slds-m-top_xx-small">Page Size:</span>
+        <lightning-combobox
+          class="slds-m-right_none"
+          name="facilityPageSize"
+          value={facilityPageSize}
+          options={pageSizeOptions}
+          onchange={handleFacilityPageSizeChange}>
+        </lightning-combobox>
+      </div>
+    </div>
+
+    <!-- CENTER: Pager buttons + page label -->
+    <div class="slds-align_absolute-center">
+      <lightning-button
+        disabled={facilityDisablePrev}
+        icon-name="utility:jump_to_left"
+        label="First"
+        alternative-text="First page"
+        onclick={facilityGoFirst}
+        class="slds-m-right_small">
+      </lightning-button>
+
+      <lightning-button
+        disabled={facilityDisablePrev}
+        icon-name="utility:chevronleft"
+        label="Previous"
+        alternative-text="Previous page"
+        onclick={facilityGoPrev}
+        class="slds-m-right_small">
+      </lightning-button>
+
+      <span class="slds-badge slds-m-horizontal_small">
+        Showing {facilityPageNumber} &nbsp;of&nbsp; {facilityTotalPages} &nbsp;&nbsp;Page(s)
+      </span>
+
+      <lightning-button
+        disabled={facilityDisableNext}
+        icon-name="utility:chevronright"
+        label="Next"
+        alternative-text="Next page"
+        onclick={facilityGoNext}
+        class="slds-m-horizontal_x-small"
+        icon-position="right">
+      </lightning-button>
+
+      <lightning-button
+        disabled={facilityDisableNext}
+        icon-name="utility:jump_to_right"
+        label="Last"
+        alternative-text="Last page"
+        onclick={facilityGoLast}
+        class="slds-m-horizontal_x-small"
+        icon-position="right">
+      </lightning-button>
+    </div>
+
+    <!-- RIGHT: Total records -->
+    <div class="slds-clearfix">
+      <div class="slds-float_right">
+        <span class="slds-badge">Total Records: {facilityCount}</span>
+      </div>
+    </div>
+  </div>
+
+
+
+    </div>
+  </template>
+
+  <template if:true={ob_showDetailsModal}>
+  <div class="blur-overlay">
+      <div class="right-align" style="width: 40%">
+      <div class="ob-modal-header">
+        <h2>Submission Details</h2>
+        <button class="ob-close-btn" onclick={ob_modalCloseDetails}>×</button>
+      </div>
+      <div class="ob-modal-content custom-scroll">
+<div class="ob-preview-wrapper">
+  <template if:true={ob_selectedRecordFields.length}>
+  <template for:each={ob_selectedRecordFields} for:item="f">
+    <div key={f.apiName} class="ob-field-grid-row">
+      <div class="ob-label">{f.label}</div>
+      <div class="ob-separator">:</div>
+
+      <!-- value / editable input -->
+      <div class="ob-value">
+        <template if:true={ob_isEditing}>
+  <template if:true={f._editable}>
+    <template if:true={f._isDate}>
+      <!-- Date picker -->
+      <lightning-input
+        data-key={f.apiName}
+        variant="label-hidden"
+        value={f.rawValue}
+        type="date"
+        onchange={ob_handleFieldChange}>
+      </lightning-input>
+    </template>
+    <template if:false={f._isDate}>
+      <!-- Normal input -->
+      <lightning-input
+        data-key={f.apiName}
+        variant="label-hidden"
+        value={f.value}
+        type="text"
+        onchange={ob_handleFieldChange}>
+      </lightning-input>
+    </template>
+  </template>
+  <template if:false={f._editable}>
+    {f.value}
+  </template>
+</template>
+<template if:false={ob_isEditing}>
+  {f.value}
+</template>
+
+
+      </div>
+    </div>
+  </template>
+</template>
+
+
+  <template if:false={ob_selectedRecordFields.length}>
+    <p class="ob-empty">No details available.</p>
+  </template>
+</div>
+
+
+
+
+      </div>
+      <div class="ob-modal-footer ob-footer-split">
+  <div class="ob-footer-left">
+    <lightning-input
+      type="checkbox"
+      label="Create User Account"
+      checked={ob_userAccountNeeded}
+      onchange={ob_toggleUserAccountNeeded}>
+    </lightning-input>
+<!-- <lightning-input
+  type="toggle"
+  label="Status"
+  variant="label-hidden"
+  checked={ob_statusActive}
+  onchange={ob_handleStatusToggle}>
+</lightning-input> -->
+
+
+
+  </div>
+
+  <div class="ob-footer-right">
+    <lightning-button
+      label="Resend Email"
+      variant="neutral"
+      onclick={ob_resendEmail}
+      class="slds-m-left_x-small">
+    </lightning-button>
+
+  <lightning-button
+  label={ob_editButtonLabel}
+  variant="brand-outline"
+  onclick={ob_toggleEdit}
+  class="slds-m-left_x-small">
+</lightning-button>
+  <template if:true={ob_isEditing}>
+    <lightning-button
+      label="Cancel"
+      variant="destructive-text"
+      onclick={ob_cancelEdit}
+      class="slds-m-left_x-small">
+    </lightning-button>
+  </template>
+
+
+    <lightning-button
+      label="Verify"
+      variant="brand"
+      onclick={ob_handleApproveClick}
+      class="slds-m-left_x-small">
+    </lightning-button>
+  </div>
+</div>
+
+    </div>
+  </div>
+</template>
+
+<!-- Confirmation Modal -->
+<template if:true={ob_showConfirmModal}>
+  <section aria-modal="true" role="dialog" class="slds-modal slds-fade-in-open">
+    <div class="slds-modal__container ob-confirm-modal">
+      <header class="slds-modal__header ob-confirm-header">
+        <h2 class="slds-text-heading_medium">Verification</h2>
+      </header>
+      <div class="slds-modal__content slds-p-around_medium slds-grid slds-grid_vertical">
+  <div class="slds-col slds-grow slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-text-align_center">
+    <p>Are you sure you want to verify this onboarding record?</p>
+  </div>
+
+  <div class="slds-col slds-m-top_medium ob-button-group slds-text-align_center">
+   
+    <lightning-button label="Cancel" variant="brand-outline" onclick={ob_closeConfirm}></lightning-button>
+     <lightning-button label="Verify" variant="brand" onclick={ob_confirmApprove}></lightning-button>
+  </div>
+</div>
+
+    </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+ <template if:false={onboardings.length}>
+  <div class="SN-emptyState slds-text-color_weak" role="status">
+    No records found.
+  </div>
+</template>
+
+
+</template>
+ </template>
+
+   <template if:false={hasFacility}>
+
+  
+<div class="facility-row">
+    <div class="floating-label">
+    <span class="label-text-drop">Facility</span>
+    <lightning-combobox
+      name="facilityFilter"
+      value={selectedFacilityId}
+      placeholder="Select Facility"
+      variant="label-hidden"
+      style="width: 130px;"
+      options={facilityOptions}
+      onchange={handleFacilityChange}>
+    </lightning-combobox>
+    </div>
+
+    <div class="SN-pills">
+  <!-- Invited -->
+  <div class="SN-pill SN-pill--blue">
+    <i class="material-icons SN-pill__icon">mark_email_unread</i>
+    <span class="SN-pill__label">Invited :</span>
+    <span class="SN-pill__count">{pillCounts.sent}</span>
+  </div>
+
+  <!-- Submitted -->
+  <div class="SN-pill SN-pill--orange">
+    <i class="material-icons SN-pill__icon">task_alt</i>
+    <span class="SN-pill__label">Submitted :</span>
+    <span class="SN-pill__count">{pillCounts.received}</span>
+  </div>
+
+  <!-- Verified -->
+  <div class="SN-pill SN-pill--green">
+    <i class="material-icons SN-pill__icon">inventory_2</i>
+    <span class="SN-pill__label">Verified :</span>
+    <span class="SN-pill__count">{pillCounts.reviewed}</span>
+  </div>
+
+  <!-- Onboarded -->
+  <div class="SN-pill SN-pill--teal">
+    <i class="material-icons SN-pill__icon">check_circle</i>
+    <span class="SN-pill__label">Onboarded :</span>
+    <span class="SN-pill__count">{pillCounts.created}</span>
+  </div>
+
+  <!-- Total Invites -->
+  <div class="SN-pill SN-pill--muted">
+    <i class="material-icons SN-pill__icon">mail</i>
+    <span class="SN-pill__label">Total Invites :</span>
+    <span class="SN-pill__count">{pillCounts.totalInvites}</span>
+  </div>
+</div>
+</div>
+
+ 
+ 
+
+ <template if:true={orgOnboardings.length}>
+    <div class="slds-scrollable_x mainframe">
+      <table class="slds-table slds-table_cell-buffer fixed-table onb-table">
+        <thead>
+          <tr>
+           
+            <th class="slds-text-align_left" style="width: 25%;">Email Address</th>
+            <th class="slds-text-align_left" style="width: 10%;">Facility</th>
+            <th class="slds-text-align_left" style="width: 10%;">Role</th>
+            <th class="slds-text-align_left" style="width: 15%;">User Type</th>
+            <th class="slds-text-align_left" style="width: 10%;">Created</th>
+            <th class="slds-text-align_left" style="width: 20%;">Status</th>
+           
+
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={orgOnboardings} for:item="rec">
+            <tr key={rec.Id} class="tr1">
+             
+              <td>{rec.email}</td>
+              <td>{rec.facilityName}</td>
+            <td>{rec.displayRole}</td>
+        <td>{rec.userType}</td>
+       <td><lightning-formatted-text value={rec.createdDateDisplay}></lightning-formatted-text></td>
+         <td>
+  <template if:true={rec.isDataReceived}>
+    <span class="status-pill received" title="Data Received" data-id={rec.id}>
+      <i class="material-icons">mark_email_read</i>
+      <span class="pill-text">Submitted</span>
+    </span>
+  </template>
+
+  <template if:true={rec.isRequestSent}>
+    <span class="status-pill sent" title="Request Sent">
+      <i class="material-icons">send</i>
+      <span class="pill-text">Invited</span>
+    </span>
+  </template>
+
+  <template if:true={rec.isCreated}>
+    <span class="status-pill created" title="Created">
+      <i class="material-icons">mark_email_unread</i>
+      <span class="pill-text">Onboarded</span>
+    </span>
+  </template>
+
+  <template if:true={rec.isReviewed}>
+  <span class="status-pill approved"
+        title={rec.reviewTitle}
+        aria-label={rec.reviewTitle}>
+    <i class="material-icons">{rec.needIcon}</i>
+    <span class="pill-text">Verified</span>
+  </span>
+</template>
+
+</td>
+
+
+
+            </tr>
+          </template>
+        </tbody>
+      </table>
+
+
+    </div>
+
+
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+     style="width:95%;margin-left:2%">
+
+  <!-- LEFT: Page size selector (uses your existing combobox + handler) -->
+  <div class="slds-col">
+    <div class="slds-list_inline slds-grid slds-grid_vertical-align-center">
+      <span class="slds-m-right_small slds-m-top_xx-small">Page Size:</span>
+      <lightning-combobox
+        class="slds-m-right_none"
+        name="pageSize"
+        value={pageSize}
+        options={pageSizeOptions}
+        onchange={handlePageSizeChange}>
+      </lightning-combobox>
+    </div>
+  </div>
+
+  <!-- CENTER: Pager buttons + page badge -->
+  <div class="slds-align_absolute-center">
+    <lightning-button
+      disabled={disablePrev}
+      icon-name="utility:jump_to_left"
+      label="First"
+      alternative-text="First page"
+      onclick={goFirst}
+      class="slds-m-right_small">
+    </lightning-button>
+
+    <lightning-button
+      disabled={disablePrev}
+      icon-name="utility:chevronleft"
+      label="Previous"
+      alternative-text="Previous page"
+      onclick={goPrev}
+      class="slds-m-right_small">
+    </lightning-button>
+
+    <span class="slds-badge slds-m-horizontal_small">
+      Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)
+    </span>
+
+    <lightning-button
+      disabled={disableNext}
+      icon-name="utility:chevronright"
+      label="Next"
+      alternative-text="Next page"
+      onclick={goNext}
+      class="slds-m-horizontal_x-small"
+      icon-position="right">
+    </lightning-button>
+
+    <lightning-button
+      disabled={disableNext}
+      icon-name="utility:jump_to_right"
+      label="Last"
+      alternative-text="Last page"
+      onclick={goLast}
+      icon-position="right">
+    </lightning-button>
+  </div>
+
+  <!-- RIGHT: Total records (uses your filteredCount) -->
+  <div class="slds-clearfix">
+    <div class="slds-float_right">
+      <span class="slds-badge">Total Records: {filteredCount}</span>
+    </div>
+  </div>
+</div>
+
+  </template>
+
+   <template if:false={orgOnboardings.length}>
+  <div class="SN-emptyState slds-text-color_weak" role="status">
+    No records found.
+  </div>
+</template>
+   </template>
+
+</template>

@@ -1,0 +1,313 @@
+<template>
+
+
+<div
+          style="
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            padding-left: 1%;
+            padding-top: 1%;
+          "
+        >
+          <div class="floating-label">
+            <span class="label-text-drop">Search Forms</span>
+            <lightning-input
+              type="search"
+              variant="label-hidden"
+              placeholder="Search by form name..."
+              onchange={handleSearchChange}
+            >
+            </lightning-input>
+          </div>
+
+          <button class="view-toggle-button">
+  <i class="material-icons toggle-icon"
+     data-name={viewToggleTarget}
+     onclick={handleChangeview}
+     title={viewToggleTitle}>{viewToggleIcon}</i>
+</button>
+
+        </div>
+<template if:true={isCardView}>
+<div class="ND-forms-grid custom-scroll">
+  <template for:each={paginatedLayouts} for:item="layout">
+    <article key={layout.layoutName} class="ND-form-card">
+      <!-- Header -->
+      <header class="ND-form-card__header">
+         <div class="ND-form-card__headings">
+        <div class="ND-form-card__subtitle">Form Name</div>
+          <div class="ND-form-card__title">{layout.title}</div>
+
+         </div>
+        <div class="ND-form-card__icons">
+          <button class="ND-icon-btn ND-icon-btn--danger"
+                  title="Delete"
+                  data-id={layout.layoutName}
+                  onclick={handleDeleteLayout}>
+            <i class="material-icons">delete</i>
+          </button>
+          <!-- <button class="ND-icon-btn"
+                  title="More"
+                  data-id={layout.layoutName}
+                  onclick={toggleCardMenu}>
+            <i class="material-icons">more_vert</i>
+          </button> -->
+        </div>
+      </header>
+
+      <!-- Title -->
+  <div class="ND-form-card__meta">
+  <div class="ND-form-card__meta-item ND-form-card__meta-item--display">
+    <i class="material-icons ND-form-card__meta-icon" aria-hidden="true">sell</i>
+    <span class="ND-form-card__meta-text">{layout.displayName}</span>
+  </div>
+  <div class="ND-form-card__meta-item ND-form-card__meta-item--time">
+    <i class="material-icons ND-form-card__meta-icon" aria-hidden="true">schedule</i>
+    <span class="ND-form-card__meta-text">{layout.dateTimeString}</span>
+  </div>
+</div>
+
+
+
+      <!-- Footer -->
+      <footer class="ND-form-card__footer">
+       <div class="ND-user">
+  <span class="ND-avatar" aria-hidden="true">{layout.createdByInitials}</span>
+  <span class="ND-user__name" title={layout.createdByName}>{layout.createdByName}</span>
+</div>
+
+        <div class="ND-form-card__actions">
+  <a href="javascript:void(0)"
+     class="ND-link ND-link--icon"
+     data-id={layout.layoutName}
+     onclick={handleEditLayout}>
+    <span class="ND-link__label">Edit</span>
+    <i class="material-icons ND-link__icon" aria-hidden="true">edit_document</i>
+  </a>
+</div>
+
+      </footer>
+    </article>
+  </template>
+</div>
+</template>
+
+<template if:true={isTableView}>
+  <div class="publishtable-wrapper custom-scroll">
+    <table class="publishtable-table">
+      <thead>
+        <tr class="custom-table-header">
+          <th scope="col"><div class="slds-truncate" title="Form Name">Form Name</div></th>
+          <th scope="col"><div class="slds-truncate" title="Type">Type</div></th>
+          <th scope="col"><div class="slds-truncate" title="Created">Created</div></th>
+          <th scope="col"><div class="slds-truncate" title="Created By">Created By</div></th>
+          <!-- <th scope="col"><div class="slds-truncate" title="Participants">Participants</div></th> -->
+          <th scope="col"><div class="slds-truncate" title="Actions">Actions</div></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <template for:each={paginatedLayouts} for:item="layout">
+          <tr key={layout.layoutName}>
+            <!-- Form Name -->
+            <td class="publishtable-cell publishtable-name">
+              <i class="material-icons publishtable-docicon" aria-hidden="true">description</i>
+              <span class="publishtable-ellipsis" title={layout.title}>{layout.title}</span>
+            </td>
+
+            <!-- Type -->
+            <td class="publishtable-cell">
+  <span class="publishtable-ellipsis" title={layout.displayName}>
+    {layout.displayName}
+  </span>
+</td>
+
+
+            <!-- Created (already formatted to DD/MM/YYYY, HH:MM AM/PM in JS as form.formattedCreated) -->
+            <td class="publishtable-cell">{layout.dateTimeString}</td>
+
+            <!-- Created By (initials + name on ONE line with ellipsis) -->
+            <td class="publishtable-cell">
+              <div class="publishtable-userline" title={layout.createdByName}>
+                <span class="publishtable-avatar">{layout.createdByInitials}</span>
+                <span class="publishtable-usertext publishtable-ellipsis">{layout.createdByName}</span>
+              </div>
+            </td>
+
+            <!-- Participants (overlapping avatars + +N) -->
+            <!-- <td class="publishtable-cell">
+              <div class="publishtable-avatars">
+                <template for:each={form.visibleParticipants} for:item="p">
+                  <span key={p.id} class="publishtable-avatar-img" title={p.name}>
+                    <template if:true={p.pictureUrl}>
+                      <img src={p.pictureUrl} alt={p.name}/>
+                    </template>
+                    <template if:false={p.pictureUrl}>
+                      <span class="publishtable-avatar-fallback">{p.initials}</span>
+                    </template>
+                  </span>
+                </template>
+                <template if:true={form.hasExtraParticipants}>
+                  <span class="publishtable-avatar-more">+{form.extraParticipantCount}</span>
+                </template>
+
+                <template if:false={form.hasVisibleParticipants}>
+      <span class="nd-form-card__no-access" title="No Participants"> <i class="material-icons" aria-hidden="true">group_off</i></span>
+    </template>
+              </div>
+            </td> -->
+
+            <!-- Actions (ONLY Assign) -->
+            <td class="publishtable-cell publishtable-actions">
+              <a href="javascript:void(0)"
+     class="ND-link ND-link--icon"
+     data-id={layout.layoutName}
+     onclick={handleEditLayout}>
+    <span class="ND-link__label">Edit</span>
+    <i class="material-icons ND-link__icon" aria-hidden="true">open_in_new</i>
+  </a>
+
+  <button class="ND-icon-btn ND-icon-btn--danger"
+                  title="Delete"
+                  data-id={layout.layoutName}
+                  onclick={handleDeleteLayout}>
+            <i class="material-icons">delete</i>
+          </button>
+            </td>
+          </tr>
+        </template>
+
+        <template if:false={paginatedLayouts.length}>
+          <tr><td colspan="6" class="publishtable-empty">No forms found.</td></tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+
+<template if:true={totalRecords}>
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large" style="padding-top: 0.5em;">
+        <!-- RECORDS PER PAGE -->
+        <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+                <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                <div class="slds-select_container">
+                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE NAVIGATION -->
+        <div class="slds-align_absolute-center" style="height:5rem">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+        </div>
+
+        <!-- TOTAL RECORDS -->
+        <div class="slds-clearfix slds-m-right_xx-large">
+            <div class="slds-float_right">
+                <span class="slds-badge">Total Records: {totalRecords}</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+
+
+    <!-- <div class="back-button-container">
+        <lightning-button 
+            variant="brand" 
+            label="Back" 
+            onclick={handleBackToForm}>
+        </lightning-button>
+    </div>
+
+    
+    <h3 class="saved-layouts-heading">Your Forms</h3> -->
+    <!-- Your Form Layouts Table (Remaining layouts) -->
+    <!-- Custom Layouts Table -->
+<!-- <table class="saved-layouts-table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Layout Name</th>
+            <th>Created Date & Time</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={customLayouts} for:item="layout">
+            <tr key={layout.layoutName}>
+                <td>{layout.title}</td>
+                <td>{layout.displayName}</td>
+                <td>{layout.dateTimeString}</td>
+                <td>
+                    <lightning-icon 
+                        icon-name="action:edit" 
+                        alternative-text="Edit" 
+                        title="Edit"
+                        size="xx-small"
+                        data-id={layout.layoutName} 
+                        onclick={handleEditLayout}
+                        class="icon-button"
+                        style="cursor:pointer;color:white;background-color:#0099DE;">
+                    </lightning-icon>
+                    <span class="separator"></span>
+                    <lightning-icon 
+                        icon-name="action:delete" 
+                        alternative-text="Delete" 
+                        title="Delete"
+                        size="xx-small"
+                        data-id={layout.layoutName} 
+                        onclick={handleDeleteLayout}
+                        class="icon-button">
+                    </lightning-icon>
+                </td>
+                
+            </tr>
+        </template>
+    </tbody>
+</table> -->
+
+<!-- <h3 class="saved-layouts-heading">Default Forms</h3>
+
+<table class="saved-layouts-table">
+    <thead>
+        <tr>
+            <th>Layout Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={defaultLayouts} for:item="layout">
+            <tr key={layout.layoutName}>
+                <td>{layout.displayName}</td>
+                <td>
+                    <lightning-button 
+                        variant="base" 
+                        label="Clone" 
+                        data-id={layout.layoutName} 
+                        onclick={handleCloneLayout}>
+                    </lightning-button>
+                </td>
+            </tr>
+        </template>
+    </tbody>
+</table> -->
+
+
+
+
+</template>
