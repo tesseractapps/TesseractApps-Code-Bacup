@@ -1,0 +1,2173 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 06-10-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>
+    <template if:true={facFlag}>
+    <!-- <div class="container"> -->
+        <div class="main-container">
+
+            <div class="content-wrapper">
+        
+        <!-- <div slot="title" style="font-weight:bold; padding: 1% 0% 2% 1%; font-size:140%;">
+            Facility Details
+        </div> -->
+        <header class="header">
+            <!-- <div class="search-section">
+                <div class="floating-label slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-6">
+                    <span class="label-text-drop">Facility Name</span>
+                    <lightning-input  type="search" label="Facility Name" name="fname" value={firstname} variant="label-hidden" onkeydown={handleKeyDown}></lightning-input>
+                </div>
+                
+                <div class="button-group">
+                    <lightning-button  variant="brand" label="Search" slot="actions" title="Search Issue" onclick={handleSearch}></lightning-button>
+            <lightning-button  variant="brand" label="Clear " slot="actions" title="Clear Issue" onclick={handleClear}></lightning-button> 
+             <lightning-button  variant="brand" label={facilitylabel} slot="actions" title="Active and Inactive facilities" onclick={handleToggleUsers}></lightning-button>
+             </div>
+            </div> -->
+
+            <div class="search-section">
+    <!-- Search box with cancel icon -->
+    <div class="floating-label slds-small-size_1-of-1 slds-medium-size_1-of-2">
+        <span class="label-text-drop">Search</span>
+        <div class="custom-search-wrapper">
+            <lightning-input
+                type="search"
+               
+                label="Facility Name"
+                name="fname"
+                value={firstname}
+                variant="label-hidden"
+                onchange={handleSearchKeyPress}>
+            </lightning-input>
+        </div>
+    </div>
+
+    <!-- Filter buttons -->
+    <div class="button-group filter-toggle-group">
+    <button type="button"
+            class={activeButtonClass}
+            onclick={handleActiveToggle}>
+        Active
+    </button>
+
+    <button type="button"
+            class={inactiveButtonClass}
+            onclick={handleInactiveToggle}>
+        Inactive
+    </button>
+</div>
+
+</div>
+
+            <div class="action-section">
+
+                <button class="view-toggle-button" >
+                    <i class="material-icons toggle-icon" data-name={viewToggleTarget}
+                        onclick={handleChange}
+                        title={viewToggleTitle}>{viewToggleIcon}</i>
+                </button>
+
+                    <!-- <lightning-icon icon-name="utility:list" label="List View" size="x-small" title="List View" data-name="listview" class={listViewClass} onclick={handleChange}
+                    style="cursor:pointer;height:20px;"></lightning-icon>
+                    <lightning-icon icon-name="utility:tile_card_list" label="Card View" size="x-small" title="Card View" data-name="cardview" class={cardViewClass} onclick={handleChange}
+                    style="cursor:pointer;height:20px;"></lightning-icon> -->
+                    <!-- <lightning-button  variant="brand" label="Create Facility" slot="actions"
+                title="New Facility" onclick={handleCreateNewFacility} class="slds-float_right"></lightning-button> -->
+
+                <button class="custom-create-btn" onclick={handleFacilityBulkUpload} title="Bulk Upload(Ctrl + Shift + U)">
+                    Bulk Upload
+                </button>
+
+                <button class="custom-create-btn" onclick={handleCreateNewFacility} title="Create(Ctrl + Shift + C)" >
+                         Create Facility
+                </button> 
+
+            </div>
+        </header>
+    
+        <!-- Card view Display Code-->
+        <template if:true={cardFlag}>
+            <template if:false={noRecordsFlag}>
+                <div if:true={isDesktop}>
+                    <!--Refresh Button-->
+                    <div class="slds-float_right">
+                    </div>
+                    <template if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Refreshing Data" size="medium"></lightning-spinner>
+                    </template>
+
+                    <div class=" slds-grid slds-gutters  slds-wrap" style="margin-right:0.1%;margin-left:0.1%;"> 
+                        <template for:each={recordsWithToggleStyle} for:item="fac" for:index="index">
+                            <div key={fac.Id} class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1%;">
+                                <div key={fac.Id} style="border-radius: 4px; border: 1px solid rgba(0, 41, 70, 0.6);box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                                    <span style="border-top-left-radius: 4px; border-top-right-radius: 4px; height:40px;display:flex;align-items: center; justify-content: space-between;background-color:#003466;border-bottom: 1px black;padding:2px; overflow: hidden;">
+                                        
+                                        <!-- <b style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;color:white;"> 
+                                            <lightning-formatted-text class="name"
+                                                    style="font-size:17px;color:white;padding-left:15px;flex-shrink:1;"
+                                                    value={fac.Name}></lightning-formatted-text>
+                                            <lightning-formatted-text class=""
+                                                    style="font-size:17px;color:white;padding-left:15px;flex-shrink:1;"
+                                                    value={fac.Type_of_Service__c}></lightning-formatted-text>
+                                            </b> -->
+                                            <b style="flex-grow:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:white; display:flex; align-items: center;"> 
+
+                                                <lightning-formatted-text
+                                                    class="name"
+                                                    style="font-size:17px; color:white; padding-left:15px;"
+                                                    value={fac.Name}>
+                                                </lightning-formatted-text>
+
+                                                <!-- Hyphen ONLY if service exists -->
+                                                <template if:true={fac.Type_of_Service__c}>
+                                                    <span 
+                                                    style="width:10px;
+                                                        height:2px;
+                                                        background:white;
+                                                        margin:0 5px;
+                                                        display:inline-block;"> </span>
+                                                </template>
+
+                                                <lightning-formatted-text 
+                                                    class="typeofservice"
+                                                    style="font-size:17px; color:white;"
+                                                    value={fac.Type_of_Service__c}>
+                                                </lightning-formatted-text>
+
+                                            </b>
+                                            
+                                 <template if:true={fac.Picture__c} >
+                                        <lightning-avatar variant="circle" src={fac.Picture__c} initials="AW" fallback-icon-name="standard:person_account" alternative-text="image" style="margin-right:0.4rem;flex-shrink: 0;"></lightning-avatar>
+                                </template> 
+                                           
+                                    </span>
+                                    <span>
+                                        <table style="margin-bottom:5px;margin-top:0.5rem;table-layout:fixed;">
+                                            <!-- <tr>
+                                                <td style="font-weight:bold;width:6rem;padding-left:15px;">&nbsp;Contact:</td>
+                                                <td style="padding-left:0.5rem;"><lightning-formatted-text
+                                                        value={fac.Phone__c}></lightning-formatted-text>
+                                                </td>
+                                            </tr> -->
+
+                                            <tr>
+                                                    <td class="label-cell">&nbsp;Contact</td>
+                                                    <td class="colon-cell">:</td>
+                                                    <td class="value-cell">
+                                                        <lightning-formatted-text value={fac.Phone__c}></lightning-formatted-text>
+                                                    </td>
+                                                </tr>
+                                            <template if:true={NdisFlag}>
+                                                <tr>
+                                                    <td class="label-cell">
+                                                        &nbsp;<a href="javascript:void(0)" data-name={fac.Facility_Name__c} onclick={servicesList}>Services</a>
+                                                    </td>
+                                                    <td class="colon-cell">:</td>
+                                                    <td class="value-cell email">
+                                                        <lightning-formatted-text value={fac.Services__c}></lightning-formatted-text>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                                <tr>
+                                                    <td class="label-cell">&nbsp;Email</td>
+                                                    <td class="colon-cell">:</td>
+                                                    <td class="value-cell email">
+                                                        <lightning-formatted-text value={fac.Email__c}></lightning-formatted-text>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td class="label-cell">&nbsp;Status</td>
+                                                    <td class="colon-cell">:</td>
+                                                    <td class="value-cell" style="display: flex; align-items: center; justify-content: space-between;">
+                                                        <!-- <lightning-input
+                                                            data-id={fac.Id}
+                                                            data-name={fac.Status__c}
+                                                            data-toggle="inputtoggle"
+                                                            data-facilityname={fac.Name}
+                                                            type="toggle"
+                                                            onchange={handlefacStatus}
+                                                            label=""
+                                                            checked={fac.Status__c}
+                                                            message-toggle-active=""
+                                                            class="input__toggle"
+                                                            message-toggle-inactive="">
+                                                        </lightning-input> -->
+
+                                                       <div class="custom-toggle-wrapper"
+                                                            >
+                                                            <div class={fac.toggleTrackClass} onclick={handlefacStatus}
+                                                            data-id={fac.Id}
+                                                            data-name={fac.Status__c}
+                                                            data-facilityname={fac.Name}>
+                                                                <div class={fac.toggleKnobClass} data-id={fac.Id}
+                                                            data-name={fac.Status__c}
+                                                            data-facilityname={fac.Name}></div>
+                                                            </div>
+                                                            <span class={fac.toggleLabelClass}>{fac.toggleLabel}</span>
+                                                        </div>
+
+
+
+
+                                                        <!-- <lightning-icon
+                                                            icon-name="action:preview"
+                                                            variant="base"
+                                                            alternative-text="Edit"
+                                                            title="Edit"
+                                                            onclick={handleviewFacility}
+                                                            data-id={fac.Id}
+                                                            size="xx-small"
+                                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                                        </lightning-icon> -->
+
+                                                        
+
+                                                        <i class="material-icons view-icon"
+                                                            onclick={handleviewFacility}
+                                                            data-id={fac.Id}
+                                                            style="
+                                                                background: #0C78BA;
+                                                                color: white;
+                                                                width: 24px;
+                                                                height: 24px;
+                                                                display: flex;
+                                                                align-items: center;
+                                                                justify-content: center;
+                                                                border-radius: 20px;
+                                                                font-size: 16px;
+                                                                cursor: pointer;
+                                                                margin-right: 0.5rem;">
+                                                            visibility
+                                                            </i>
+                                                    </td>
+                                                </tr>
+
+                                            
+                                        </table>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            
+            </template>
+        </template>
+        <!-- List view Display Code-->  
+        <template if:true={listFlag}>
+            <template if:false={noRecordsFlag}>
+            <div class="listview custom-scroll">
+                <table
+                class="slds-table slds-table_cell-buffer table"
+                style="table-layout:fixed">
+                    <thead class="table_th">
+                        <tr>
+                            <th class="slds-cell-wrap table_th">
+                                {facilityPreferredName} Name</th>
+                            <th class="slds-cell-wrap table_th" style="width:10%;">
+                                Type of Industry</th>
+                            <th class="slds-cell-wrap table_th" style="width:10%;">
+                                Contact Number</th>
+                            <template if:true={NdisFlag}><th class="slds-cell-wrap table_th">
+                                Services</th></template>
+                            <th class="slds-cell-wrap table_th">
+                                Email</th>
+                            <th class="slds-cell-wrap table_th" style="width:6%;">
+                                Status</th>
+                            <th class="slds-cell-wrap table_th" style="width:8%">
+                                Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={recordsToDisplay} for:item="fac">
+                            <tr key={fac.Id} class="tr1">
+                                <td class="slds-cell-wrap table_td">{fac.Name}</td>
+                                <td class="slds-cell-wrap table_td">{fac.Type_of_Service__c}</td>
+                                <td class="slds-cell-wrap table_td">{fac.Phone__c}</td>
+                                <template if:true={NdisFlag}><td class="slds-cell-wrap table_td ellipsis-cell" title={fac.Services__c}>{fac.Services__c}</td></template>
+                                <td class="slds-cell-wrap table_td">{fac.Email__c}</td>
+                                <td class="slds-cell-wrap table_td">{fac.facility_status__c}</td>
+                                <td class="slds-cell-wrap table_td">									
+                                  <!-- <lightning-icon icon-name="utility:preview" alternative-text="Edit" title="Edit"
+                                  onclick={handleviewFacility} data-id={fac.Id} size="small" variant="base"></lightning-icon>  -->
+                                  <a href="javascript:void(0)"  title="View" onclick={handleviewFacility} data-id={fac.Id} style="text-decoration: none;">
+                                    <i class="material-icons view-icon">visibility</i>
+                                    </a>                                 
+                                </td>
+                            </tr>
+                        </template>
+  
+                    </tbody>
+                </table>
+            </div>
+            </template>
+        </template>  
+        
+        <!-- if there is no facilities -->
+        <template if:true={noRecordsFlag}>
+           <div class="no-data">
+            <p>No records found</p>
+         </div>
+        </template>
+</div>
+
+        <template if:false={noRecordsFlag}>
+
+            <div if:true={isDesktop}>
+                <div if:true={visible} class="fixed-pagination">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                        <!--PAGE NAVIGATION-->
+                        <div class="slds-align_absolute-center">
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First"
+                                class="slds-p-horizontal_x-small" alternative-text="first page"
+                                onclick={firstPage}></lightning-button>
+                            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous"
+                                alternative-text="Previous" onclick={previousPage}></lightning-button>
+                            &nbsp;
+                            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+                                &nbsp;&nbsp;Page(s)</span>
+                            &nbsp;
+                            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next"
+                                alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small"
+                                icon-position="right"></lightning-button>
+                            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last"
+                                alternative-text="last page" onclick={lastPage}
+                                icon-position="right"></lightning-button>
+                        </div>
+
+                        <!--TOTAL RECORDS-->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right ">
+                                <span class="slds-badge"> Total Records: {totalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </template>
+        
+        
+    </div>
+  </template>
+
+    <template if:true={isServiceModel}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+            aria-describedby="modal-content-id-1" class="slds-modal  slds-fade-in-open slds-modal_small">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Box LWC header here -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeservicesList}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-03" class="slds-text-heading_medium slds-hyphenate"> <b>{facilityPreferredName}</b>
+                    </h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-3">
+                    <div class="slds-p-around_medium slds-m-left_large">
+                        <h3><b class="slds-text-heading_medium slds-m-left_xx-large">Services</b>
+                        </h3>
+                    </div>
+                    <div class=" slds-size_1-of-2 slds-m-left_xx-large">
+                        <template for:each={lstOptions} for:item="services">
+                            <div key={services.label} class="slds-m-left_xx-large">
+
+                                <ul class="slds-list_dotted slds-m-around_small slds-m-left_xx-large">
+
+                                    <li> {services.label} <br /></li><br />
+                                </ul>
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    
+
+    <template if:true={facEditFlag}>
+        <div class="blur-overlay"></div>
+        <div class="right-align fade-in" style="width:80%;">    
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:1.5%;">Create Facility</h3>
+                <div style="display: flex; align-items: center; gap: 10px;margin-top:1%;margin-right:1%">
+                <!-- <lightning-button label="Back" variant="brand" onclick={handleeditClose}></lightning-button>  -->
+            </div>
+            </div>  
+            <div class="container2" >
+            
+              <lightning-record-edit-form object-api-name="Facility__c" record-id={recordId} onsuccess={handleSuccess} onsubmit={handleSubmit} onerror={handleError}>
+                <!-- <lightning-messages></lightning-messages> -->
+                 <div class="right-content custom-scroll">
+                        <div class="container-box">
+                            <div  class="toggle-bar" onclick={handleSectionToggle} data-id="Facility" style="cursor: pointer;">
+                            <span>Facility</span>
+                            <span>{sectionIcons.Facility}</span>      
+                            </div>
+                            <div class="section-content" data-section="Facility">
+                            <template if:true={sectionFlags.Facility}>
+                            <div class="slds-grid slds-wrap custom-grid" style="padding: 20px 0px 20px 0px;">
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Facility</span>
+                                <lightning-input-field field-name="Name" variant="label-hidden" required="true" name="name" message-when-value-missing="Please Enter Facility Name" onchange={handleChange}></lightning-input-field> 
+                            </div>
+                        </div>
+                        
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Contact Number</span>
+                                <lightning-input-field field-name="Phone__c" name="phone" variant="label-hidden" pattern="^\d{11}$"
+                            maxlength="11" onchange={handleNameChange} required></lightning-input-field> 
+                            </div>
+                        </div>
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Manager Name</span>
+                                <lightning-input-field field-name="Manager_Name__c" variant="label-hidden" required="true"></lightning-input-field>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small" style="overflow:visible;">
+                            <div class={emailClass}>
+                                <span class="label-text-drop"><span style="color:red">*</span>Email ID</span>
+                                <lightning-input-field field-name="Email__c" name="email" onchange={handleErrorCss} variant="label-hidden" required></lightning-input-field>
+                            </div>
+                        </div>
+
+<!-- Riyaz Changes for Fields  -->
+                        
+
+                    <template if:true={NdisFlag}>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Roles</span>
+                            <div class="dropdown-container" lwc:ref="dropdownContainer">
+                                <!-- Dropdown Button -->
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1" 
+                                    onclick={toggleDropdown}
+                                    aria-expanded={isOpen}
+                                    aria-haspopup="listbox"
+                                >
+                                    <span class={selectedOptionClass} title={displayText}>
+                                        {displayText}
+                                    </span>
+                                    <lightning-icon 
+                                        icon-name={chevronIcon} 
+                                        size="x-small" 
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <!-- Dropdown Menu -->
+                                <div if:true={isOpen} class="dropdown-menu">
+                                    <!-- Add New Option Section -->
+                                    <div class="add-option-section">
+                                        <div class="input-container">
+                                            <lightning-input
+                                                type="text"
+                                                value={newOptionText}
+                                                placeholder="Add new option..."
+                                                onchange={handleInputChange}
+                                                onkeypress={handleKeyPress}
+                                                class="option-input"
+                                                variant="label-hidden">
+                                            </lightning-input>
+                                            <lightning-button
+                                                label="Add"
+                                                onclick={handleAddOption}
+                                                disabled={isAddDisabled}
+                                                variant="brand"
+                                                class="add-button">
+                                            </lightning-button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Options List -->
+                                    <div class="options-list custom-scroll">
+                                        <template for:each={options} for:item="option">
+                                            <div key={option.id} class="option-item">
+                                                <button 
+                                                    type="button"
+                                                    title={option.label}
+                                                    class={option.buttonClass}
+                                                    data-option-id={option.id}
+                                                    disabled={option.isDisabled}>
+                                                    {option.label}
+                                                </button>
+                                                    <!-- onclick={handleSelectOption} for button-->
+                                                <div class="option-controls">
+                                                    <!-- Status Badge -->
+                                                    <!-- <span class={option.badgeClass}>
+                                                        {option.statusText}
+                                                    </span> -->
+
+                                                    <!-- Toggle Switch -->
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input
+                                                            type="toggle"
+                                                            checked={option.checked}
+                                                            data-option-id={option.id}
+                                                            onchange={handleToggleActive}
+                                                            variant="label-hidden"
+                                                            class="toggle-input toggle_bar_right"
+                                                            message-toggle-active="" size="xx-small" 
+                                                            message-toggle-inactive="">
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>                         
+                        </div>
+                    </div>
+                    </template>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                         <div class="floating-label" style="width: 100%;">
+                            <span class="label-text-drop"><span style="color:red">*</span>Services</span>
+
+                            <!-- <lightning-input-field field-name="Services__c" required="true" variant="label-hidden"></lightning-input-field> -->
+                           <div class="dropdown-container1" lwc:ref="dropdownContainerServices">
+            
+                            <!-- Dropdown Button -->
+                            <button 
+                                type="button"
+                                class="dropdown-button1" 
+                                onclick={toggleServicesDropdown}
+                                aria-expanded={isServicesOpen}
+                                aria-haspopup="listbox"
+                            >
+                                <span class={servicesSelectedClass} title={servicesDisplayText}>
+                                    {servicesDisplayText}
+                                </span>
+                                <lightning-icon 
+                                    icon-name={chevronIcon} 
+                                    size="x-small" 
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div if:true={isServicesOpen} class="dropdown-menu">
+                                
+                                <!-- Options List -->
+                                <div class="options-list custom-scroll">
+                                    <template for:each={allServices} for:item="service">
+                                        <div key={service.id} class="option-item">
+                                            
+                                            <!-- Service Label -->
+                                            <button 
+                                                type="button"
+                                                title={service.label}
+                                                class={service.buttonClass}
+                                                onclick={handleSelectService}
+                                                data-service-id={service.id}
+                                                disabled={service.isDisabled}>
+                                                {service.label}
+                                            </button>
+
+                                            <!-- Badge + Toggle -->
+                                            <div class="option-controls">
+                                                <!-- <span class={service.badgeClass}>
+                                                    {service.statusText}
+                                                </span> -->
+                                                <div class="toggle-switch-container">
+                                                    <lightning-input 
+                                                        type="toggle" 
+                                                        data-service-id={service.id}
+                                                        checked={service.checked}
+                                                        class="toggle_bar_right"
+                                                        onchange={handleToggleService} 
+                                                        message-toggle-active="" 
+                                                        message-toggle-inactive=""
+                                                        variant="label-hidden">
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                <template if:true={NdisFlag}>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Type of Industry</span>
+                                <lightning-input-field field-name="Type_of_Service__c" required="true" name="phone" variant="label-hidden" onchange={handleServiceChange}></lightning-input-field> 
+                            </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="floating-label" style="width: 100%;">
+                            <span class="label-text-drop">Documents</span>
+
+                            <div class="dropdown-container-documents" lwc:ref="documentsDropdown">
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1" 
+                                    onclick={toggleDocumentsDropdown}
+                                    aria-expanded={isDocumentsOpen}
+                                    aria-haspopup="listbox"
+                                >
+                                    <span class={documentsSelectedClass} title={documentsDisplayText}>
+                                        {documentsDisplayText}
+                                    </span>
+                                    <lightning-icon 
+                                        icon-name={chevronIcon} 
+                                        size="x-small" 
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <div if:true={isDocumentsOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+                                        <template for:each={documentsList} for:item="doc">
+                                            <div key={doc.id} class="option-item">
+
+                                                <!-- <button 
+                                                    type="button"
+                                                    class={doc.buttonClass}
+                                                    onclick={handleSelectDocument}
+                                                    data-doc-id={doc.id}>
+                                                    {doc.label}
+                                                </button> -->
+                                                <div class="option-label" title={doc.label}>{doc.label}</div>
+                                                <div class="option-controls">
+                                                    <!-- <span class={doc.badgeClass}>{doc.statusText}</span> -->
+                                                    <div class="toggle-switch-container">
+                                                    <lightning-input 
+                                                        type="toggle"
+                                                        checked={doc.checked}
+                                                        data-doc-id={doc.id}
+                                                        onchange={handleToggleDocument}
+                                                        message-toggle-active="" 
+                                                        message-toggle-inactive=""
+                                                        variant="label-hidden"
+                                                        class="toggle_bar_right">
+                                                    </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            <div class="slds-grid slds-p-vertical_x-small slds-align-middle slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div>
+                                                <lightning-input type="checkbox" variant="label-hidden" 
+                                                    onchange={handleOrgAbnToggle} checked={useOrgAbn}>
+                                                </lightning-input>
+                                            </div>
+                                            <div class="slds-col slds-align-middle">
+                                                <span >Use Org ABN</span>
+                                            </div>
+                            </div>
+                        
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>ABN</span>
+                                <lightning-input-field field-name="ABN__c" variant="label-hidden" required="true"  data-id="abnInput"  value={ABN} disabled={abnfield} onchange ={handleAbnChange} ></lightning-input-field>
+                            </div>
+                        </div>
+
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 1% 0% 1%">
+                        <div class="floating-label">      
+                        <input type="file" id="fileInput" onchange={onFileUpload} accept=".jpg, .jpeg, .png, .gif" name="uploadFile" style="display: none;" >
+                        <button type="button" onclick={triggerFileInput} class="file-upload-button" style="display:flex;">
+                           <i class="material-icons">upload</i> Upload Profile Pic
+                        </button>
+                        <div class="slds-text-body_small">{fileName}</div>
+                        </div>
+                    </div>
+
+
+
+             <!-- TRAININGS DROPDOWN -->
+                <template if:true={NdisFlag}>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        <div class="floating-label" style="width: 100%;">
+                            <span class="label-text-drop">Trainings</span>
+
+                            <div class="dropdown-container-trainings" lwc:ref="trainingsDropdown">
+
+                                <button 
+                                    type="button"
+                                    class="dropdown-button1" 
+                                    onclick={toggleTrainingsDropdown}
+                                    aria-expanded={isTrainingsOpen}
+                                    aria-haspopup="listbox"
+                                >
+                                    <span class={trainingsSelectedClass} title={trainingsDisplayText}>
+                                        {trainingsDisplayText}
+                                    </span>
+
+                                    <lightning-icon 
+                                        icon-name={chevronIcon} 
+                                        size="x-small" 
+                                        class="chevron-icon">
+                                    </lightning-icon>
+                                </button>
+
+                                <div if:true={isTrainingsOpen} class="dropdown-menu">
+                                    <div class="options-list custom-scroll">
+                                        <template for:each={trainingsList} for:item="tr">
+                                            <div key={tr.id} class="option-item">
+                                                <div class="option-label" title={tr.label}>{tr.label}</div>
+                                                <div class="option-controls">
+                                                    <!-- <span class={tr.badgeClass}>{tr.statusText}</span> -->
+                                                    <div class="toggle-switch-container">
+                                                        <lightning-input 
+                                                            type="toggle"
+                                                            checked={tr.checked}
+                                                            data-tr-id={tr.id}
+                                                            onchange={handleToggleTraining}
+                                                            message-toggle-active="" 
+                                                            message-toggle-inactive=""
+                                                            variant="label-hidden"
+                                                        class="toggle_bar_right">
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>                    
+                    </template>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                        
+                            <span style="display:flex; align-items: center;">
+                                <lightning-input  type="toggle" onchange={handleStatus} value={toggleValue}  name="toggle" message-toggle-active="" variant="label-hidden" size="xx-small" 
+                                message-toggle-inactive="" style="transform: scale(0.8); transform-origin: left center;"></lightning-input>
+                                <span>Status</span>
+                            </span>  
+                            
+                        </div>
+                        
+                 
+
+
+
+                        <div class="slds-size_1-of-3"></div>
+                        <div class="slds-size_1-of-1 slds-large-size_1-of-2">
+                            <div class="slds-m-right_medium slds-m-left_medium">  
+                                <div style="color:red;">{errorMessage}</div>                      
+                            <lightning-input-address
+                                address-label="Address"
+                                street-label="Street"
+                                city-label="Suburb"
+                                country-label="Country"
+                                province-label="State"
+                                postal-code-label="Post Code"
+                                street={street}
+                                city={city}
+                                country={country}
+                                province={province}
+                                postal-code={postalcode}
+                                onchange={addressInputChange}
+                                show-address-lookup required="true">
+                                </lightning-input-address>     
+                            </div>
+                        </div>
+                        
+                        </div>
+                        
+                        </template>
+
+                        </div>
+                        
+                        </div>
+                        <template if:true={NdisFlag}>
+                                 <div class="container-box">
+                                 <div  class="toggle-bar" onclick={handleSectionToggle} data-id="PayrollSettings" style="cursor: pointer;">
+                                                <span>Facility Settings</span>
+                                                <span >{sectionIcons.PayrollSettings}</span>      
+                                    </div>
+                                            <div class="section-content" data-section="PayrollSettings">
+                                            <template if:true={sectionFlags.PayrollSettings}>
+                                            <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+
+                                                <!-- <div class="slds-grid slds-p-vertical_x-small slds-align-middle slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                        <div>
+                                                            <lightning-input type="checkbox" variant="label-hidden" 
+                                                                onchange={handleOrgPayrollSettings} checked={useOrgPayrollSettings}>
+                                                            </lightning-input>
+                                                        </div>
+                                                        <div class="slds-col slds-align-middle">
+                                                            <span >Use Org Payroll Settings</span>
+                                                        </div>
+                                                </div>
+                                                 <div class="slds-grid slds-p-vertical_x-small slds-align-middle slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+
+                                                 </div> -->
+                                                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop"><span style="color:red">*</span>BMS Identifier</span>
+                                                                <lightning-input-field field-name="BMS_Identifier__c" required="true" value={BMSIDValue} disabled={isBMSIDDisbale} variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div> 
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop"><span style="color:red">*</span>Software ID</span>
+                                                                <lightning-input-field field-name="Software_Id__c" required="true" value={softwareIDValue} disabled="true" variant="label-hidden"></lightning-input-field> 
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Agent Name</span>
+                                                                <lightning-input-field field-name="Agent_Name__c" value={agentName} disabled={disablePayrollSettingValue} variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                       
+                                                        
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Tax Agency</span>
+                                                                <lightning-input-field field-name="Tax_Agency__c" value={taxAgency} disabled={disablePayrollSettingValue} variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Agent Number</span>
+                                                                <lightning-input-field field-name="Agent_Number__c" value={taxAgencyNumber} disabled={disablePayrollSettingValue}  variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                    <template if:true={NdisFlag}>
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Facility Preferred Name</span>
+                                                                <lightning-input-field field-name="Facility_Preferred_Name__c" variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                    
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Participant Preferred Name</span>
+                                                                <lightning-input-field field-name="Participant_Preferred_Name__c" variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Staff Preferred Name</span>
+                                                                <lightning-input-field field-name="Staff_Preferred_Name__c" variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                             </div>
+                                        
+                                        </template>
+                                        </div>
+                        </div>
+                       
+                        </template>
+                       
+                </div>
+                <div class="slds-align_absolute-center ">
+                     <lightning-button label="Cancel" variant="brand-outline" onclick={handleeditClose}
+                    class="slds-m-around_small"></lightning-button>
+                     <template if:true={NdisFlag}>
+                             <lightning-button   label="Generate BMS ID" variant="brand"  disabled={bmsIdButtonDisable}
+                                        class="slds-m-around_small" name="bmsid" onclick={handleOpenBMSSoftwareID}></lightning-button>
+                                        <lightning-button label="Generate Software ID" name="generatesoftwareid" variant="brand" onclick={handleOpenBMSSoftwareID}
+                                        class="slds-m-around_small" disabled={softwareButtonDisbale} >
+                                       </lightning-button>
+                     </template>
+                    
+                    <lightning-button label={buttonName} variant="brand" type="submit" class="slds-m-around_small" disabled={saveButtonDisable}></lightning-button>
+                 
+                </div>
+                
+                
+              </lightning-record-edit-form>
+        </div>
+        </div>
+         <template if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Refreshing Data" size="medium"></lightning-spinner>
+         </template>
+    </template>
+
+
+    <template if:true={facviewFlag}>
+        <div class="main-container">
+
+    <div class="menu-container">
+        <div class={facilitydetailsclass} onclick={handledetails}>Details</div>
+        <div class={facilityonboardclass} onclick={handleonboard}>Onboarding</div>
+        <template if:true={NdisFlag}>
+        <div class={facilitydocumentclass} onclick={handledocument}>Documents</div>
+        <div class={facilitydentityclass} onclick={handleidentity}>Identity</div>
+        <div class={facilitytrainingsclass} onclick={handletrainings}>Trainings</div>
+        <div class={facilityshiftcomplianceclass} onclick={handleshiftcompliance}>Shift Compliance</div>
+        <div class={facilitycompliancereportclass} onclick={handlecompliancereport}>Compliance Report</div>
+        <div class={facilityBulkEntityclass} onclick={handleBulkEntity}>Bulk Entity</div>
+        <!-- <div class={facilityCatalogueclass} onclick={handleCatalogueClick}>Catalogue</div> -->
+
+        </template>
+    </div>
+
+        <div class="major-cont custom-scroll">
+
+      
+                      
+            <div class="container2" >
+<template if:true={facilitydetails}>
+            <template if:true={facilityflag}>
+                    <lightning-record-view-form object-api-name="Facility__c" record-id={recordId} onsuccess={handleSuccess} onsubmit={handleSubmit} >
+                    <lightning-messages></lightning-messages>
+                <div  class="right-content custom-scroll">
+                         <div class="container-box">
+                    <div  class="toggle-bar" onclick={handleSectionToggle} data-id="Facility1" style="cursor: pointer;">
+                    <span>Facility Details</span>
+
+                    <span >{sectionIcons.Facility1}</span>      
+                    </div>
+                    <div class="section-content" data-section="Facility1">
+                    <template if:true={sectionFlags.Facility1}>
+                    <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold; text-overflow: ellipsis;">{facilityPreferredName}</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Name" variant="label-hidden" required="true" name="name" onchange={handleChange}></lightning-output-field>    
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Contact Number</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Phone__c" name="phone" variant="label-hidden" style="pointer-events:none;" onchange={handleNameChange}></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Manager Name</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Manager_Name__c" variant="label-hidden"></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Email ID</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Email__c" name="email" onchange={handleNameChange} variant="label-hidden" style="pointer-events:none;"></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+
+
+
+                    <template if:true={NdisFlag}>
+                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Role</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div class="label-value">
+                    <p class="slds-truncate" title={activeRolesDisplay}>{activeRolesDisplay}</p>
+                    </div>
+                    </label>
+                    </div>
+                    </template>
+
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Services</div>
+                    <div style="flex: 0 0 5%; font-weight: bold;text-align: center;">:</div>
+                    <div class="label-value">
+                    <p class="slds-truncate" title={servicesDisplayValue}>{servicesDisplayValue}</p>
+                    </div>
+                    </label>
+                    </div>
+
+
+                <template if:true={NdisFlag}>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Type of Industry</div>
+                    <div style="flex: 0 0 5%; font-weight: bold;text-align: center;">:</div>
+                    <div class="slds-truncate" style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <lightning-output-field field-name="Type_of_Service__c" required="true" variant="label-hidden"></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>    
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Documents</div>
+                    <div style="flex: 0 0 5%; font-weight: bold;text-align: center;">:</div>
+                    <div class="label-value">
+                    <p class="slds-truncate" title={documentsDisplayValue}>
+                    {documentsDisplayValue}
+                    </p>
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Trainings</div>
+                    <div style="flex: 0 0 5%; font-weight: bold;text-align: center;">:</div>
+                    <div class="label-value">
+                    <p class="slds-truncate" title={trainingsDisplayValue}>{trainingsDisplayValue}</p>
+                    </div>
+                    </label>
+                    </div>
+
+                    <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                        <label class="labelClass" style="display: flex; align-items: left;">
+                            <div style="flex: 0 0 20%; font-weight: bold;">Trainings</div>
+                            <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                            <div class="slds-truncate description" title={facility.DisplayTrainings}>
+                                <p class="desc_1">{facility.DisplayTrainings}</p>
+                            </div>
+                        </label>
+                    </div> -->
+
+
+                </template>
+
+
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Use Org ABN</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Use_Org_ABN__c"  variant="label-hidden" ></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">ABN</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="ABN__c" variant="label-hidden" required="true"></lightning-output-field>   
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Status</div>
+                    <div style="flex: 0 0 5%; font-weight: bold;text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Status__c" value={status} variant="label-hidden" ></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>
+
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Street</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Address__Street__s" variant="label-hidden"></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">City</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Address__City__s" variant="label-hidden"></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">State</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Address__StateCode__s" variant="label-hidden"></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Country</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Address__CountryCode__s" variant="label-hidden"></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Post Code</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Address__PostalCode__s" variant="label-hidden"></lightning-output-field>
+                    </div>
+                    </label>
+                    </div>
+                    </div>
+                    </template>
+                    </div>
+                    </div>
+             <template if:true={NdisFlag}>
+                             <div class="container-box">
+                    <div  class="toggle-bar" onclick={handleSectionToggle} data-id="PayrollSettings1" style="cursor: pointer;">
+                    <span>Facility Settings</span>
+
+                    <span >{sectionIcons.PayrollSettings1}</span>      
+                    </div>
+                    <div class="section-content" data-section="PayrollSettings1">
+                    <template if:true={sectionFlags.PayrollSettings1}>
+                    <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">BMS Identifier</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="BMS_Identifier__c" variant="label-hidden" required="true" name="name" ></lightning-output-field>    
+                    </div>
+                    </label>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Software ID</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Software_Id__c" name="phone" variant="label-hidden" style="pointer-events:none;"></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Agent Name</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Agent_Name__c" variant="label-hidden"></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Tax Agency</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Tax_Agency__c" name="email" onchange={handleNameChange} variant="label-hidden" style="pointer-events:none;"></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Agent Number</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Agent_Number__c"  variant="label-hidden" ></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                <template if:true={NdisFlag}>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Facility Preferred Name</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Facility_Preferred_Name__c"  variant="label-hidden" ></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Participant Preferred Name</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Participant_Preferred_Name__c"  variant="label-hidden" ></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                    <label class="labelClass" style="display: flex; align-items: left;">
+                    <div style="flex: 0 0 20%; font-weight: bold;">Staff Preferred Name</div>
+                    <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                    <div style="flex: 1 1 75%; text-align: left; padding-left: 8px; margin: 0;">
+                    <lightning-output-field field-name="Staff_Preferred_Name__c"  variant="label-hidden" ></lightning-output-field>  
+                    </div>
+                    </label>
+                    </div>
+                </template>
+                    </div>
+                    </template>
+                    </div>
+                    </div>
+
+                   
+                     </template>
+                    
+                </div>
+                   
+                    
+
+        </lightning-record-view-form>
+
+            </template>
+            <template if:true={facilityeditflag}>
+                        <lightning-record-edit-form object-api-name="Facility__c" record-id={recordId} onsuccess={handleSuccess} onsubmit={handleSubmit} onerror={handleError1}>
+                        
+                            <div class="blur-overlay"></div>
+                            <div class="right-align-inner fade-in" style="width:80%;padding:1%;">    
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:0.5%;">Edit Facility</h3>
+                                        
+                                    </div> 
+                                    <div  class="right-content custom-scroll">
+                                        <div class="container-box">
+                                            <div  class="toggle-bar" onclick={handleSectionToggle} data-id="Facility" style="cursor: pointer;">
+                                                <span>Facility Details</span>
+                                                <span >{sectionIcons.Facility}</span>      
+                                            </div>
+                                            <div class="section-content" data-section="Facility">
+                                            <template if:true={sectionFlags.Facility}>
+                                            <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Facility</span>
+                                                <lightning-input-field field-name="Name" variant="label-hidden" required="true" name="name" onchange={handleChange}></lightning-input-field> 
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Contact Number</span>
+                                                <lightning-input-field field-name="Phone__c" name="phone" variant="label-hidden" onchange={handleNameChange}></lightning-input-field> 
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Manager Name</span>
+                                                <lightning-input-field field-name="Manager_Name__c" variant="label-hidden" required="true"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        
+                                        
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class={emailClass}>
+                                                <span class="label-text-drop"><span style="color:red">*</span>Email ID</span>
+                                                <lightning-input-field field-name="Email__c" name="email"  onchange={handleErrorCss} variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+
+
+
+                                        <!-- Riyaz Changes for Fields  -->
+
+                                        <template if:true={NdisFlag}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Roles</span>
+                                                <div class="dropdown-container" lwc:ref="dropdownContainer">
+                                                    <!-- Dropdown Button -->
+                                                    <button 
+                                                        type="button"
+                                                        class="dropdown-button1" 
+                                                        onclick={toggleDropdown}
+                                                        aria-expanded={isOpen}
+                                                        aria-haspopup="listbox"
+                                                    >
+                                                        <span class={selectedOptionClass} title={displayText}>
+                                                            {displayText}
+                                                        </span>
+                                                        <lightning-icon 
+                                                            icon-name={chevronIcon} 
+                                                            size="x-small" 
+                                                            class="chevron-icon">
+                                                        </lightning-icon>
+                                                    </button>
+
+                                                    <!-- Dropdown Menu -->
+                                                    <div if:true={isOpen} class="dropdown-menu">
+                                                        <!-- Add New Option Section -->
+                                                        <div class="add-option-section">
+                                                            <div class="input-container">
+                                                                <lightning-input
+                                                                    type="text"
+                                                                    value={newOptionText}
+                                                                    placeholder="Add new option..."
+                                                                    onchange={handleInputChange}
+                                                                    onkeypress={handleKeyPress}
+                                                                    class="option-input"
+                                                                    variant="label-hidden">
+                                                                </lightning-input>
+                                                                <lightning-button
+                                                                    label="Add"
+                                                                    onclick={handleAddOption}
+                                                                    disabled={isAddDisabled}
+                                                                    variant="brand"
+                                                                    class="add-button">
+                                                                </lightning-button>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Options List -->
+                                                        <div class="options-list custom-scroll">
+                                                            <template for:each={options} for:item="option">
+                                                                <div key={option.id} class="option-item" title={option.label}>
+                                                                    <button 
+                                                                        type="button"
+                                                                        class={option.buttonClass}
+                                                                        data-option-id={option.id}
+                                                                        disabled={option.isDisabled}>
+                                                                        {option.label}
+                                                                    </button>
+                                                                        <!-- onclick={handleSelectOption} -->
+                                                                    <div class="option-controls">
+                                                                        <!-- Status Badge -->
+                                                                        <!-- <span class={option.badgeClass}>
+                                                                            {option.statusText}
+                                                                        </span> -->
+
+                                                                        <!-- Toggle Switch -->
+                                                                        <div class="toggle-switch-container">
+                                                                            <lightning-input
+                                                                                type="toggle"
+                                                                                checked={option.checked}
+                                                                                data-option-id={option.id}
+                                                                                onchange={handleToggleActive}
+                                                                                class="toggle-input toggle_bar_right"
+                                                                                message-toggle-active="" 
+                                                                                message-toggle-inactive=""
+                                                                                variant="label-hidden">
+                                                                            </lightning-input>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>                         
+                                            </div>
+                                        </div>
+                                        </template>
+
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label" style="width: 100%;">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Services</span>
+                                            <div class="dropdown-container1" lwc:ref="dropdownContainerServices">
+                                                <!-- Dropdown Button -->
+                                                <button 
+                                                    type="button"
+                                                    class="dropdown-button1" 
+                                                    onclick={toggleServicesDropdown}
+                                                    aria-expanded={isServicesOpen}
+                                                    aria-haspopup="listbox">
+                                                
+                                                    <span class={servicesSelectedClass} title={servicesDisplayText}>
+                                                        {servicesDisplayText}
+                                                    </span>
+                                                    <lightning-icon 
+                                                        icon-name={chevronIcon} 
+                                                        size="x-small" 
+                                                        class="chevron-icon">
+                                                    </lightning-icon>
+                                                </button>
+
+                                                <!-- Dropdown Menu -->
+                                                <div if:true={isServicesOpen} class="dropdown-menu">
+                                                    
+                                                    <!-- Options List -->
+                                                    <div class="options-list custom-scroll">
+                                                        <template for:each={allServices} for:item="service">
+                                                            <div key={service.id} class="option-item">
+                                                                
+                                                                <!-- Service Label -->
+                                                                <button 
+                                                                    type="button"
+                                                                    class={service.buttonClass}
+                                                                    title={service.label}
+                                                                    onclick={handleSelectService}
+                                                                    data-service-id={service.id}
+                                                                    disabled={service.isDisabled}>
+                                                                    {service.label}
+                                                                </button>
+
+                                                                <!-- Badge + Toggle -->
+                                                                <div class="option-controls">
+                                                                    <!-- <span class={service.badgeClass}>
+                                                                        {service.statusText}
+                                                                    </span> -->
+                                                                    <div class="toggle-switch-container">
+                                                                        <lightning-input 
+                                                                            type="toggle" 
+                                                                            data-service-id={service.id}
+                                                                            checked={service.checked} 
+                                                                            onchange={handleToggleService} 
+                                                                            message-toggle-active="" 
+                                                                            message-toggle-inactive=""
+                                                                            class="toggle_bar_right"
+                                                                            variant="label-hidden">
+                                                                        </lightning-input>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            </div>
+                                        </div>
+
+                                        <template if:true={NdisFlag}>
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div class="floating-label">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Type of Industry</span>
+                                                <lightning-input-field field-name="Type_of_Service__c" name="phone" required="true" onchange={handleServiceChange} variant="label-hidden"></lightning-input-field> 
+                                                </div>
+                                            </div>     
+                                        <!--        <div class="slds-col slds-size_1-of-2" style="padding-left: 1%;padding-right: 1%;padding-top: 1%;">
+                                                    <div class="floating-label-role" style="width: 100%;">
+                                                        <span class="label-text-drop"><span style="color:red">*</span>Services</span>
+
+                                                        <lightning-input-field field-name="Services__c" required="true" variant="label-hidden"></lightning-input-field>    
+                                                    </div>
+                                                </div> Manendra-->
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label" style="width: 100%;">
+                                            <span class="label-text-drop">Documents</span>
+
+                                            <div class="dropdown-container-documents" lwc:ref="documentsDropdown">
+                                                <button 
+                                                    type="button"
+                                                    class="dropdown-button1" 
+                                                    onclick={toggleDocumentsDropdown}
+                                                    aria-expanded={isDocumentsOpen}
+                                                    aria-haspopup="listbox"
+                                                >
+                                                    <span class={documentsSelectedClass} title={documentsDisplayText}>
+                                                        {documentsDisplayText}
+                                                    </span>
+                                                    <lightning-icon 
+                                                        icon-name={chevronIcon} 
+                                                        size="x-small" 
+                                                        class="chevron-icon">
+                                                    </lightning-icon>
+                                                </button>
+
+                                                <div if:true={isDocumentsOpen} class="dropdown-menu">
+                                                    <div class="options-list custom-scroll">
+                                                        <template for:each={documentsList} for:item="doc">
+                                                            <div key={doc.id} class="option-item">
+
+                                                                <!-- <button 
+                                                                    type="button"
+                                                                    class={doc.buttonClass}
+                                                                    onclick={handleSelectDocument}
+                                                                    data-doc-id={doc.id}>
+                                                                    {doc.label}
+                                                                </button> -->
+                                                                <div class="option-label" title={doc.label}>{doc.label}</div>
+                                                                <div class="option-controls">
+                                                                    <!-- <span class={doc.badgeClass}>{doc.statusText}</span> -->
+                                                                    <div class="toggle-switch-container">
+                                                                    <lightning-input 
+                                                                        type="toggle"
+                                                                        checked={doc.checked}
+                                                                        data-doc-id={doc.id}
+                                                                        onchange={handleToggleDocument}
+                                                                        message-toggle-active="" 
+                                                                        message-toggle-inactive=""
+                                                                        variant="label-hidden"
+                                                                        class="toggle_bar_right">
+                                                                    </lightning-input>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+
+                                        </template>  
+
+
+                                            <div class="slds-grid slds-p-vertical_x-small slds-align-middle slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div>
+                                                                <lightning-input type="checkbox" variant="label-hidden" 
+                                                                    onchange={handleOrgAbnToggle} checked={useOrgAbn}>
+                                                                </lightning-input>
+                                                            </div>
+                                                            <div class="slds-col slds-align-middle">
+                                                                <span >Use Org ABN</span>
+                                                            </div>
+                                            </div>
+                                        
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div class="floating-label">
+                                                    <span class="label-text-drop"><span style="color:red">*</span>ABN</span>
+                                                    <lightning-input-field field-name="ABN__c" variant="label-hidden" required="true"  data-id="abnInput"  value={ABN} disabled={abnfield} onchange ={handleAbnChange}></lightning-input-field>
+                                                </div>
+                                            </div>
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 1.2% 0% 1.2%">
+                                                <div class="floating-label">       
+                                                <input type="file"  onchange={onFileUpload} accept=".jpg, .jpeg, .png, .gif" name="uploadFile" style="display: none;">
+                                                <button type="button" onclick={triggerFileInput} class="file-upload-button" style="display:flex;" >
+                                                <i class="material-icons">upload</i> Upload Profile Pic
+                                                </button>
+                                                <div class="slds-text-body_small">{fileName}</div>
+                                                </div>
+                                            </div>
+
+                                    <!-- TRAININGS DROPDOWN -->
+                                    <template if:true={NdisFlag}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label" style="width: 100%;">
+                                                <span class="label-text-drop">Trainings</span>
+
+                                                <div class="dropdown-container-trainings" lwc:ref="trainingsDropdown">
+
+                                                    <button 
+                                                        type="button"
+                                                        class="dropdown-button1" 
+                                                        onclick={toggleTrainingsDropdown}
+                                                        aria-expanded={isTrainingsOpen}
+                                                        aria-haspopup="listbox"
+                                                    >
+                                                        <span class={trainingsSelectedClass} title={trainingsDisplayText}>
+                                                            {trainingsDisplayText}
+                                                        </span>
+
+                                                        <lightning-icon 
+                                                            icon-name={chevronIcon} 
+                                                            size="x-small" 
+                                                            class="chevron-icon">
+                                                        </lightning-icon>
+                                                    </button>
+
+                                                    <div if:true={isTrainingsOpen} class="dropdown-menu">
+                                                        <div class="options-list custom-scroll">
+                                                            <template for:each={trainingsList} for:item="tr">
+                                                                <div key={tr.id} class="option-item">
+                                                                    <div class="option-label" title={tr.label}>{tr.label}</div>
+                                                                    <div class="option-controls">
+                                                                        <!-- <span class={tr.badgeClass}>{tr.statusText}</span> -->
+                                                                        <div class="toggle-switch-container">
+                                                                            <lightning-input 
+                                                                                type="toggle"
+                                                                                checked={tr.checked}
+                                                                                data-tr-id={tr.id}
+                                                                                onchange={handleToggleTraining}
+                                                                                message-toggle-active="" 
+                                                                                message-toggle-inactive=""
+                                                                                variant="label-hidden"
+                                                                                class="toggle_bar_right">
+                                                                            </lightning-input>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>  
+
+
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div>
+                                                <label style="display: flex;gap:2%">
+                                                    <lightning-input-field field-name="Status__c"  onchange={handleStatus} value={toggleValue} name="checkbox" variant="label-hidden" ></lightning-input-field>
+                                                    <span>Status</span>
+                                                </label>  
+                                                </div>
+                                            </div>
+
+
+                                        <div class="slds-size_1-of-3"></div>
+
+                                        <div class="slds-size_1-of-1 slds-large-size_1-of-2">
+                                            <div class="slds-m-right_medium slds-m-left_medium">  
+                                                <div style="color:red;">{errorMessage}</div>                      
+                                            <lightning-input-address
+                                                address-label="Address"
+                                                street-label="Street"
+                                                city-label="Suburb"
+                                                country-label="Country"
+                                                province-label="State"
+                                                postal-code-label="Post Code"
+                                                street={street}
+                                                city={city}
+                                                country={country}
+                                                province={province}
+                                                postal-code={postalcode}
+                                                onchange={addressInputChange}
+                                                show-address-lookup required="true">
+                                                </lightning-input-address>     
+                                            </div>
+                                        </div>
+                                        
+                                        </div>
+                                        
+                                        </template>
+                                        </div>
+                                        </div>
+                                          <template if:true={NdisFlag}>
+                                                <div class="container-box">
+                                            <div  class="toggle-bar" onclick={handleSectionToggle} data-id="PayrollSettings" style="cursor: pointer;">
+                                                <span>Facility Settings</span>
+                                                <span >{sectionIcons.PayrollSettings}</span>      
+                                            </div>
+                                            <div class="section-content" data-section="PayrollSettings">
+                                            <template if:true={sectionFlags.PayrollSettings}>
+                                            <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+
+                                                <!-- <div class="slds-grid slds-p-vertical_x-small slds-align-middle slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                        <div>
+                                                            <lightning-input type="checkbox" variant="label-hidden" 
+                                                                onchange={handleOrgPayrollSettings} checked={useOrgPayrollSettings}>
+                                                            </lightning-input>
+                                                        </div>
+                                                        <div class="slds-col slds-align-middle">
+                                                            <span >Use Org Payroll Settings</span>
+                                                        </div>
+                                                </div>
+                                                 <div class="slds-grid slds-p-vertical_x-small slds-align-middle slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+
+                                                 </div> -->
+                                                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop"><span style="color:red">*</span>BMS Identifier</span>
+                                                                <lightning-input-field field-name="BMS_Identifier__c" required="true" value={BMSIDValue} disabled={isBMSIDDisbale} variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div> 
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop"><span style="color:red">*</span>Software ID</span>
+                                                                <lightning-input-field field-name="Software_Id__c" required="true" value={softwareIDValue} disabled="true" variant="label-hidden"></lightning-input-field> 
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Agent Name</span>
+                                                                <lightning-input-field field-name="Agent_Name__c" value={agentName} disabled={disablePayrollSettingValue} variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                       
+                                                        
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Tax Agency</span>
+                                                                <lightning-input-field field-name="Tax_Agency__c" value={taxAgency} disabled={disablePayrollSettingValue} variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                     
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Agent Number</span>
+                                                                <lightning-input-field field-name="Agent_Number__c" value={taxAgencyNumber} disabled={disablePayrollSettingValue}  variant="label-hidden"></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                    <template if:true={NdisFlag}> 
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Facility Preferred Name</span>
+                                                                <lightning-input-field field-name="Facility_Preferred_Name__c" variant="label-hidden" onchange={handleFacilityNameChange}></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                     
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Participant Preferred Name</span>
+                                                                <lightning-input-field field-name="Participant_Preferred_Name__c" variant="label-hidden" onchange={handleParticipantNameChange}></lightning-input-field>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                            <div class="floating-label">
+                                                                <span class="label-text-drop">Staff Preferred Name</span>
+                                                                <lightning-input-field field-name="Staff_Preferred_Name__c" variant="label-hidden" onchange={handleStaffNameChange}></lightning-input-field>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                             </div>
+                                        </template>
+                                        </div>
+                                        </div>
+                                        
+                                </template>
+                                        
+                                    </div>
+
+
+                                    <div class="slds-align_absolute-center">
+                                        <lightning-button label="Cancel" variant="brand-outline" onclick={handleClose}
+                                            class="slds-m-around_small">
+                                         </lightning-button>
+                                         <template if:true={NdisFlag}>
+                                                <lightning-button   label="Generate BMS ID" variant="brand"  disabled={bmsIdButtonDisable}
+                                                class="slds-m-around_small" name="bmsid" onclick={handleOpenBMSSoftwareID}></lightning-button>
+                                                <lightning-button label="Generate Software ID" name="generatesoftwareid" variant="brand" onclick={handleOpenBMSSoftwareID}
+                                                class="slds-m-around_small" disabled={softwareButtonDisbale} >
+                                                </lightning-button>
+                                          </template>
+                                        <lightning-button label="Update" variant="brand" type="submit" class="slds-m-around_small" disabled={saveButtonDisable}></lightning-button>
+                                    
+                                    </div>
+
+                            </div>
+                            
+                            
+                        </lightning-record-edit-form>
+            </template> 
+
+            <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>
+                        <div class="custom-edit-btn" data-id={recordId} onclick={handleEdit}>
+                            Edit
+                        </div>
+                  </div>
+            </template>
+
+            <template if:true={facilityonboard}>
+                <c-on-boarding
+                    key={recordId}
+                    facility-id={recordId}>
+                </c-on-boarding>
+                <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>
+                  </div>
+            </template>
+
+        <template if:false={ictUserType}>
+            <template if:true={facilitydocument}>
+                <c-facility-Document
+                    key={recordId}
+                    facility-id={recordId}>
+                </c-facility-Document>
+                <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>                     
+                  </div>
+            </template>
+
+            <template if:true={facilityidentity}>
+                <c-facility-Identity
+                    key={recordId}
+                    facility-id={recordId}>
+                </c-facility-Identity>
+                <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>                    
+                  </div>
+            </template>
+
+            <template if:true={facilitytrainings}>
+                <c-facility-Trainings
+                    key={recordId}
+                    facility-id={recordId}>
+                </c-facility-Trainings>
+                <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>                        
+                </div>
+            </template>
+
+            <template if:true={facilityshiftcompliance}>
+                <c-facility-Shift-Compliance
+                    key={recordId}
+                    facility-id={recordId}>
+                </c-facility-Shift-Compliance>
+                <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>                       
+                  </div>
+            </template> 
+
+            <template if:true={facilitycompliancereport}>
+                <c-facility-compliance-report
+                    key={recordId}
+                    facility-id={recordId}>
+                </c-facility-compliance-report>
+                <div class="button-group-container">
+                        <div class="custom-back-btn" onclick={handleBack}>
+                            Back
+                        </div>                        
+                  </div>
+            </template> 
+
+             <template if:true={facilityBulkEntity}>
+               
+                <c-tesseract-apps-accounting-entity-bulk-upload  key={recordId} orgid={selectedName}
+                    facility-id={recordId} iscompanyexist={isCompanyExist}  is-entity-exist={isEntityExist} is-from-manage-invoice={isFromManageInvoice} selected-comp-id={existingCompanyId} oncreatecompany={handleCreateCompanyFromParent} oncreateentity={handleCreateEntityFromParent}></c-tesseract-apps-accounting-entity-bulk-upload>
+                
+                <div class="button-group-container" >
+                        <div class="custom-back-btn" title="Back(Ctrl + Shift + B)" onclick={handleBack}>
+                            Back
+                        </div>                       
+                  </div>
+            </template> 
+
+            <!-- <Vamshi> -->
+            <!-- <template if:true={facilityCatalogue}>
+                
+                
+               <div style="display: flex;justify-content:space-between;">
+                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                    <span class="label-text-drop">Service Type</span>
+                    <lightning-combobox
+                    label="Service Type"
+                    placeholder="Select Service Type"
+                    options={serviceTypeOptions}
+                    value={selectedServiceType}
+                    variant="label-hidden"
+                    onchange={handleServiceTypeChange}>
+                </lightning-combobox>
+                    </div>
+                </div> 
+
+                <lightning-button label="Create New Catalogue" variant="brand" onclick={handleCreateCatalogue} class="slds-m-around_xx-small"></lightning-button>
+
+                </div>  
+
+         <template if:true={filteredCatalogs.length}>
+            <div class="slds-m-top_medium">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <div class="slds-truncate">Support Item Name</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate">Support Item Number</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate">Amount</div>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                     
+                             <template for:each={catalogueRecords} for:item="item">
+                            <tr key={item.Id}>
+                               
+                                <td>
+                                    <div class="slds-truncate">
+                                        {item.Support_Item_Name__c}
+                                    </div>
+                                </td>
+
+                            
+                                <td>
+                                    <div class="slds-truncate">
+                                        {item.Support_Item_Number__c}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="slds-truncate">
+                                        {item.Amount}
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template if:true={cataloguePaginationVisible}>
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_medium">
+
+              
+                <div class="slds-col">
+                    <div class="slds-list_inline">
+                        <span style="margin-right:5px;">Page Size:</span>
+                        <div class="slds-select_container">
+                            <select class="slds-select" onchange={handleCatalogueRecordsPerPage}>
+                                <template for:each={cataloguePageSizeOptions} for:item="option">
+                                    <option key={option} value={option}>{option}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+               
+                <div class="slds-align_absolute-center">
+                    <lightning-button
+                        disabled={isCatalogueFirstPage}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        onclick={catalogueFirstPage}>
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={isCatalogueFirstPage}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        onclick={cataloguePreviousPage}
+                        class="slds-m-horizontal_xx-small">
+                    </lightning-button>
+
+                    <span class="slds-badge">
+                        Showing {cataloguePageNumber} of {catalogueTotalPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                        disabled={isCatalogueLastPage}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        onclick={catalogueNextPage}
+                        class="slds-m-horizontal_xx-small">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={isCatalogueLastPage}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        onclick={catalogueLastPage}>
+                    </lightning-button>
+                </div>
+
+               
+                <div class="slds-col slds-text-align_right">
+                    <span class="slds-badge">
+                        Total Records: {catalogueTotalRecords}
+                    </span>
+                </div>
+
+            </div>
+        </template>
+
+
+
+
+
+            </template> -->
+        </template>   
+        
+            </div>
+              </div>
+        
+        </div>
+         <template if:true={showSpinner}>
+                        <lightning-spinner alternative-text="Refreshing Data" size="medium"></lightning-spinner>
+         </template>
+    </template>
+     <template if:true={createCompanyFlag}>
+          <div class="main-container custom-scroll" style="overflow-y: auto; overflow-x:hidden;">
+            <c-create-company-lwc  orgidtrack={selectedName} create-company-facility-id={recordId} is-from-facility={isFromFacility}  oncreatecompanyback={handleCreateCompanyBack}></c-create-company-lwc>
+          </div>
+         
+    </template>
+    <template if:true={isNewEntityFlag}>
+          <div class="main-container custom-scroll" style="overflow-y: auto; overflow-x:hidden;">
+        <!-- <c-tesseract-apps-accounting-settings-lwc orgid={orgid}  companyid={companyid} companyname ={companyname} ></c-tesseract-apps-accounting-settings-lwc> -->
+        <c-tesseract-apps-accounting-entities  is-customer={selectedCardType} selectedid={existingCompanyId} is-from-facility={isFromFacility} onclientevent={handleCreateEntityBack}  editcompanyname={existingCompanyName}></c-tesseract-apps-accounting-entities>   <!--  onnavigateentitycard={handleNewCreateEntity}-->
+        </div>
+    </template>
+
+    <template if:true={BMSconfirmMessgeTemplate}>
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+        
+        <div class="slds-modal__container modal-container" style="width:30%;">
+            <!-- Centered Header -->
+            <header class="slds-modal__header modal-header" style="background: #002A52;">
+                <h2 class="slds-text-heading_medium slds-hyphenate modal-title" style="color:white;font-weight:bold;text-align: center;">Confirm</h2>
+            </header> 
+    
+            <!-- Modal Content -->
+            <div class="slds-modal__content slds-p-around_medium modal-content">                                
+                <div class="slds-m-around_small">
+                    <div>
+                            <h1>
+                                <p style="text-align: center;">
+                                    Do you want to copy a BMS ID? Please click "Yes" to proceed, or click "Generate New" to create a new one.<br />
+                                    <strong>Note:</strong> This ID is unique and can only be generated once.
+                                    </p>
+                            </h1>
+
+
+                    </div>
+                    
+                    <!-- Centered Buttons -->
+                    <div class="button-container">
+                        <lightning-button label="Yes" variant="brand" onclick={handleCopyBmsId} class="slds-m-around_xx-small"></lightning-button>
+                        <lightning-button label="No" variant="brand" onclick={ConfirmClose} class="slds-m-around_xx-small"></lightning-button>
+                        <lightning-button label="Generate New" variant="brand" onclick={handleBmsId} class="slds-m-around_xx-small"></lightning-button>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <template if:true={SoftwareIDconfirmMessgeTemplate}>
+    <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+    class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+    
+    <div class="slds-modal__container modal-container"  style="width:30%;">
+        <!-- Centered Header -->
+        <header class="slds-modal__header modal-header" style="background: #002A52;">
+            <h2 class="slds-text-heading_medium slds-hyphenate modal-title" style="color:white;font-weight:bold;text-align: center;">Confirm</h2>
+        </header> 
+
+        <!-- Modal Content -->
+        <div class="slds-modal__content slds-p-around_medium modal-content">                                
+            <div class="slds-m-around_small">
+                <div>
+                    <h1>
+                        <p style="text-align: center;">
+                            Do you want to Generate Sofware ID?<br/>
+                            <strong>Note:</strong> This ID is unique and can only be generated once.
+                        </p>
+                    </h1>
+                </div>
+                
+                <!-- Centered Buttons -->
+                <div class="button-container">
+                    <lightning-button label="Yes" variant="brand" onclick={GenerateSoftwareId} class="slds-m-around_small"></lightning-button>
+                    <lightning-button label="No" variant="brand" onclick={ConfirmClose} class="slds-m-around_small"></lightning-button>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+
+      <template if:true={handleStatusFlag}>
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+                    
+                        <div class="slds-modal__container modal-container" style="max-width:25%;">
+                         <header class="slds-modal__header" style="background: #002A52;">
+                            
+                            <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                        </header> 
+                        <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+                            <div class="slds-m-around_small" style="text-align:center">
+                                <div><p style="text-align: center;">Are you sure you want to change status of the </br>{facilityname}?</p></div>
+                                <div  style="margin-top:10px;text-align: center;">
+                                     <lightning-button label="No" variant="brand" onclick={handlestatusclose}
+                                    class="slds-m-around_small"></lightning-button>
+                                    <lightning-button label="Yes" variant="brand" onclick={handlestatuschange} class="slds-m-around_small"></lightning-button>
+                                   
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+
+
+       <template if:true={handleAbnFlag}>
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+                    
+                        <div class="slds-modal__container modal-container" style="max-width:25%;">
+                         <header class="slds-modal__header" style="background: #002A52;">
+                            
+                            <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                        </header> 
+                        <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+                            <div class="slds-m-around_small" style="text-align:center">
+                                <div><p style="text-align: center;">Do you want to use Org ABN?</p></div>
+                                <div  style="margin-top:10px;text-align: center;">
+                                     <lightning-button label="No" variant="brand" onclick={handlecloseAbn}
+                                    class="slds-m-around_small"></lightning-button>
+                                    <lightning-button label="Yes" variant="brand" onclick={handleAbn} class="slds-m-around_small"></lightning-button>
+                                   
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+
+    <!-- Multi-Upload Section -->
+    <template if:true={isMultiFacilityUpload}>
+        <!-- <p > Bulk Upload</p> -->
+        <c-tesseract-apps-facility-bulk-upload-lwc onfacilityeventfrombulk={childevent}></c-tesseract-apps-facility-bulk-upload-lwc>   
+    </template>
+</template>
