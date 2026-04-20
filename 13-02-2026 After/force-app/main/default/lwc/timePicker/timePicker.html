@@ -1,0 +1,142 @@
+<template>
+    <!-- Trigger Button -->
+    <div class="timepicker-trigger-container">
+        <button class="trigger-button" onclick={toggleTimePicker} disabled={disableTimeButton}>{displayedTime}</button>
+    </div>
+
+    <!-- Time Picker Popup -->
+    <template if:true={isTimePickerOpen}>
+        <div class="timepicker-extension">
+            <div class="timepicker-modal">
+                <button class="close-button" onclick={cancelTimePicker}>&times;</button>
+                <div class="time-selection-section">
+                    <!-- Modal Title -->
+                    <p class="modal-title">Pick your time slot <lightning-helptext content="Click and Scroll to Edit" style="padding-bottom: 5%;"></lightning-helptext></p>
+                    
+                    <!-- Time Input Container -->
+                    <!-- Hour Selection -->
+                    <!-- Hour Selection -->
+                    <div class="time-input-section">
+                        <!-- Hour Selection -->
+                        <div class="time-hour-box" onclick={handleHourClick}>
+                            <template if:false={isHourInputEnabled}>
+                                {selectedHour}
+                            </template>
+                            <template if:true={isHourInputEnabled}>
+                                <input
+                                    type="number"
+                                    class="time-input-field"
+                                    value={selectedHour}
+                                    oninput={updateHourFromInput}
+                                    onkeypress={restrictHourInput}
+                                    onblur={disableHourInput}
+                                    maxlength="2"
+                                    min="0" max="12"
+                                    
+                                    onwheel={handleScrollHour}
+                                    onkeydown={handleKeyPress}
+                                />
+                            </template>
+                        </div>
+                    
+                        <!-- Colon Separator -->
+                        <span class="time-separator">:</span>
+                    
+                        <!-- Minute Selection -->
+                        <div class="time-minute-box" onclick={handleMinuteClick}>
+                            <template if:false={isMinuteInputEnabled}>
+                                {selectedMinute}
+                            </template>
+                            <template if:true={isMinuteInputEnabled}>
+                                <input
+                                    type="number"
+                                    class="time-input-field"
+                                    value={selectedMinute}
+                                    oninput={updateMinuteFromInput}
+                                    onkeypress={restrictMinuteInput}
+                                    onblur={disableMinuteInput}
+                                    maxlength="2"
+                                    min="0" max="59"
+                                    onwheel={handleScrollMinute}
+                                    onkeydown={handleKeyPress}
+                                />
+                            </template>
+                        </div>
+                    </div>
+                    
+
+
+                    <!-- AM/PM Selector -->
+                    <div class="ampm-selector">
+                        <button style="border-top-left-radius: 6px; border-top-right-radius: 6px;" class={amButtonClass} onclick={selectAm} onkeydown={handleKeyPress}>AM</button>
+                        <button style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" class={pmButtonClass} onclick={selectPm} onkeydown={handleKeyPress}>PM</button>
+                    </div>
+                </div>
+
+                <!-- Clock Section -->
+                <div class="clock-section">
+                    <div class="clock-container">
+                        <svg class="clock-face" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" class="outer-circle"></circle>
+
+                            <!-- Hour/Minute Markers -->
+                            <g>
+                                <template if:true={isHourSelection}>
+                                    <template for:each={hours} for:item="hour">
+                                        <text
+                                            key={hour.value}
+                                            x={hour.x}
+                                            y={hour.y}
+                                            class="hour-text"
+                                            data-value={hour.value}
+                                            onclick={handleHourClick}
+                                        >
+                                            {hour.label}
+                                        </text>
+                                    </template>
+                                </template>
+                                <template if:true={isMinuteSelection}>
+                                    <template for:each={minuteMarkers} for:item="minute">
+                                        <text
+                                            key={minute.value}
+                                            x={minute.x}
+                                            y={minute.y}
+                                            class="minute-text"
+                                            data-value={minute.value}
+                                            onclick={handleMinuteClick}
+                                        >
+                                            {minute.label}
+                                        </text>
+                                    </template>
+                                </template>
+                            </g>
+
+                            <!-- Clock Hands -->
+                            <line
+                                x1="50"
+                                y1="50"
+                                x2={hourHandX}
+                                y2={hourHandY}
+                                class="clock-hour-hand"
+                            ></line>
+                            <line
+                                x1="50"
+                                y1="50"
+                                x2={minuteHandX}
+                                y2={minuteHandY}
+                                class="clock-minute-hand"
+                            ></line>
+                            <circle cx="50" cy="50" r="2" class="center-circle"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    
+                    <button class="confirm-button" onclick={saveTime}>&#x2713;</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

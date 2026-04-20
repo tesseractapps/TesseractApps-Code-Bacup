@@ -1,0 +1,1071 @@
+<template>
+   <!--  <div class="count-text">
+        Showing {staffList.length} of {staffList.length} staff members
+    </div> -->
+
+<div class="main-container" >
+    <template if:true={isHome}>
+     <!-- TOP SUMMARY CARDS -->
+        <div class="summary-wrapper">
+            <div class="summary-card total" data-status="All" onclick={handleTileClick}>
+                <div class="label" >
+                    Total Documents
+                <template if:true={isTotalTileActive}>
+                <i class="material-iconsInvoice">task_alt</i>
+                </template>
+                 </div>
+                <div class="count">{totalDocuments}</div>
+                 
+            </div>
+            <div class="summary-card approved" data-status="Approved" onclick={handleTileClick}>
+                <div class="label">
+                    Approved
+            <template if:true={isApprovedTileActive}>
+                <i class="material-iconsInvoice">task_alt</i>
+            </template>
+            </div>
+                <div class="count">{approvedCount}</div>
+            </div>
+            <div class="summary-card pending" data-status="Pending" onclick={handleTileClick}>
+                <div class="label">
+                    Pending - Approval Queue
+                <template if:true={isPendingTileActive}>
+                <i class="material-iconsInvoice">task_alt</i>
+                </template>
+                </div>
+                <div class="count">{pendingCount}</div>
+            </div>
+            <div class="summary-card expiring" data-status="Expiring Soon" onclick={handleTileClick}>
+                <div class="label">
+                    Expiring Soon
+             <template if:true={isExpiringTileActive}>
+                <i class="material-iconsInvoice">task_alt</i>
+            </template>
+                </div>
+                <div class="count">{expiringSoonCount}</div>
+            </div>
+            <div class="summary-card expired" data-status="Expired" onclick={handleTileClick}>
+                <div class="label">
+                    Expired
+            <template if:true={isExpiredTileActive}>
+            <i class="material-iconsInvoice">task_alt</i>
+            </template>
+                </div>
+                <div class="count">{expiredCount}</div>
+            </div>
+            <div class="summary-card rejected" data-status="Rejected" onclick={handleTileClick}>
+                <div class="label">
+                    Rejected
+            <template if:true={isRejectedTileActive}>
+                <i class="material-iconsInvoice">task_alt</i>
+            </template>
+                </div>
+                <div class="count">{rejectedCount}</div>
+            </div>
+        </div>
+
+        <div class="top-header slds-grid slds-grid_align-spread slds-m-bottom_medium">
+            <div class="title-block">
+            <div class="page-title">All Staff Documents</div>
+            <div class="page-subtitle">View, filter, and manage all documents across your entire workforce</div>
+            </div>
+
+            <div class="header-actions">
+            <button class="export-btn" onclick={exportToCSV}>
+            <span class="material-icons-export Export">file_download</span>
+            Export 
+            </button>
+            </div>
+        </div>
+     <div class="search-section">
+     <div class="floating-label slds-small-size_1-of-4">
+        <span class="label-text-drop">Search</span>
+        <div class="custom-search-wrapper">
+            <lightning-input
+                type="search"
+                placeholder="Search by document or Staff Name"
+                label="Staff Name"
+                title="Search by document or Staff Name"
+                name="searchName"
+                value={searchName}
+                variant="label-hidden"
+                onchange={handleSearchInput}>
+            </lightning-input>
+        </div>
+    </div>
+    
+   <!--  <div class="button-group filter-toggle-group">
+        <button type="button"
+                class={activeButtonClass}
+                onclick={handleActiveToggle}>
+            Active
+        </button>
+
+        <button type="button"
+                class={inactiveButtonClass}
+                onclick={handleInactiveToggle}>
+            Inactive
+        </button>
+    </div> -->
+
+    <!--  <div class="slds-small-size_1-of-6">
+        <lightning-combobox
+            name="statusFilter"
+            value={selectedStatus}
+            placeholder="All Statuses"
+            options={statusOptions}  
+            variant="label-hidden"
+            onchange={handleStatusChange}>
+        </lightning-combobox>
+    </div> -->
+
+    <!-- FILTER: ROLES -->
+   <!--  <div class="filter-dropdown">
+        <lightning-combobox
+            name="roleFilter"
+            value={selectedRole}
+            placeholder="All Roles"
+            options={roleOptions}  
+            variant="label-hidden"
+            onchange={handleRoleChange}>
+        </lightning-combobox>
+    </div> -->
+
+    <!-- FILTER: DOCUMENT TYPES -->
+    <div class="slds-small-size_1-of-6">
+        <lightning-combobox
+            name="docTypeFilter"
+            value={selectedDocType}
+            placeholder="All Document Types"
+            options={docTypeOptions}  
+            variant="label-hidden"
+            onchange={handleDocTypeChange}>
+        </lightning-combobox>
+    </div>
+    
+ 
+    </div>
+
+        <div class="toolbar">
+                <div class="group-by">
+                    <button class={byDocTypeClass} onclick={groupByDocType}>By Document Type</button>
+                    <button class={byStaffClass} onclick={groupByStaff}>By Staff Member</button>
+                    <button class={byStatusClass} onclick={groupByStatus}>By Status</button>
+                </div>
+
+                <div class="controls">
+                    <!-- <label>Sort by:</label>
+                    <lightning-combobox
+                        value={sortBy}
+                        options={sortOptions}
+                        onchange={handleSort}>
+                    </lightning-combobox> -->
+
+                    <button onclick={expandAll}>Expand All</button>
+                    <button onclick={collapseAll}>Collapse All</button>
+                </div>
+        </div>
+    <div class="staffTable custom-scroll">
+        <template if:true={isStaffView}>
+            <template for:each={staffList} for:item="staff">
+                <div key={staff.Id} class="staff-card">
+
+                    <!-- HEADER (click to expand) -->
+                    <div class="staff-header" data-id={staff.Id} onclick={toggleSection}>
+                        <div class="left">
+                        <!--  <span class="arrow">
+                                <template if:true={staff.expand}>keyboard_arrow_right</template>
+                                <template if:false={staff.expand}>keyboard_arrow_down</template>
+                            </span> -->
+                        <span class="material-icons arrow">
+                            <template if:true={staff.expand}>keyboard_arrow_down</template>
+                            <template if:false={staff.expand}>keyboard_arrow_right</template>
+                        </span>
+
+                            
+                        <div class="staff-name">
+                        <!--   <span class={staff.statusClass}></span> -->
+                            {staff.NameToDisplay__c}
+                        </div>
+                            <div class="doc-count">{staff.docCount} documents</div>
+                        </div>
+
+                        <div class="right">
+                        <!--  <span class="approved-count">{staff.approvedCount} Approved</span>
+                            <button class="view-profile">👤 View Profile</button> -->
+                        </div>
+                    </div>
+
+                    <!-- TABLE OF CHILD RECORDS -->
+                    <template if:true={staff.expand}>
+                        <div class="doc-list">
+                            <template for:each={staff.Child_Staffs__r} for:item="doc">
+                                <div key={doc.Id} class="doc-row">
+
+                                    <!-- LEFT SIDE -->
+                                    <div class="doc-left">
+
+                                        <!-- ICON + DOCUMENT NAME -->
+                                        <div class="doc-title">
+                                            <span class={doc.statusIconClass}></span>
+                                            <template if:true={staffFlag}>
+                                                <span class="doc-name">{doc.Document_Type__c}</span>
+                                            </template>
+                                        <template if:false={staffFlag}>
+                                            <a href="javascript:void(0);"
+                                            class="doc-name link"
+                                            data-id={doc.Id}
+                                            onclick={handleOpenHistory}>
+                                                {doc.Document_Type__c}
+                                            </a>
+                                        </template>
+                                        </div>
+
+                                        <!-- SUBTEXT: ROLE + DATE -->
+                                        <div class="doc-meta">
+                                            Role: {staff.role}
+                                            <template if:true={doc.FormattedDate}>
+                                                • Expires: {doc.FormattedDate}
+                                            </template>
+                                        <!--  <template if:true={doc.UploadedDate}>
+                                                • Uploaded: {doc.UploadedDate}
+                                            </template> -->
+                                        </div>
+
+                                        <!-- TAGS LIKE IMAGE -->
+                                        <div class="tags">
+                                            
+                                        </div>
+
+                                    </div>
+
+                                    <!-- RIGHT SIDE (ICONS) -->
+                                    <div class="doc-actions">
+                                        <template if:true={doc.isMandatory}>
+                                                <span class="tag purple">Mandatory</span>
+                                            </template>
+
+                                            <template if:true={doc.isPending}>
+                                                <span class="tag yellow">Pending</span>
+                                            </template>
+                                            <template if:true={stafflag}> 
+                                            <template if:true={doc.isPending}>
+                                                <span class="material-icons action approve"
+                                                    data-id={doc.Id}
+                                                    onclick={handleApprove}>
+                                                    thumb_up_off_alt
+                                                </span>
+                                                <span class="material-icons action reject"
+                                                    data-id={doc.Id}
+                                                    onclick={handleReject}>
+                                                    thumb_down_off_alt
+                                                </span>
+                                            </template>
+                                            </template>
+                                            <template if:true={doc.isApproved}>
+                                                <span class="tag green">Approved</span>
+                                            </template>
+                                            <template if:true={doc.isRejected}>
+                                                <span class="tag red">Rejected</span>
+                                            </template>
+
+                                            <template if:true={doc.expiringSoon}>
+                                                <span class="tag orange">Expires in {doc.daysLeft}d</span>
+                                            </template>
+                                            <template if:true={doc.isExpired}>
+                                                <span class="tag red">Expired</span>
+                                            </template>
+
+
+                                        
+                                        <span class="material-icons view-icon"
+                                            data-id={doc.Id}
+                                            data-url={doc.View_File__c}
+                                            onclick={handleView}>visibility</span>
+                                        <template if:true={stafflag}> 
+                                        <span class="material-icons edit-icon"
+                                        data-id={doc.Id}  data-doc={doc.Document_Type__c} data-key={doc.key__c} data-staffid={staff.Id} data-facilityid={staff.Facility__c}
+                                        onclick={handleEdit}>edit_document</span>
+
+                                        <span class="material-icons delete-icon"
+                                            data-id={doc.Id} data-key={doc.key__c}
+                                            onclick={handleDelete}>delete</span>
+                                            
+
+                                        <span class="material-icons rule-icon"
+                                            onclick={handleShare}  data-staffid={staff.Id}
+                                            data-id={doc.Id}>passkey</span>
+                                    </template>
+                                    </div>
+
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
+        </template>
+    <!-- DOCUMENT VIEW -->
+        <template if:true={isDocTypeView}>
+            <template for:each={staffList} for:item="group">
+               <!--  <template if:true={group.docCount}> -->
+                <div key={group.key} class="staff-card">
+
+                    <!-- HEADER (Document Type on top) -->
+                    <div class="staff-header" data-id={group.key} onclick={toggleSection}>
+                        
+                        <div class="left">
+                            <!-- <span class="arrow">
+                                <template if:true={group.expand}>▼</template>
+                                <template if:false={group.expand}>▶</template>
+                            </span> -->
+                            <span class="material-icons arrow">
+                            <template if:true={group.expand}>keyboard_arrow_down</template>
+                            <template if:false={group.expand}>keyboard_arrow_right</template>
+                        </span>
+                        
+
+                            <div class="staff-name">
+                                <span class="doc-type-title">{group.documentTypeName}</span>
+                            </div>
+
+                            <div class="doc-count">
+                                {group.docCount} document
+                                <!-- <template if:true={group.docCount > 1}>s</template> -->
+                            </div>
+                        </div>
+
+                        <div class="right">
+                            <template if:true={group.mandatoryCount}>
+                                <span class="tag purple">{group.mandatoryCount} Mandatory</span>
+                            </template>
+                        </div>
+
+                    </div>
+
+                    <!-- EXPANDED CHILD ROWS (Staff rows) -->
+                    <template if:true={group.expand}>
+                        <div class="doc-list">
+
+                            <template for:each={group.Child_Staffs__r} for:item="doc">
+                                <div key={doc.Id} class="doc-row">
+
+                                    <!-- LEFT SIDE -->
+                                    <div class="doc-left">
+
+                                        <!-- STAFF NAME -->
+                                        <div class="doc-title">
+                                            <template if:true={staffFlag}>
+                                                <span class={doc.statusIconClass}></span>
+                                            </template>
+
+                                        <template if:false={staffFlag}>
+                                            <a href="javascript:void(0);"
+                                            class="doc-name link"
+                                            data-id={doc.Id}
+                                            onclick={handleOpenHistory}>
+                                            Staff: {doc.staffName}
+                                            </a>
+                                        </template>
+                                            <!-- Staff: {doc.staffName} -->
+                                        </div>
+
+                                        <!-- META -->
+                                        <div class="doc-meta">
+                                            Role: {doc.role}
+                                            <template if:true={doc.FormattedDate}> • Expires: {doc.FormattedDate}</template>
+                                            <template if:true={doc.UploadedDate}> • Uploaded: {doc.UploadedDate}</template>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- RIGHT SIDE (TAGS & ICONS) -->
+                                    <div class="doc-actions">
+
+                                        <!-- TAGS -->
+                                        <template if:true={doc.isMandatory}>
+                                            <span class="tag purple">Mandatory</span>
+                                        </template>
+                                        <template if:true={doc.isPending}>
+                                            <span class="tag yellow">Pending</span>
+                                        </template>
+                                        <template if:true={stafflag}>
+                                        <template if:true={doc.isPending}>
+                                            <span class="material-icons action approve"
+                                                data-id={doc.Id}
+                                                onclick={handleApprove}>
+                                                thumb_up_off_alt
+                                            </span>
+                                            <span class="material-icons action reject"
+                                                data-id={doc.Id}
+                                                onclick={handleReject}>
+                                                thumb_down_off_alt
+                                            </span>
+                                        </template>
+                                        </template>
+                                        <template if:true={doc.isApproved}>
+                                            <span class="tag green">Approved</span>
+                                        </template>
+                                        <template if:true={doc.isRejected}>
+                                            <span class="tag red">Rejected</span>
+                                        </template>
+                                        <template if:true={doc.expiringSoon}>
+                                            <span class="tag orange">Expires in {doc.daysLeft}d</span>
+                                        </template>
+                                        <template if:true={doc.isExpired}>
+                                            <span class="tag red">Expired</span>
+                                        </template>
+
+                                        <!-- ACTION ICONS -->
+                                        <span class="material-icons view-icon"
+                                            onclick={handleView}
+                                            data-url={doc.View_File__c}>visibility</span>
+
+                                        <span class="material-icons edit-icon"
+                                            data-id={doc.Id}
+                                            data-doc={doc.Document_Type__c}
+                                            data-key={doc.key__c}
+                                           data-staffid={doc.Staff__c}
+                                           data-facilityid={doc.Facility__c}
+                                            onclick={handleEdit}>edit_document</span>
+                                        <template if:true={stafflag}> 
+                                        <span class="material-icons delete-icon"
+                                            data-id={doc.Id} data-key={doc.key__c}
+                                            onclick={handleDelete}>delete</span>
+                                        <span class="material-icons rule-icon"
+                                        onclick={handleShare} data-staffid={doc.Staff__c}
+                                        data-id={doc.Id}>passkey</span> 
+                                        </template>  
+
+                                    </div>
+
+                                </div>
+                            </template>
+
+                        </div>
+                    </template>
+
+                </div>
+               <!--  </template> -->
+            </template>
+        </template>
+
+        <!-- STATUS VIEW -->
+        <template if:true={isStatusView}>
+            <template for:each={staffList} for:item="group">
+                <div key={group.key} class="staff-card">
+
+                    <!-- STATUS HEADER (click to expand) -->
+                    <div class="staff-header" data-id={group.key} onclick={toggleSection}>
+
+                        <div class="left">
+                            <!-- <span class="arrow">
+                                <template if:true={group.expand}>▼</template>
+                                <template if:false={group.expand}>▶</template>
+                            </span> -->
+
+                            <span class="material-icons arrow">
+                            <template if:true={group.expand}>keyboard_arrow_down</template>
+                            <template if:false={group.expand}>keyboard_arrow_right</template>
+                        </span>
+
+                            <div class="staff-name">
+                                <span class="status-title">{group.statusHeader}</span>
+                            </div>
+
+                            <div class="doc-count">
+                                {group.docCount} document
+                                <!-- <template if:true={group.docCount > 1}>s</template> -->
+                            </div>
+                        </div>
+
+                        <div class="right"></div>
+
+                    </div>
+
+                    <!-- EXPANDED LIST -->
+                    <template if:true={group.expand}>
+                        <div class="doc-list">
+
+                            <template for:each={group.Child_Staffs__r} for:item="doc">
+                                <div key={doc.Id} class="doc-row">
+
+                                    <!-- LEFT SIDE -->
+                                    <div class="doc-left">
+
+                                        <!-- STATUS AS TITLE -->
+                                        <div class="doc-title">
+                                            <span class={doc.statusIconClass}></span>
+                                            <template if:true={staffFlag}> <template if:true={doc.staffName}>{doc.staffName}</template> </template>
+                                            <template if:false={staffFlag}>
+                                            <template if:true={doc.staffName}>
+                                                <a href="javascript:void(0);"
+                                                class="doc-name link"
+                                                data-id={doc.Id}
+                                                onclick={handleOpenHistory}>
+                                                    {doc.staffName}
+                                                </a>
+                                            </template>
+                                            </template>
+                                            <!-- Correct Status Label -->
+                                        <!--  <template if:true={doc.isApproved}>Approved</template>
+                                            <template if:true={doc.isPending}>Pending</template>
+                                            <template if:true={doc.isRejected}>Rejected</template>
+                                            <template if:true={doc.isExpired}>Expired</template>
+                                            <template if:true={doc.expiringSoon}>Expiring Soon</template> -->
+
+                                        
+                                        </div>
+
+                                        <!-- STAFF INFO -->
+                                        <div class="doc-meta">
+                                        <!--  Staff: {doc.staffName} -->
+                                            • Type: {doc.Document_Type__c}
+                                            <template if:true={doc.FormattedDate}> • Expires: {doc.FormattedDate}</template>
+                                            <!-- <template if:true={doc.UploadedDate}> • Uploaded: {doc.UploadedDate}</template> -->
+                                        </div>
+
+                                    </div>
+
+                                    <!-- RIGHT SIDE (TAGS + ACTIONS) -->
+                                    <div class="doc-actions">
+
+                                        <template if:true={doc.isMandatory}>
+                                            <span class="tag purple">Mandatory</span>
+                                        </template>
+
+                                        <template if:true={doc.isPending}>
+                                            <span class="tag yellow">Pending</span>
+                                        </template>
+                                        <template if:true={stafflag}>
+                                        <template if:true={doc.isPending}>
+                                            <span class="material-icons action approve"
+                                                data-id={doc.Id}
+                                                onclick={handleApprove}>
+                                                thumb_up_off_alt
+                                            </span>
+                                            <span class="material-icons action reject"
+                                                data-id={doc.Id}
+                                                onclick={handleReject}>
+                                                thumb_down_off_alt
+                                            </span>
+                                        </template>
+                                        </template>
+
+                                        <template if:true={doc.isApproved}>
+                                            <span class="tag green">Approved</span>
+                                        </template>
+
+                                        <template if:true={doc.isRejected}>
+                                            <span class="tag red">Rejected</span>
+                                        </template>
+
+                                        <template if:true={doc.expiringSoon}>
+                                            <span class="tag orange">Expires in {doc.daysLeft}d</span>
+                                        </template>
+
+                                        <template if:true={doc.isExpired}>
+                                            <span class="tag red">Expired</span>
+                                        </template>
+
+                                        <!-- ACTION ICONS -->
+                                        <span class="material-icons view-icon"
+                                            data-url={doc.View_File__c}
+                                            onclick={handleView}>visibility</span>
+                                        <template if:true={stafflag}> 
+                                        <span class="material-icons edit-icon"
+                                            data-id={doc.Id} data-doc={doc.Document_Type__c}
+                                            data-key={doc.key__c} data-staffid={doc.Staff__c}
+                                             data-facilityid={doc.Facility__c}
+                                            onclick={handleEdit}>edit_document</span>
+
+                                        <span class="material-icons delete-icon"
+                                            data-id={doc.Id} data-key={doc.key__c}
+                                            onclick={handleDelete}>delete</span>
+
+                                    <span class="material-icons rule-icon"
+                                        onclick={handleShare} data-staffid={doc.Staff__c}
+                                        data-id={doc.Id}>passkey</span>
+                                        </template>
+
+                                    </div>
+
+                                </div>
+                            </template>
+
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+        </template>
+
+    </div>
+        <template if:false={noRecordsFlag}>
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large fixed-pagination" style="padding-top: 0.5em;">
+            <!--RECORDS PER PAGE-->
+            <div class="slds-col">
+                    <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                    <div class="slds-select_container">
+                        <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                <template for:each={pageSizeOptions} for:item="option">
+                                <option key={option} value={option}>{option}</option>
+                                </template>
+                        </select>
+                    </div>
+                    </div>
+            </div>
+
+            <!--PAGE NAVIGATION-->
+            <div class="slds-align_absolute-center" style="height:5rem">
+                    <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+                    <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+                    &nbsp;
+                    <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                    &nbsp;
+                    <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                    <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+            </div>
+            <!--TOTAL RECORDS-->
+            <div class="slds-clearfix slds-m-right_xx-large">
+                    <div class="slds-float_right">
+                    <span class="slds-badge"> Total Records: {totalRecords}</span>
+                    </div>
+            </div>
+            </div>  
+        </template>
+
+     </template>
+
+      <template if:true={isModalOpen}>
+            <div class="slds-grid slds-grid_align-end">
+                <lightning-button class="slds-m-left_medium"  label="Back" variant="brand"
+                onclick={handleback} style="margin-bottom: 0.5%;"></lightning-button>
+            </div>
+            <div class="main-container-iframe custom-scroll">
+              <iframe src={currentUrl} width="100%" height="1200px" ></iframe>
+              </div>
+     </template>
+      <template if:true={showPreTaxRecordEditForm}>
+            <div class="blur-overlay"></div>
+            <div class="right-align fixed-right-panel">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 3% 0 0 3%;">Edit Staff Documentation</h3>
+                 
+                    <!-- <lightning-button class="slds-m-left_small" label="Back" onclick={closePreTaxRecordEditForm} variant="brand" style="padding-right: 2.5%;padding-top:2%;"></lightning-button> -->
+                 </div> 
+                 <div class="seperator right-content custom-scroll">
+                    <div class=" slds-p-around_medium">
+                    <lightning-record-edit-form object-api-name="Child_Staff__c" record-id={DocId} data-recid="PreTaxForm" data-message="Doctable" onsuccess={handlePreTaxSuccess} onsubmit={handlePreTaxRecordFormSubmit}>
+                        <lightning-messages></lightning-messages>
+                            <div class="slds-grid slds-wrap">
+                               
+                                <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop"><span style="color:red">*</span>StaffRec</span>
+                                        <lightning-input-field field-name="Name" variant="label-hidden" ></lightning-input-field>
+                                    </div>
+                                </div> -->
+                                 <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                 <div class="floating-label"> 
+                                 <span class="label-text-drop">Document Type</span>     
+                                 <c-hierarchical-dropdown-lwc
+                                    data-index={index}
+                                    value={typeOfDocument}
+                                    options={dynamicDocumentTypes}
+                                    placeholder="Select document type"
+                                    variant="label-hidden"
+                                    onchange={handleDocTypeChange1}>
+                                </c-hierarchical-dropdown-lwc>
+                                </div>
+                                </div>
+                                
+                                <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                    <div class="floating-label">
+                                        <span class="label-text-drop">Type</span>
+                                        <lightning-input-field field-name="Type__c"  variant="label-hidden" ></lightning-input-field>
+                                    </div>
+                                </div> -->
+                                
+                               <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                <!-- <div class="floating-label">
+                                    <span class="label-text-drop">Expiry Date</span>
+                                    <lightning-input-field field-name="Expiry_Date__c" variant="label-hidden" ></lightning-input-field>
+                                </div> -->
+                                    <div class="floating-label">
+                                        <template if:true={isExpiryRequired}>
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>Expiry Date
+                                            </span>
+                                        </template>
+
+                                        <template if:false={isExpiryRequired}>
+                                            <span class="label-text-drop">Expiry Date</span>
+                                        </template>
+
+                                        <lightning-input-field
+                                            field-name="Expiry_Date__c"
+                                            variant="label-hidden">
+                                        </lightning-input-field>
+                                    </div>
+                            </div>
+                            <!--  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Compliance</span>
+                                    <lightning-input-field field-name="Compliance__c" variant="label-hidden" ></lightning-input-field>
+                                </div>
+                            </div> -->
+                             
+                             <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Points</span>
+                                    <lightning-input-field field-name="Points__c" variant="label-hidden"  value={points}></lightning-input-field>
+                                </div>
+                            </div>
+                               <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Staff</span>
+                                    <lightning-input-field field-name="Staff__c" value={parentStaffId} disabled="true" variant="label-hidden"></lightning-input-field>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-size_1-of-1  slds-p-around_small">
+                                <div class="floating-label" style="height: 62px;">
+                                    <span class="label-text-drop">Comments</span>
+                                    <lightning-input-field field-name="Comments__c" variant="label-hidden" maxlength="1000"></lightning-input-field>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                                <span style="display: flex; gap: 2%; padding: 6% 0px 0% 0%; justify-content: center; align-items: center;">
+                                    <lightning-input-field field-name="Compliance__c" variant="label-hidden" ></lightning-input-field>
+                                        <span>Compliance</span>
+                                </span>  
+                            </div>
+                               <div class="slds-size_1-of-1  slds-p-around_small">
+                              <div class="slds-box slds-m-top_medium drag-drop" ondragover={handleDragOver} ondrop={handleDrop}>
+                                            <p class="slds-text-align_center">
+                                                Drag and drop files here<br />
+                                                <a href="javascript:void(0);" onclick={triggerFileDialog}>Click to browse</a>
+                                            </p>
+
+                                            <input
+                                                class="file-input"
+                                                type="file"
+                                                
+                                                accept=".pdf,.png,.jpg,.jpeg"
+                                                onchange={handleFileUploadInputChange}
+                                                style="display:none;" />
+                                        </div>
+                                        <template if:true={isEdit}>
+                                            <div class="slds-text-body_small" style="display: flex;align-items:center;">
+                                                {fileName}  <!-- <i class="material-icons delete-icon" onclick={handleDeleteClick}>delete</i> -->
+                                            </div>
+                                        </template>
+                                        <template if:true={isFileExpand}>
+                                                <c-document-office-service
+                                                    record-id={recordId}
+                                                    module-path-from-parent="ticket"
+                                                    onuploadcomplete={handleAwsUploadComplete}
+                                                    onfiledeleted={handleFileDeleted}
+                                                     oncancel={handlefilecancel}>
+                                                </c-document-office-service>
+                                        </template>
+                                        </div>
+                                
+                            </div>
+                    
+                        <div class="slds-align_absolute-center slds-m-around_small">
+                            <lightning-button label="Cancel" variant="Brand-Outline"  data-message="Doctable"  onclick={closePreTaxRecordEditForm}
+                            class="slds-m-around_small"></lightning-button> 
+                            <lightning-button type="submit" variant="brand" label="Save" class="slds-m-around_small"></lightning-button>
+                          
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+                </div>
+                </div>
+                
+                
+
+        </template>
+
+       <!--  <template if:true={showRejectModal}>
+        <section class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header modal-header">
+                    <h2 class="slds-text-heading_medium">Add Comments</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>Please provide a reason for rejecting this document</p>
+
+                    <lightning-textarea 
+                        value={comments} 
+                        onchange={handleCommentsChange}
+                        placeholder="Enter your reason...">
+                    </lightning-textarea>
+
+                    <div class="modal-buttons">
+                        <lightning-button 
+                            label="Cancel" 
+                            variant="neutral" 
+                            onclick={handleRejectedClose}>
+                        </lightning-button>
+
+                        <lightning-button 
+                            label="Submit"
+                            variant="destructive"
+                            onclick={handleRejectSubmit}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+       </template> -->
+
+        <template if:true={showRejectModal}>
+       
+        <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+            
+                <div class="slds-modal__container modal-container" style="max-width:25%;">
+                    <header class="slds-modal__header" style="background: #002A52;">
+                    
+                    <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Add Comments</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content"  >         <!-- style="border-radius:0 0 15px 15px" -->                      
+                   <div class="slds-m-around_small"><p>Please provide a reason for rejecting this document</p></div>
+                    <div class="slds-m-around_small" style="text-align:center">
+                        
+                        <lightning-textarea
+                        variant="label-hidden" 
+                        value={comments} 
+                        onchange={handleCommentsChange}
+                        placeholder="Enter your reason...">
+                      </lightning-textarea>
+                        <div class="button-container slds-m-top_medium">
+                            <lightning-button label="Cancel" 
+                            variant="neutral" onclick={handleRejectedClose}
+                            class="slds-m-around_small"></lightning-button>
+                            <lightning-button label="Submit" variant="brand" onclick={handleRejectSubmit} class="slds-m-around_small" ></lightning-button>
+                            
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+     <template if:true={isShowSpinner}>
+          <!-- <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner> -->
+          <div class="overlay-logo"></div>
+
+          <div class="spinner-wrapper">
+            <div class="loader-container">
+              <img
+                src={logoUrl}
+                alt="Breathing Frame"
+                class="breathing-frame"
+              />
+              <img src={imageUrl} alt="T Logo" class="Tlogo" />
+            </div>
+
+            <!-- Progress text instead of progress bar -->
+            <p class="progress-text">Loading<br />Please Wait...</p>
+          </div>
+        </template>
+
+    <template if:true={assignmentFlag}>
+        <div class="blur-overlay"></div>
+        <div class="right-align" style="width:40%;"> 
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 2% 0 0 2%;">Grant Access</h3>
+            <!-- <div style="display: flex; align-items: center; gap: 10px;margin-right:2.2%;margin-top:1%;">
+            <lightning-button label="Back" variant="brand" onclick={handleeditClose}></lightning-button>
+            </div> -->
+            </div>
+        <div class="right-content custom-scroll">
+        <div class="seperator">
+
+            <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+
+           
+
+            <div class="slds-size_1-of-1  slds-large-size_1-of-1 slds-p-around_small" >
+            <lightning-dual-listbox name="languages" 
+            label="Select Staff"
+            source-label="Available Staff"
+            selected-label="Selected Staff"
+            field-level-help="Select your staff"
+            options={filteredStaffOptions}
+            onchange={handleduallist}></lightning-dual-listbox>
+            </div>
+
+            </div>
+        </div>
+        </div>
+        <div class="slds-align_absolute-center">
+        <lightning-button label="Cancel" variant="brand-outline" onclick={handleShareClose} type="close" class="slds-m-around_small"></lightning-button>
+        <lightning-button label="Save" variant="brand" onclick={handleassignmentinsert}  class="slds-m-around_small" disabled={saveButtonDisable}></lightning-button>
+
+        </div>
+
+        </div>
+
+    </template>
+
+</div>
+
+<!-- <template if:true={showHistoryModal}>
+    <section class="slds-modal slds-fade-in-open" role="dialog">
+        <div class="slds-modal__container history-modal">
+
+            <header class="slds-modal__header">
+                <h2 class="slds-text-heading_medium">
+                    Document History
+                </h2>
+            </header>
+
+            <div class="slds-modal__content slds-p-around_medium">
+
+                <template if:true={historyList.length}>
+                    <template for:each={historyList} for:item="item">
+                        <div key={item.activityDate} class="history-row">
+
+                            <div class="history-left">
+                                <div class="history-date">
+                                    {item.formattedDay}
+                                </div>
+                                <div class="history-time">
+                                    <span class="history-dot"></span>
+                                    {item.formattedTime}
+                                </div>
+                            </div>
+
+                            <div class="history-avatar">
+                                <div class="avatar-circle">
+                                    {item.initials}
+                                </div>
+                            </div>
+
+                            <div class="history-content">
+                                <div class="history-user">
+                                    {item.userName}
+                                </div>
+                                <div class="history-title">
+                                    {item.title}
+                                </div>
+                                <div class="history-description">
+                                    {item.description}
+                                </div>
+                            </div>
+
+                        </div>
+                    </template>
+                </template>
+
+                <template if:false={historyList.length}>
+                    <p class="slds-text-align_center slds-text-color_weak">
+                        No history available.
+                    </p>
+                </template>
+
+            </div>
+
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    label="Close"
+                    variant="neutral"
+                    onclick={closeHistoryModal}>
+                </lightning-button>
+            </footer>
+
+        </div>
+    </section>
+
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template> -->
+
+    <template if:true={showFormHistoryModal}>
+        <div class="incident-history-backdrop">
+            <div class="incident-history-modal">
+
+                <!-- Header -->
+                <div class="incident-history-header">
+                    <h2 class="slds-text-heading_medium h2custom">
+                        Document History
+                    </h2>
+                    <button
+                        class="incident-history-close"
+                        onclick={closeFormHistory}
+                        aria-label="Close"
+                    >
+                        ×
+                    </button>
+                </div>
+
+                <!-- Timeline -->
+                <div class="history-timeline custom-scroll">
+
+                    <template for:each={groupedFormHistory} for:item="group">
+                        <div key={group.date} class="history-date-section">
+
+                            <div class="history-date-label">
+                                {group.date}
+                            </div>
+
+                            <template for:each={group.entries} for:item="entry">
+                                <div key={entry.timestamp} class="history-entry">
+
+                                    <!-- Left rail -->
+                                    <div class="entry-time">
+                                        <span class="timeline-dot"></span>
+                                        {entry.time}
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="entry-content">
+                                        <div class="entry-header">
+                                            <div class="avatar-circle">
+                                                {entry.initials}
+                                            </div>
+
+                                            <div class="entry-meta">
+                                                <span class="entry-user">
+                                                    {entry.user}
+                                                </span>
+                                                <span class="entry-action">
+                                                    {entry.action}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <lightning-formatted-rich-text
+                                            value={entry.changes}
+                                        ></lightning-formatted-rich-text>
+                                    </div>
+
+                                </div>
+                            </template>
+
+                        </div>
+                    </template>
+
+                    <template if:false={hasFormHistory}>
+                        <div class="no-history-message">
+                            No history available.
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </div>
+    </template>
+
+</template>
