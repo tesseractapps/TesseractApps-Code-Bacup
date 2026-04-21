@@ -1,0 +1,1141 @@
+<template>
+
+
+<div class="forms-toolbar">
+
+  <!-- ================= LEFT SIDE (SEARCH) ================= -->
+  <div class="floating-label">
+    <span class="label-text-drop">Search Forms</span>
+
+    <lightning-input
+      type="search"
+      variant="label-hidden"
+      placeholder="Search by form name..."
+      onchange={handleSearchChange}>
+    </lightning-input>
+  </div>
+
+  <!-- ================= RIGHT SIDE ================= -->
+  <div class="forms-toolbar-right">
+
+    <!-- BULK BUTTON -->
+    <template if:true={isBulkSelection}>
+      <button
+        class="slds-button slds-button_brand bulk-grant-btn"
+        onclick={handleBulkGrantClick}>
+        Bulk Grant Access ({selectedPublishedCount})
+      </button>
+    </template>
+
+    <!-- AUDIENCE TOGGLE -->
+    <div class="audience-toggle">
+
+      <label class="btn-audience-switch">
+
+        <input
+          type="checkbox"
+          checked={isParticipantAudience}
+          onchange={handleAudienceToggle}
+        />
+
+        <span
+          class="btn-audience-switch-inner"
+          data-on="Participants"
+          data-off="Staff">
+        </span>
+
+      </label>
+
+    </div>
+
+  </div>
+
+</div>
+
+<template if:true={isCardView}>
+<div class="ND-forms-grid custom-scroll">
+  <template for:each={paginatedLayouts} for:item="layout">
+    <article key={layout.layoutName} class="ND-form-card">
+      <!-- Header -->
+      <header class="ND-form-card__header">
+         <div class="ND-form-card__headings">
+        <div class="ND-form-card__subtitle">Form Name</div>
+          <div class="ND-form-card__title">{layout.title}</div>
+
+         </div>
+        <div class="ND-form-card__icons">
+          <button class="ND-icon-btn ND-icon-btn--danger"
+                  title="Delete"
+                  data-id={layout.layoutName}
+                  onclick={handleDeleteLayout}>
+            <i class="material-icons">delete</i>
+          </button>
+          <!-- <button class="ND-icon-btn"
+                  title="More"
+                  data-id={layout.layoutName}
+                  onclick={toggleCardMenu}>
+            <i class="material-icons">more_vert</i>
+          </button> -->
+        </div>
+      </header>
+
+      <!-- Title -->
+  <div class="ND-form-card__meta">
+  <div class="ND-form-card__meta-item ND-form-card__meta-item--display">
+    <i class="material-icons ND-form-card__meta-icon" aria-hidden="true">sell</i>
+    <span class="ND-form-card__meta-text">{layout.displayName}</span>
+  </div>
+  <div class="ND-form-card__meta-item ND-form-card__meta-item--time">
+    <i class="material-icons ND-form-card__meta-icon" aria-hidden="true">schedule</i>
+    <span class="ND-form-card__meta-text">{layout.dateTimeString}</span>
+  </div>
+</div>
+
+
+
+      <!-- Footer -->
+      <footer class="ND-form-card__footer">
+       <div class="ND-user">
+  <span class="ND-avatar" aria-hidden="true">{layout.createdByInitials}</span>
+  <span class="ND-user__name" title={layout.createdByName}>{layout.createdByName}</span>
+</div>
+
+        <div class="ND-form-card__actions">
+  <a href="javascript:void(0)"
+     class="ND-link ND-link--icon"
+     data-id={layout.layoutName}
+     onclick={handleEditLayout}>
+    <span class="ND-link__label">Edit</span>
+    <i class="material-icons ND-link__icon" aria-hidden="true">edit_document</i>
+  </a>
+</div>
+
+      </footer>
+    </article>
+  </template>
+</div>
+</template>
+
+<template if:true={isTableView}>
+  <div class="publishtable-wrapper custom-scroll">
+    <table class="publishtable-table">
+      <thead>
+        <tr class="custom-table-header">
+          <th scope="col">
+            <div class="slds-truncate">
+
+              <input
+                type="checkbox"
+                checked={selectAllPublishedChecked}
+                onchange={handleSelectAllPublished}/>
+
+            </div>
+          </th>
+
+          <th scope="col"><div class="slds-truncate" title="Form Name">Form Name</div></th>
+          
+          <th scope="col"><div class="slds-truncate" title="Created">Created</div></th>
+          <th scope="col"><div class="slds-truncate" title="Created By">Created By</div></th>
+          <th scope="col"><div class="slds-truncate" title="Form Category">Form Category</div></th>
+         <template if:true={isStaffAudience}>
+            <th scope="col">
+              <div class="slds-truncate" title="Staff">Staff</div>
+            </th>
+          </template>
+
+          <template if:true={isParticipantAudience}>
+            <th scope="col">
+              <div class="slds-truncate" title="Participants">Participants</div>
+            </th>
+          </template>
+
+          <th scope="col"><div class="slds-truncate" title="Actions">Actions</div></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <template for:each={paginatedLayouts} for:item="layout">
+          <tr key={layout.layoutName}>
+
+            <!-- ========================= -->
+            <!-- SELECT ROW CHECKBOX -->
+            <!-- ========================= -->
+            <td class="publishtable-cell publishtable-checkbox">
+
+              <!-- Published only -->
+              <template if:true={layout.isPublished}>
+                <input
+                  type="checkbox"
+                  data-id={layout.layoutName}
+                  checked={layout.isSelected}
+                  onchange={handlePublishedRowToggle}/>
+              </template>
+
+              <!-- Draft → empty -->
+              <template if:true={layout.isDraft}>
+                &nbsp;
+              </template>
+
+            </td>
+
+            <!-- Form Name -->
+            <td class="publishtable-cell publishtable-name">
+              <i class="material-icons publishtable-docicon" aria-hidden="true">description</i>
+              <span class="publishtable-ellipsis" title={layout.title}>{layout.title}</span>
+            </td>
+
+            
+
+
+            <!-- Created (already formatted to DD/MM/YYYY, HH:MM AM/PM in JS as form.formattedCreated) -->
+            <td class="publishtable-cell">{layout.dateTimeString}</td>
+
+            <!-- Created By (initials + name on ONE line with ellipsis) -->
+            <td class="publishtable-cell">
+              <div class="publishtable-userline" title={layout.createdByName}>
+                <span class="publishtable-avatar">{layout.createdByInitials}</span>
+                <span class="publishtable-usertext publishtable-ellipsis">{layout.createdByName}</span>
+              </div>
+            </td>
+
+            <!-- Form Category -->
+            <td class="publishtable-cell">
+              <span
+                class={layout.categoryClass}
+                title={layout.displayName}
+              >
+                {layout.displayName}
+              </span>
+            </td>
+
+
+            <!-- Participants (overlapping avatars + +N) -->
+            <!-- <td class="publishtable-cell">
+              <div class="publishtable-avatars">
+                <template for:each={form.visibleParticipants} for:item="p">
+                  <span key={p.id} class="publishtable-avatar-img" title={p.name}>
+                    <template if:true={p.pictureUrl}>
+                      <img src={p.pictureUrl} alt={p.name}/>
+                    </template>
+                    <template if:false={p.pictureUrl}>
+                      <span class="publishtable-avatar-fallback">{p.initials}</span>
+                    </template>
+                  </span>
+                </template>
+                <template if:true={form.hasExtraParticipants}>
+                  <span class="publishtable-avatar-more">+{form.extraParticipantCount}</span>
+                </template>
+
+                <template if:false={form.hasVisibleParticipants}>
+      <span class="nd-form-card__no-access" title="No Participants"> <i class="material-icons" aria-hidden="true">group_off</i></span>
+    </template>
+              </div>
+            </td> -->
+
+
+<template if:true={isStaffAudience}>
+  <td class="publishtable-cell">
+
+    <!-- Draft → dash -->
+    <template if:true={layout.isDraft}>
+      <span class="publishtable-dash">—</span>
+    </template>
+
+    <!-- Published → avatars -->
+    <template if:true={layout.isPublished}>
+      <div class="nd-form-card__avatars">
+
+        <template if:true={layout.hasVisibleStaff}>
+          <div class="form-access-img-group">
+
+            <template for:each={layout.visibleStaff} for:item="p">
+              <div
+                key={p.id}
+                class="form-access-tooltip-container form-access-avatar-wrapper">
+
+                <template if:true={p.pictureUrl}>
+                  <img
+                    src={p.pictureUrl}
+                    alt={p.name}
+                    class="form-access-avatar" />
+                </template>
+
+                <template if:false={p.pictureUrl}>
+                  <div class="form-access-avatar fallback-avatar">
+                    {p.initials}
+                  </div>
+                </template>
+
+                <span class="form-access-tooltip-text">
+                  {p.name}
+                </span>
+              </div>
+            </template>
+
+            <template if:true={layout.hasExtraStaff}>
+              <div
+                class="form-access-avatar-wrapper form-access-extra-count"
+                title={layout.extraStaffNames}>
+                +{layout.extraStaffCount}
+              </div>
+            </template>
+
+          </div>
+        </template>
+
+        <!-- Published but no users -->
+        <template if:false={layout.hasVisibleStaff}>
+          <span
+            class="nd-form-card__no-access"
+            title="No Staff">
+            <i class="material-icons" aria-hidden="true">
+              group_off
+            </i>
+          </span>
+        </template>
+
+      </div>
+    </template>
+
+  </td>
+</template>
+
+
+
+<!-- ================================ -->
+
+<template if:true={isParticipantAudience}>
+  <td class="publishtable-cell">
+
+    <!-- Draft → dash -->
+    <template if:true={layout.isDraft}>
+      <span class="publishtable-dash">—</span>
+    </template>
+
+    <!-- Published → avatars -->
+    <template if:true={layout.isPublished}>
+      <div class="nd-form-card__avatars">
+
+        <template if:true={layout.hasVisibleParticipants}>
+          <div class="form-access-img-group">
+
+            <template for:each={layout.visibleParticipants} for:item="p">
+              <div
+                key={p.id}
+                class="form-access-tooltip-container form-access-avatar-wrapper">
+
+                <template if:true={p.pictureUrl}>
+                  <img
+                    src={p.pictureUrl}
+                    alt={p.name}
+                    class="form-access-avatar" />
+                </template>
+
+                <template if:false={p.pictureUrl}>
+                  <div class="form-access-avatar fallback-avatar">
+                    {p.initials}
+                  </div>
+                </template>
+
+                <span class="form-access-tooltip-text">
+                  {p.name}
+                </span>
+              </div>
+            </template>
+
+            <template if:true={layout.hasExtraParticipants}>
+              <div
+                class="form-access-avatar-wrapper form-access-extra-count"
+                title={layout.extraParticipantNames}>
+                +{layout.extraParticipantCount}
+              </div>
+            </template>
+
+          </div>
+        </template>
+
+        <template if:false={layout.hasVisibleParticipants}>
+          <span
+            class="nd-form-card__no-access"
+            title="No Participants">
+            <i class="material-icons" aria-hidden="true">
+              group_off
+            </i>
+          </span>
+        </template>
+
+      </div>
+    </template>
+
+  </td>
+</template>
+
+
+
+
+
+            <!-- Actions (ONLY Assign) -->
+            <!-- <td class="publishtable-cell publishtable-actions">
+              <a href="javascript:void(0)"
+     class="ND-link ND-link--icon"
+     data-id={layout.layoutName}
+     onclick={handleEditLayout}>
+    <span class="ND-link__label">Edit</span>
+    <i class="material-icons ND-link__icon" aria-hidden="true">open_in_new</i>
+  </a>
+
+  <button class="ND-icon-btn ND-icon-btn--danger"
+                  title="Delete"
+                  data-id={layout.layoutName}
+                  onclick={handleDeleteLayout}>
+            <i class="material-icons">delete</i>
+          </button>
+            </td> -->
+
+            <td class="publishtable-cell publishtable-actions">
+
+  <!-- ========================= -->
+  <!-- Draft → Edit + Delete -->
+  <!-- ========================= -->
+  <template if:true={layout.isDraft}>
+
+    <button 
+      class="ND-icon-btn ND-link--icon"
+      data-id={layout.layoutName}
+      onclick={handleEditLayout}
+      title="Edit Draft">
+      <i class="material-icons ND-link__icon">
+        edit_document
+      </i>
+    </button>
+
+    <button
+      class="ND-icon-btn ND-icon-btn--danger"
+      title="Delete Draft"
+      data-id={layout.layoutName}
+      onclick={handleDeleteLayout}>
+      <i class="material-icons">delete</i>
+    </button>
+
+  </template>
+
+  <!-- ========================= -->
+  <!-- Published → Grant Access -->
+  <!-- ========================= -->
+  <template if:true={layout.isPublished}>
+
+    <button
+      class="ND-icon-btn ND-link--icon"
+      data-id={layout.layoutName}
+      onclick={handleAssignClick}
+      disabled={isBulkSelection}
+      title="Grant Access">
+      <i class="material-icons ND-link__icon">
+        person_add
+      </i>
+    </button>
+
+  </template>
+
+</td>
+
+
+
+          </tr>
+        </template>
+
+        <template if:false={paginatedLayouts.length}>
+          <tr><td colspan="7" class="publishtable-empty">No forms found.</td></tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+
+<template if:true={totalRecords}>
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large" style="padding-top: 0.5em;">
+        <!-- RECORDS PER PAGE -->
+        <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+                <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                <div class="slds-select_container">
+                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE NAVIGATION -->
+        <div class="slds-align_absolute-center" style="height:5rem">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+        </div>
+
+        <!-- TOTAL RECORDS -->
+        <div class="slds-clearfix slds-m-right_xx-large">
+            <div class="slds-float_right">
+                <span class="slds-badge">Total Records: {totalRecords}</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+
+
+    <!-- <div class="back-button-container">
+        <lightning-button 
+            variant="brand" 
+            label="Back" 
+            onclick={handleBackToForm}>
+        </lightning-button>
+    </div>
+
+    
+    <h3 class="saved-layouts-heading">Your Forms</h3> -->
+    <!-- Your Form Layouts Table (Remaining layouts) -->
+    <!-- Custom Layouts Table -->
+<!-- <table class="saved-layouts-table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Layout Name</th>
+            <th>Created Date & Time</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={customLayouts} for:item="layout">
+            <tr key={layout.layoutName}>
+                <td>{layout.title}</td>
+                <td>{layout.displayName}</td>
+                <td>{layout.dateTimeString}</td>
+                <td>
+                    <lightning-icon 
+                        icon-name="action:edit" 
+                        alternative-text="Edit" 
+                        title="Edit"
+                        size="xx-small"
+                        data-id={layout.layoutName} 
+                        onclick={handleEditLayout}
+                        class="icon-button"
+                        style="cursor:pointer;color:white;background-color:#0099DE;">
+                    </lightning-icon>
+                    <span class="separator"></span>
+                    <lightning-icon 
+                        icon-name="action:delete" 
+                        alternative-text="Delete" 
+                        title="Delete"
+                        size="xx-small"
+                        data-id={layout.layoutName} 
+                        onclick={handleDeleteLayout}
+                        class="icon-button">
+                    </lightning-icon>
+                </td>
+                
+            </tr>
+        </template>
+    </tbody>
+</table> -->
+
+<!-- <h3 class="saved-layouts-heading">Default Forms</h3>
+
+<table class="saved-layouts-table">
+    <thead>
+        <tr>
+            <th>Layout Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={defaultLayouts} for:item="layout">
+            <tr key={layout.layoutName}>
+                <td>{layout.displayName}</td>
+                <td>
+                    <lightning-button 
+                        variant="base" 
+                        label="Clone" 
+                        data-id={layout.layoutName} 
+                        onclick={handleCloneLayout}>
+                    </lightning-button>
+                </td>
+            </tr>
+        </template>
+    </tbody>
+</table> -->
+
+<template if:true={showAssignModal}>
+
+  <div class="assign-modal-backdrop">
+
+    <div class="assign-modal">
+
+      <!-- ================= HEADER ================= -->
+
+      <div class="assign-modal-header">
+        <span class="assign-title">
+          Form Access - {selectedFormTitle}
+        </span>
+
+        <button
+          class="assign-close-button"
+          onclick={closeAssignModal}>
+          ×
+        </button>
+      </div>
+
+      <!-- ================= BODY ================= -->
+
+      <div class="assign-modal-body">
+
+        <!-- ============ SEARCH + FILTERS ============ -->
+
+        <div class="assign-search-row">
+
+          <!-- SEARCH -->
+
+          <div class="floating-label-input">
+            <span class="label-text-drop">
+              Search {selectedAudience}
+            </span>
+
+            <lightning-input
+              type="search"
+              placeholder="Search"
+              onchange={handleAssignSearch}
+              value={assignSearchTerm}
+              variant="label-hidden">
+            </lightning-input>
+          </div>
+
+          <!-- ================= FACILITY MULTI ================= -->
+
+          <div class="floating-label-input">
+
+            <span class="label-text-drop">
+              Facility
+            </span>
+
+            <div
+              class="facility-multiselect"
+              onclick={showAssignFacilityDropdown}>
+
+              <div class="facility-bubble-container facility-scroll-horizontal">
+
+                <template
+                  for:each={assignSelectedFacilities}
+                  for:item="facility">
+
+                  <span
+                    key={facility.value}
+                    class="facility-bubble">
+
+                    {facility.label}
+
+                    <span
+                      class="facility-remove"
+                      data-id={facility.value}
+                      onclick={removeAssignFacility}>
+                      ×
+                    </span>
+
+                  </span>
+
+                </template>
+
+                <input
+                  type="text"
+                  class="facility-search-input"
+                  placeholder="Search"
+                  value={assignFacilitySearchTerm}
+                  oninput={handleAssignFacilitySearchChange}
+                  onfocus={showAssignFacilityDropdown}
+                  onclick={stopPropagation} />
+
+              </div>
+
+              <template if:true={showAssignFacilityOptions}>
+
+                <div
+                  class="facility-dropdown custom-scroll"
+                  onclick={stopPropagation}>
+
+                  <template
+                    for:each={assignFilteredFacilityOptions}
+                    for:item="facility">
+
+                    <label
+                      key={facility.value}
+                      class="facility-option">
+
+                      <input
+                        type="checkbox"
+                        value={facility.value}
+                        data-label={facility.label}
+                        checked={facility.checked}
+                        onchange={handleAssignFacilityCheckboxChange} />
+
+                      {facility.label}
+
+                    </label>
+
+                  </template>
+
+                </div>
+
+              </template>
+
+            </div>
+
+          </div>
+
+          <!-- ================= ROLE FILTER (STAFF ONLY) ================= -->
+
+          <template if:true={isStaffAudience}>
+
+            <div class="floating-label-input">
+
+              <span class="label-text-drop">
+                Role
+              </span>
+
+              <div
+                class="facility-multiselect"
+                onclick={showAssignRoleDropdown}>
+
+                <div class="facility-bubble-container facility-scroll-horizontal">
+
+                  <template
+                    for:each={assignSelectedRoles}
+                    for:item="role">
+
+                    <span
+                      key={role.value}
+                      class="facility-bubble">
+
+                      {role.label}
+
+                      <span
+                        class="facility-remove"
+                        data-id={role.value}
+                        onclick={removeAssignRole}>
+                        ×
+                      </span>
+
+                    </span>
+
+                  </template>
+
+                  <input
+                    type="text"
+                    class="facility-search-input"
+                    placeholder="Search"
+                    value={assignRoleSearchTerm}
+                    oninput={handleAssignRoleSearchChange}
+                    onfocus={showAssignRoleDropdown}
+                    onclick={stopPropagation} />
+
+                </div>
+
+                <template if:true={showAssignRoleOptions}>
+
+                  <div
+                    class="facility-dropdown custom-scroll"
+                    onclick={stopPropagation}>
+
+                    <template
+                      for:each={assignFilteredRoleOptions}
+                      for:item="role">
+
+                      <label
+                        key={role.value}
+                        class="facility-option">
+
+                        <input
+                          type="checkbox"
+                          value={role.value}
+                          data-label={role.label}
+                          checked={role.checked}
+                          onchange={handleAssignRoleCheckboxChange} />
+
+                        {role.label}
+
+                      </label>
+
+                    </template>
+
+                  </div>
+
+                </template>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </div>
+
+        <!-- ================= PARTICIPANT TABLE ================= -->
+
+        <template if:true={isParticipantAudience}>
+
+          <template if:true={assignTotalRecords}>
+
+            <div class="assign-table-container custom-scroll">
+
+              <table class="assign-custom-table">
+
+                <thead>
+
+                  <tr class="custom-table-header">
+
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={assignSelectAllChecked}
+                        onchange={handleAssignSelectAll}/>
+                    </th>
+
+                    <th>Name</th>
+                    <th>Facility</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <template
+                    for:each={assignParticipantsPage}
+                    for:item="p">
+
+                    <tr key={p.Id}>
+
+                      <td class="publishtable-cell publishtable-checkbox">
+
+                        <input
+                          type="checkbox"
+                          data-id={p.Id}
+                          checked={p.isSelected}
+                          onchange={handleAssignParticipantToggle}/>
+
+                      </td>
+
+                      <td class="publishtable-cell">
+
+                        <div class="publishtable-userline">
+
+                          <template if:true={p.Picture}>
+                            <img
+                              src={p.Picture}
+                              class="publishtable-avatar-img"/>
+                          </template>
+
+                          <template if:false={p.Picture}>
+                            <span class="publishtable-avatar">
+                              {p.initials}
+                            </span>
+                          </template>
+
+                          <span class="publishtable-usertext">
+                            {p.Name}
+                          </span>
+
+                        </div>
+
+                      </td>
+
+                      <td class="publishtable-cell facility-cell">
+                       
+                          {p.FacilityName}
+                      
+                      </td>
+
+
+                    </tr>
+
+                  </template>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </template>
+
+            <template if:false={assignTotalRecords}>
+              <div class="assign-empty-state">
+                <i class="material-icons empty-icon">group_off</i>
+                <div class="empty-text">No Participants Found</div>
+              </div>
+            </template>
+
+        </template>
+
+        <!-- ================= STAFF TABLE ================= -->
+
+        <template if:true={isStaffAudience}>
+
+          <template if:true={assignStaffTotalRecords}>
+
+            <div class="assign-table-container custom-scroll">
+
+              <table class="assign-custom-table">
+
+                <thead>
+
+                  <tr class="custom-table-header">
+
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={assignStaffSelectAllChecked}
+                        onchange={handleAssignStaffSelectAll}/>
+                    </th>
+
+                    <th>Name</th>
+                    <th>Facility</th>
+                    <th>Role</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <template
+                    for:each={assignStaffPage}
+                    for:item="s">
+
+                    <tr key={s.Id}>
+
+                      <td class="publishtable-cell publishtable-checkbox">
+
+                        <input
+                          type="checkbox"
+                          data-id={s.Id}
+                          checked={s.isSelected}
+                          onchange={handleAssignStaffToggle}/>
+
+                      </td>
+
+                      <td class="publishtable-cell">
+
+                        <div class="publishtable-userline">
+
+                          <span class="publishtable-avatar">
+                            {s.initials}
+                          </span>
+
+                          <span class="publishtable-usertext">
+                            {s.Name}
+                          </span>
+
+                        </div>
+
+                      </td>
+
+                      <td class="publishtable-cell facility-cell">
+                        {s.FacilityName}
+                      </td>
+
+                      <td class="publishtable-cell">
+                        {s.Role}
+                      </td>
+
+                    </tr>
+
+                  </template>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </template>
+
+            <template if:false={assignStaffTotalRecords}>
+              <div class="assign-empty-state">
+                <i class="material-icons empty-icon">group_off</i>
+                <div class="empty-text">No Staff Found</div>
+              </div>
+            </template>
+
+        </template>
+
+        <!-- ================= STAFF PAGINATION ================= -->
+
+        <template if:true={isStaffAudience}>
+
+          <template if:true={assignStaffTotalRecords}>
+
+            <div class="fixed-pagination">
+
+              <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                <div class="slds-align_absolute-center">
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    onclick={firstPageAssignStaff}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    onclick={previousPageAssignStaff}>
+                  </lightning-button>
+
+                  &nbsp;
+
+                  <span class="slds-badge">
+                    Showing {assignStaffPageNumber}
+                    &nbsp;of&nbsp;
+                    {assignStaffTotalPages}
+                    Page(s)
+                  </span>
+
+                  &nbsp;
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    onclick={nextPageAssignStaff}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    onclick={lastPageAssignStaff}>
+                  </lightning-button>
+
+                </div>
+
+                <div class="slds-float_right slds-m-right_xx-large">
+
+                  <span class="slds-badge">
+                    Total Records: {assignStaffTotalRecords}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </template>
+
+        <!-- ================= PARTICIPANT PAGINATION ================= -->
+
+        <template if:true={isParticipantAudience}>
+
+          <template if:true={assignTotalRecords}>
+
+            <div class="fixed-pagination">
+
+              <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                <div class="slds-align_absolute-center">
+
+                  <lightning-button
+                    disabled={bDisableAssignFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    onclick={firstPageAssign}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    onclick={previousPageAssign}>
+                  </lightning-button>
+
+                  &nbsp;
+
+                  <span class="slds-badge">
+                    Showing {assignPageNumber}
+                    &nbsp;of&nbsp;
+                    {assignTotalPages}
+                    Page(s)
+                  </span>
+
+                  &nbsp;
+
+                  <lightning-button
+                    disabled={bDisableAssignLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    onclick={nextPageAssign}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    onclick={lastPageAssign}>
+                  </lightning-button>
+
+                </div>
+
+                <div class="slds-float_right slds-m-right_xx-large">
+
+                  <span class="slds-badge">
+                    Total Records: {assignTotalRecords}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </template>
+
+        <template if:true={showGrantAccessButton}>
+          <div class="assign-modal-footer">
+            <button
+              class="assign-primary slds-button slds-button_brand"
+              onclick={grantAccess}>
+              Grant Access
+            </button>
+          </div>
+        </template>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+</template>
+
+
+
+
+
+</template>
