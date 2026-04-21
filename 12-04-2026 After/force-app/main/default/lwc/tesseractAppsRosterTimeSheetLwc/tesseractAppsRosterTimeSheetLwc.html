@@ -1,0 +1,1748 @@
+<template>
+    <div class="main-container">
+
+        <template if:true={timeSheet}>
+
+            <!-- Header -->
+            <header class="header">
+                <div class="search-section">
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Select Facility</span>
+                        <lightning-combobox name="Facility" label="Name of the Facility" value={facSelectedValue}
+                        placeholder="Select Facility" options={facilityOptions} onchange={handleChange}
+                        required="true" variant="label-hidden" disabled={userType}></lightning-combobox> 
+                    </div>
+                </div>
+
+                <template if:false={userType}>
+                    <!-- <lightning-button 
+                        variant="brand" 
+                        label="Approve" 
+                        title="Approve" 
+                        onclick={handleBulkApproveClick} 
+                        class="slds-m-left_x-small">
+                    </lightning-button> -->
+                    <button class="custom-create-btn" onclick={handleBulkApproveClick} title="Approve(Ctrl + Shift + O)">
+                          Approve
+                      </button>
+                </template>
+                </div>
+                <div class="action-section">
+                    <div>
+                    <span class="Arrow" >
+                      <lightning-button-icon icon-name="utility:left" class="slds-m-top_xx-small"
+                      onclick={handlePrevWeek}></lightning-button-icon>
+                    </span>
+                    <span class="today">
+                      <lightning-button label="Today" onclick={navigateToToday}></lightning-button>
+                    </span>
+                    <span class="Arrow">
+                      <lightning-button-icon icon-name="utility:right" class="slds-m-top_xx-small"
+                      onclick={handleNextWeek}></lightning-button-icon>
+                    </span>
+                </div>
+                <lightning-combobox
+                    class="view-combobox slds-m-left_small"
+                    name="viewType"
+                    variant="label-hidden"
+                    value={selectedView}
+                    placeholder="Select Status"
+                    options={viewOptions}
+                    onchange={handleViewChange}>
+                </lightning-combobox>
+                <lightning-input label="Date" type="date" name="select-date" variant="label-hidden"
+                            class="lwc-datepicker" value={datePickerString}
+                            onchange={navigateToDay}>
+                </lightning-input>
+                            <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={handleRefresh}>
+                                <svg class="slds-button__icon" aria-hidden="true">
+                                    <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                                </svg>
+                            </button>
+                            <lightning-button-icon 
+                                icon-name="utility:download" 
+                                variant="border-filled" 
+                                onclick={handleDownloadClick}
+                                alternative-text="Download">
+                            </lightning-button-icon>
+                            <lightning-button-icon 
+                                icon-name="utility:print" 
+                                variant="border-filled" 
+                                onclick={handlePrint} 
+                                alternative-text="Print">
+                            </lightning-button-icon>
+                </div>
+            </header>
+
+            <!-- Timesheet Table -->
+            <div class="listview custom-scroll" style="padding: 1%;">
+                <div class="slds-theme_default custom-table">
+                    <!-- Column Headers -->
+                    <div class="slds-grid custom-header-row">
+                        <div class="slds-col slds-p-around_small slds-text-align_left slds-text-title_caps custom-cell custom-first-cell" style="width: 14%;">
+                            {staffPreferredName}
+                        </div>
+                        <template for:each={weekDays} for:item="day">
+                            <div key={day.date} style={day.style}
+                                class="slds-col slds-p-around_small custom-cell" title={day.tooltip}>
+                                
+                                    <!-- <div class="slds-text-title_caps">{day.dayName}</div>
+                                    <div class="slds-text-body_small">{day.formatted}</div> -->
+
+                                   <div class="day-left">
+                                        <div class="day-name">{day.dayName}</div>
+                                        <div class="day-date">{day.formatted}</div>
+                                        <template if:true={day.tooltip}>
+                                            <span class="holiday-name" style="font-size: 0.65rem; color: black; font-weight: bold; 
+                                                                                display: inline-block; 
+                                                                                max-width: 8.5em; 
+                                                                                white-space: nowrap; 
+                                                                                overflow: hidden; 
+                                                                                text-overflow: ellipsis;">
+                                                  {day.tooltip}
+                                              </span>
+                                        </template>
+                                        <template if:false={day.tooltip}>
+                                            <span class="holiday-name" style="font-size: 0.65rem; color: black; font-weight: bold;">
+                                                &nbsp;
+                                            </span>
+                                        </template>
+                                    </div>
+ 
+                               
+                            </div>
+                        </template>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">Total</br>(hr)</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">Mileage</br>(km)</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">Expense</br></div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">Sleepover</br>(hr)</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">Variance</br>(hr)</div>
+                        <template if:false={userType}>
+                          <template if:true={xeroFlag}>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell custom-last-cell" style="width: 7%;">Action</div>
+                          </template>
+                        </template>
+                    </div>
+
+                    <!-- Staff Rows with Pagination -->
+                    <template for:each={processedStaff} for:item="staff">
+                        <div key={staff.id} class="slds-grid custom-data-row">
+                            <!-- Staff Name -->
+                            <div class="slds-col slds-p-around_small custom-cell custom-first-cell inrow" style="width: 14%;">
+                                <div class="slds-grid slds-grid_align-spread" style="height: 100%; width: 100%;">
+                                    
+                                    <!-- Left: Staff Name -->
+                                    <div class="slds-text-body_regular slds-truncate" style="text-align: left;">
+                                        {staff.nameToDisplay}
+                                    </div>
+
+                                    <!-- Right: Checkbox Icon or Mismatch Badge -->
+                                    <div>
+                                        <template if:true={staff.hasShiftForAnyDay}>
+                                            <template if:true={staff.hasMismatch}>
+                                                <div class="custom-green-badge" onclick={handleMismatchClick} 
+                                                data-staff-id={staff.staffId} data-staff-name={staff.staffName}>
+                                                    <span class="mismatch-count">{staff.mismatchCount}</span>
+                                                </div>
+                                            </template>
+                                            <template if:false={staff.hasMismatch}>
+                                                <lightning-icon
+                                                    icon-name="action:check"
+                                                    alternative-text="Shift OK"
+                                                    size="xx-small"
+                                                    onclick={handleCheckClick}
+                                                    data-staff-id={staff.staffId}
+                                                    data-staff-name={staff.staffName}
+                                                    style="cursor: pointer; Transform: Scale(0.8);">
+                                                </lightning-icon>
+                                            </template>
+                                        </template>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            <!-- Daily Shifts -->
+                            <template for:each={staff.shiftRows} for:item="shift">
+                                <div key={shift.key} class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">
+                                    <template if:true={shift.hasShift}>
+                                        <div class={shift.cellClass}>
+                                            <div class="slds-text-body_small">{shift.hours} hr</div>
+                                        </div>
+                                    </template>
+                                    <template if:false={shift.hasShift}>
+                                        <div class="slds-text-body_small">–</div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Totals -->
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">
+                                {staff.totalDuration}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">
+                                {staff.totalMileageOthers}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">
+                                
+                                <lightning-formatted-number 
+                                        value={staff.totalMileageAmount}
+                                        format-style="currency"
+                                        currency-code="AUD"
+                                        minimum-fraction-digits="2"
+                                        maximum-fraction-digits="2">
+                                </lightning-formatted-number>
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">
+                                {staff.totalSleepoverHours}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">
+                                {staff.totalvariance}
+                            </div>
+                          <template if:false={userType}>
+                            <template if:true={xeroFlag}>
+                              <div class="slds-col slds-p-around_small slds-text-align_center custom-cell custom-last-cell" style="width: 7%;">
+                                  <a
+                                    href="javascript:void(0)"
+                                    data-id={staff.staffId}
+                                    onclick={handleAddToXero}
+                                    title={Accountingtitle}
+                                  ><i class="material-icons1 edit-icon">inbox_text_share</i>
+                                  </a> 
+                              </div>
+                            </template>
+                          </template>
+                        </div>
+                    </template>
+                </div>
+
+                
+            </div>
+
+            <template if:false={userType}>
+                <!-- Pagination Controls -->
+                <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination" style="width:95%;margin-left:2%">
+                        <!-- RECORDS PER PAGE -->
+                        <div class="slds-col">
+                            <div class="slds-list_inline">
+                                <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+                                <label class="slds-text-color_weak" for="recordsPerPage"></label>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                        <template for:each={pageSizeOptions} for:item="option">
+                                            <option key={option} value={option}>{option}</option>
+                                        </template> 
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- PAGE NAVIGATION -->
+                        <div class="slds-align_absolute-center">
+                            <lightning-button disabled={isFirstPage} icon-name="utility:jump_to_left" label="First" 
+                                alternative-text="first page" onclick={firstPage} class="slds-m-right_small"></lightning-button>
+                            <lightning-button disabled={isFirstPage} icon-name="utility:chevronleft" label="Previous" 
+                                alternative-text="Previous" onclick={handlePrev} class="slds-m-right_x-small"></lightning-button>
+                            &nbsp;
+                            <span class="slds-badge slds-m-horizontal_x-small">Showing {currentPage} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                            &nbsp;
+                            <lightning-button disabled={isLastPage} icon-name="utility:chevronright" label="Next" 
+                                alternative-text="Next" onclick={handleNext} class="slds-m-horizontal_x-small" icon-position="right"></lightning-button>
+                            <lightning-button disabled={isLastPage} icon-name="utility:jump_to_right" label="Last" 
+                                alternative-text="last page" onclick={lastPage} class="slds-m-left_small" icon-position="right"></lightning-button>
+                        </div>
+                        <!-- TOTAL RECORDS -->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge">Total Records: {staffMembers.length}</span>
+                            </div>
+                        </div>
+                </div>
+            </template>
+            
+        </template>
+
+        <template if:true={shiftInformation}>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1rem 1rem 1rem;">
+                <!-- Left: Title -->
+                <p style="font-weight: bold; font-size: 140%; margin: 0;">{StaffName1} - Shifts</p>
+
+                <!-- Right: Back Button and Download Icon -->
+                <div style="display: flex; align-items: center;">
+                    <lightning-button 
+                        variant="brand" 
+                        label="Back" 
+                        title="Back(Ctrl + Shift + B)" 
+                        onclick={handleBackClick} 
+                        class="slds-m-right_x-small">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <header class="header1">
+                <div class="search-section"></div>
+                <div class="action-section1">
+
+                  <template if:true={ismissmatchedshifts}>
+                    <div style="display: flex;">
+                      <lightning-input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onchange={handleCheckboxChange}>
+                      </lightning-input>
+                      <span>Weekly shift</span>
+                    </div>
+                  </template>
+
+                  <div class="legend">
+                      <div class="legend-item">
+                          <span class="dot scheduled"></span>
+                          <span class="label scheduled-label">Scheduled Shift</span>
+                      </div>
+                      <div class="legend-item">
+                          <span class="dot actual"></span>
+                          <span class="label actual-label">Actual Shift</span>
+                      </div>
+                  </div>
+                   <div class="legend">
+                      <div class="legend-item">
+                          <span class="dot accepted"></span>
+                          <span class="label accepted-label">Accepted</span>
+                      </div>
+                      <div class="legend-item">
+                          <span class="dot inprogress"></span>
+                          <span class="label inprogress-label">In Progress</span>
+                      </div>
+                      <div class="legend-item">
+                          <span class="dot completed"></span>
+                          <span class="label completed-label">Completed</span>
+                      </div>
+                       <div class="legend-item">
+                          <span class="dot cancelled"></span>
+                          <span class="label cancelled-label">Cancelled</span>
+                      </div>
+                  </div>
+
+
+
+                    <div class="badge blue">
+                        <span>Sleepover:</span><span>{sleepoverDuration} hr</span>
+                    </div> 
+                    
+                    <div class="badge green">
+                        <span>Mileage:</span><span>{totalKms} km</span>
+                    </div>
+                    <div class="badge red">
+                        <span>Expenses:</span><span>${totalexpenses}</span>
+                    </div>
+                    <div class="badge green">
+                        <span>Approved:</span><span>{totalApprovedLoggedDuration} hr</span>
+                    </div>
+                    <div class="badge blue">
+                        <span>Total:</span><span>{totalShiftDuration} hr</span>
+                    </div>
+
+                    <div class="slds-form-element">
+                      <div class="floating-label1">
+                        <span class="label-text-drop">Start Date</span>
+                          <lightning-input
+                              type="date"
+                              name="select-date"
+                              value={weekStartDate}
+                              variant="label-hidden"
+                              disabled
+                              class="lwc-datepicker"
+                              id="start-date-input">
+                          </lightning-input>
+                      </div>
+                    </div>
+
+                    <div class="slds-form-element">
+                      <div class="floating-label1">
+                        <span class="label-text-drop">End Date</span>
+                          <lightning-input
+                              type="date"
+                              name="select-date"
+                              value={weekEndDate}
+                              variant="label-hidden"
+                              disabled
+                              class="lwc-datepicker"
+                              id="end-date-input">
+                          </lightning-input>
+                      </div>
+                    </div>
+
+                    <div class="slds-form-element">
+                        <lightning-button-icon 
+                            icon-name="utility:download" 
+                            variant="border-filled" 
+                            onclick={handleDownloadClick}
+                            alternative-text="Download"
+                            class="slds-m-left_x-small">
+                        </lightning-button-icon>
+                    </div>
+
+                    <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={handleRefresh1}>
+                        <svg class="slds-button__icon" aria-hidden="true">
+                            <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Timesheet1 Table -->
+              <div class="listview custom-scroll">
+                <div class="slds-theme_default custom-table">
+                    <!-- Column Headers -->
+                    <div class="slds-grid custom-header-row">
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%;">Date</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 17%;">Shift</div>
+                        <template if:false={otherThanNdis}>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 14%;">Services</div>
+                        </template>
+                        <template if:true={otherThanNdis}>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 14%;">{participantPreferredName}</div>
+                        </template>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 14%;">{facilityPreferredName}</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 9%;">Start Time</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 9%;">End Time</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%;">Break Time</br>(min)</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%;">Duration</br>(hr)</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%;">Mileage</br>(km)</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%;">Expense</div>
+                        <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%;">Variance</br>(hr)</div>
+                        <template if:false={userType}>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell custom-last-cell" style="width: 7%;">Actions</div>
+                        </template>
+                    </div>
+                    
+                    <!-- Data Rows with Key for Proper Reactivity -->
+                    <template for:each={selectedStaffShifts} for:item="shift" for:index="index">
+                        <div key={shift.Id} class="slds-grid custom-row" data-shift-id={shift.Id}>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%; display: flex; justify-content: center; align-items: center;">
+                                {shift.shiftDate}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 17%; display: flex; justify-content: space-between; align-items: center;">
+                                {shift.shiftType}
+                                <div class="icon-allign">
+                                  <!-- <i class="material-icons {shift.statusIconClass}" -->
+                                  <span class={shift.uiStatus}
+                                      title={shift.statusTitle}>
+                                      <!-- {shift.statusIcon} -->⬤</span>
+                                    <tempalte if:true={shift.showCancelIcon}>
+                                          <i class="material-icons checklist-icon" data-id={shift.Id} data-shiftcancelnotes={shift.Shift_Cancel_Notes__c} title="Shift Cancel Notes" onclick={handleShiftCancelClick}>scan_delete</i>
+                                    </tempalte>
+                                   
+                                    <i class="material-icons checklist-icon" data-id={shift.Id} title="Checklist" onclick={handleChecklistClick}>fact_check</i>
+                                    <i class="material-icons overview-icon" data-id={shift.Id} title="Activity" onclick={handleActivityClick}>overview</i>
+                                    <i class="material-icons overview-icon" data-id={shift.Id} data-status={shift.Status__c}  data-date={shift.Date__c} title="Geo Location" onclick={handlegeolocationClick}>distance</i>
+                                    <!-- <i class={shift.signatureIconClass} data-id={shift.Id} data-signature={shift.Client_Signature__c} title="Signature" onclick={handleSignature}>signature</i> -->
+                                      <template if:true={shift.isSignatureClickable}>
+                                          <i class={shift.signatureIconClass}
+                                            data-id={shift.Id}
+                                            data-signature={shift.Client_Signature__c}
+                                            title={shift.signatureTitle}
+                                            onclick={handleSignature}>
+                                            signature
+                                          </i>
+                                      </template>
+                                      <template if:false={shift.isSignatureClickable}>
+                                          <i class={shift.signatureIconClass}
+                                            data-id={shift.Id}
+                                            data-signature={shift.Client_Signature__c}
+                                            title={shift.signatureTitle}>
+                                            signature
+                                          </i>
+                                      </template>
+                                </div>
+                            </div>
+                            <template if:false={otherThanNdis}>
+                              <div class="slds-col slds-p-around_small slds-text-align_center custom-cell service-type-cell" style="width: 14%; display: flex; justify-content: flex-start; align-items: center;" title={shift.serviceType}>
+                                  <span class="description">{shift.serviceType}</span>
+                              </div>
+                            </template>
+                            <template if:true={otherThanNdis}>
+                              <div class="slds-col slds-p-around_small slds-text-align_center custom-cell service-type-cell" style="width: 14%; display: flex; justify-content: flex-start; align-items: center;" title={shift.serviceType}>
+                                  <span class="description">{shift.clientName}</span>
+                              </div>
+                            </template>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell service-type-cell" style="width: 14%; display: flex; justify-content: flex-start; align-items: center;" title={shift.serviceType}>
+                                <span class="description">{shift.facilityName}</span>
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 9%;">
+                                <div class="legend-item">
+                                    <span class="dot1 scheduled"></span>
+                                    <span>{shift.formattedStart}</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="dot1 actual"></span>
+                                    <span>{shift.formattedLogin}</span>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 9%;">
+                                <div class="legend-item">
+                                    <span class="dot1 scheduled"></span>
+                                    <span>{shift.formattedEnd}</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="dot1 actual"></span>
+                                    <span>{shift.formattedLogout}</span>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%; display: flex; justify-content: center; align-items: center;">
+                                {shift.Break__c}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%; display: flex; justify-content: center; align-items: center;">
+                                {shift.totalDuration}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%; display: flex; justify-content: center; align-items: center;">
+                                {shift.mileageOthersTotal}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%; display: flex; justify-content: center; align-items: center;">
+                                ${shift.mileageAmountTotal}
+                            </div>
+                            <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 6%; display: flex; justify-content: center; align-items: center;">
+                                {shift.extendedDuration}
+                            </div>
+                            <template if:false={userType}>
+                                <div class="slds-col slds-p-around_small slds-text-align_center custom-cell" style="width: 7%; display: flex; justify-content: center; align-items: center;">
+                                    <!-- Dynamic Icon with Proper Key for Reactivity -->
+                                    <i class="material-icons shift-icon {shift.iconClass}" 
+                                      title={shift.iconTitle}
+                                      data-id={shift.Id}
+                                      data-duration={shift.totalDuration}
+                                      data-status={shift.Status__c}
+                                      data-loggedhours={shift.formattedLoggedHours}
+                                      key={shift.iconUpdateKey}
+                                      style={shift.iconStyle}
+                                      onclick={handleSubmission}>
+                                      {shift.iconName}
+                                    </i>
+                                    <a href="javascript:void(0)" onclick={handleEditClick} data-id={shift.Id} title="Edit" style="text-decoration: none;">
+                                        <i class="material-icons edit-icon">edit_document</i>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    
+                    <!-- Loading Spinner -->
+                    <template if:true={showSpinner}>
+                        <div class="overlay-logo"></div>
+                        <div class="spinner-wrapper">
+                            <div class="loader-container">
+                                <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                                <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                            </div>
+                            <p class="progress-text">Loading</br>Please Wait...</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Submission Confirmation Modal -->
+            <template if:true={submissionFlag}>
+                <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                    class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+                    <div class="slds-modal__container modal-container" style="max-width:25%;">
+                        <header class="slds-modal__header" style="background:#002A52;">
+                            <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                        </header> 
+                        <div class="slds-modal__content slds-p-around_medium modal-content">                                
+                            <div class="slds-m-around_small">
+                                <div><p style="text-align: center;">Are you sure you want to submit timesheet for&nbsp;{confirmationData.totalHours}&nbsp;hours?</p></div>
+                                <div class="button-container slds-m-top_medium" style="display: flex; justify-content: center;">
+                                    <lightning-button label="No" variant="brand" onclick={handlesubmissionclose}
+                                    class="slds-m-around_small"></lightning-button>
+                                    <lightning-button label="Yes" variant="brand" onclick={handlesubmit} class="slds-m-around_small"></lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+        </template>
+
+        <template if:true={editflag}>
+          <header class="slds-modal__header">
+            <h2  class="slds-text-heading_medium slds-hyphenate">Edit Shift</h2>
+            <!-- <lightning-button label="Cancel" variant="brand" onclick={handleeditClose}
+          class="slds-m-around_small" style="float: right;">
+          </lightning-button>  -->
+          </header>
+          <!-- modal body start -->
+          <div class="slds-modal__content slds-p-around_medium custom-scroll" id="modal-content-id-2">
+            <lightning-record-edit-form object-api-name="ShiftwithStaff__c" record-id={shiftID} onsubmit={handleUpdate}
+              onsuccess={handleeditAllocation} onerror={handleShiftError}>
+              <!-- <div class="line-with-label">
+                <span class="label-on-line">Shift Details</span>
+              </div>  -->
+              <div class="container-box">
+                <div id="toggleStaffDetails" class="toggle-bar" onclick={handleSectionToggle} data-id="StaffDetails">
+                  <span id="toggleStaffDetailsI">Shift Details</span>
+                  <!-- <span  style="cursor: default;">{sectionIcons.StaffDetails}</span>     -->
+                      <span
+                        class={sectionIcons.StaffDetails.class}>
+                        {sectionIcons.StaffDetails.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="StaffDetails" style="padding-top: 1%;">
+              <div class="slds-grid slds-wrap">
+
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                  <div class="floating-label">
+                      <span class="label-text-drop">{staffPreferredName}</span>
+                      <lightning-input-field field-name="Full_Name__c" disabled="true" variant="label-hidden"></lightning-input-field>                
+                  </div>
+              </div>
+                
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                  <div class="floating-label">
+                      <span class="label-text-drop">Date</span>
+                      <lightning-input-field field-name="Date__c" disabled="true" variant="label-hidden"></lightning-input-field>           
+                  </div>
+              </div>
+                
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                  <div class="floating-label">
+                      <span class="label-text-drop">{facilityPreferredName}</span>
+                      <lightning-input-field field-name="Facility_Names__c" disabled="true" variant="label-hidden"></lightning-input-field>          
+                  </div>
+              </div>
+
+              <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">Shift Type</span>
+                   <!--  <lightning-input-field  variant="label-hidden"></lightning-input-field>  --> 
+                   <lightning-input-field field-name="Type_of_shift__c" disabled="true" variant="label-hidden"></lightning-input-field>                  
+                </div>
+            </div>
+              </div>
+
+                </div></div>
+              <div class="container-box">
+                <div id="toggleOriginalStaffDetails" class="toggle-bar" onclick={handleSectionToggle} data-id="OriginalStaffDetails">
+                  <span id="toggleOriginalStaffDetailsI">Original Shift Details</span>
+                  <!-- <span  style="cursor: default;">{sectionIcons.OriginalStaffDetails}</span>     -->
+                      <span
+                        class={sectionIcons.OriginalStaffDetails.class}>
+                        {sectionIcons.OriginalStaffDetails.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="OriginalStaffDetails" style="padding-top: 1%;">
+              <div class="slds-grid slds-wrap">
+                
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                  <div class="floating-label">
+                      <span class="label-text-drop">Start Time</span>
+                      <lightning-input-field field-name="Start_time_Formula__c" disabled="true" variant="label-hidden"></lightning-input-field>      
+                  </div>
+              </div>
+                
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                  <div class="floating-label">
+                      <span class="label-text-drop">End Time</span>
+                      <lightning-input-field field-name="End_time_formula__c" disabled="true" variant="label-hidden"></lightning-input-field>     
+                  </div>
+              </div>
+
+              <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">Break</span>
+                    <lightning-input-field field-name="Break__c" disabled="true" variant="label-hidden"></lightning-input-field>         
+                </div>
+            </div>
+                
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                  <div class="floating-label">
+                      <span class="label-text-drop">Duration(hh:mm)</span>
+                      <lightning-input-field field-name="Add_Shift_Duration_hh_mm__c" disabled="true" variant="label-hidden"></lightning-input-field>          
+                  </div>
+              </div>
+
+              </div>
+                </div>
+              </div>
+
+              <div class="container-box">
+                <div id="toggleCompletedStaffDetails" class="toggle-bar" onclick={handleSectionToggle} data-id="CompletedStaffDetails">
+                  <span id="toggleCompletedStaffDetailsI">Completed Shift Details</span>
+                  <!-- <span  style="cursor: default;">{sectionIcons.CompletedStaffDetails}</span>     -->
+                      <span
+                        class={sectionIcons.CompletedStaffDetails.class}>
+                        {sectionIcons.CompletedStaffDetails.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="CompletedStaffDetails" style="padding-top: 1%;">
+              <div class="slds-grid slds-wrap">
+
+            
+                
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class={LogInDateTimeClass}>
+                      <span class="label-text-drop">Login Time</span>
+                      <!-- <lightning-input-field field-name="Log_In_Date_Time__c" name="startTime" variant="label-hidden" onchange={handleErrorCss}></lightning-input-field> -->
+                        <c-tesseract-apps-time-picker 
+                            selected-hour={startTimeSelectedHour1} 
+                            selected-minute={startTimeSelectedMinute1} 
+                            displayed-time={AddShiftStartTimeAMPM1} 
+                            is-am={startTimeAMPM1}
+                            disable-time-button={disableTimeButton}
+                            onsavetimefromchild={handleStartTimeChange}>
+                        </c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class={LogOutDateTimeClass}>
+                      <span class="label-text-drop">Logout Time</span>
+                      <!-- <lightning-input-field field-name="Log_Out_Date_Time__c" onchange={handleLogOutChnage} name="Endtime" variant="label-hidden"></lightning-input-field> -->
+                      <c-tesseract-apps-time-picker 
+                          selected-hour={endTimeSelectedHour1} 
+                          selected-minute={endTimeSelectedMinute1} 
+                          is-am={endTimeAMPM1} 
+                          displayed-time={AddShiftEndTimeAMPM1} 
+                            disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleEndTimeChange}>
+                      </c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+              
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Shift Duration(hh:mm)</span>
+                     <!--  <lightning-input-field field-name="Actual_Duration__c" variant="label-hidden"></lightning-input-field> -->
+                     <lightning-input-field field-name="Actual_Duration_In_Hours_and_Mins__c" variant="label-hidden"></lightning-input-field> 
+                    </div>
+                  </div>
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">{ShiftRatelabel}</span>
+                      <!-- <lightning-input-field field-name="Staff_Final_Hourly_Rate__c" disabled variant="label-hidden" formatter="currency"></lightning-input-field> -->
+                      <lightning-input-field field-name="Staff_Final_Hourly_Rate__c"  disabled={isHourlyRateDisabled} variant="label-hidden" formatter="currency"></lightning-input-field>
+                    </div>
+                  </div>
+             
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Shift Wages</span>
+                      <lightning-input-field field-name="Shift_Wage__c" variant="label-hidden" formatter="currency"></lightning-input-field>
+                    </div>
+                  </div>
+                  <template if:true={schadsMinimumEngageApplied}>
+                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop1 description1" title="Minimum Engagement Hours(hh:mm)">Minimum Engagement Hours(hh:mm)</span>
+                          <lightning-input-field field-name="Schads_Minimum_Hours_hh_mm__c" variant="label-hidden" formatter="currency" disabled="true"></lightning-input-field>
+                        </div>
+                     </div>
+                  </template>
+                  <template if:true={showOverTimeRate} >
+                       <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">Over time tier one duration</span>
+                          <lightning-input-field field-name="Over_Time_Tier_One__c" variant="label-hidden" formatter="currency" disabled="true"></lightning-input-field>
+                        </div>
+                     </div>
+
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop" >Over time tier one wages</span>
+                          <lightning-input-field field-name="Over_Time_Tier_One_Wage__c" variant="label-hidden" formatter="currency" disabled="true"></lightning-input-field>
+                        </div>
+                     </div>
+                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">Over time tier two duration</span>
+                          <lightning-input-field field-name="Over_Time_Tier_Two__c" variant="label-hidden" formatter="currency" disabled="true"></lightning-input-field>
+                        </div>
+                     </div>
+
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop" >Over time tier two wages</span>
+                          <lightning-input-field field-name="Over_Time_Tier_Two_Wage__c" variant="label-hidden" formatter="currency" disabled="true"></lightning-input-field>
+                        </div>
+                     </div>
+                  </template>
+                  
+              
+                </div>
+                </div>
+              </div>
+            <div class="slds-nowrap equal-height-container">
+
+            <div class="container-box full-height">
+                <div  class="toggle-bar" onclick={handleSectionToggle} data-id="CompletedStaffDetails1">
+                  <span >Request Sign in and Sign out comments</span>
+                  <!-- <span  style="cursor: default;">{sectionIcons.CompletedStaffDetails1}</span>     -->
+                      <span
+                        class={sectionIcons.CompletedStaffDetails1.class}>
+                        {sectionIcons.CompletedStaffDetails1.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="CompletedStaffDetails1" style="padding-top: 1%;">
+              <div class="slds-grid slds-nowrap">
+                
+                  <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class={LogInDateTimeClass}>
+                      <span class="label-text-drop">Request Sign in - {staffPreferredName}</span>
+                      <lightning-textarea field-name="Request_sign_in_comments__c" variant="label-hidden" disabled></lightning-textarea>
+                    </div>
+                  </div> -->
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class={LogOutDateTimeClass}>
+                      <span class="label-text-drop">Request Sign out - {staffPreferredName}</span>
+                      <lightning-input-field field-name="Request_sign_out_comments__c" variant="label-hidden" disabled></lightning-input-field>
+                    </div>
+                  </div>
+             
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class={LogOutDateTimeClass}>
+                      <span class="label-text-drop">Request Sign in - Approver</span>
+                      <lightning-input-field field-name="Enable_Sign_In_Comments__c" variant="label-hidden" disabled></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class={LogOutDateTimeClass}>
+                      <span class="label-text-drop">Request Sign out - Approver</span>
+                      <lightning-input-field field-name="Enable_Sign_out_Comments__c" variant="label-hidden" disabled></lightning-input-field>
+                    </div>
+                  </div>
+              
+                </div>
+                </div></div>
+                </div>
+                
+
+
+            <template if:true={isCustomShifts}>
+              <div class="container-box">
+                  <div  class="toggle-bar" onclick={handleSectionToggle} data-id="CustomShift">
+                    <span >Custom Shifts</span>
+                    <!-- <span  style="cursor: default;">{sectionIcons.CustomShift}</span>     -->
+                      <span
+                        class={sectionIcons.CustomShift.class}>
+                        {sectionIcons.CustomShift.icon}
+                      </span>
+                  </div>
+               
+                  <div class="section-content" data-section="CustomShift" style="padding-top: 1%;">
+                  <!--   <template if:true={isLongMorningShift}>
+                      <span class="slds-p-around_small"> <b> Morning Shift</b></span> 
+                      <div class="slds-grid slds-wrap">
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                          <div class="floating-label">
+                            <span class="label-text-drop">Start Time</span>
+                          <lightning-input-field field-name="Long_Morning_Start_Time__c"   variant="label-hidden"></lightning-input-field>
+                          </div>
+                      </div>
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">End Time</span>
+                        <lightning-input-field field-name="Long_Morning_End_Time__c"    variant="label-hidden"></lightning-input-field>
+                        </div>
+                      </div>
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Duration</span>
+                      <lightning-input-field field-name="Long_Morning_Shift_Duartion__c"    variant="label-hidden"></lightning-input-field>
+                      </div>
+                    </div>
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Rate</span>
+                      <lightning-input-field field-name="Long_Morning_Hourly_Rate__c"   variant="label-hidden"></lightning-input-field>
+                      </div>
+                    </div>
+                    </div>  
+                    </template>
+
+                  <template if:true={isLongAfternoonShift}>
+                    <span class="slds-p-around_small"> <b>Afternoon Shift</b></span> 
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">Start Time</span>
+                        <lightning-input-field field-name="Long_Afternoon_Start_Time__c"   variant="label-hidden"></lightning-input-field>
+                        </div>
+                    </div>
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">End Time</span>
+                        <lightning-input-field field-name="Long_Afternoon_End_Time__c"    variant="label-hidden"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Duration</span>
+                      <lightning-input-field field-name="Long_Afternoon_Shift_Duartion__c"    variant="label-hidden"></lightning-input-field>
+                      </div>
+                  </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Rate</span>
+                      <lightning-input-field field-name="Long_Afternoon_Hourly_Rate__c"   variant="label-hidden"></lightning-input-field>
+                      </div>
+                  </div>
+                    </div>
+                  </template>
+
+                  <template if:true={isLongNightShift}>
+                    <span class="slds-p-around_small"> <b> Night Shift</b></span> 
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">Start Time</span>
+                        <lightning-input-field field-name="Long_Night_Start_Time__c"   variant="label-hidden"></lightning-input-field>
+                        </div>
+                    </div>
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">End Time</span>
+                        <lightning-input-field field-name="Long_Night_End_Time__c"    variant="label-hidden"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Duration</span>
+                      <lightning-input-field field-name="Long_Night_Shift_Duartion__c"    variant="label-hidden"></lightning-input-field>
+                      </div>
+                  </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Rate</span>
+                      <lightning-input-field field-name="Long_Night_Hourly_Rate__c"   variant="label-hidden"></lightning-input-field>
+                      </div>
+                  </div>
+                    </div>
+                  </template>
+
+                  <template if:true={isLongSleepoverShift} >
+                     <span class="slds-p-around_small"> <b>Sleepover Shift</b></span> 
+                     <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">Start Time</span>
+                        <lightning-input-field field-name="Long_Sleepover_Start_Time__c"   variant="label-hidden"></lightning-input-field>
+                        </div>
+                    </div>
+                      <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">End Time</span>
+                        <lightning-input-field field-name="Long_Sleepover_End_Time__c"    variant="label-hidden"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Duration</span>
+                      <lightning-input-field field-name="Long_Sleepover_Duartion__c"    variant="label-hidden"></lightning-input-field>
+                      </div>
+                  </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Allowance</span>
+                      <lightning-input-field field-name="Long_Sleepover_Allowance__c"   variant="label-hidden"></lightning-input-field>
+                      </div>
+                  </div>
+                    </div>
+                  </template>  -->
+              <template for:each={rateRows} for:item="row" for:index="index">
+                <div key={row.id} class="slds-grid slds-wrap">
+                  <div class="slds-size_1-of-1 slds-p-left_small">
+                      <b>{row.rowShiftType}</b>
+                  </div>
+
+                  <!-- Start Time -->
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                          <span class="label-text-drop">Start Time</span>
+                          <lightning-input type="time"
+                              name="startTime"
+                              value={row.startTime}
+                              data-index={index}
+                              data-field="startTime"
+                              onchange={handleRateRowInputChange} disabled="true"
+                              variant="label-hidden">
+                          </lightning-input>
+                      </div>
+                  </div>
+
+                  <!-- End Time -->
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                          <span class="label-text-drop">End Time</span>
+                          <lightning-input type="time"
+                              name="endTime"
+                              value={row.endTime}
+                              data-index={index}
+                              data-field="endTime"
+                              onchange={handleRateRowInputChange} disabled="true"
+                              variant="label-hidden">
+                          </lightning-input>
+                      </div>
+                  </div>
+
+                  <!-- Duration -->
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                          <span class="label-text-drop">Duration</span>
+                          <lightning-input type="number"
+                              name="duration"
+                              value={row.duration}
+                              data-index={index}
+                              data-field="duration"
+                              onchange={handleRateRowInputChange} disabled="true"
+                              variant="label-hidden"
+                              >
+                          </lightning-input>
+                      </div>
+                  </div>
+
+                  <!-- Hourly Rate -->
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                          <span class="label-text-drop">{row.rateLabel}</span>
+                          <lightning-input type="number"
+                              name="hourlyRate"
+                              value={row.hourlyRate}
+                              data-index={index}
+                              data-field="hourlyRate"
+                              formatter="currency"
+                                      step="0.01"
+                              onchange={handleRateRowInputChange} disabled="true"
+                              variant="label-hidden">
+                          </lightning-input>
+                      </div>
+                  </div>
+                </div>
+             </template>
+
+                  </div>
+              </div>
+            </template>
+              
+             
+              <div class="container-box">
+                <div id="toggleExtendedShift" class="toggle-bar" onclick={handleSectionToggle} data-id="ExtendedShift">
+                  <span id="toggleExtendedShiftI">Extended Shift Hours</span>
+                  <!-- <span style="cursor: default;">{sectionIcons.ExtendedShift}</span>     -->
+                      <span
+                        class={sectionIcons.ExtendedShift.class}>
+                        {sectionIcons.ExtendedShift.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="ExtendedShift" style="padding-top: 1%;">
+              <div class="slds-grid slds-wrap" if:true={isExtendedShift}>
+
+              
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Shift Variance(hh:mm)</span>
+                     <!--  <lightning-input-field field-name="Extended_Duration__c" value={extendedDuartion} variant="label-hidden"></lightning-input-field> -->
+                     <lightning-input-field field-name="Extended_Duration_in_Hours_and_Mins__c"  disabled="true" value={extendedHoursandmins} variant="label-hidden"></lightning-input-field>
+                    </div>
+                  </div>
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Type of Pay</span>
+                      <lightning-input-field field-name="Type_of_Pay__c" variant="label-hidden" onchange={handleExtendedTypeOfPay}></lightning-input-field>
+                    </div>
+                  </div>
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Variance Rate</span>
+                      <lightning-input-field field-name="Variance_Rate__c" value={varianceRate} onchange={handleOnchangeExtendedRates} variant="label-hidden"></lightning-input-field>
+                    </div>
+                  </div>
+              
+                
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label" style="height: 62px;">
+                      <span class="label-text-drop">{staffPreferredName} Reason</span>
+                      <lightning-input-field field-name="Staff_Extended_Shift_Reason__c" variant="label-hidden"></lightning-input-field>
+                    </div>
+                  </div>
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label" style="height: 62px;">
+                      <span class="label-text-drop">RM Comments</span>
+                      <lightning-input-field field-name="RM_Extended_Comments__c" variant="label-hidden"></lightning-input-field>
+                    </div>
+                  </div>
+              
+                
+              
+              </div>
+                </div></div>
+              
+              <!-- <div class="line-with-label">
+                <span class="label-on-line">Sleepover Shift</span>
+              </div> -->
+              <div class="container-box">
+                <div id="toggleSleepoverShift" class="toggle-bar" onclick={handleSectionToggle} data-id="SleepoverShift">
+                  <span id="toggleSleepoverShiftI">Sleepover Shift Hours</span>
+                  <!-- <span  style="cursor: default;">{sectionIcons.SleepoverShift}</span>     -->
+                      <span
+                        class={sectionIcons.SleepoverShift.class}>
+                        {sectionIcons.SleepoverShift.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="SleepoverShift" style="padding-top: 1%;">
+              <div class="slds-grid slds-wrap" if:true={isSleepOver}>
+
+              
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Sleepover work Hrs(hh:mm)</span>
+                        <lightning-input-field field-name="Sleepover_Night_Shift_hours_in_hh_mm__c" disabled="true" variant="label-hidden"></lightning-input-field>       
+                      </div>
+                    </div>
+              
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Type of Pay</span>
+                        <lightning-input-field field-name="Sleepover_Night_Shift_Pay__c" variant="label-hidden" onchange={handleSleepOverTypeOfPay}></lightning-input-field>       
+                      </div>
+                    </div>
+              
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Rate</span>
+                        <lightning-input-field field-name="Sleepover_Night_Shift_Hourly_Rate__c" value={SleepOverNightHourlyRates} onchange={handleOnchangeNightRates} variant="label-hidden"></lightning-input-field>       
+                      </div>
+                    </div>
+              
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label" style="height: 62px;">
+                        <span class="label-text-drop">Staff Reason</span>
+                        <lightning-input-field field-name="Staff_Night_Shift_Hours_Reason__c" variant="label-hidden"></lightning-input-field>       
+                      </div>
+                    </div>
+              
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label" style="height: 62px;">
+                        <span class="label-text-drop">RM Comments</span>
+                        <lightning-input-field field-name="RM_Night_Shift_Comments__c" variant="label-hidden"></lightning-input-field>       
+                      </div>
+                    </div>
+              
+              </div>
+                </div>
+              </div>
+
+              <div class="container-box">
+                  <div id="toggleBreakTimingsDetails" class="toggle-bar" onclick={handleSectionToggle} data-id="BreakTimingsDetails">
+                      <span id="toggleBreakTimingsDetailsI">Break Timings Details</span>
+                      <!-- <span  style="cursor: default;">{sectionIcons.BreakTimingsDetails}</span>     -->
+                      <span
+                        class={sectionIcons.BreakTimingsDetails.class}>
+                        {sectionIcons.BreakTimingsDetails.icon}
+                      </span>
+                    </div>
+                  <div class="section-content" data-section="BreakTimingsDetails" style="padding-top: 1%;">
+                      <template if:true={breakTimeRecords.length}>
+                          <!-- Select All Checkbox Row -->
+                          <div class="slds-grid slds-wrap  slds-m-bottom_small">
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-6 slds-p-around_small">
+                              <lightning-input
+                                type="checkbox"
+                                label="Select All"
+                                checked={selectAllChecked}
+                                onchange={handleSelectAll}>
+                              </lightning-input>
+                            </div>
+                          </div>
+
+                      
+                          <template for:each={breakTimeRecords} for:item="breakTime" for:index="index">
+                            <div key={breakTime.Id} class="slds-grid slds-wrap  slds-m-bottom_x-small">
+
+                              <!-- Checkbox -->
+                              <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-6 slds-p-around_small"> -->
+                                <lightning-input
+                                  type="checkbox"
+                                  name="selected"
+                                  data-id={breakTime.Id}
+                                  checked={breakTime.selected}
+                                  onchange={handleBreakCheckboxChange}
+                                  style="margin-top: 1%; margin-left: 1%;">
+                                </lightning-input> 
+                              <!-- </div> -->
+
+                              <!-- Break Start Time -->
+                              <div class="slds-size_1-of-1 slds-medium-size_1-of-6 slds-p-around_small">
+                                <div class="floating-label">
+                                  <span class="label-text-drop">Break Start Time</span>
+                                  <lightning-input
+                                    type="time"
+                                    value={breakTime.Break_Start_Time__c}
+                                    data-id={breakTime.Id}
+                                    data-field="Break_Start_Time__c"
+                                    variant="label-hidden"
+                                    disabled="true">
+                                  </lightning-input>
+                                </div>
+                              </div>
+
+                              <!-- Break End Time -->
+                              <div class="slds-size_1-of-1 slds-medium-size_1-of-6 slds-p-around_small">
+                                <div class="floating-label">
+                                  <span class="label-text-drop">Break End Time</span>
+                                  <lightning-input
+                                    type="time"
+                                    value={breakTime.Break_End_Time__c}
+                                    data-id={breakTime.Id}
+                                    data-field="Break_End_Time__c"
+                                    variant="label-hidden"
+                                    disabled="true">
+                                  </lightning-input>
+                                </div>
+                              </div>
+
+                            </div>
+                          </template>
+                      </template>
+                         
+                        </div>
+                </div>
+          <template if:true={isBrokenShift}>
+             <div class="container-box">
+                <div id="brokenShiftDetails" class="toggle-bar" onclick={handleSectionToggle} data-id="brokenShiftDetails">
+                  <span id="brokenShiftDetailsI">Broken Shift Details</span>
+                      <span
+                        class={sectionIcons.brokenShiftDetails.class}>
+                        {sectionIcons.brokenShiftDetails.icon}
+                      </span>
+                </div>
+                <div class="section-content" data-section="brokenShiftDetails" style="padding-top: 1%;">
+                <span class="slds-p-left_small"><b>Note: </b>Broken Shift Started At {orignalShiftTime}</span>  
+                <div class="slds-grid slds-wrap">
+                   <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Broken Shift Allowance</span>
+                     <lightning-input-field field-name="Broken_Shift_Allowance__c" variant="label-hidden"></lightning-input-field> 
+                    </div>
+                 </div>
+              
+                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Excess Hours(After 12-Hour Span)</span>
+                      <lightning-input-field field-name="Broken_Extended_Duration__c" value={brokenExtendedDuration}  disabled variant="label-hidden" ></lightning-input-field>
+                    </div>
+                  </div>
+              
+               
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Double Time Rate</span>
+                      <lightning-input-field field-name="Broken_Extended_Rate__c" value={brokenExtendedRate}  disabled  variant="label-hidden" formatter="currency"></lightning-input-field>
+                    </div>
+                  </div>
+             
+                 
+                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                        <div class="floating-label">
+                          <span class="label-text-drop">Double Time Pay</span>
+                          <lightning-input-field field-name="Broken_Extended_Wage__c" value={brokenExtendedWage} disabled   variant="label-hidden" formatter="currency"></lightning-input-field>
+                        </div>
+                     </div>
+              
+                    </div>
+                  </div>
+                 </div>
+                </template>
+                      <!-- <div class="slds-grid slds-wrap">
+
+                          <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                            <div class={LogInDateTimeClass}>
+                              <span class="label-text-drop">Break Start Time</span>
+                              <lightning-input-field field-name="Break_Start_Time__c" name="breakStart" variant="label-hidden" ></lightning-input-field>
+                            </div>
+                          </div>
+                      
+                          <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-5 slds-p-around_small">
+                            <div class={LogOutDateTimeClass}>
+                              <span class="label-text-drop">Break End Time</span>
+                              <lightning-input-field field-name="Break_End_Time__c" name="breakEndtime" variant="label-hidden"></lightning-input-field>
+                            </div>
+                          </div>
+                      </div>
+                  </div>
+              </div> -->
+              
+              <template if:true={isReimburesementsTable}>
+                <table class="slds-table slds-table_cell-buffer table1">
+                  <thead>
+                      <tr>
+                          <th>Res No</th>
+                          <th>{staffPreferredName} Name</th>
+                          <th>Shift Date</th>
+                          <th>Login Time</th>
+                          <th>Logout Time</th>
+                          <th>Mileage in Km's</th>
+                          <th>Cost per Km</th>
+                          <th>Mileage Amount</th>
+                          <th>Amount</th>
+                          <th>Total Amount</th>
+                          <th>Status</th>
+                          <th>Approved Date</th>
+                          <th>View Files</th>
+                         
+                      </tr>
+                  </thead>
+                  <tbody>
+                    <template if:true={dayWiseReimburesements}>
+                      <template for:each={dayWiseReimburesements} for:item="module">
+                          <tr key={module.Id}>
+                              <td>{module.Name}</td>
+                              <td class="truncate">{module.ShiftwithStaff__r.Staff__r.NameToDisplay__c}</td>
+                              <td class="truncate">{module.shiftdate}</td>
+                              <td>{module.Shift_login_time_Formula__c}</td>
+                              <td>{module.Shift_log_out_time_formula__c}</td>
+                              <td>{module.Mileage_Others__c}</td>
+                              <td>{module.Cost_per_KM__c}</td>
+                              <td>{module.Mileage_Amount__c}</td>
+                              <td>{module.Amount__c}</td>
+                              <td>{module.Total_Amount__c}</td>
+                              <td class="truncate1">{module.Approval_Status__c}</td>
+                              <td>{module.Approved_Date__c}</td>
+                              <td>
+                                  <template if:true={module.Amazon_file_URL__c}>
+                                      <a href={module.Amazon_file_URL__c} >
+                                          <lightning-icon icon-name="utility:preview" size="small" title="View File" data-url={module.Amazon_file_URL__c}  
+                                          onclick={handleView}></lightning-icon>
+                                      </a>
+                                  </template>
+                              </td>
+                          </tr>
+                      </template>
+                    </template>
+                   <!--  <template if:false={dayWiseReimburesements}>
+                        No Reimbursements Found
+                    </template> -->
+                  </tbody>
+              </table>
+              </template>
+            
+            <div class="container-total" style="border: 0; box-shadow: 0;" >
+              <div class="box1" style="border: 0; box-shadow: 0;">
+              <table class="invoicetotal" style="margin-left: 60px;">
+              <tr>
+                <th class="subtotal-text" style="padding-left: 115px;">Shift Wages:</th>
+                <td class="subtotal" style="text-align: right;">
+                  <lightning-formatted-number 
+                          value={totalShiftWages}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                </td>
+              </tr>
+              <template if:true={isExtendedShift}>
+                <tr>
+                  <th class="reimbursements" style="padding-left: 115px;">Variance Wages:</th>
+                  <td class="reimbursements-total" style="text-align: right;">
+                    <lightning-formatted-number 
+                          value={extendedWage}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                  </td>
+                </tr>
+              </template>
+              <template if:true={isSleepOver}>
+                <tr>
+                  <th class="reimbursements" style="padding-left: 115px;">Sleepover Work Wages:</th>
+                  <td class="reimbursements-total" style="text-align: right;">
+                    <lightning-formatted-number 
+                          value={sleepOverWage}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                  </td>
+                </tr>
+              </template>
+              <template if:true={isBrokenShift}>
+                <tr>
+                  <th class="reimbursements" style="padding-left: 57px;">Extended Broken Wages:</th>
+                  <td class="reimbursements-total" style="text-align: right;">
+                    <lightning-formatted-number 
+                          value={brokenExtendedWage}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                  </td>
+                </tr>
+                <tr>
+                  <th class="reimbursements" style="padding-left: 98px;">Broken Allowance:</th>
+                  <td class="reimbursements-total" style="text-align: right;">
+                    <lightning-formatted-number 
+                          value={brokenAllowance}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                  </td>
+                </tr>
+              </template>
+              
+              <tr>
+                <th class="reimbursements" style="padding-left: 40px;">Approved Reimbursements:</th>
+                <td class="reimbursements-total" >
+                  <lightning-formatted-number 
+                          value={totalReiAmount}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                </td>
+              </tr>
+              <!-- Add class for the third row -->
+              <tr class="total-row">
+                <th class="totaltext" style="padding-left: 100px;"><b>Total Amount:</b></th>
+                <td class="total" style="text-align: right;">
+                  <lightning-formatted-number 
+                          value={grandTotal}
+                          format-style="currency"
+                          currency-code="AUD"
+                          minimum-fraction-digits="2"
+                          maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                </td>
+              </tr>
+              <tr>
+                <th colspan="2" class="line"></th>
+                <td colspan="2" class="line"></td>
+              </tr>
+              </table>
+              </div>
+          </div>  
+
+              <div class="slds-align_absolute-center slds-m-around_small">
+                  <lightning-button label="Cancel" variant="Brand-Outline" onclick={handleeditClose} class="slds-m-around_small"></lightning-button>
+                  <lightning-button label="Update" variant="brand" type="submit" class="slds-m-around_small" data-id={shiftID} ></lightning-button> 
+              </div>
+            </lightning-record-edit-form>
+          </div>
+        </template>
+
+        <template if:true={isShowChecklsit}>             
+          <div class="blur-overlay"></div>
+                <div class="right-align-container" style="width:40%;">
+              <div style="display:flex;justify-content: flex-end;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div>
+
+          <div class="container-box">
+              <div  class="toggle-bar"  style="cursor: pointer;">
+                <span>Checklist</span>
+                </div>
+            
+              <div class="slds-grid slds-wrap custom-scroll tableHeight">
+                  <table class="slds-table slds-table_cell-buffer slds-table_fixed-layout cheListtable">
+                      <thead>
+                          <tr>
+                              
+                              <th>Description</th>
+                              <th>Mandatory</th>
+                              <th>Completed</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <template for:each={checklistItems} for:item="item">
+                              <tr key={item.id}>
+                                  <td class="description">{item.description}</td>
+                                  <td>
+                                      <template if:true={item.isMandatory}>
+                                          <lightning-badge label="Yes"></lightning-badge>
+                                      </template>
+                                      <template if:false={item.isMandatory}>
+                                          <lightning-badge label="No"></lightning-badge>
+                                          
+                                      </template>
+                                  </td>
+                                  <td>
+                                      <lightning-input 
+                                          type="checkbox" 
+                                          data-id={item.id} 
+                                          checked={item.isCompleted}
+                                          disabled=true
+                                          >
+                                      </lightning-input>
+                                  </td>
+                              </tr>
+                          </template>
+                      </tbody>
+                  </table>
+
+              </div>
+                
+            
+          </div>
+        </div>        
+        </template>
+
+         <template if:true={showCancelNotes}>             
+          <div class="blur-overlay"></div>
+                <div class="right-align-container" style="width:40%;">
+              <div style="display:flex;justify-content: flex-end;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div>
+
+          <div class="container-box">
+              <div  class="toggle-bar"  style="cursor: pointer;">
+                <span>Cancelled Notes</span>
+
+
+              </div>
+              <div class="slds-p-left_small slds-p-top_small">
+               <lightning-textarea
+                    name="cancelNotes"
+                    label="Cancelled Notes"
+                    variant="label-hidden"
+                    placeholder="Enter notes..."
+                    value={shiftCancelnotes}
+                    onchange={handleNotesChange}
+                    maxlength="2000"
+                     readonly
+                    rows="6">
+                </lightning-textarea>
+              </div>
+          </div>
+        </div>        
+        </template>
+
+        <template if:true={isShowActivity}>
+          <div class="blur-overlay"></div>
+          <div class="right-align1" style="width:40%;">
+          <div style="display:flex;justify-content: flex-end;padding-right:1%;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div>
+
+          <div class="container-box">
+          <div  class="toggle-bar"  style="cursor: pointer;">
+          <span>Activity</span>
+
+          </div>
+            <template if:true={activitydata}>
+              <template for:each={activitydata} for:item="activity">
+                  <div key={activity.Id} class="activity-card" >
+                      <div class="left-strip">
+                      <div class="content">
+                          <div class="title">{activity.Notes__c}</div>
+                      </div>
+                          <!-- <div class="time">{activity.Time}</div> -->
+                      </div>
+                  </div>
+              </template>
+            </template>
+          </div>
+          </div>        
+        </template>
+
+        <template if:true={ShowGeoLocation}>
+          <div class="blur-overlay"></div>
+          <div class="right-align1" style="width:40%;">
+          <div style="display:flex;justify-content: flex-end;padding-right:1%;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div>
+
+           <div class="container-box">
+                  <div class="toggle-bar">
+                    <span>Geo Location</span>
+
+                  </div>
+                  <div style="padding: 2%;height:20%">
+                    <template if:true={showLocation}>
+                      <a href="javascript:void(0)" onclick={handleGetlocation} >Get Locations</a>
+                    </template>
+                    <template if:true={hideLocation}>
+                      <a href="javascript:void(0)" onclick={hideHandleLocation} >Hide Location</a>
+                    </template>
+                    <template if:true={isShowMap}>
+                      <div class="map-container" style="height: 455px;width:100%;"></div>
+                    </template>
+                  </div>
+                </div>
+          </div>        
+        </template>
+
+        <template if:true={ShowSignature}>
+          <div class="blur-overlay"></div>
+          <div class="right-align1" style="width:40%;">
+          <div style="display:flex;justify-content: flex-end;padding-right:1%;"><lightning-button label="Back" variant="brand" onclick={handleeditCloseCheckList} ></lightning-button></div>
+
+          <div class="container-box">
+          <div  class="toggle-bar"  style="cursor: pointer;">
+          <span>Signature</span>
+          </div>
+          <div style="padding:2%;"> <lightning-formatted-rich-text value={Sign}></lightning-formatted-rich-text></div>
+          
+          </div>
+          </div>        
+        </template>
+
+        <template if:true={BulkApproveFlag}>
+                <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                    class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+                
+                    <div class="slds-modal__container modal-container" style="max-width:25%;">
+                    <header class="slds-modal__header" style="background:#002A52;">
+                        
+                        <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                    </header> 
+                    <div class="slds-modal__content slds-p-around_medium modal-content">                                
+                        <div class="slds-m-around_small">
+                            <div><p style="text-align: center;">Are you sure you want to submit the timesheet for {validShiftslength} shifts?</p></div>
+                            <div class="button-container slds-m-top_medium" style="display: flex; justify-content: center;">
+                                <lightning-button label="No" variant="brand" onclick={handlesubmissionclose}
+                                class="slds-m-around_small"></lightning-button>
+                                <lightning-button label="Yes" variant="brand"  onclick={handleBulksubmit} class="slds-m-around_small"></lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- Modal for File Preview -->
+        <template if:true={isModalOpen}>
+              <div class="slds-p-around_medium">
+              <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                          onclick={closeModal} style="float:right;margin-bottom:5px;margin-right:2%;"></lightning-button>
+              
+              <iframe src={currentUrl} width="100%" height="750vh" ></iframe>
+              </div>
+              
+        </template>
+
+        <template if:true={isModalOpenfortimesheetExport}>
+          <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" 
+                    aria-modal="true" class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+
+                <div class="slds-modal__container" style="max-width:25%;">
+                    
+                    <!-- Modal Header -->
+                    <header class="slds-modal__header" style="background:#002A52;">
+                        <h2 id="modal-heading-01" 
+                            class="slds-text-heading_medium slds-text-align_center slds-text-color_inverse slds-text-title_bold">
+                            Export
+                        </h2>
+                    </header>
+
+                    <!-- Modal Body -->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div class="slds-form slds-form_stacked custom-form">
+
+                            <!-- Select Frequency -->
+                            <div class="slds-form-element slds-size_1-of-1 slds-m-bottom_medium">
+                                <div class="floating-label">
+                                  <span class="label-text-drop"><span style="color:red">*</span>Frequency</span>
+                                    <lightning-combobox
+                                        name="frequency"
+                                        label="Select Frequency"
+                                        value={frequency}
+                                        options={frequencyOptions}
+                                        onchange={handleFrequencyChange}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+
+                            <!-- Select Start Date -->
+                            <div class="slds-form-element slds-size_1-of-1 slds-m-bottom_medium">
+                                <div class="floating-label">
+                                  <span class="label-text-drop"><span style="color:red">*</span>Select Start Date</span>
+                                    <lightning-input
+                                        type="date"
+                                        name="startDate"
+                                        label="Select Start Date"
+                                        value={ExportStartDate}
+                                        onchange={handleStartDateChange}
+                                        placeholder="Select a date"
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <!-- Export Range -->
+                             <template if:true={showExportRange}>
+                                <div class="slds-form-element slds-size_1-of-1 slds-m-bottom_medium">
+                                  <div class="floating-label">
+                                    <span class="label-text-drop">Export Range</span>
+                                      <lightning-input
+                                          type="text"
+                                          name="exportRange"
+                                          label="Export Range"
+                                          value={exportRange}
+                                          readonly
+                                          class="slds-input_readonly"
+                                          variant="label-hidden"
+                                          disabled>
+                                      </lightning-input>
+                                  </div>
+                                </div>
+                             </template>
+                            
+
+                            <!-- Export As -->
+                            <div class="slds-form-element slds-size_1-of-1 slds-m-bottom_medium">
+                              <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Export As</span>
+                                  <lightning-combobox
+                                      name="format"
+                                      label="Export As"
+                                      value={exportFormat}
+                                      options={formatOptions}
+                                      onchange={handleFormatChange}
+                                      variant="label-hidden">
+                                  </lightning-combobox>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="button-container slds-m-top_medium">
+                            <lightning-button label="Cancel" variant="neutral" onclick={handleCloseModal} 
+                                              class="slds-m-horizontal_small"></lightning-button>
+                            <lightning-button label="Download" variant="brand" onclick={handleExport} 
+                                              class="slds-m-horizontal_small"></lightning-button>
+                        </div>
+                    </div>                    
+                </div>
+          </section>
+          <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <template if:true={isLoading}>
+            <!-- <div class="spinner-container">
+                <lightning-spinner
+                    alternative-text="Loading..."
+                    size="large"
+                    variant="brand">
+                </lightning-spinner>
+            </div> -->
+
+            <div class="overlay-logo"></div>
+            <div class="spinner-wrapper">
+                <div class="loader-container">
+                    <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                    <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                </div>
+                <p class="progress-text">Loading</br>Please Wait...</p>
+            </div>
+        </template>
+
+    </div>
+</template>
