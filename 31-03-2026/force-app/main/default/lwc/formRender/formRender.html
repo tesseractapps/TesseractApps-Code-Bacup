@@ -1,0 +1,2001 @@
+<template>
+  <!-- <template if:false={isFormSelected}> -->
+  <template if:true={showPublishedForms}>
+    <div class="blur-overlay">
+      <div class="right-align" style="width: 65%">
+        <div class="pf-bar">
+          <div class="pf-left">
+            <h3 class="pf-title">Published Forms</h3>
+          </div>
+
+          <div class="pf-center">
+            <div class="floating-label">
+              <span class="label-text-drop">Search Forms</span>
+              <lightning-input
+                type="search"
+                variant="label-hidden"
+                placeholder="Search by form name..."
+                onchange={handleSearchChange}
+              >
+              </lightning-input>
+            </div>
+          </div>
+
+          <div class="pf-right">
+            <lightning-button
+              variant="brand-outline"
+              label="Cancel"
+              title="Cancel"
+              onclick={togglePublishedForms}
+            >
+            </lightning-button>
+          </div>
+        </div>
+
+        <!-- PublishedForms.html -->
+        <div class="published-grid custom-scroll" role="list">
+          <!-- <template for:each={filteredForms} for:item="form">
+    <button
+      key={form.Id}
+      class="doc-tile"
+      data-id={form.Id}
+      onclick={handleFormClick}
+      role="listitem"
+      aria-label={form.Name__c}
+      title={form.Name__c}
+    >
+      <span class="material-symbols-outlined doc-icon">docs</span>
+      <span class="doc-label">{form.Name__c}</span>
+    </button>
+  </template> -->
+
+          <table class="table">
+            <thead>
+              <tr class="tr1">
+                <th class="table_th">Form Name</th>
+                <th class="table_th">Created By</th>
+                <th class="table_th">Created On</th>
+                <th class="table_th">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={filteredForms} for:item="form">
+                <tr key={form.Id} class="tr1">
+                  <td class="table_td" title={form.Name__c}>{form.Name__c}</td>
+                  <td class="table_td">{form.CreatedByName}</td>
+                  <td class="table_td">{form.FormattedCreatedDate}</td>
+                  <td class="table_td">
+                    <button
+                      class="assign-close-button"
+                      data-id={form.Id}
+                      onclick={handleFormClick}
+                      title="Open form"
+                    >
+                      <i class="material-icons open-icon">file_open</i>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <template if:false={filteredForms.length}>
+            <div class="empty-state">
+              <span class="material-symbols-outlined empty-icon"
+                >description</span
+              >
+              <p class="empty-text">No published forms found</p>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- </template> -->
+<div style="padding:10px">
+  <!-- <h3 style="font-size:120%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:2%;">Submitted Forms</h3> -->
+  <div
+    style="display: flex; align-items: flex-start; justify-content: space-between;padding-bottom: 10px;"
+  >
+    <div class="search_role">
+      <div class="floating-label-input">
+        <span class="label-text-drop">Search Forms</span>
+        <lightning-input
+          type="search"
+          placeholder="Search by Form Name, Type, Participant, Date..."
+          onchange={handleSubmittedFormSearch}
+          value={searchSubmittedQuery}
+          variant="label-hidden"
+        >
+        </lightning-input>
+      </div>
+
+      <div class="role-tab-scroll-container">
+        <lightning-button-icon
+          icon-name="utility:chevronleft"
+          onclick={scrollTabsLeft}
+          alternative-text="Scroll Left"
+          variant="bare"
+          size="small"
+        >
+        </lightning-button-icon>
+
+        <div
+          class="role-tab-wrapper"
+          data-id="roleTabsContainer"
+          onscroll={handleScroll}
+        >
+          <template for:each={nameTabs} for:item="tab">
+            <button
+              key={tab.value}
+              class={tab.computedClass}
+              data-role={tab.value}
+              onclick={handleNameTabClick}
+            >
+              {tab.label}
+            </button>
+          </template>
+        </div>
+
+        <lightning-button-icon
+          icon-name="utility:chevronright"
+          onclick={scrollTabsRight}
+          alternative-text="Scroll Right"
+          variant="bare"
+          size="small"
+        >
+        </lightning-button-icon>
+      </div>
+    </div>
+
+    <div
+      style="display: flex; align-items: center; gap: 10px;"
+    >
+      <lightning-button
+        label="Add New Form"
+        variant="brand"
+        onclick={togglePublishedForms}
+      >
+      </lightning-button>
+    </div>
+  </div>
+
+  <div class="combine-show">
+    <template if:false={isExpandview}>
+      <div style="width: 35%">
+        <template if:true={hasResponses}>
+          <template if:true={paginatedFormResponses}>
+            <div class="default-forms-section">
+                <div class="formsscroll custom-scroll">
+                  <template if:true={totalFormRecords}>
+                    <!-- <table class="table">
+                      <colgroup>
+                        <col class="col-1" />
+                        <col class="col-2" />
+                        <col class="col-3" />
+                        <col class="col-4" />
+                        <col class="col-5" />
+                      </colgroup>
+                      <thead>
+                        <tr class="tr1">
+                          <th class="table_th1">Form Name</th>
+                          <th class="table_th">Created By</th>
+                          <th class="table_th" style="white-space: nowrap">
+                            Submitted On
+                          </th>
+                          <th class="table_th">Status</th>
+                          <th class="table_th2">Actions</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        <template
+                          for:each={paginatedFormResponses}
+                          for:item="response"
+                        >
+                          <tr key={response.Id} class="tr1">
+                            <td class="table_td">
+                              <div class="cell-text">{response.Name__c}</div>
+                            </td>
+                            <td class="table_td">
+                              <div class="cell-text">
+                                {response.CreatedByName}
+                              </div>
+                            </td>
+                            <td class="table_td">{response.FormattedDate}</td>
+                            <td class="table_td">
+                               <span class="status-indicator">
+                                <span class={response.statusDotClass}></span>
+                                {response.Status__c}
+                              </span>
+                            </td>
+
+
+                          <td class="table_td actions">
+                            <template if:true={response.isSigned}>
+
+                              <template if:true={response.canEditOrDelete}>
+                                <a
+                                  href="javascript:void(0)"
+                                  data-id={response.Id}
+                                  onclick={handleDelete}
+                                  title="Delete"
+                                >
+                                  <i
+                                    class="material-icons delete-icon"
+                                    data-id={response.Id}
+                                  >delete</i>
+                                </a>
+                                &nbsp;
+                              </template>
+
+                              <lightning-button
+                                label="Signed"
+                                variant="success"
+                                data-id={response.Id}
+                                data-signature-url={response.signatureUrl}
+                                onclick={handleTsignFromForms}
+                                title="View signed PDF"
+                                style="margin-left: 20px;"
+                              >
+                              </lightning-button>
+                            </template>
+                            <template if:false={response.isSigned}>
+
+                              <a
+                                href="javascript:void(0)"
+                                data-id={response.Id}
+                                onclick={handleView}
+                                title="View"
+                              >
+                                <i
+                                  class="material-icons view-icon"
+                                  data-id={response.Id}
+                                >visibility</i>
+                              </a>
+                              &nbsp;
+
+                              <template if:true={response.canEditOrDelete}>
+                                <a
+                                  href="javascript:void(0)"
+                                  data-id={response.Id}
+                                  onclick={handleEdit}
+                                  title="Edit"
+                                >
+                                  <i
+                                    class="material-icons edit-icon"
+                                    data-id={response.Id}
+                                  >edit_document</i>
+                                </a>
+                                &nbsp;
+
+                                <a
+                                  href="javascript:void(0)"
+                                  data-id={response.Id}
+                                  onclick={handleDelete}
+                                  title="Delete"
+                                >
+                                  <i
+                                    class="material-icons delete-icon"
+                                    data-id={response.Id}
+                                  >delete</i>
+                                </a>
+                                &nbsp;
+                              </template>
+
+                              <a
+                                href="javascript:void(0)"
+                                data-id={response.Id}
+                                data-url={response.AWS_Url__c}
+                                onclick={handleTsignFromForms}
+                                title="TSign"
+                              >
+                                <i
+                                  class="material-icons tsign-icon"
+                                  data-id={response.Id}
+                                >stylus_note</i>
+                              </a>
+
+                            </template>
+                          </td>
+
+
+
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table> -->
+                  
+<div class="table-container formResponseTable">
+
+    <!-- HEADER -->
+    <div class="header-wrapper">
+        <table class="staff-table" role="table">
+            <thead>
+                <tr>
+                    <th class="table-th">Form Name</th>
+                    <th class="table-th">Created By</th>
+                    <th class="table-th">Submitted On</th>
+                    <th class="table-th">Status</th>
+                    <th class="table-th">Action</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- BODY -->
+    <div class="body-scroll custom-scroll tableHeight">
+        <table class="staff-table">
+            <tbody>
+
+                <template for:each={paginatedFormResponses} for:item="response">
+                    <tr key={response.Id} class="table-row">
+
+                        <!-- Avatar + Form Name -->
+                        <td class="table-td" title={response.Name__c}>
+                                {response.Name__c}
+                        </td>
+
+                        <!-- Created By -->
+                        <td class="table-td" title={response.CreatedByName}>
+                            {response.CreatedByName}
+                        </td>
+
+                        <!-- Submitted On -->
+                        <td class="table-td">
+                            {response.FormattedDate}
+                        </td>
+
+                        <!-- Status -->
+                        <td class="table-td">
+                            <span class={response.statusBadgeClass}>
+                                {response.Status__c}
+                            </span>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="table-td actions-col">
+
+                            <template if:true={response.isSigned}>
+                                <lightning-button
+                                    label="Signed"
+                                    variant="success"
+                                    data-id={response.Id}
+                                    data-signature-url={response.signatureUrl}
+                                    onclick={handleTsignFromForms}>
+                                </lightning-button>
+                            </template>
+
+                            <template if:false={response.isSigned}>
+
+                                <i class="material-icons view-icon"
+                                   data-id={response.Id}
+                                   onclick={handleView}>
+                                   visibility
+                                </i>
+
+                                <template if:true={response.canEditOrDelete}>
+                                    <i class="material-icons edit-icon"
+                                       data-id={response.Id}
+                                       onclick={handleEdit}>
+                                       edit_document
+                                    </i>
+
+                                    <i class="material-icons delete-icon"
+                                       data-id={response.Id}
+                                       onclick={handleDelete}>
+                                       delete
+                                    </i>
+                                </template>
+
+                                <i class="material-icons tsign-icon"
+                                   data-id={response.Id}
+                                   data-url={response.AWS_Url__c}
+                                   onclick={handleTsignFromForms}>
+                                   stylus_note
+                                </i>
+
+                            </template>
+
+                        </td>
+
+                    </tr>
+                </template>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+                  
+                  </template>
+                </div>
+            </div>
+
+            <!-- Pagination Controls for Submitted Forms -->
+            <template if:true={totalFormRecords}>
+              <div
+                class="slds-grid slds-p-around_medium slds-grid_vertical-align-center paginationcontrol"
+              >
+                <!-- Left spacer grows to push center into true middle -->
+                <div class="slds-col slds-grow"></div>
+
+                <!-- Center: Pagination Controls (no grow) -->
+                <div class="slds-col">
+                  <div
+                    class="slds-grid slds-gutters slds-align_absolute-center"
+                  >
+                    <lightning-button
+                      class="slds-m-horizontal_x-small"
+                      disabled={disableFirstFormPage}
+                      icon-name="utility:chevronleft"
+                      label="Previous"
+                      onclick={previousFormPage}
+                    >
+                    </lightning-button>
+
+                    <span class="slds-badge slds-m-horizontal_small">
+                      Showing {formPageNumber} of {totalFormPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                      class="slds-m-horizontal_x-small"
+                      disabled={disableLastFormPage}
+                      icon-name="utility:chevronright"
+                      label="Next"
+                      onclick={nextFormPage}
+                    >
+                    </lightning-button>
+                  </div>
+                </div>
+
+                <!-- Right: Total count grows and aligns to extreme right -->
+                <div class="slds-col slds-grow slds-text-align_right">
+                  <span class="slds-badge"
+                    >Total Submitted Forms: {totalFormRecords}</span
+                  >
+                </div>
+              </div>
+            </template>
+          </template>
+        </template>
+      </div>
+    </template>
+
+    <template if:true={hasResponses}>
+      <template if:true={isViewModeON}>
+        <template if:false={isViewMode}>
+          <div class="view-popup-content">
+            <div
+              class="empty-view slds-p-around_large slds-text-align_center"
+              role="region"
+              aria-label="No form selected"
+            >
+              <i class="material-icons empty-view__icon" aria-hidden="true"
+                >description</i
+              >
+              <p class="slds-text-heading_small slds-text-title_bold">
+                Select a form response to view details
+              </p>
+              <p class="slds-text-color_weak slds-m-top_x-small">
+                Tip: click the eye icon in the table to open a preview.
+              </p>
+            </div>
+          </div>
+        </template>
+
+        <!-- View Mode -->
+        <template if:true={isViewMode}>
+          <!-- <div class="view-popup-container"> -->
+          <div class={viewPopupContentClass}>
+            <div class="view-popup-header">
+              <span class="view-popup-title">
+                Preview: {selectedFormTitle} ({selectedFormType})
+              </span>
+
+              <div class="view-popup-actions">
+                <span
+                  class="icon-btn"
+                  role="button"
+                  tabindex="0"
+                  title="Download PDF"
+                  aria-label="Download PDF"
+                  onclick={downloadPdfinView}
+                  onkeydown={handleIconKeydown}
+                >
+                  <i class="material-icons download-icon">file_download</i>
+                </span>
+
+                <span
+                  class="icon-btn"
+                  role="button"
+                  tabindex="0"
+                  title={expandButtonTitle}
+                  aria-label={expandButtonTitle}
+                  onclick={expandview}
+                  onkeydown={handleIconKeydown}
+                >
+                  <i class="material-icons expand-icon">{expandIconName}</i>
+                </span>
+
+                <span
+                  class="icon-btn"
+                  role="button"
+                  tabindex="0"
+                  title="Close"
+                  aria-label="Close"
+                  onclick={closeView}
+                  onkeydown={handleIconKeydown}
+                >
+                  <i class="material-icons close-icon">close</i>
+                </span>
+              </div>
+            </div>
+
+            <!-- ✅ Table Container -->
+            <div class="view-popup-table-container custom-scroll">
+              <table class="view-popup-table">
+                <thead>
+                  <tr>
+                    <th>Field Name</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template iterator:item={viewTableData}>
+                    <!-- 🔹 Page Break Divider -->
+                    <template if:true={item.value.isPageBreak}>
+                      <tr key={item.value.key}>
+                        <td
+                          colspan="2"
+                          class="page-break-row"
+                          onclick={togglePageSection}
+                          data-page={item.value.pageNumber}
+                        >
+                          <div class="page-divider">
+                            <span>
+                              <span class="arrow">{item.value.arrow}</span>
+                              Page {item.value.pageNumber}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+
+                    <!-- 🔹 Render Visible Fields Only -->
+                    <template if:false={item.value.isPageBreak}>
+                      <template if:true={item.value.isSectionHeader}>
+                        <tr key={item.value.id} if:true={item.value.isVisible}>
+                          <!-- Optional inline style coming from headerStyle -->
+                          <td
+                            class="section-cell"
+                            colspan="2"
+                            style={item.value.headerStyle}
+                          >
+                            {item.value.title}
+                          </td>
+                        </tr>
+                      </template>
+                      <template if:false={item.value.isSectionHeader}>
+                        <template if:true={item.value.isVisible}>
+                          <tr key={item.value.id}>
+                            <td class="view-table-label">{item.value.label}</td>
+                            <td class="view-table-value">
+                              <template if:true={item.value.isCheckbox}>
+                                
+                                <lightning-icon
+                                  icon-name={item.value.value}
+                                   size="xx-small"
+                                ></lightning-icon>
+                               
+                              </template>
+
+                              <template if:true={item.value.isUploadFile}>
+                                <!-- Prefer the normalized array -->
+                                <template if:true={item.value.files}>
+                                  <template
+                                    for:each={item.value.files}
+                                    for:item="f"
+                                  >
+                                    <div key={f.key} class="uploaded-file">
+                                      <template if:true={f.isImage}>
+                                        <img
+                                          src={f.url}
+                                          alt="Uploaded File"
+                                          class="uploaded-image"
+                                        />
+                                      </template>
+                                      <!-- <a href={f.downloadUrl} target="_blank" download class="download-link">
+                <lightning-icon icon-name="utility:download" size="xx-small"
+                  alternative-text="Download" class="download-icon">
+                </lightning-icon>
+                Download File
+              </a> -->
+                                    </div>
+                                  </template>
+                                </template>
+
+                                <!-- Legacy single-url fallback -->
+                                <template if:false={item.value.files}>
+                                  <template if:true={item.value.uploadUrl}>
+                                    <template if:true={item.value.isImageFile}>
+                                      <img
+                                        src={item.value.uploadUrl}
+                                        alt="Uploaded File"
+                                        class="uploaded-image"
+                                      />
+                                    </template>
+                                    <a
+                                      href={item.value.finalDownloadUrl}
+                                      target="_blank"
+                                      download
+                                      class="download-link"
+                                    >
+                                      <lightning-icon
+                                        icon-name="utility:download"
+                                        size="xx-small"
+                                        alternative-text="Download"
+                                        class="download-icon"
+                                      >
+                                      </lightning-icon>
+                                      Download File
+                                    </a>
+                                  </template>
+                                  <template if:false={item.value.uploadUrl}>
+                                    <span>No File Uploaded</span>
+                                  </template>
+                                </template>
+                              </template>
+
+                              <!-- ✅ Rich Text Field -->
+                              <template if:true={item.value.isRichText}>
+                                <div class="rich-text-view-container">
+                                  <div
+                                    class="rich-text-view"
+                                    lwc:dom="manual"
+                                    data-id={item.value.id}
+                                  ></div>
+                                </div>
+                              </template>
+
+                              <!-- ✅ Radio Button Text (Basic Display) -->
+                              <template if:true={item.value.isRadioButton}>
+                                <span class="view-radio-value"
+                                  >{item.value.value}</span
+                                >
+                              </template>
+
+                               <!-- ⭐ Signature Display -->
+                              <template if:true={item.value.isSignature}>
+                                <div class="signature-view-wrapper">
+                                  <img
+                                    src={item.value.value}
+                                    alt="Signature"
+                                    class="signature-view-img"
+                                  />
+                                </div>
+                              </template>
+
+                              <!-- ✅ Fallback for Text/Date/Dropdown -->
+                              <template if:true={item.value.isRegularField}>
+                                <span>{item.value.value}</span>
+                              </template>
+                            </td>
+                          </tr>
+                        </template>
+                      </template>
+                    </template>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </template>
+      </template>
+    </template>
+
+    <template if:true={isFormSelected}>
+      <div class={unitedContentClass}>
+        <div class="title-step">
+          <div class="form-title-container">
+            <span class="form-title"
+              >{selectedFormTitle} - {selectedFormType}</span
+            >
+          </div>
+
+          <div class="form-navigation-buttons">
+            <template if:true={showStepProgressIndicator}>
+              <div class="pagination-bar">
+                <button
+                  class="icon-btn"
+                  aria-label="Previous page"
+                  onclick={goToPreviousStepPage}
+                  disabled={isFirstStepPage}
+                >
+                  <i class="material-icons material-icons-page">chevron_left</i>
+                </button>
+
+                <span class="page-info">
+                  Page <strong>{stepCurrentPageDisplay}</strong>
+                  <span class="page-of">of {totalStepPages}</span>
+                </span>
+
+                <button
+                  class="icon-btn"
+                  aria-label="Next page"
+                  onclick={goToNextStepPage}
+                  disabled={isLastStepPage}
+                >
+                  <i class="material-icons material-icons-page"
+                    >chevron_right</i
+                  >
+                </button>
+              </div>
+            </template>
+
+            <span
+              class="icon-btn"
+              role="button"
+              tabindex="0"
+              title={expandButtonTitle}
+              aria-label={expandButtonTitle}
+              onclick={expandview}
+              onkeydown={handleIconKeydown}
+            >
+              <i class="material-icons expand-icon">{expandIconName}</i>
+            </span>
+          </div>
+        </div>
+
+        <div class="excel-table-container custom-scroll">
+          <table class="excel-table">
+            <tbody>
+              <template for:each={tableRows} for:item="row">
+                <tr key={row.id}>
+                  <template for:each={row.cells} for:item="cell">
+                    <template if:true={cell.isVisible}>
+                      <!-- Only render <td> if there is a valid field -->
+                      <template if:true={cell.field}>
+                        <td
+                          key={cell.domKey}
+                          class="table-cell"
+                          colspan={cell.colspan}
+                          rowspan={cell.rowspan}
+                        >
+                          <template if:true={cell.hasContent}>
+                            <div
+                              class="floating-label"
+                              style={cell.floatingLabelStyle}
+                            >
+                              <span class="label-text-drop">
+                                <template if:true={cell.field.isRequired}>
+                                  <span style="color: red">*</span>
+                                </template>
+                                {cell.field.label}
+                              </span>
+
+                              <template if:true={cell.hasComment}>
+                                <span class="tooltip-container">
+                                  <lightning-icon
+                                    icon-name="utility:info"
+                                    size="xx-small"
+                                    class="info-icon"
+                                  ></lightning-icon>
+                                  <span class="tooltip-text"
+                                    >{cell.field.comments}</span
+                                  >
+                                </span>
+                              </template>
+
+                              <template if:true={cell.field.isHeader}>
+                                <div
+                                  class="fc-header"
+                                  style={cell.field.inlineStyle}
+                                >
+                                  {cell.field.text}
+                                </div>
+                              </template>
+
+                              <template if:true={cell.isTextField}>
+                                <input
+                                  type="text"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  oninput={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <template if:true={cell.isTextArea}>
+                                <textarea
+                                  key={cell.domKey}
+                                  data-id={cell.id}
+                                  class="input-textarea"
+                                  maxlength="255"
+                                  placeholder={cell.placeholderText}
+                                  value={cell.field.value}
+                                  oninput={handleTextAreaInput}
+                                ></textarea>
+                              </template>
+
+                              <!-- ✅ AlphaNumeric Text Field (Restricts special chars) -->
+                              <template if:true={cell.isAlphaNumeric}>
+                                <input
+                                  type="text"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  maxlength={cell.maxLength}
+                                  pattern="[A-Za-z0-9]*"
+                                  onkeypress={restrictAlphaNumeric}
+                                  oninput={validateAlphaNumeric}
+                                  onchange={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <!-- ✅ Only Alphabets Text Field (No numbers, no special chars) -->
+                              <template if:true={cell.isOnlyAlphabets}>
+                                <input
+                                  type="text"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  maxlength={cell.maxLength}
+                                  pattern="[A-Za-z]*"
+                                  onkeypress={restrictOnlyAlphabets}
+                                  oninput={validateOnlyAlphabets}
+                                  onchange={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <template if:true={cell.isRichText}>
+                                <lightning-input-rich-text
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  onchange={handleInputChange}
+                                  onpaste={handleRtePaste}
+                                  disabled-categories="INSERT_IMAGE"
+                                  placeholder={cell.placeholderText}
+                                  class="rich-text-editor"
+                                >
+                                </lightning-input-rich-text>
+                              </template>
+
+                              <template if:true={cell.isNumberField}>
+                                <template if:true={cell.isContactNumber}>
+                                  <input
+                                    type="text"
+                                    data-id={cell.id}
+                                    value={cell.field.value}
+                                    maxlength={cell.maxLength}
+                                    pattern="[0-9]*"
+                                    onkeypress={restrictNumbersOnly}
+                                    oninput={validateNumbersOnly}
+                                    onchange={handleInputChange}
+                                    class="input-field"
+                                    placeholder={cell.placeholderText}
+                                  />
+                                </template>
+
+                                <template if:true={cell.isCurrency}>
+                                  <input
+                                    type="text"
+                                    data-id={cell.id}
+                                    data-decimals={cell.field.decimalValue}
+                                    value={cell.field.value}
+                                    onkeypress={restrictCurrencyInput}
+                                    oninput={validateCurrencyInput}
+                                    onchange={handleInputChange}
+                                    class="input-field"
+                                    placeholder={cell.placeholderText}
+                                  />
+                                </template>
+
+                                <template if:true={cell.isDefaultNumber}>
+                                  <input
+                                    type="number"
+                                    data-id={cell.id}
+                                    value={cell.field.value}
+                                    oninput={handleInputChange}
+                                    class="input-field"
+                                    placeholder={cell.placeholderText}
+                                  />
+                                </template>
+                              </template>
+
+                              <!-- ✅ Time Field (No Formatting) -->
+                              <template if:true={cell.isTimeField}>
+                                <input
+                                  type="time"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  oninput={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <!-- ✅ Date Field (No Formatting) -->
+                              <template if:true={cell.isDateField}>
+                                <input
+                                  key={cell.domKey}
+                                  type="date"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  oninput={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <!-- ✅ Checkbox Field (Slider Toggle) -->
+                              <template if:true={cell.isCheckboxField}>
+                                <label class="switch">
+                                  <input
+                                    type="checkbox"
+                                    data-id={cell.id}
+                                    checked={cell.field.value}
+                                    oninput={handleInputChange}
+                                  />
+                                  <span class="slider"></span>
+                                </label>
+                              </template>
+
+                              <!-- <template if:true={cell.isDropdownField}>
+                                                            <template if:false={cell.isMultiSelect}>
+                                                            
+                                                                <select data-id={cell.dataId} onchange={handleInputChange} class="input-dropdown" >
+                                                                    <option value="" disabled selected class="dropdown-placeholder">{cell.placeholderText}</option>
+                                                                    <option value="None">None</option>
+                                                                    <template for:each={cell.field.options} for:item="option">
+                                                                        <option key={option.label} value={option.label} selected={option.isSelected}>{option.label}</option>
+                                                                    </template>
+                                                                </select>
+                                                            </template>
+                                                        
+                                                            <template if:true={cell.isMultiSelect}>
+                                                                <div class="multi-dropdown-container">
+                                                                   
+                                                                    <div class="multi-selected-values" data-id={cell.id} onclick={toggleDropdown}>
+                                                                        <template for:each={cell.field.options} for:item="option">
+                                                                            <template if:true={option.isSelected}>
+                                                                                <span key={option.label} class="selected-option">
+                                                                                    {option.label} 
+                                                                                    <span class="remove-option" data-id={cell.id} data-value={option.label} onclick={removeSelectedOption}>&times;</span>
+                                                                                </span>
+                                                                            </template>
+                                                                        </template>
+                                                                        
+                                                                    </div>
+                                                            
+                                                                   
+                                                                    <div class="multi-dropdown-options" if:true={cell.isDropdownOpen}>
+                                                                        <template for:each={cell.field.options} for:item="option">
+                                                                            <label key={option.label} class="multi-dropdown-item">
+                                                                                <input type="checkbox" 
+                                                                                       value={option.label} 
+                                                                                       data-id={cell.id} 
+                                                                                       checked={option.isSelected}
+                                                                                       onchange={handleMultiSelectChange} />
+                                                                                {option.label}
+                                                                            </label>
+                                                                        </template>
+                                                                        <div class="multi-dropdown-footer">
+                                                                            <button class="multi-dropdown-save" data-id={cell.id} onclick={saveMultiSelect}>Save</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </template>      
+                                                        </template> -->
+
+                              <template if:true={cell.isDropdownField}>
+                                <template if:false={cell.isMultiSelect}>
+                                  <template if:true={cell.field.isDisabled}>
+                                    <!-- Disabled Single Select Dropdown -->
+                                    <select
+                                      data-id={cell.id}
+                                      value={cell.field.value}
+                                      class="input-dropdown"
+                                      disabled
+                                    >
+                                      <option
+                                        value=""
+                                        disabled
+                                        class="dropdown-placeholder"
+                                      >
+                                        {cell.placeholderText}
+                                      </option>
+                                      <option value="None">None</option>
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                          selected={option.isSelected}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      </template>
+                                    </select>
+                                  </template>
+                                  <template if:false={cell.field.isDisabled}>
+                                    <!-- Enabled Single Select Dropdown -->
+                                    <select
+                                      data-id={cell.id}
+                                      value={cell.field.value}
+                                      onchange={handleInputChange}
+                                      class="input-dropdown"
+                                    >
+                                      <option
+                                        value=""
+                                        disabled
+                                        class="dropdown-placeholder"
+                                      >
+                                        {cell.placeholderText}
+                                      </option>
+                                      <option value="None">None</option>
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                          selected={option.isSelected}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      </template>
+                                    </select>
+                                  </template>
+                                </template>
+
+                                <template if:true={cell.isMultiSelect}>
+                                  <div class="multi-dropdown-container">
+                                    <!-- Selected Options Display -->
+                                    <div
+                                      class="multi-selected-values"
+                                      data-id={cell.id}
+                                      onclick={toggleDropdown}
+                                    >
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <template if:true={option.isSelected}>
+                                          <span
+                                            key={option.label}
+                                            class="selected-option"
+                                          >
+                                            {option.label}
+                                            <span
+                                              class="remove-option"
+                                              data-id={cell.id}
+                                              data-value={option.label}
+                                              onclick={removeSelectedOption}
+                                              >&times;</span
+                                            >
+                                          </span>
+                                        </template>
+                                      </template>
+                                      <span
+                                        class="multi-select-icon"
+                                        title="Multi-select"
+                                        data-id={cell.id}
+                                        onclick={handleIconClick}
+                                        >&#10507;</span
+                                      >
+                                    </div>
+
+                                    <!-- Dropdown Options -->
+                                    <div
+                                      class="multi-dropdown-options"
+                                      if:true={cell.isDropdownOpen}
+                                    >
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <label
+                                          key={option.label}
+                                          class="multi-dropdown-item"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            value={option.label}
+                                            data-id={cell.id}
+                                            checked={option.isSelected}
+                                            onchange={handleMultiSelectChange}
+                                          />
+                                          {option.label}
+                                        </label>
+                                      </template>
+                                      <div class="multi-dropdown-footer">
+                                        <button
+                                          class="multi-dropdown-save"
+                                          data-id={cell.id}
+                                          onclick={saveMultiSelect}
+                                        >
+                                          Save
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </template>
+                              </template>
+
+                              <template if:true={cell.isUploadField}>
+                                <div>
+                                  <!-- Hidden actual input -->
+                                  <input
+                                    type="file"
+                                    data-id={cell.id}
+                                    class="hidden-file-input"
+                                    onchange={handleFileUploadInputChange}
+                                    data-cell-id={cell.id}
+                                    accept="image/*"
+                                    multiple
+                                  />
+
+                                  <!-- Styled button -->
+                                  <button
+                                    type="button"
+                                    class="file-upload-button"
+                                    data-id={cell.id}
+                                    onclick={triggerFileInput}
+                                  >
+                                    &#8684; Upload Image
+                                  </button>
+
+                                  <!-- <template if:true={cell.field.fileName}>
+                                <div class="uploaded-file-name">
+                                  📎 {cell.field.fileName}
+                                </div>
+
+                                
+                              </template> -->
+                                </div>
+
+                                <!-- <template if:true={cell.field.value}>
+                              <a
+                                href={cell.field.value}
+                                target="_blank"
+                                style="display: block; margin-top: 5px"
+                              >
+                                View Uploaded File
+                              </a>
+
+                              
+                            </template> -->
+
+                                <c-document-office-service
+                                    data-cell-id={cell.id}
+                                    context-cell-id={cell.id}
+                                    record-id={recordId}
+                                    module-path-from-parent="ticket"
+                                    onuploadcomplete={handleAwsUploadComplete}
+                                  >
+                                  </c-document-office-service>
+
+                                  <!-- Existing uploaded files list -->
+<template if:true={cell.field.meta.uploadedFiles}>
+  <div class="Exupload-filesWrap">
+    <template for:each={cell.field.meta.uploadedFiles} for:item="file" for:index="idx">
+      <div key={file.fileId} class="Exupload-fileRow">
+        <a class="Exupload-fileLink" href={file.url} target="_blank" rel="noopener noreferrer">
+          <i class="material-icons Exupload-mi Exupload-miOpen" aria-hidden="true">file_open</i>
+          <span class="Exupload-fileName" title={file.originalName}>{file.originalName}</span>
+        </a>
+
+        <button
+          type="button"
+          class="Exupload-iconBtn Exupload-iconBtnDanger"
+          title="Delete file"
+          aria-label="Delete file"
+          data-cellid={cell.id}
+          data-index={idx}
+          data-key={file.key}       
+          data-url={file.url}        
+          data-fileid={file.fileId}  
+          onclick={handleDeleteUploadedFile}
+        >
+          <i class="material-icons Exupload-mi" aria-hidden="true">delete</i>
+        </button>
+      </div>
+    </template>
+  </div>
+</template>
+
+<!-- Fallback if meta.uploadedFiles not present but value exists -->
+<!-- <template if:false={cell.field.meta.uploadedFiles}>
+  <template if:true={cell.field.value}>
+    <div class="Exupload-filesWrap slds-m-top_small">
+      <template for:each={cell.field.value} for:item="url" for:index="idx">
+        <div key={url} class="Exupload-fileRow">
+          <a class="Exupload-fileLink" href={url} target="_blank" rel="noopener noreferrer">
+            <i class="material-icons Exupload-mi Exupload-miOpen" aria-hidden="true">file_open</i>
+            <span class="Exupload-fileName" title={url}>File {idx}</span>
+          </a>
+
+          <button
+            type="button"
+            class="Exupload-iconBtn Exupload-iconBtnDanger"
+            title="Delete file"
+            aria-label="Delete file"
+            data-cellid={cell.id}
+            data-index={idx}
+            data-url={url}  
+            onclick={handleDeleteUploadedFile}
+          >
+            <i class="material-icons Exupload-mi" aria-hidden="true">delete</i>
+          </button>
+        </div>
+      </template>
+    </div>
+  </template>
+</template> -->
+
+
+
+
+                              </template>
+
+                              <template if:true={cell.isRadioButton}>
+                                <div class="incident-radio-group">
+                                  <template
+                                    for:each={cell.radioOptionsProcessed}
+                                    for:item="option"
+                                  >
+                                    <div
+                                      key={option.optionLabel}
+                                      class="incident-radio-option"
+                                    >
+                                      <input
+                                        type="radio"
+                                        class="incident-radio-input"
+                                        name={cell.id}
+                                        value={option.optionLabel}
+                                        data-id={cell.id}
+                                        data-subtype={option.subType}
+                                        onchange={handleRadioChange}
+                                        checked={option.isSelected}
+                                      />
+                                      <label class="incident-radio-label"
+                                        >{option.optionLabel}</label
+                                      >
+
+                                      <template if:true={option.isSelected}>
+                                        <template if:true={option.hasSubInput}>
+                                          <div
+                                            class="incident-radio-sub-question"
+                                          >
+                                            <label
+                                              class="incident-radio-sub-label"
+                                              >{option.subQuestion}</label
+                                            >
+
+                                            <template
+                                              if:true={option.isDropdown}
+                                            >
+                                              <select
+                                                class="incident-radio-sub-dropdown"
+                                                data-id={cell.id}
+                                                onchange={handleRadioSubInputChange}
+                                              >
+                                                <option value="">
+                                                  -- Select --
+                                                </option>
+                                                <template
+                                                  for:each={option.processedSubOptions}
+                                                  for:item="val"
+                                                >
+                                                  <option
+                                                    key={val.label}
+                                                    value={val.label}
+                                                    selected={val.isSelected}
+                                                  >
+                                                    {val.label}
+                                                  </option>
+                                                </template>
+                                              </select>
+                                            </template>
+
+                                            <template
+                                              if:true={option.isTextInput}
+                                            >
+                                              <input
+                                                type="text"
+                                                class="incident-radio-sub-input"
+                                                data-id={cell.id}
+                                                value={cell.subInputValue}
+                                                onchange={handleRadioSubInputChange}
+                                                placeholder="Enter here..."
+                                              />
+                                            </template>
+
+                                            <template
+                                              if:true={option.isRadioList}
+                                            >
+                                              <div
+                                                class="incident-radio-sub-radiolist"
+                                              >
+                                                <template
+                                                  for:each={option.processedSubOptions}
+                                                  for:item="val"
+                                                >
+                                                  <label
+                                                    key={val.label}
+                                                    class="incident-radio-sub-option"
+                                                  >
+                                                    <input
+                                                      type="radio"
+                                                      name={cell.subRadioName}
+                                                      value={val.label}
+                                                      data-id={cell.id}
+                                                      checked={val.isSelected}
+                                                      onchange={handleRadioSubInputChange}
+                                                    />
+                                                    {val.label}
+                                                  </label>
+                                                </template>
+                                              </div>
+                                            </template>
+                                          </div>
+                                        </template>
+                                      </template>
+                                    </div>
+                                  </template>
+                                </div>
+                              </template>
+
+                              <!-- ✍️ SIGNATURE FIELD -->
+                              <template if:true={cell.isSignature}>
+                                <div class="signature-container">
+
+                                  <!-- ✅ SHOW BUTTON ONLY WHEN NO SIGNATURE -->
+                                  <template if:false={cell.field.value}>
+                                    <button
+                                      type="button"
+                                      class="file-upload-button signature-upload-btn"
+                                      data-id={cell.id}
+                                      onclick={openSignatureModal}
+                                    >
+                                      &#9998; Add Signature
+                                    </button>
+
+                                  </template>
+
+                                  <!-- ✅ SHOW PREVIEW WHEN SIGNED -->
+                                  <template if:true={cell.field.value}>
+                                    <div class="signature-preview-wrapper">
+
+                                      <img
+                                        src={cell.field.value}
+                                        class="signature-preview-img"
+                                        alt="signature"
+                                      />
+
+
+                                      <!-- delete icon -->
+                                      <button
+                                        class="signature-delete-btn"
+                                        data-id={cell.id}
+                                        onclick={handleSignatureDelete}
+                                        title="Remove signature">
+                                        ✕
+                                      </button>
+
+                                    </div>
+                                  </template>
+
+                                </div>
+                              </template>
+
+
+                            </div>
+                          </template>
+                        </td>
+                      </template>
+                    </template>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="button-group-container">
+          <div class="custom-edit-btn" onclick={handleinputCancel}>Cancel</div>
+          <div class="custom-back-btn" onclick={openSubmitConfirmModal}>Submit</div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <template if:false={hasResponses}>
+    <div class="slds-p-around_medium slds-text-align_center empty-state">
+      <div class="slds-text-heading_small slds-m-bottom_x-small">
+        No records found
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isTsignConfirmModalOpen}>
+  <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+    <div class="slds-modal__container modal-custom">
+
+      <!-- HEADER -->
+      <header class="slds-modal__header headercustom">
+        <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+          Send to TSign Confirmation
+        </h2>
+      </header>
+
+      <!-- BODY -->
+      <div class="slds-modal__content slds-p-around_medium custom-scroll">
+        <p class="slds-text-body_regular">
+          You’re about to send this form to TSign for signature.
+        </p>
+
+        <div class="slds-m-top_medium slds-box slds-theme_alert-texture">
+          <p class="slds-text-body_regular">
+            <b>Note:</b> After you send to TSign, the <b>View</b> and <b>Edit</b> actions will be disabled once the
+            participant completes the signature.
+          </p>
+        </div>      
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="slds-modal__footer footer-center">
+  <div class="footer-center-inner">
+    <lightning-button
+      variant="neutral"
+      label="Cancel"
+      onclick={closeTsignConfirmModal}
+    ></lightning-button>
+
+    <lightning-button
+      class="slds-m-left_small"
+      variant="brand"
+      label="Continue"
+      onclick={confirmAndLaunchTsign}
+    ></lightning-button>
+  </div>
+</footer>
+
+
+    </div>
+  </section>
+
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+
+  <!-- </template> -->
+
+  <!-- <template if:true={isFormListEmpty}>
+        <div class="no-data">
+          <p>No records found</p>
+        </div>
+      </template> -->
+
+  <template if:false={clientId}>
+    <template if:false={isFormSelected}>
+      <template if:true={showFormsAccess}>
+        <h3
+          style="
+            font-size: 120%;
+            font-weight: bold;
+            margin-bottom: 0.5%;
+            margin-top: 1%;
+            margin-left: 1%;
+          "
+        >
+          Forms Access
+        </h3>
+        <div class="floating-label-input">
+          <span class="label-text-drop">Search Participant</span>
+          <lightning-input
+            type="search"
+            placeholder="Search by Participant, Staff, or Status"
+            onchange={handleFormsAccessSearch}
+            value={searchFormsAccessQuery}
+            variant="label-hidden"
+          >
+          </lightning-input>
+        </div>
+        <template if:true={recordsToDisplay}>
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr class="custom-table-header">
+                  <th class="custom-th">Participant Name</th>
+                  <th class="custom-th">Staff</th>
+                  <th class="custom-th">Participant Status</th>
+                  <th class="custom-th">Grant Access</th>
+                  <!-- 🔹 New Column -->
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={recordsToDisplay} for:item="participant">
+                  <tr key={participant.Id} class="custom-tr">
+                    <td class="custom-td">{participant.Name}</td>
+                    <!-- <td class="custom-td">
+                                <template if:true={participant.Picture__c}>
+                                    <img src={participant.Picture__c} alt="Participant Picture" class="participant-img"/>
+                                </template>
+                                <template if:false={participant.Picture__c}>
+                                    No Image
+                                </template>
+                            </td> -->
+                    <td class="custom-td">
+                      <template if:true={participant.hasVisibleStaff}>
+                        <div class="form-access-img-group">
+                          <template
+                            for:each={participant.visibleStaffMembers}
+                            for:item="staff"
+                          >
+                            <div
+                              key={staff.name}
+                              class="form-access-tooltip-container form-access-avatar-wrapper"
+                            >
+                              <template if:true={staff.pictureUrl}>
+                                <img
+                                  src={staff.pictureUrl}
+                                  alt={staff.name}
+                                  class="form-access-avatar"
+                                />
+                              </template>
+                              <template if:false={staff.pictureUrl}>
+                                <div class="form-access-avatar fallback-avatar">
+                                  👤
+                                </div>
+                              </template>
+                              <span class="form-access-tooltip-text"
+                                >{staff.name}</span
+                              >
+                            </div>
+                          </template>
+
+                          <template if:true={participant.hasExtraStaff}>
+                            <div
+                              class="form-access-avatar-wrapper form-access-extra-count"
+                              title={participant.extraStaffNames}
+                            >
+                              +{participant.extraStaffCount}
+                            </div>
+                          </template>
+                        </div>
+                      </template>
+
+                      <template if:false={participant.hasVisibleStaff}>
+                        No Staff Assigned
+                      </template>
+                    </td>
+
+                    <td class="custom-td">
+                      {participant.Participant_Status__c}
+                    </td>
+                    <td class="custom-td">
+                      <!-- 🔹 Hyperlink for Grant Access -->
+                      <a
+                        href="javascript:void(0);"
+                        data-id={participant.Id}
+                        onclick={handleGrantAccessClick}
+                        >Grant Access</a
+                      >
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <!-- Pagination Controls -->
+        <template if:true={totalRecords}>
+          <div
+            class="slds-grid slds-align_absolute-center slds-p-around_medium"
+          >
+            <!-- Left Column (Empty Spacer) -->
+            <div class="slds-col slds-size_1-of-3"></div>
+
+            <!-- Center Column: Pagination Controls -->
+            <div class="slds-col slds-size_1-of-3 slds-text-align_center">
+              <div class="slds-grid slds-gutters slds-align_absolute-center">
+                <lightning-button
+                  class="slds-m-horizontal_x-small"
+                  disabled={bDisableFirst}
+                  icon-name="utility:jump_to_left"
+                  label="First"
+                  onclick={firstPage}
+                >
+                </lightning-button>
+
+                <lightning-button
+                  class="slds-m-horizontal_x-small"
+                  disabled={bDisableFirst}
+                  icon-name="utility:chevronleft"
+                  label="Previous"
+                  onclick={previousPage}
+                >
+                </lightning-button>
+
+                <span class="slds-badge slds-m-horizontal_small">
+                  Showing {pageNumber} of {totalPages} Page(s)
+                </span>
+
+                <lightning-button
+                  class="slds-m-horizontal_x-small"
+                  disabled={bDisableLast}
+                  icon-name="utility:chevronright"
+                  label="Next"
+                  onclick={nextPage}
+                >
+                </lightning-button>
+
+                <lightning-button
+                  class="slds-m-horizontal_x-small"
+                  disabled={bDisableLast}
+                  icon-name="utility:jump_to_right"
+                  label="Last"
+                  onclick={lastPage}
+                >
+                </lightning-button>
+              </div>
+            </div>
+
+            <!-- Right Column: Total Record Count -->
+            <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+              <span class="slds-badge">Total Records: {totalRecords}</span>
+            </div>
+          </div>
+        </template>
+
+        <!-- No Participants Message -->
+        <!-- <template if:true={noRecordsFlag}>
+        <div class="slds-grid slds-grid_align-spread slds-m-left_large"
+            style="padding-top: 0.5em; font-size:20px;">
+            <b style="color: #4CAF50;">No Participants are registered for this organisation.</b>
+        </div>
+    </template> -->
+
+        <!-- 🔹 Grant Access Popup -->
+        <template if:true={isGrantAccessPopupOpen}>
+          <div class="grant-modal-overlay">
+            <div class="grant-modal">
+              <!-- Header -->
+              <div class="grant-modal-header">
+                <span class="grant-modal-title"
+                  >Grant Access to {selectedParticipantName}</span
+                >
+                <template if:true={selectedParticipantStaffNames}>
+                  <p class="grant-modal-subtitle">
+                    Staff: {selectedParticipantStaffNames}
+                  </p>
+                </template>
+                <button
+                  class="grant-modal-close"
+                  onclick={closeGrantAccessPopup}
+                >
+                  &times;
+                </button>
+              </div>
+
+              <!-- Body -->
+              <div class="grant-modal-body">
+                <div class="floating-label-input-grant">
+                  <span class="label-text-drop">Search Forms</span>
+                  <lightning-input
+                    type="search"
+                    variant="label-hidden"
+                    placeholder="Search by form name..."
+                    onchange={handleGrantFormSearch}
+                  >
+                  </lightning-input>
+                </div>
+
+                <template if:true={filteredAvailableForms}>
+                  <div class="grant-form-list">
+                    <template for:each={filteredAvailableForms} for:item="form">
+                      <div key={form.Id} class="grant-form-item">
+                        <label class="grant-checkbox-container">
+                          <input
+                            type="checkbox"
+                            value={form.Id}
+                            checked={form.isSelected}
+                            data-id={form.Id}
+                            onchange={handleFormSelection}
+                          />
+                          <span class="grant-custom-checkbox"></span>
+                          <span class="grant-checkbox-label"
+                            >{form.Name__c}</span
+                          >
+                        </label>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <template if:false={filteredAvailableForms}>
+                  <p>No published forms available.</p>
+                </template>
+              </div>
+
+              <!-- Footer -->
+              <div class="grant-modal-footer">
+                <lightning-button
+                  label="Cancel"
+                  onclick={closeGrantAccessPopup}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Grant Access"
+                  onclick={grantAccess}
+                ></lightning-button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </template>
+    </template>
+  </template>
+</div>
+  <!-- NO RECORDS MESSAGE -->
+  <template if:true={noRecordsFlag}>
+    <div
+      class="slds-grid slds-grid_align-spread slds-m-left_large"
+      style="padding-top: 0.5em; font-size: 20px"
+    >
+      <b style="color: #4caf50"
+        >No Participants are registered for this organisation.</b
+      >
+    </div>
+  </template>
+
+
+  <template if:true={isSubmitConfirmModalOpen}>
+  <section
+    role="dialog"
+    tabindex="-1"
+    aria-modal="true"
+    class="slds-modal slds-fade-in-open"
+  >
+    <div class="slds-modal__container modal-custom">
+
+      <!-- HEADER -->
+      <header class="slds-modal__header headercustom">
+          <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+          Submit Form Confirmation
+        </h2>
+      </header>
+
+      <!-- BODY -->
+      <div class="slds-modal__content slds-p-around_medium custom-scroll">
+        <p>
+          You’re about to submit this form.
+        </p>
+
+        <div class="slds-m-top_medium slds-box slds-theme_alert-texture">
+          <p>
+            <b>Partial Submit</b> → You can still edit later.<br />
+            <b>Final Submit</b> → Editing and deleting will be disabled.
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="slds-modal__footer footer-center">
+        <div class="footer-center-inner">
+
+          <lightning-button
+            variant="neutral"
+            label="Cancel"
+            onclick={closeSubmitConfirmModal}
+          ></lightning-button>
+
+          <lightning-button
+            class="slds-m-left_small"
+            variant="neutral"
+            label="Partial Submit"
+            onclick={confirmPartialSubmit}
+          ></lightning-button>
+
+          <lightning-button
+            class="slds-m-left_small"
+            variant="brand"
+            label="Final Submit"
+            onclick={confirmFinalSubmit}
+          ></lightning-button>
+
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+
+  <template if:true={isLoading}>
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+      <div class="loader-container">
+        <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+      </div>
+
+      <!-- Progress text instead of progress bar -->
+      <p class="progress-text">Please wait...</p>
+    </div>
+  </template>
+
+
+  <template if:true={showSignatureModal}>
+
+  <div class="assign-modal-backdrop">
+
+    <div class="assign-modal signature-modal">
+
+      <!-- ================= HEADER ================= -->
+      <div class="assign-modal-header">
+        <span class="assign-title">
+          Add Signature
+        </span>
+
+        <button
+          class="assign-close-button"
+          onclick={closeSignatureModal}>
+          ×
+        </button>
+      </div>
+
+      <!-- ================= BODY ================= -->
+      <div class="assign-modal-body signature-body">
+
+        <!-- ================= MODE TOGGLE (NEW) ================= -->
+        <div class="signature-toggle">
+
+          <!-- TYPE -->
+          <button
+            class={typeBtnClass}
+            data-mode="type"
+            onclick={selectSignatureMode}>
+            <i class="material-icons open-icon">edit</i>
+            Type Signature
+          </button>
+
+          <!-- DRAW -->
+          <button
+            class={drawBtnClass}
+            data-mode="draw"
+            onclick={selectSignatureMode}>
+            <i class="material-icons open-icon">gesture</i>
+            Draw Signature
+          </button>
+
+          <!-- UPLOAD -->
+          <button
+            class={uploadBtnClass}
+            data-mode="upload"
+            onclick={selectSignatureMode}>
+            <i class="material-icons open-icon">file_open</i>
+            Upload Signature
+          </button>
+
+        </div>
+
+        <!-- ================= MODE CONTENT ================= -->
+
+        <!-- TYPE MODE -->
+        <template if:true={isTypeMode}>
+  <div class="signature-mode-panel">
+
+    <div class="signature-type-row">
+
+      <input
+        type="text"
+        class="signature-type-input"
+        placeholder="Enter your name here..."
+        value={signatureTypedText}
+        oninput={handleSignatureTyped}/>
+
+      <template if:true={signatureTypedText}>
+        <button
+          class="signature-clear-inline"
+          onclick={clearTypedSignature}
+          title="Clear">
+          ✕
+        </button>
+      </template>
+
+    </div>
+
+    <div class="signature-preview-basic">
+      {signatureTypedText}
+    </div>
+
+  </div>
+</template>
+
+
+        <!-- UPLOAD MODE -->
+       <template if:true={isUploadMode}>
+  <div class="signature-mode-panel">
+
+    <input
+      type="file"
+      class="hidden-file-input"
+      accept="image/*"
+      onchange={handleSignatureUpload}
+      data-role="signature-upload"
+    />
+
+    <button
+      type="button"
+      class="file-upload-button"
+      onclick={triggerSignatureFileInput}>
+      &#8684; Upload Image
+    </button>
+
+    <template if:true={pendingSignatureBase64}>
+      <div class="signature-upload-preview">
+
+        <img src={pendingSignatureBase64} class="signature-preview-img"/>
+
+        <button
+          class="signature-delete-btn"
+          onclick={clearUploadedSignature}>
+          ✕
+        </button>
+
+      </div>
+    </template>
+
+  </div>
+</template>
+
+
+
+        <!-- DRAW MODE -->
+        <template if:true={isDrawMode}>
+  <div class="signature-mode-panel">
+
+    <canvas class="signature-canvas"></canvas>
+
+    <div class="signature-draw-actions">
+      <button
+        class="signature-clear-canvas"
+        onclick={clearDrawSignature}>
+        Clear
+      </button>
+    </div>
+
+  </div>
+</template>
+
+
+      </div>
+
+      <!-- ================= FOOTER ================= -->
+      <div class="assign-modal-footer">
+        <button
+          class="assign-primary slds-button slds-button_brand"
+          onclick={saveSignature}>
+          Save Signature
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</template>
+
+</template>
