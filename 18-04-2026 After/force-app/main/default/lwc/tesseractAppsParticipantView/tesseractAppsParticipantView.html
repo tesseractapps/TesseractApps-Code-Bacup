@@ -1,0 +1,2948 @@
+<template>
+  <template if:true={participantDataflag}>
+    <template if:true={participantData}>
+      <div class="role-content">
+        <div class="slds-table" style="background-color: transparent">
+          <table
+            class="slds-table slds-table_fixed-layout slds-table_resizable-cols weekly-table glow-hover table2"
+            role="grid"
+          >
+            <thead>
+              <tr>
+                <td class={getFirstCellClass}>
+                  <div class="staff-member">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Search by Name</span>
+                      <lightning-input
+                        type="search"
+                        variant="label-hidden"
+                        value={searchName}
+                        onchange={handleSearchName}
+                      ></lightning-input>
+                    </div>
+                  </div>
+                </td>
+
+                <template
+                  for:each={participantData.weekData}
+                  for:item="weekDay"
+                >
+                  <td key={weekDay.date} class={weekDay.holidayColor}>
+                    <div class={dayCellClass}>
+                    <!-- <div class={weekDay.holidayColor}> -->
+                    <div class="day-left">
+                      <div class="day-name">{weekDay.day}</div>
+                      <div class="day-date">{weekDay.UiFormattedDate}</div>
+                    </div>
+
+                    <!-- <p><b>{weekDay.day}</b> <br><b>{weekDay.UiFormattedDate}</b></p> -->
+                    <div class="holiday-spacer-bottom">
+                      <template if:true={weekDay.isHoliday}>
+                        <div class="holiday-label" title={weekDay.holidayName}>
+                          {weekDay.holidayName}
+                        </div>
+                      </template>
+                    </div>
+                    </div>
+                  </td>
+                </template>
+              </tr>
+            </thead>
+          </table>
+          <div class="calendar-part custom-scroll">
+            <table
+              class="slds-table slds-table_bordered slds-table_fixed-layout table1"
+              role="grid"
+            >
+              <tbody>
+                <template
+                  for:each={participantData.Participnat}
+                  for:item="participantdata"
+                >
+                  <tr key={participantdata.participantId}>
+                    <!-- Staff Name and Info Column -->
+                    <!-- <td style="width:16%"> -->
+                    <td class={getStaffCellClass}>
+                      <div
+                        class="card"
+                        data-id={participantdata.participantId}
+                        draggable="true"
+                        ondragstart={handleDragStart}
+                      >
+                        <div
+                          class="avatar"
+                          if:true={participantdata.profileUrl}
+                        >
+                          <lightning-avatar
+                            variant="circle"
+                            src={participantdata.profileUrl}
+                            class="avatar-small"
+                            fallback-icon-name="standard:person_account"
+                          >
+                          </lightning-avatar>
+                        </div>
+                        <div
+                          class="avatar"
+                          if:false={participantdata.profileUrl}
+                        >
+                          <lightning-icon
+                            icon-name="action:user"
+                            variant="error"
+                            size="small"
+                            style="background: #02275b"
+                            class="avatar-small fallback-icon"
+                          ></lightning-icon>
+                        </div>
+                        <div class={infoClass}>
+                          <!-- <span class="name"
+                          >{participantdata.firstName}&nbsp;{participantdata.lastName}</span
+                        > -->
+                          <span class={getNameClass}>{participantdata.fullName} </span>
+                            <template if:true={participantdata.isNdisService}>
+                                  <a
+                            href="javascript:void(0);"
+                            class="details"
+                            style="color: black"
+                            onclick={handleRiskNavigation}
+                            data-participantid={participantdata.participantId}
+                            data-typeofservice={participantdata.typeOfService}
+                            >{participantdata.riskStatus}</a
+                          >
+                            </template>
+                        
+                          <!--   <span  class="details">{participantdata.riskStatus}</span >  -->
+                          <template if:true={fundVisibility}>
+                               <span class="meta">
+                              <lightning-formatted-number
+                                value={participantdata.wages}
+                                format-style="currency"
+                                currency-code="AUD"
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="2"
+                              >
+                              </lightning-formatted-number>
+                            </span>
+                          </template>
+                         
+                        </div>
+                      </div>
+                    </td>
+                    <template
+                      for:each={participantdata.servicesByDay}
+                      for:item="dayShift"
+                    >
+                      <td
+                        key={dayShift.day}
+                        class="day-cell"
+                        ondragover={handleDragOver}
+                        data-sizezero={dayShift.isSizeZeroFlag}
+                        data-facvalue={participantdata.facilityIdValue}
+                        ondrop={handleOpenParticipantShiftView}
+                        data-participantid={participantdata.participantId}
+                        data-weekname="{dayShift.day"
+                        data-weekdate={dayShift.Shiftdate}
+                        data-isholiday={dayShift.isHoliday}
+                      >
+                        <div class="day-cell-wrapper">
+                          <div class={getIconContainerClass}>
+                            <!-- day with no services -->
+                            <template if:true={dayShift.isSizeZeroFlag}>
+                              <div class="no-shifts">
+                                <a
+                                  href="javascript:void(0)"
+                                  class="add-icon-link"
+                                >
+                                  <lightning-icon
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    style="transform: scale(0.7)"
+                                    data-participantid={participantdata.participantId}
+                                    data-facvalue={participantdata.facilityIdValue}
+                                    data-weekname={dayShift.day}
+                                    data-weekdate={dayShift.Shiftdate}
+                                    data-isholiday={dayShift.isHoliday}
+                                    onclick={handleOpenParticipantShiftView}
+                                  >
+                                  </lightning-icon>
+                                </a>
+                              </div>
+                            </template>
+
+                            <template if:false={dayShift.isSizeZeroFlag}>
+                              <template if:false={dayShift.hasHovered}>
+                                <div class="no-shifts1">
+                                  <a
+                                    href="javascript:void(0)"
+                                    class="add-icon-link"
+                                  >
+                                    <i
+                                      class={getAddIconClass}
+                                      title="Add Shift"
+                                      style="position: relative"
+                                      data-participantid={participantdata.participantId}
+                                      data-facvalue={participantdata.facilityIdValue}
+                                      data-weekname={dayShift.day}
+                                      data-weekdate={dayShift.Shiftdate}
+                                      data-isholiday={dayShift.isHoliday}
+                                      onclick={handleOpenParticipantShiftView}
+                                      >add_circle</i
+                                    >
+                                  </a>
+                                </div>
+                              </template>
+                            </template>
+
+                            <!-- day with more than one services -->
+                            <template if:false={dayShift.isSizeZeroFlag}>
+                              <template if:true={dayShift.nonNdisMoreflag}>
+                                <template if:false={dayShift.hasHovered}>
+                                  <template
+                                    for:each={dayShift.services}
+                                    for:item="serv"
+                                  >
+                                    <div
+                                      key={serv.Id}
+                                      class={getIconItemClass}
+                                      style={serv.inLineHeight}
+                                      data-serviceid={serv.Id}
+                                      data-participantid={participantdata.participantId}
+                                      data-day={dayShift.Shiftdate}
+                                    >
+                                      <template if:true={isCompactView}>
+                                        <div
+                                          class="expanded-two-shift-row"
+                                          style="
+                                            display: flex;
+                                            justify-content: space-between;
+                                            align-items: flex-start;
+                                            flex-direction: column;
+                                          "
+                                        >
+                                          <div class="singleexp-details">
+                                            <div class={getOverflowTextClass}>
+
+                                            <div class="slds-grid slds-grid_vertical-align-center">
+                                              <template
+                                                if:true={serv.showSplitIcon}
+                                              >
+                                                <i
+                                                  class={getTypeIconClass}
+                                                  title="Split Shift"
+                                                  >splitscreen_top</i
+                                                >
+                                              </template>
+                                              <template
+                                                if:true={serv.showGroupShiftIcon}
+                                              >
+                                                <i
+                                                  class={getTypeIconClass}
+                                                  title="Group Shift"
+                                                  >group</i
+                                                >
+                                              </template>
+                                              <template
+                                                if:true={serv.showBrokenShiftIcon}
+                                              >
+                                                <i
+                                                  class={getTypeIconClass}
+                                                  title="Broken Shift"
+                                                  >restaurant</i
+                                                >
+                                              </template>                                              
+                                              <!-- {serv.serviceStaffName} -->
+                                              <template
+                                                if:true={serv.unassignedService}
+                                              >
+                                                <b>{serv.RoleName}</b>
+                                              </template>
+                                              <template
+                                                if:false={serv.unassignedService}
+                                              >
+                                                <template
+                                                  if:false={serv.serviceStaffName}
+                                                >
+                                                  <b>{serv.RoleName}</b>
+                                                </template>
+
+                                                <template
+                                                  if:true={serv.serviceStaffName}
+                                                >
+                                                  <b>{serv.serviceStaffName}</b>
+                                                </template>
+                                              </template>
+                                              </div>
+                                            </div>
+
+                                            <div class={getFontSizeClass}>
+                                              <a
+                                                href="javascript:void(0)"
+                                                onclick={handleEditShiftScreen}
+                                                 data-serviceid={serv.Id}
+                                                data-participantid={participantdata.participantId}
+                                                data-shiftstaffid={serv.shiftWithStaffId}
+                                                style="color: inherit"
+                                              >
+                                                {serv.ShiftTime}
+                                              </a>
+                                            </div>
+
+                                           
+                                          </div>
+                                        </div>
+
+                                        <div
+                                          class="statuspart"
+                                          style="width: 100%"
+                                        >
+                                          <div
+                                            class="slds-grid slds-grid_align-center slds-col"
+                                          >
+                                            <span class="status-gap">{serv.uiStatus} </span>
+                                            <span class={serv.cssUiStatus}
+                                              >&#x2B24;</span
+                                            >
+                                          </div>
+                                        </div>
+                                      </template>
+                                      <template if:true={isExpandedView}>
+                                        <div
+                                          class="expanded-two-shift-row"
+                                          style="
+                                            display: flex;
+                                            justify-content: space-between;
+                                            align-items: flex-start;
+                                            flex-direction: column;
+                                          "
+                                        >
+                                          <div class="singleexp-details">
+                                            <div class="overflowtext">
+                                              <!-- {serv.serviceStaffName} -->
+
+                                            <div class="slds-grid slds-grid_vertical-align-center">
+                                              <template
+                                                if:true={serv.showSplitIcon}
+                                              >
+                                                <i
+                                                  class={getTypeIconClass}
+                                                  title="Split Shift"
+                                                  >splitscreen_top</i
+                                                >
+                                              </template>
+                                              <template
+                                                if:true={serv.showGroupShiftIcon}
+                                              >
+                                                <i
+                                                  class={getTypeIconClass}
+                                                  title="Group Shift"
+                                                  >group</i
+                                                >
+                                              </template>
+                                              <template
+                                                if:true={serv.showBrokenShiftIcon}
+                                              >
+                                                <i
+                                                  class={getTypeIconClass}
+                                                  title="Broken Shift"
+                                                  >restaurant</i
+                                                >
+                                              </template>
+
+
+                                              <template
+                                                if:true={serv.unassignedService}
+                                              >
+                                                <b>{serv.RoleName}</b>
+                                              </template>
+                                              <template
+                                                if:false={serv.unassignedService}
+                                              >
+                                                <template
+                                                  if:false={serv.serviceStaffName}
+                                                >
+                                                  <b>{serv.RoleName}</b>
+                                                </template>
+
+                                                <template
+                                                  if:true={serv.serviceStaffName}
+                                                >
+                                                  <b>{serv.serviceStaffName}</b>
+                                                </template>
+                                              </template>
+                                              </div>
+                                            </div>
+
+                                            <div class="overflowtext">
+                                              <a
+                                                href="javascript:void(0)"
+                                                onclick={handleEditShiftScreen}
+                                                 data-serviceid={serv.Id}
+                                                data-participantid={participantdata.participantId}
+                                                data-shiftstaffid={serv.shiftWithStaffId}
+                                                style="color: inherit"
+                                              >
+                                                {serv.ShiftTime}
+                                              </a>
+                                            </div>
+
+                                            <!-- <div class="overflowtext">
+                                              {serv.Facility}
+                                            </div> -->
+
+                                            <div class="overflowtext">
+                                              {serv.ShiftStreet},{serv.ShiftCity}
+                                            </div>
+
+                                            <div class="singleexp-detail-row">
+                                              <span class="singleexp-label"
+                                                >Services:</span
+                                              >
+                                              <span class="overflowtext"
+                                                >{serv.serviceTypeName}</span
+                                              >
+                                            </div>
+
+                                            <div class="singleexp-detail-row">
+                                              <span class="singleexp-label"
+                                                >Notes:</span
+                                              >
+                                              <span
+                                                class="overflowtext"
+                                                style="white-space: normal"
+                                                >{serv.Notes}</span
+                                              >
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div
+                                          class="statuspart"
+                                          style="width: 100%"
+                                        >
+                                          <div
+                                            class="slds-grid slds-grid_align-center slds-col"
+                                          >
+                                            <span class="status-gap">{serv.uiStatus} </span>
+                                            <span class={serv.cssUiStatus}
+                                              >&#x2B24;</span
+                                            >
+                                          </div>
+                                        </div>
+                                      </template>
+                                    </div>
+                                  </template>
+                                </template>
+                              </template>
+                            </template>
+                          </div>
+                        </div>
+                      </td>
+                    </template>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </template>
+  </template>
+  <template if:true={isTooltip}>
+    <div
+      class="tooltip"
+      style={shiftTooltipInformation.position}
+      onclick={stopPropagation}
+    >
+      <span class="close-icon" onclick={closeTooltip}>✖</span>
+
+      <div class="top-recordToopTip">
+        <!-- Left Side: Image or Icon -->
+        <template if:false={shiftTooltipInformation.servicestaffimage}>
+          <lightning-icon
+            icon-name="standard:user"
+            alternative-text="user"
+            size="small"
+            title="user"
+            class="toolTipIcon"
+            data-id={shiftTooltipInformation.serviceid}
+            data-shifttime={shiftTooltipInformation.shiftTime}
+            data-staffname={shiftTooltipInformation.staffname}
+            data-servicestaffimage={shiftTooltipInformation.serviceStaffImage}
+            data-participantid={shiftTooltipInformation.participantid}
+            data-shiftstaffid={shiftTooltipInformation.shiftstaffid}
+            onclick={showTooltip}
+          >
+          </lightning-icon>
+        </template>
+
+        <template if:true={shiftTooltipInformation.servicestaffimage}>
+          <lightning-avatar
+            variant="circle"
+            src={shiftTooltipInformation.servicestaffimage}
+            initials="P"
+            fallback-icon-name="standard:person_account"
+            data-id={shiftTooltipInformation.serviceid}
+            data-shifttime={shiftTooltipInformation.shiftTime}
+            data-staffname={shiftTooltipInformation.staffname}
+            data-servicestaffimage={shiftTooltipInformation.serviceStaffImage}
+            data-participantid={shiftTooltipInformation.participantid}
+            data-shiftstaffid={shiftTooltipInformation.shiftstaffid}
+            onclick={showTooltip}
+            class="toolTipAvatar"
+          >
+          </lightning-avatar>
+        </template>
+
+        <!-- Right Side: Name & Shift Time -->
+        <div class="service-detailstooltip">
+          <template if:true={shiftTooltipInformation.unassignedservice}>
+            <span><b>{shiftTooltipInformation.rolename}</b></span>
+            <span> {shiftTooltipInformation.shiftTime} </span>
+          </template>
+          <template if:false={shiftTooltipInformation.unassignedservice}>
+            <span><b>{shiftTooltipInformation.staffname}</b></span>
+            <span>
+              <a
+                href="javascript:void(0)"
+                onclick={handleEditShiftScreen}
+                data-participantid={shiftTooltipInformation.participantid}
+                data-shiftstaffid={shiftTooltipInformation.shiftstaffid}
+              >
+                {shiftTooltipInformation.shiftTime}
+              </a>
+            </span>
+          </template>
+          <span class={shiftTooltipInformation.cssUiStatus}>
+            <span class="tooltipstatus">
+              <span class={shiftTooltipInformation.cssUiStatus}
+                >{shiftTooltipInformation.uiStatus}</span
+              >
+              <span
+                class={shiftTooltipInformation.cssUiStatus}
+                style="margin-left: 3%"
+                >&#x2B24;</span
+              >
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isModalOpen}>
+    <div class="blur-overlay"></div>
+    <div class="right-align1 fade-in" style="width: 25%">
+      <div
+        class="slds-m-around_xx-small slds-m-right_large"
+        style="
+          padding: 1% 5% 1% 1%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <p style="font-weight: bold; margin: 0; font-size: 140%">
+          Service Details
+        </p>
+        <lightning-button
+          label="Close"
+          title="Back"
+          variant="brand"
+          onclick={handleCloseModal}
+        ></lightning-button>
+      </div>
+      <div class="service_details_slide custom-scroll">
+        <template if:true={moreShiftlist.length}>
+          <template for:each={moreShiftlist} for:item="shift">
+            <div key={shift.Id} class="shift-card" style={shift.newInlineStyle}>
+              <div class="shift-info-more">
+                <div class="shift-left">
+                  <template if:true={shift.unassignedService}>
+                    <p class="staff-name-more">
+                      <b>{shift.ShiftwithStaff__r.Role_formula__c}</b>
+                    </p>
+                    <a
+                      href="javascript:void(0)"
+                      style="color: inherit"
+                      onclick={handleEditShiftScreen}
+                      data-shiftstaffid={shift.ShiftwithStaff__c}
+                      data-participantid={shift.Client__c}
+                    >
+                      {shift.Start_Time_Formula__c}-{shift.End_Time_Formula__c}
+                    </a>
+                  </template>
+                  <template if:false={shift.unassignedService}>
+                    <p class="staff-name-more">
+                      <b>{shift.Resource_Name__c}</b>
+                    </p>
+                    <a
+                      href="javascript:void(0)"
+                      style="color: inherit"
+                      onclick={handleEditShiftScreen}
+                      data-shiftstaffid={shift.ShiftwithStaff__c}
+                      data-participantid={shift.Client__c}
+                    >
+                      {shift.Start_Time_Formula__c}-{shift.End_Time_Formula__c}
+                    </a>
+                    <span
+                      >{shift.ShiftwithStaff__r.Add_Shift__r.Location__Street__s},{shift.ShiftwithStaff__r.Add_Shift__r.Location__City__s}</span
+                    >
+                    <!--   <span>{shift.ShiftwithStaff__r.Add_Shift__r.Facility_Name__c}</span> -->
+                    <span>{shift.Service_Type_Name__c}</span>
+                    <span
+                      >{shift.ShiftwithStaff__r.Add_Shift__r.Shift_Notes__c}</span
+                    >
+                  </template>
+                </div>
+
+                <div class="shift-status">
+                  <span class="shift-time-more-status">{shift.uiStatus}</span>
+                  <span class={shift.cssUiStatus} style="margin-left: 3%"
+                    >&#x2B24;</span
+                  >
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+        <template if:false={moreShiftlist.length}>
+          <p class="no-shift">No shift details to display.</p>
+        </template>
+      </div>
+    </div>
+   
+  </template>
+
+  <template if:true={openParticipantshiftView}>
+    <div>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1% 1% 0 1%;
+        "
+      >
+        <div class="slds-grid slds-grid_vertical-align-center slds-gutters">
+            <!-- Heading -->
+            <div class="slds-col slds-grid slds-grid_vertical-align-center">
+                <p class="slds-text-heading_medium slds-text-title_bold">
+                    {headingLabel}
+                </p>
+                <p>-{selectedParticipantLabel}</p>
+            </div>
+             <!-- Shift M"ode Radios -->
+        <div class="">
+            <div class="slds-form-element shift-mode-container slds-grid slds-grid_vertical-align-center">
+                <label class="slds-text-heading_medium slds-text-title_bold slds-col">Shift Mode</label>
+
+                <div class="slds-form-element__control ">
+                    <div class="slds-grid">
+
+                        <div class="">
+                            <div class="slds-radio">
+                                <input
+                                    type="radio"
+                                    id="draft"
+                                    name="shiftMode"
+                                    value="Draft"
+                                    checked={isDraft}
+                                    onchange={handleShiftModeChange}
+                                />
+                                <label class="slds-radio__label" for="draft">
+                                    <span class="slds-radio_faux"></span>
+                                    <span class="slds-form-element__label">
+                                        Draft Shift
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="">
+                            <div class="slds-radio">
+                                <input
+                                    type="radio"
+                                    id="Active"
+                                    name="shiftMode"
+                                    value="Active"
+                                    checked={isAssign}
+                                    onchange={handleShiftModeChange}
+                                />
+                                <label class="slds-radio__label" for="Active">
+                                    <span class="slds-radio_faux"></span>
+                                    <span class="slds-form-element__label">
+                                        Active Shift
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+       </div>
+        <div style="display: flex; justify-content: flex-end">
+          <lightning-button
+            label="Back"
+            onclick={handleCloseCalenderParticipantView}
+            variant="brand"
+            class="export-csv-btn"
+          >
+          </lightning-button>
+        </div>
+      </div>
+      <div class="right-content custom-scroll">
+        <div class="slds-grid slds-wrap">
+          <!--  First Column  -->
+          <div
+            class="slds-large-size_12-of-12 slds-medium-size_6-of-12 slds-small-size_12-of-12"
+          >
+            <div class="slds-box slds-theme_default">
+              <!-- box one starts -->
+              <div class="container-box">
+                <span>Shift Details</span>
+                <div class="slds-grid slds-wrap">
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Date</span>
+                      <lightning-input
+                        type="date"
+                        class="AddShiftStartDate"
+                        name="AddShiftStartDate"
+                        variant="label-hidden"
+                        value={addShiftData.AddShiftStartDate}
+                        onchange={handleAddShiftChange}
+                        disabled={disablePostInsertButtons}
+                      ></lightning-input>
+                    </div>
+                  </div>
+
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop"
+                        >{facilityPreferredName}</span
+                      >
+                      <lightning-combobox
+                        name="AddShiftFacilityValue"
+                        class="AddShiftFacilityValue"
+                        variant="label-hidden"
+                        options={finalSelectedFacilities}
+                        value={addShiftData.AddShiftFacilityValue}
+                        onchange={handleAddShiftChange}
+                    
+                      ></lightning-combobox>
+                    </div>
+                  </div>
+                   <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Role</span>
+                      <lightning-combobox
+                        name="AddShiftRole"
+                        class="AddShiftRole"
+                        variant="label-hidden"
+                        options={RoleFilter}
+                        value={addShiftData.AddShiftRole}
+                        onchange={handleAddShiftChange}
+                        disabled={disablePostInsertButtons}
+                      ></lightning-combobox>
+                    </div>
+                  </div>
+
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Shift Name</span>
+                      <lightning-combobox
+                        name="AddShiftTypeName"
+                        class="AddShiftTypeName"
+                        variant="label-hidden"
+                        options={shiftNameOptions}
+                        value={addShiftData.AddShiftTypeName}
+                        onchange={handleAddShiftChange}
+                        disabled={disablePostInsertButtons}
+                      ></lightning-combobox>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Shift Type</span>
+                      <lightning-combobox
+                        name="AddShiftType"
+                        class="AddShiftType"
+                        variant="label-hidden"
+                        options={shiftTypeOptions}
+                        value={addShiftData.AddShiftType}
+                        onchange={handleAddShiftChange}
+                        disabled="true"
+                      ></lightning-combobox>
+                    </div>
+                  </div>
+
+                 
+
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Start Time</span>
+                     
+                      <c-tesseract-apps-time-picker
+                        data-timetype="AddShiftStartTime"
+                        selected-hour={startTimeSelectedHour}
+                        selected-minute={startTimeSelectedMinute}
+                        data-ampm="AddShiftStartTimeAMPM"
+                        displayed-time={addShiftData.AddShiftStartTimeAMPM}
+                        is-am={startTimeAMPM}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      >
+                      </c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">End Time</span>
+                      <c-tesseract-apps-time-picker
+                        data-timetype="AddShiftEndTime"
+                        data-ampm="AddShiftEndTimeAMPM"
+                        selected-hour={endTimeSelectedHour}
+                        selected-minute={endTimeSelectedMinute}
+                        displayed-time={addShiftData.AddShiftEndTimeAMPM}
+                        is-am={endTimeAMPM}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Break(mins)</span>
+                      <lightning-input
+                        type="number"
+                        name="AddShiftBreak"
+                        variant="label-hidden"
+                        value={addShiftData.AddShiftBreak}
+                        onchange={handleAddShiftChange}
+                        disabled="true"
+                      ></lightning-input>
+                    </div>
+                  </div>
+                  <template if:true={rowShiftTimingsEnable}>
+                    <div class="slds-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop"
+                          >{staffPreferredName}</span
+                        >
+                        <lightning-combobox
+                          name="AddShiftStaffValue"
+                          class="AddShiftStaffValue"
+                          variant="label-hidden"
+                          options={staffOptions}
+                          value={addShiftData.AddShiftStaffValue}
+                          onchange={handleAddShiftChange}
+                          disabled={disablePostInsertButtons}
+                        ></lightning-combobox>
+                      </div>
+                    </div>
+                  </template>
+
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop"
+                        >{participantPreferredName}</span
+                      >
+                      <lightning-combobox
+                        name="ServiceParticipant"
+                        variant="label-hidden"
+                        options={participantoptions}
+                        value={serviceParticipant}
+                        onchange={handleParticipantChange}
+                      ></lightning-combobox>
+                    </div>
+                  </div>
+                  <template if:false={rowShiftTimingsEnable}>
+                    <div class="slds-size_1-of-5 slds-p-around_small"></div>
+                  </template>
+
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-5">
+                        <lightning-input
+                          type="checkbox"
+                          variant="label-hidden"
+                          name="AddShiftnotification"
+                          checked={addShiftData.AddShiftnotification}
+                          disabled={disableNotification}
+                        ></lightning-input>
+                      </div>
+                      <div class="slds-size_1-of-2">
+                        <span>Notifications</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-5">
+                        <lightning-input
+                          type="checkbox"
+                          variant="label-hidden"
+                          name="sil"
+                          checked={addShiftData.sil}
+                           disabled={disablePostInsertButtons}
+                          onchange={handleNotificationChange}
+                        ></lightning-input>
+                      </div>
+
+                      <div class="slds-size_1-of-2">
+                        <span>SIL</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-5 slds-p-around_small">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-5">
+                        <lightning-input
+                          type="checkbox"
+                          name="recurCheckBox"
+                          variant="label-hidden"
+                          checked={AddShiftRecurringCheckboxValue}
+                          onchange={handleRecurEveryChange}
+                        ></lightning-input>
+                      </div>
+                      <div class="slds-size_1-of-2">
+                        <span>Recurring</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <template if:true={recurTemplate}>
+                    <div class="slds-size_1-of-5 slds-p-around_small"></div>
+                    <div class="slds-size_1-of-5 slds-p-around_small"></div>
+                    <div class="slds-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop">Recur</span>
+                        <lightning-combobox
+                          name="typeOfRecurOption"
+                          class="typeOfRecurOption"
+                          variant="label-hidden"
+                          options={recurOptions}
+                          value={RecurValue}
+                          onchange={handleRecurChange}
+                        ></lightning-combobox>
+                      </div>
+                    </div>
+                    <div class="slds-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop"
+                          >Recur Every {RecurLabel}</span
+                        >
+                        <!--  <lightning-combobox name="recurEvery" variant="label-hidden" value={recurEveryValue} placeholder="Select Recurrence" options={recurEveryOptions}
+                                    onchange={handleRecurEveryChange} ></lightning-combobox> -->
+                        <lightning-combobox
+                          placeholder="Select Recurrence"
+                          class="recurEvery"
+                          name="recurEvery"
+                          variant="label-hidden"
+                          options={recurEveryOptions}
+                          value={recurEveryValue}
+                          onchange={handleRecurEveryChange}
+                        ></lightning-combobox>
+                      </div>
+                    </div>
+                    <!-- <div class="slds-p-around_small">
+                            {RecurLabel}
+                          </div> -->
+                    <div class="slds-size_1-of-5 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop">End Date</span>
+                        <lightning-input
+                          type="date"
+                          name="recurEndDate"
+                          class="recurEndDate"
+                          value={recurEndDate}
+                          variant="label-hidden"
+                          onchange={handleRecurEveryChange}
+                          disabled={isRecurDateDisabled}
+                        ></lightning-input>
+                      </div>
+                    </div>
+                    <!-- </div> -->
+                    <template if:true={isRecurmontlyFlag}>
+                      <div class="slds-size_1-of-10 slds-p-around_small">
+                        <p class="">set for Day</p>
+                        
+                      </div>
+                      <div class="slds-size_1-of-7 slds-p-around_small">
+                        <div class="floating-label-new">
+                          <span class="label-text-drop">Recur Every</span>
+                          <lightning-combobox
+                            name="monthLyOptions"
+                            class="monthLyOptions"
+                            variant="label-hidden"
+                            options={monthLyOptions}
+                            value={monthOfDay}
+                            onchange={handleRecurEveryChange}
+                          ></lightning-combobox>
+                        </div>
+                      </div>
+
+                      <!-- <div class="slds-size_1-of-2 slds-p-around_small"></div> -->
+                    </template>
+                  </template>
+                </div>
+                <template if:true={isRecurWeekFlag}>
+                  <div class="slds-p-left_small">set for <br /></div>
+                  <div class="slds-grid slds-wrap">
+                    <template for:each={weekDays} for:item="day">
+                      <div
+                        key={day}
+                        class="slds-size_1-of-7 slds-p-around_small"
+                      >
+                        <span>{day}</span>
+                        <lightning-input
+                          type="checkbox"
+                          name={day}
+                          variant="label-hidden"
+                          class="slds-p-left_small"
+                          onchange={handleCheckboxChange}
+                        >
+                        </lightning-input>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <template if:true={recurTemplate}>
+                  <div class="slds-p-around_small">
+                    <p>
+                      Repeats {RecurValue}, ending on
+                      {recurEndDateFormattedDate}, with {recurOccurencesValue}
+                      occurrences
+                    </p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="slds-grid slds-nowrap equal-height-container">
+            <div
+              class="slds-large-size_1-of-2 slds-medium-size_1-of-2 slds-small-size_1-of-2"
+            >
+              <!-- box 2 starts -->
+              <div class="container-box full-height">
+                <span>Address</span>
+                <div class="slds-grid slds-wrap">
+                  <div class="slds-size_1-of-3 slds-p-around_small">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-6">
+                        <lightning-input
+                          type="checkbox"
+                          variant="label-hidden"
+                          name="facilityAddressCheckbox"
+                          checked={facilityAddressCheckbox}
+                          onchange={AdreesCheckboxChange}
+                          disabled={disablePostInsertButtons}
+                        ></lightning-input>
+                      </div>
+                      <div class="slds-size_1-of-2">
+                        <span>{facilityPreferredName}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-3 slds-p-around_small">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-6">
+                        <lightning-input
+                          type="checkbox"
+                          name="participantAddressCheckBox"
+                          checked={participantAddressCheckBox}
+                          onchange={AdreesCheckboxChange}
+                          variant="label-hidden"
+                        ></lightning-input>
+                      </div>
+                      <div class="slds-size_1-of-2">
+                        <span>{participantPreferredName}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-3 slds-p-around_small">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-6">
+                        <lightning-input
+                          type="checkbox"
+                          checked={addNewAddressCheckBox}
+                          variant="label-hidden"
+                          onchange={AdreesCheckboxChange}
+                          disabled={disablePostInsertButtons}
+                        ></lightning-input>
+                      </div>
+                      <div class="slds-size_1-of-2">
+                        <span>Add New</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="slds-grid slds-wrap slds-p-left_xx-small">
+                    <div class="slds-m-right_medium">
+                      <!-- Show when Add New is selected -->
+                      <!-- <template if:true={addNewAddressCheckBox}> -->
+                      <lightning-input-address
+                        class="addressClass"
+                        street-label="Street"
+                        city-label="Suburb"
+                        country-label="Country"
+                        province-label="State"
+                        postal-code-label="Post Code"
+                        street={address.street}
+                        city={address.citySuburb}
+                        country={address.country}
+                        province={address.provinceState}
+                        postal-code={address.postalcode}
+                        onchange={addressInputChange}
+                        disabled={disablePostInsertButtons}
+                        show-address-lookup
+                        required
+                        style={addressComponentStyle}
+                      >
+                      </lightning-input-address>
+                      <!-- </template> -->
+
+                      <!-- Show read-only text for Facility or Participant -->
+                      <template if:false={addNewAddressCheckBox}>
+                      
+                        <strong>Address:</strong> {formattedAddress}
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="slds-large-size_1-of-2 slds-medium-size_1-of-2 slds-small-size_1-of-2"
+            >
+              <!-- Box 5 starts -->
+
+              <div class="container-box full-height">
+                <span>Geo Location</span>
+                <div style="display: flex; flex-direction: column">
+                  <span
+                    class="slds-text-heading_small slds-m-bottom_x-small link-like"
+                    onclick={handleGetlocation}
+                    style="text-decoration: underline; cursor: pointer"
+                    >{geolabel}</span
+                  >
+
+                  <div
+                    class={staffTrackingClass}
+                    style="height: 160px; width: 100%"
+                  ></div>
+
+                  <div
+                    class={shiftLocationClass}
+                    style="height: 160px; width: 100%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--   Second Column -->
+          <div
+            class="slds-col slds-large-size_12-of-12 slds-medium-size_12-of-12 slds-small-size_12-of-12"
+          >
+            <div class="container-box">
+              <div>
+                <span>Add {staffPreferredName}/{participantPreferredName}</span>
+              </div>
+              <div>
+                <div class="slds-p-around_x-small">
+                  <div
+                    class="slds-grid slds-grid_align-start slds-grid_vertical-align-center"
+                  >
+                    <!--   <lightning-input
+                      type="checkbox"
+                      label="Split Shift"
+                      checked={splitShift}
+                      onchange={handleShiftOptionChange}
+                      data-name="splitShift"
+                      disabled={disableSplitShift}
+                    >
+                    </lightning-input>
+ -->
+                    <lightning-input
+                      type="checkbox"
+                      label="Group Shift"
+                      checked={groupShift}
+                      onchange={handleShiftOptionChange}
+                      data-name="groupShift"
+                      disabled={diableGroupShift}
+                    >
+                    </lightning-input>
+                    <template if:true={showAddRowButton}>
+                      <a
+                        ><i
+                          class="material-icons add-icon"
+                          onclick={handleAddServiceRow}
+                          style="cursor: pointer"
+                          title="Add Row"
+                          >add_circle</i
+                        >
+                      </a>
+                    </template>
+                  </div>
+                  <p class="slds-p-around_x-small"><strong>Note:</strong> For Sleepover Shifts, payment is calculated using a sleepover allowance instead of an hourly rate. </p>
+
+                  <div>
+                    <div>
+                      <table
+                        class="slds-table-group slds-table_cell-buffer slds-table_bordered-group"
+                        role="grid"
+                      >
+                        <thead>
+                          <tr>
+                            <template if:false={splitShift}>
+                              <template if:false={rowShiftTimingsEnable}>
+                                <th scope="col">{staffPreferredName}</th>
+                              </template>
+                            </template>
+                            <!--   <th scope="col">{participantPreferredName}</th> -->
+                            <th scope="col">Service Type</th>
+                            <th scope="col">Service Item</th>
+                            <th scope="col" style="width: 6%">Unit Price</th>
+                            <template if:true={rowShiftTypeEnable}>
+                              <th scope="col" style="width: 8%">Shift Type</th>
+                            </template>
+                            <template if:true={rowShiftTimingsEnable}>
+                              <th scope="col" style="width: 8%">Start Time</th>
+                              <th scope="col" style="width: 8%">End Time</th>
+                              <template if:false={rowShiftTypeEnable}>
+                                <th scope="col" style="width: 8%">Address</th>
+                              </template>
+                            </template>
+
+                            <th scope="col" style="width: 7.5%">
+                              Billable Hours
+                            </th>
+                            <th scope="col" style="width: 6%">Amount</th>
+                             <th scope="col" style="width: 6.5%">{hourlrRateLabel}</th>
+                              <template if:false={otherThanNdis}>
+                                     <th scope="col" style="width: 4%">Forms</th>
+                              </template>
+                          
+                            <th scope="col" style="width: 4%">Action</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          <template
+                            for:each={AddShiftAndServices}
+                            for:item="row"
+                            for:index="index"
+                          >
+                            <tr key={row.id}>
+                              <template if:false={splitShift}>
+                                <template if:false={rowShiftTimingsEnable}>
+                                  <td >
+                                    <div
+                                      class="dropdown-container-groupshifts"
+                                      data-dropdown="staff"
+                                    >
+                                      <div
+                                        class="dropdown-label slds-button slds-button_neutral slds-text-align_left slds-p-horizontal_xx-small"
+                                        onclick={toggleDropdownForCustomisation}
+                                        data-index={index}
+                                        data-field="staff"
+                                      >
+                                        <span class="dropdown-text" title={row.stafflabel}
+                                          >{row.stafflabel}</span
+                                        >
+                                         <template if:true={row.staff}>
+                                           <!--  <lightning-icon
+                                              icon-name="utility:close"
+                                              size="x-small"
+                                              class="clear-icon"
+                                              data-index={index}
+                                              data-field="staff"
+                                              onclick={handleClearSelection} -->
+                                              <i
+                                                  class="material-icons cancel-icon"
+                                                  data-index={index}
+                                                  data-field="staff"
+                                                  onclick={handleClearSelection}
+                                                  style="cursor: pointer"
+                                                  title="Cancel"
+                                                  >cancel</i
+                                                >
+
+                                          
+                                         </template>
+                                        <lightning-icon
+                                          icon-name="utility:chevrondown"
+                                          size="x-small"
+                                          class={row.staffchevronclass}
+                                        >
+                                        </lightning-icon>
+                                      </div>
+                                      <template if:true={row.showstaffdropdown}>
+                                        <div
+                                          class="table-options slds-dropdown slds-dropdown_left custom-scroll"
+                                          data-dropdown-content="staff"
+                                        >
+                                          <div
+                                            class="slds-p-horizontal_x-small"
+                                            onclick={stopPropagation}
+                                          >
+                                            <lightning-input
+                                              type="text"
+                                              placeholder="Search Staff"
+                                              value={row.staffsearch}
+                                              data-index={index}
+                                              data-field="staff"
+                                              onchange={handleSearchInput}
+                                              onclick={stopPropagation}
+                                              variant="label-hidden"
+                                            >
+                                            </lightning-input>
+                                          </div>
+                                          <ul
+                                            class="slds-dropdown__list"
+                                            role="listbox"
+                                            style="
+                                              text-align: left;
+                                              padding: 0 15px;
+                                            "
+                                          >
+                                            <template
+                                              for:each={row.filteredstaff}
+                                              for:item="opt"
+                                            >
+                                              <li
+                                                key={opt.value}
+                                                class="slds-dropdown__item dropdown-option"
+                                                data-index={index}
+                                                data-field="staff"
+                                                data-value={opt.value}
+                                                data-label={opt.label}
+                                                onclick={handleDropdownSelect}
+                                                role="option"
+                                              >
+                                                <span class="slds-truncate"
+                                                  >{opt.label}</span
+                                                >
+                                              </li>
+                                            </template>
+                                          </ul>
+                                        </div>
+                                      </template>
+                                    </div>
+                                  </td>
+                                </template>
+                              </template>
+
+                              
+
+                              <!-- SERVICE TYPE -->
+                              <td >
+                                <div
+                                  class="dropdown-container-groupshifts"
+                                  data-dropdown="servicetype"
+                                >
+                                  <div
+                                    class="dropdown-label slds-button slds-button_neutral slds-text-align_left slds-p-horizontal_xx-small"
+                                    onclick={toggleDropdownForCustomisation}
+                                    data-index={index}
+                                    data-field="servicetype"
+                                  >
+                                    <span class="dropdown-text" title={row.servicetypelabel}
+                                      >{row.servicetypelabel}</span
+                                    >
+                                    <lightning-icon
+                                      icon-name="utility:chevrondown"
+                                      size="x-small"
+                                      class={row.servicetypechevronclass}
+                                    >
+                                    </lightning-icon>
+                                  </div>
+                                  <template
+                                    if:true={row.showservicetypedropdown}
+                                  >
+                                    <div
+                                      class="table-options slds-dropdown slds-dropdown_left custom-scroll"
+                                      data-dropdown-content="servicetype"
+                                    >
+                                      <div
+                                        class="slds-p-horizontal_x-small"
+                                        onclick={stopPropagation}
+                                      >
+                                        <lightning-input
+                                          type="text"
+                                          placeholder="Search Service Type"
+                                          value={row.servicetypesearch}
+                                          data-index={index}
+                                          data-field="servicetype"
+                                          onchange={handleSearchInput}
+                                          onclick={stopPropagation}
+                                          variant="label-hidden"
+                                        >
+                                        </lightning-input>
+                                      </div>
+                                      <ul
+                                        class="slds-dropdown__list"
+                                        role="listbox"
+                                        style="
+                                          text-align: left;
+                                          padding: 0 15px;
+                                        "
+                                      >
+                                        <template
+                                          for:each={row.filteredservicetypes}
+                                          for:item="opt"
+                                        >
+                                          <li
+                                            key={opt.value}
+                                            class="slds-dropdown__item dropdown-option"
+                                            data-index={index}
+                                            data-field="servicetype"
+                                            data-value={opt.value}
+                                            data-label={opt.label}
+                                            onclick={handleDropdownSelect}
+                                            role="option"
+                                          >
+                                            <span class="slds-truncate"
+                                              >{opt.label}</span
+                                            >
+                                          </li>
+                                        </template>
+                                      </ul>
+                                    </div>
+                                  </template>
+                                </div>
+                              </td>
+
+                              <!-- SERVICE ITEM -->
+                              <td >
+                                <div
+                                  class="dropdown-container-groupshifts"
+                                  data-dropdown="serviceitem"
+                                >
+                                  <div
+                                    class="dropdown-label slds-button slds-button_neutral slds-text-align_left slds-p-horizontal_xx-small"
+                                    onclick={toggleDropdownForCustomisation}
+                                    data-index={index}
+                                    data-field="serviceitem"
+                                  >
+                                    <span class="dropdown-text" title={row.serviceitemlabel}
+                                      >{row.serviceitemlabel}</span
+                                    >
+                  
+                                    <lightning-icon
+                                      icon-name="utility:chevrondown"
+                                      size="x-small"
+                                      class={row.serviceitemchevronclass}
+                                    >
+                                    </lightning-icon>
+                                  </div>
+
+                                  <template
+                                    if:true={row.showserviceitemdropdown}
+                                  >
+                                    <div
+                                      class="table-options slds-dropdown slds-dropdown_left custom-scroll"
+                                      data-dropdown-content="serviceitem"
+                                    >
+                                      <div
+                                        class="slds-p-horizontal_x-small"
+                                        onclick={stopPropagation}
+                                      >
+                                        <lightning-input
+                                          type="text"
+                                          placeholder="Search Service Item"
+                                          value={row.serviceitemsearch}
+                                          data-index={index}
+                                          data-field="serviceitem"
+                                          onchange={handleSearchInput}
+                                          onclick={stopPropagation}
+                                          variant="label-hidden"
+                                        >
+                                        </lightning-input>
+                                      </div>
+                                      <ul
+                                        class="slds-dropdown__list"
+                                        role="listbox"
+                                        style="
+                                          text-align: left;
+                                          padding: 0 15px;
+                                        "
+                                      >
+                                        <template
+                                          for:each={row.filteredserviceitems}
+                                          for:item="opt"
+                                        >
+                                          <li
+                                            key={opt.value}
+                                            class="slds-dropdown__item dropdown-option"
+                                            data-index={index}
+                                            data-field="serviceitem"
+                                            data-value={opt.value}
+                                            data-label={opt.label}
+                                            data-unit={opt.unit}
+                                            onclick={handleDropdownSelect}
+                                            role="option"
+                                          >
+                                            <span class="slds-truncate"
+                                              >{opt.label} - ${opt.unit}</span
+                                            >
+                                          </li>
+                                        </template>
+                                      </ul>
+                                    </div>
+                                  </template>
+                                </div>
+                              </td>
+                              <!-- unite price  -->
+                              <td>
+                                <lightning-input
+                                  type="number"
+                                  value={row.unitprice}
+                                  formatter="currency"
+                                  step="0.01"
+                                  data-index={index}
+                                  data-field="unitprice"
+                                  onchange={handleUnitPriceOrHoursChange}
+                                  variant="label-hidden"
+                                >
+                                </lightning-input>
+                              </td>
+
+                              <!-- START TIME -->
+                              <template if:true={rowShiftTypeEnable}>
+                                <td>
+                                  <div
+                                    class="dropdown-container-groupshifts"
+                                    data-dropdown="customshift"
+                                  >
+                                    <div
+                                      class="slds-button slds-button_neutral slds-text-align_left slds-p-horizontal_xx-small dropdown-label"
+                                      onclick={toggleDropdownForCustomisation}
+                                      data-index={index}
+                                      data-field="customshift"
+                                    >
+                                      <span class="dropdown-text"
+                                        >{row.customshiftlabel}</span
+                                      >
+                                      <lightning-icon
+                                        icon-name="utility:chevrondown"
+                                        size="x-small"
+                                        class={row.customshiftchevronclass}
+                                      >
+                                      </lightning-icon>
+                                    </div>
+                                    <template
+                                      if:true={row.showcustomshiftdropdown}
+                                    >
+                                      <div
+                                        class="table-options slds-dropdown slds-dropdown_left custom-scroll slds-p-horizontal_xx-small"
+                                        data-dropdown-content="customshift"
+                                      >
+                                        <div
+                                          class="slds-p-horizontal_x-small"
+                                          onclick={stopPropagation}
+                                        ></div>
+                                        <ul
+                                          class="slds-dropdown__list"
+                                          role="listbox"
+                                          style="
+                                            text-align: left;
+                                            padding: 0 15px;
+                                          "
+                                        >
+                                          <template
+                                            for:each={row.customshiftsoptions}
+                                            for:item="opt"
+                                          >
+                                            <li
+                                              key={opt.value}
+                                              class="slds-dropdown__item dropdown-option"
+                                              data-index={index}
+                                              data-field="customshift"
+                                              data-value={opt.value}
+                                              data-label={opt.label}
+                                              onclick={handleDropdownSelect}
+                                              role="option"
+                                            >
+                                              <span class="slds-truncate"
+                                                >{opt.label}</span
+                                              >
+                                            </li>
+                                          </template>
+                                        </ul>
+                                      </div>
+                                    </template>
+                                  </div>
+                                </td>
+                              </template>
+                              <template if:true={rowShiftTimingsEnable}>
+                                <td>
+                                  <c-tesseract-apps-time-picker
+                                    data-index={index}
+                                    data-field="starttime"
+                                    data-amapm="starttimeAmPm"
+                                    selected-hour={row.startTimeSelectedHour}
+                                    selected-minute={row.startTimeSelectedMinute}
+                                    displayed-time={row.startTimeDisplayTime}
+                                    is-am={row.startTimeSelectedAmPm}
+                                    disable-time-button={row.strtDisableTimeButton}
+                                    onsavetimefromchild={handleGroupShiftTimeChange}
+                                  ></c-tesseract-apps-time-picker>
+                                </td>
+
+                                <td>
+                                  <c-tesseract-apps-time-picker
+                                    data-index={index}
+                                    data-field="endtime"
+                                    data-amapm="endtimeAmPm"
+                                    selected-hour={row.endTimeSelectedHour}
+                                    selected-minute={row.endTimeSelectedMinute}
+                                    displayed-time={row.endTimeDisplayTime}
+                                    is-am={row.endTimeSelectedAmPm}
+                                    disable-time-button={row.endDisableTimeButton}
+                                    onsavetimefromchild={handleGroupShiftTimeChange}
+                                  ></c-tesseract-apps-time-picker>
+                                </td>
+                                <template if:false={rowShiftTypeEnable}>
+                                  <td>
+                                    <div
+                                      class="slds-grid slds-grid_vertical-align-center"
+                                    >
+                                      <div class="slds-col">
+                                        <div
+                                          class="slds-button-group"
+                                          role="group"
+                                        >
+                                          <a
+                                            ><i
+                                              class={row.facilityIconClass}
+                                              onclick={handleAddressSelection}
+                                              style="cursor: pointer"
+                                              title="Facility"
+                                              data-type="facility"
+                                              data-index={index}
+                                              >apartment</i
+                                            >
+                                          </a>
+
+                                          <a
+                                            ><i
+                                              class={row.participantIconClass}
+                                              onclick={handleAddressSelection}
+                                              style="cursor: pointer"
+                                              title="Participant Address"
+                                              data-type="participant"
+                                              data-index={index}
+                                              >supervisor_account</i
+                                            >
+                                          </a>
+
+                                          <a
+                                            ><i
+                                              class={row.newIconClass}
+                                              onclick={handleAddressSelection}
+                                              style="cursor: pointer"
+                                              title="New Address"
+                                              data-type="new"
+                                              data-index={index}
+                                              >add_circle</i
+                                            >
+                                          </a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </template>
+                              </template>
+                              <!-- hours -->
+                              <td>
+                                <lightning-input
+                                  type="number"
+                                  value={row.billablehours}
+                                  step="0.01"
+                                  data-index={index}
+                                  data-field="billablehours"
+                                  onchange={handleUnitPriceOrHoursChange}
+                                  variant="label-hidden"
+                                >
+                                </lightning-input>
+                              </td>
+
+                              <!-- AMOUNT -->
+                              <td>
+                                <span
+                                  class="slds-text-body_small amount-display"
+                                >
+                                  <lightning-formatted-number
+                                    value={row.amount}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2"
+                                  >
+                                  </lightning-formatted-number>
+                                </span>
+                              </td>
+                              <!--  HOURLY RATE -->
+                              <td>
+                                <span
+                                  class="slds-text-body_small amount-display"
+                                >
+                                  <template if:true={hourlyRateEditable}>
+                                    <lightning-input
+                                      type="number"
+                                      value={row.hourlyrate}
+                                      formatter="currency"
+                                      step="0.01"
+                                      data-index={index}
+                                      data-field="hourlyrate"
+                                      onchange={handleHourlyRateChange}
+                                      variant="label-hidden"
+                                    >
+                                    </lightning-input>
+                                     <template if:true={row.isCustomShift}>
+                                        <lightning-helptext style="position: absolute;top: 10px;right: 10px;" content="Allowance"></lightning-helptext>
+                                     </template>
+                                         
+                                  </template>
+                                  <template if:false={hourlyRateEditable}>
+                                    <lightning-formatted-number
+                                      value={row.hourlyrate}
+                                      format-style="currency"
+                                      currency-code="AUD"
+                                      minimum-fraction-digits="2"
+                                      maximum-fraction-digits="2"
+                                    >
+                                    </lightning-formatted-number>
+                                  </template>
+                                  <!--  ${row.amount} -->
+                                </span>
+                              </td>
+                              <!--  Forms -->
+                              <template if:false={otherThanNdis}>
+                                    <td>
+                                    <a>
+                                        <i
+                                            class={row.formsIconClass}
+                                            data-index={index}
+                                            onclick={handleFormsIconClick}
+                                            title="Forms"
+                                            style="cursor:pointer"
+                                        >
+                                            forms_add_on
+                                        </i>
+                                    </a>
+                                </td>
+
+                              </template>
+                        
+
+
+                              <!-- ACTION -->
+                              <td>
+                                <div style="display: flex; align-items: center">
+                                  <!--  <a
+                                      href="javascript:void(0)"
+                                      onclick={handleRowAction}
+                                      data-index={index}
+                                      title="Edit"
+                                      style="text-decoration: none"
+                                    >
+                                      <i class="material-icons edit-icon"
+                                        >edit_document</i
+                                      >
+                                    </a> -->
+                                  <a
+                                    href="javascript:void(0)"
+                                    data-value="delete"
+                                    onclick={handleDeleteConfirmation}
+                                    data-index={index}
+                                    title="Delete"
+                                    style="text-decoration: none"
+                                  >
+                                    <i class="material-icons delete-icon1"
+                                      >delete</i
+                                    >
+                                  </a>
+                                </div>
+                              </td>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </table>
+                    </div>
+                     <template if:true={showExtendedBrokenUI}>
+                      <div class="slds-box slds-m-top_small">
+                     
+                          <div class="slds-text-heading_small  slds-m-bottom_x-small">
+                                Extended Broken Shift Applied(After 12-Hour Span)
+                             
+                          </div>
+
+                          <!-- HORIZONTAL DETAILS ROW -->
+                          <div class="slds-grid slds-wrap slds-gutters_small slds-text-body_regular">
+
+                           
+                              <div class="slds-col slds-size_1-of-6">
+                                  <strong>Excess Hours:</strong> {extendedBrokenMeta.extraHours} hrs
+                              </div>
+
+                              <div class="slds-col slds-size_1-of-6">
+                                  <strong>Double Time Rate:</strong>
+                                  <lightning-formatted-number
+                                      value={extendedBrokenMeta.hourlyRate}
+                                      format-style="currency"
+                                      currency-code="AUD">
+                                  </lightning-formatted-number>
+                              </div>
+
+                              <div class="slds-col slds-size_1-of-6">
+                                  <strong>Double Time Pay:</strong>
+                                  <lightning-formatted-number
+                                      value={extendedBrokenMeta.brokenExtendedWages}
+                                      format-style="currency"
+                                      currency-code="AUD">
+                                  </lightning-formatted-number>
+                              </div>
+
+                          </div>
+                      </div>
+                  </template>
+
+                    <!-- No Data Message -->
+                    <template if:false={hasData}>
+                      <div class="slds-text-align_center slds-p-around_large">
+                        <p class="slds-text-body_regular">
+                          No shift data available. Click "Add Row" to get
+                          started.
+                        </p>
+                      </div>
+                    </template>
+                  </div>
+                  <!-- </lightning-card> -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="slds-col slds-large-size_12-of-12 slds-medium-size_12-of-12 slds-small-size_12-of-12"
+          >
+            <div class="slds-box slds-theme_default">
+              <!-- Box 6 starts -->
+              <div class="container-box">
+                <span>Shift Notes <lightning-helptext content="Maximum 1000 characters allowed for notes."></lightning-helptext></span>
+                <div style="padding: 1%">
+                  <lightning-textarea
+                    name="AddShiftNotes"
+                    variant="label-hidden"
+                    value={addShiftData.AddShiftNotes}
+                    onchange={handleAddShiftChange}
+                    onfocus={handleFocus}
+                    placeholder="Enter your text here or start speaking..."
+                    disabled={disablePostInsertButtons}
+                  ></lightning-textarea>
+                  <div>
+                    <lightning-icon
+                      icon-name={iconName}
+                      alternative-text={altText}
+                      onclick={toggleListening}
+                      if:true={showMuteIcon}
+                      class="slds-button slds-button_icon mute-icon"
+                      style="margin-left: 5px"
+                      size="small"
+                    >
+                    </lightning-icon>
+                    <lightning-icon
+                      icon-name="utility:clear"
+                      alternative-text="Clear Text"
+                      onclick={clearText}
+                      if:true={showClearIcon}
+                      class="slds-button slds-button_icon clear-icon"
+                      size="small"
+                    >
+                    </lightning-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="slds-col slds-large-size_12-of-12 slds-medium-size_12-of-12 slds-small-size_12-of-12"
+          >
+            <div class="slds-box slds-theme_default">
+              <!-- box 4 starts  -->
+              <div class="container-box full-height">
+                <div class="slds-grid slds-grid_align-start slds-align-center">
+
+                <span class="slds-text-heading_small slds-m-right_small">
+                    Checklist
+                </span>
+
+              <template if:true={showRecurringIcon}>
+                  <div class="slds-grid slds-align-center">
+                      <a href="javascript:void(0)"
+                      >
+                          <i class="material-icons">cycle</i>
+                      </a>
+                      <span><a href="javascript:void(0)"
+                        onclick={handleOpenRecurChecklist}>Apply to recurring shifts</a></span>
+                  </div>
+              </template>
+          </div>
+
+                <div class="checklist-grid">
+                  <template for:each={computedStaticChecklist} for:item="item">
+                    <div key={item.id} class="checklist-item">
+                      <lightning-input
+                        type="checkbox"
+                        label={item.label}
+                        checked={item.checked}
+                        data-id={item.id}
+                        data-label={item.label}
+                        onchange={handleStaticChecklistToggle}
+                      >
+                      </lightning-input>
+                    </div>
+                  </template>
+                </div>
+                <!-- Row for description and "New" icon -->
+                <div class="slds-grid slds-wrap" style="padding-top: 1%">
+                  <!-- Description Input -->
+                  <div class="slds-size_6-of-12 slds-p-around_small order-1">
+                    <div class="floating-label-new">
+                      <span class="label-text-drop">Description</span>
+                      <lightning-input
+                        type="text"
+                        variant="label-hidden"
+                        value={checkListDescription}
+                        onchange={handleDescriptionChange}
+                        disabled={disablePostInsertButtons}
+                         maxlength="1000"
+                      >
+                      </lightning-input>
+                    </div>
+                  </div>
+                  <!-- "New" Icon -->
+                  <!-- <div class="slds-size_3-of-12 slds-p-around_small order-2">
+                      <a href="javascript:void(0)">
+                        <lightning-icon 
+                          icon-name="action:new" 
+                          alternative-text="new" 
+                          size="xx-small" 
+                          title="new" 
+                          onclick={handleAddRow} 
+                          style="margin-left:25%;margin-top:2%; background-color:#0099de;transform: scale(0.8);">
+                        </lightning-icon>
+                      </a>
+                    </div> -->
+                  <div
+                    class="slds-size_3-of-12 slds-p-around_small order-2 slds-grid slds-align-middle"
+                  >
+                    <i
+                      class="material-icons add-icon"
+                      onclick={handleAddRow}
+                      style="cursor: pointer"
+                      >add_circle</i
+                    >
+                  </div>
+                </div>
+                <template for:each={ChekListrows} for:item="row">
+                  <div
+                    key={row.id}
+                    class="row-item slds-grid slds-wrap slds-p-around_x-small"
+                  >
+                    <div class="slds-size_1-of-12 slds-p-around_xx-small">
+                      {row.index}
+                    </div>
+                    <div class="slds-size_4-of-6 slds-p-around_xx-small">
+                      <span>{row.description}</span>
+                    </div>
+                    <div
+                      class="slds-size_1-of-6 slds-grid slds-align-middle slds-grid_align-center"
+                    >
+                      <!-- slds-align_absolute-center slds-justify_space-between -->
+
+                      <div
+                        class="slds-m-horizontal_small slds-grid slds-align-center"
+                      >
+                        <lightning-input
+                          type="checkbox"
+                          variant="label-hidden"
+                          checked={row.mandatory}
+                          data-id={row.id}
+                          onchange={handleChecklistMandatoryChnage}
+                          disabled={disablePostInsertButtons}
+                        >
+                        </lightning-input>
+                        <span class="slds-m-right_small">Mandatory</span>
+                      </div>
+                      <template if:false={disablePostInsertButtons}>
+                        <div>
+                          <i
+                            class="material-icons delete-icon"
+                            onclick={handleDeleteRow}
+                            data-id={row.id}
+                            data-index={row.index}
+                            >delete</i
+                          >
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cancelAndCreatebtn">
+        <div class="createShift1">
+          <lightning-button
+            variant="brand-outline"
+            label="Cancel"
+            title="Cancel"
+            onclick={handleCloseCalenderParticipantView}
+          >
+          </lightning-button>
+          <lightning-button
+            label={createShiftlabel}
+            title={createShiftlabel}
+            onclick={handleCreateNewShift}
+           
+            variant="brand"
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+
+    <template if:true={holidayPopup}>
+      <section
+        aria-describedby="modal-content-id-1"
+        aria-labelledby="modal-heading-01"
+        aria-modal="true"
+        class="slds-modal slds-fade-in-open"
+        role="dialog"
+        tabindex="-1"
+        style="width: 70%; margin-left: 20%"
+      >
+        <div class="slds-modal__container">
+          <header class="slds-modal__header" style="background: #002a52">
+            <h2
+              class="slds-text-heading_medium slds-hyphenate"
+              style="color: white; font-weight: bold; text-align: center"
+            >
+              Public Holidays Detected During Recurring Shifts
+            </h2>
+          </header>
+
+          <div class="slds-modal__content slds-p-around_medium">
+            <div class="slds-text-align_center">
+              <p>Select a holiday to apply holiday rates and create a shift.</p>
+            </div>
+            <div class="slds-m-around_small">
+              <div class="slds-col slds-size_12-of-12 slds-p-horizontal_small">
+                <div class="slds-box slds-theme_default slds-m-bottom_small">
+                  <div style="max-height: 180px; overflow-y: auto">
+                    <table class="slds-table slds-table_cell-buffer table2">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>Date</th>
+                          <th>Holiday Name</th>
+                          <th>Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template
+                          for:each={holidaysList}
+                          for:item="holidays"
+                          for:index="index"
+                        >
+                          <tr key={holidays} class="tr1">
+                            <td>
+                              <lightning-input
+                                type="checkbox"
+                                name="holidayCheckBox"
+                                variant="label-hidden"
+                                checked={holidays.checked}
+                                data-index={index}
+                                data-date={holidays.Date__c}
+                                onchange={handleholidayChange}
+                              >
+                              </lightning-input>
+                            </td>
+                            <td>{holidays.Date__c}</td>
+                            <td>{holidays.Name}</td>
+                            <td>{holidays.Rate__c}</td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <p>
+                  Note: Unselected holidays won't create shifts and require
+                  manual creation.
+                </p>
+
+                <div
+                  class="slds-grid slds-align_absolute-center slds-m-top_medium"
+                >
+                  <lightning-button
+                    label="Cancel"
+                    variant="brand-outline"
+                    class="slds-m-around_small"
+                    onclick={handleholidayPopup}
+                  >
+                  </lightning-button>
+                  <lightning-button
+                    label="Save"
+                    variant="brand"
+                    onclick={handleholidayPopupSave}
+                    disabled={HolidaySaveButton}
+                    class="slds-m-around_small"
+                  >
+                  </lightning-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+  </template>
+
+  <template if:true={isShowSpinner}>
+    <!-- <div >
+      <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+  </div> -->
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+      <div class="loader-container">
+        <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+      </div>
+
+      <!-- Progress text instead of progress bar -->
+      <p class="progress-text">Loading<br />Please Wait...</p>
+    </div>
+  </template>
+
+   <template if:true={showErrorModal}>
+    <section class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+        <div class="slds-modal__container" style="max-width: 25%; min-width: 400px;">
+            <!-- Modal Header -->
+            <header class="slds-modal__header" style="background: #002a52;">
+                <h2 class="slds-text-heading_medium" style="color: white; text-align: center;">
+                    <template if:true={AddShiftRecurringCheckboxValue}>
+                        Recurring Shift Conflicts
+                    </template>
+                    <template if:false={AddShiftRecurringCheckboxValue}>
+                        Shift Assignment Failed
+                    </template>
+                </h2>
+            </header>
+            
+            <!-- Modal Body -->
+            <div class="slds-modal__content slds-p-around_medium slds-text-align_center custom-scroll">
+                <!-- Conditional Message -->
+                <template if:true={AddShiftRecurringCheckboxValue}>
+                    <p>Conflicts found in recurring shift dates:</p>
+                    <div class="slds-text-color_weak slds-m-bottom_small">
+                        <small><strong>Note: </strong> Conflicting dates will be skipped during creation</small>
+                    </div>
+                </template>
+                <template if:false={AddShiftRecurringCheckboxValue}>
+                    <p class="slds-m-bottom_medium">Cannot proceed with shift assignment. Issues found:</p>
+                </template>
+
+                <!-- Staff Conflicts List -->
+                <!-- <ul class="slds-list_dotted slds-m-left_medium">
+                    <template for:each={staffDateConflicts} for:item="staff">
+                        <li key={staff.staffId} class="slds-item slds-m-bottom_small">
+                            <strong>{staff.staffName}</strong>
+                            <ul class="slds-list_dotted slds-m-left_medium slds-m-top_xx-small">
+                                <template for:each={staff.conflictDates} for:item="conflict">
+                                    <li key={conflict.date}>
+                                        {conflict.displayDate}: {conflict.reason}
+                                    </li>
+                                </template>
+                            </ul>
+                        </li>
+                    </template>
+                </ul> -->
+
+                  <div class="center-list">
+                    <ul>
+                        <template for:each={staffDateConflicts} for:item="staff">
+                            <li key={staff.staffId}>
+                                <strong>{staff.staffName}</strong>
+                                <ul class="slds-m-top_xx-small">
+                                    <template for:each={staff.conflictDates} for:item="conflict">
+                                        <li key={conflict.date} class="conflict-row">
+                                            <span class="conflict-date">{conflict.displayDate}:</span>
+                                            <span class="conflict-reason">{conflict.reason}</span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </li>
+                        </template>
+                    </ul>
+                  </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <footer class="slds-modal__footer" style="color: white;align-content:center">
+                 <template if:true={AddShiftRecurringCheckboxValue}>
+                    <div class="slds-align_absolute-center">
+                        <lightning-button
+                            label="Cancel"
+                            variant="brand"
+                            onclick={closeErrorModal}
+                        ></lightning-button>
+                        <lightning-button class="slds-p-left_medium"
+                            label="Create Shifts" 
+                            onclick={hanleRecurShiftsCreation} 
+                            variant="brand"
+                        ></lightning-button>
+                    </div>
+                </template>
+                  <template if:false={AddShiftRecurringCheckboxValue}>
+                    <lightning-button 
+                    label="OK" 
+                    onclick={closeErrorModal} 
+                    variant="brand"
+                   ></lightning-button>
+
+                </template>
+              
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+  
+  <template if:true={ServiceWarningMessage}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 25%">
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Delete
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small" style="text-align: center">
+            <div>
+              <h1>
+                Are you sure you want to delete the
+                <b>{participantServiceDeleteInfo.serviceName} </b>service for
+                the
+                <b>{participantServiceDeleteInfo.partcipantName} </b>
+                {facilityPreferredName}?
+              </h1>
+            </div>
+            <div class="button-container slds-m-top_medium">
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={closeWarningMessage}
+                class="slds-m-around_small"
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handleDeleteService}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={shiftDeleteConfirmation}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container" style="width: 20%">
+        <header
+          class="slds-modal__header modal-header"
+          style="background: #124795; border-radius: 15px 15px 0 0"
+        >
+          <h2
+            class="slds-text-heading_medium slds-hyphenate modal-title"
+            style="color: white; font-weight: bold; text-align: left"
+          >
+            Delete
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small">
+            <div><h1>Are you sure you want to delete the shift?</h1></div>
+            <div class="button-container">
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handleDeleteShift}
+                class="slds-m-around_small"
+              ></lightning-button>
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={closeWarningMessage}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={fatigueManagementFlag}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container">
+        <!-- Centered Header -->
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Warning
+          </h2>
+        </header>
+
+
+        <!-- Modal Content -->
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small">
+            <div>
+              <h1>
+                <p>
+                  The interval between shifts is less than 8 hours for the
+                  following staff. Would you like to assign this shift?
+                </p>
+              </h1>
+            </div>
+
+            <!-- Centered Buttons -->
+            <div class="button-container">
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handleFinalAllocate}
+                class="slds-m-around_small"
+              ></lightning-button>
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={handleDeselectStaff}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+  <template if:true={unavailableTemplate}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 25%">
+        <!-- Centered Header -->
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Warning
+          </h2>
+        </header>
+
+        <!-- Modal Content -->
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small" style="text-align: center">
+            <div style="text-align: center">
+              <p style="text-align: center">
+                  This shift is outside the stated availability for the following staff member(s):
+              </p>
+
+              <template for:each={unavailableStaffNames} for:item="name">
+                  <p key={name}>
+                      <strong>{name}</strong>
+                  </p>
+              </template>
+
+            <p>
+                They have not marked this time as unavailable, so you can still assign the shift. Do you want to proceed?
+            </p>
+          </div>
+
+            <!-- Centered Buttons -->
+            <div class="button-container slds-m-top_medium">
+              <lightning-button
+                label="Cancel"
+                variant="brand"
+                onclick={handleCloseUnavailabletemplate}
+              ></lightning-button>
+              <lightning-button
+                label="Proceed"
+                variant="brand"
+                onclick={handleFinalRosterCreation}
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={autoschdulePopup}>
+    <div class="blur-overlay"></div>
+    <div class="right-align1 fade-in" style="width: 45%">
+      <div
+        class="slds-m-around_xx-small slds-m-right_large"
+        style="
+          padding: 1% 2%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <p style="font-weight: bold; margin: 0; font-size: 140%">
+          Auto Schedule
+        </p>
+        <!-- <lightning-button label="Back" title="Back" variant="brand" onclick={handleCloseautoSchedule}></lightning-button> -->
+      </div>
+      <div
+        class="slds-modal__content slds-p-around_medium"
+        style="background-color: #f3f5f7"
+      >
+        <div style="display: flex">
+          <!-- Static Serial Numbers -->
+          <div class="serial-number-column">
+            <div class="serial-number">1.</div>
+            <div class="serial-number">2.</div>
+            <div class="serial-number">3.</div>
+            <div class="serial-number">4.</div>
+            <div class="serial-number">5.</div>
+            <div class="serial-number">6.</div>
+          </div>
+
+          <!-- Table Content -->
+          <div style="width: 100%">
+            <table
+              class="slds-table slds-table_cell-buffer slds-table_bordered"
+            >
+              <tbody>
+                <template for:each={rows} for:item="row" for:index="index">
+                  <tr
+                    key={row.id}
+                    ondragover={handleDragOver}
+                    ondrop={handleDrop}
+                    data-index={index}
+                  >
+                    <td
+                      style="width: 40px"
+                      draggable="true"
+                      data-index={index}
+                      ondragstart={handleDragStart}
+                    >
+                      <lightning-icon
+                        icon-name="utility:rows"
+                        alternative-text="Drag"
+                        size="x-small"
+                        class="drag-icon"
+                      ></lightning-icon>
+                    </td>
+
+                    <td style="border-right: none">
+                      <div if:true={row.isSlider}>
+                        <div>
+                          <strong>Geo Location</strong><br />
+                          <span style="font-size: 80%">Radius (km)</span>
+                        </div>
+                      </div>
+                      <template if:false={row.isSlider}>
+                        <strong>{row.label}</strong>
+                      </template>
+                    </td>
+
+                    <td style="border-left: none">
+                      <template if:true={row.isCheckbox}>
+                        <lightning-input
+                          type="checkbox"
+                          data-index={index}
+                          checked={row.value}
+                          onchange={handleInputChange}
+                        ></lightning-input>
+                      </template>
+
+                     <!--  <template if:true={row.isRadio}>
+                        <div class="radio-group">
+                          <lightning-radio-group
+                            data-index={index}
+                            options={employmentTypeOptions}
+                            value={row.value}
+                            onchange={handleInputChange}
+                            type="radio"
+                            variant="label-hidden"
+                          ></lightning-radio-group>
+                        </div>
+                      </template> -->
+                      <template if:true={row.isCheckboxGroup}>
+                        <lightning-checkbox-group
+                          data-index={index}
+                          options={employmentTypeOptions}
+                          value={row.value}
+                          onchange={handleInputChange}
+                          variant="label-hidden"
+                        >
+                        </lightning-checkbox-group>
+                      </template>
+
+
+                      <template if:true={row.isIcon}>
+                        <div
+                          onclick={toggleArrow}
+                          data-index={index}
+                          style="
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            gap: 5px;
+                          "
+                        >
+                          <lightning-icon
+                            icon-name={row.iconName}
+                            alternative-text="Arrow"
+                            size="x-small"
+                          ></lightning-icon>
+                          <span>{row.directionLabel}</span>
+                        </div>
+                      </template>
+                      <template if:true={row.isSlider}>
+                        <div style="display: flex; flex-direction: column">
+                          <lightning-slider
+                            label="Radius (km)"
+                            variant="label-hidden"
+                            size="small"
+                            value={row.value}
+                            min="0"
+                            max="200"
+                            step="1"
+                            data-index={index}
+                            onchange={handleInputChange}
+                            onmousedown={stopDragPropagation}
+                            ontouchstart={stopDragPropagation}
+                          ></lightning-slider>
+                        </div>
+                      </template>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="slds-p-around_medium slds-text-align_center">
+        <lightning-button
+          label="Cancel"
+          onclick={handleCloseautoSchedule}
+          class="slds-m-right_small"
+        ></lightning-button>
+        <lightning-button
+          variant="brand"
+          label="Run"
+          onclick={handleRun}
+        ></lightning-button>
+      </div>
+    </div>
+  </template>
+  <template if:true={publishTempalte}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 25%">
+        <!-- Centered Header -->
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Confirmation
+          </h2>
+        </header>
+
+        <!-- Modal Content -->
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small">
+            <!-- <div style="text-align:center">
+                        <h1>
+                            <p>
+                               Are you sure want to publish the shifts? If yes please click on Submit.
+                            </p>
+                        </h1>
+                    </div> -->
+            <div
+              style="display: flex; flex-direction: column; align-items: center"
+            >
+              <div class="slds-p-around_small">
+                <div class="floating-label-new">
+                  <span class="label-text-drop">Start Date</span>
+                  <lightning-input
+                    type="date"
+                    name="start"
+                    variant="label-hidden"
+                    value={publishStartDate}
+                    onchange={handlePublishDateChange}
+                  >
+                  </lightning-input>
+                </div>
+              </div>
+              <div class="slds-p-around_small">
+                <div class="floating-label-new">
+                  <span class="label-text-drop">End Date</span>
+                  <lightning-input
+                    type="date"
+                    name="end"
+                    variant="label-hidden"
+                    value={publishEndDate}
+                    onchange={handlePublishDateChange}
+                  >
+                  </lightning-input>
+                </div>
+              </div>
+              <div>
+                <lightning-input
+                  type="checkbox"
+                  label="I confirm that the roster between these dates is ready to publish."
+                  checked={isCheckboxChecked}
+                  onchange={handlePublishCheckboxChange}
+                >
+                </lightning-input>
+              </div>
+              <p>
+                <b>Note: </b>End Date is required and must be after Start Date.
+              </p>
+            </div>
+
+            <!-- Centered Buttons -->
+            <div class="button-container">
+              <lightning-button
+                label="Cancel"
+                variant="brand-outline"
+                onclick={handlePublishClose}
+              ></lightning-button>
+              <lightning-button
+                label="Submit"
+                variant="brand"
+                onclick={handleFinalPublish}
+                disabled={isPublishDisable}
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+   <template if:true={unassignedFlagConfirmation}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container">
+        <!-- Centered Header -->
+       <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Warning
+          </h2>
+        </header>
+
+        <!-- Modal Content -->
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small" style="text-align: center">
+            <div style="text-align: center">
+              <h1>
+               <p style="text-align: center">
+                No staff member(s) have been assigned to this shift.
+                Would you like to proceed and {headingLabel} as <strong>unassigned</strong>?
+              </p>
+
+              </h1>
+            </div>
+
+            <!-- Centered Buttons -->
+            <div class="button-container slds-m-top_medium">
+               <lightning-button
+                label="No"
+                variant="brand"
+                onclick={handleCloseUnassigned}
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handleUnassignedFinalAllocate}
+              ></lightning-button>
+             
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+   <template if:true={showComplianceWarningModal}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 35%">
+        <!-- Centered Header -->
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Shift Compliance Warning
+          </h2>
+        </header>
+
+      
+        <div class="slds-modal__content modal-content slds-text-align_center custom-scroll">
+          <div  style="text-align: center">
+        
+              <div class="center-list">
+                  <ul>
+                    <template for:each={staffDateWarnings} for:item="staff">
+                        <li key={staff.staffId} class="slds-m-bottom_small">
+                            <strong>{staff.staffName}</strong>
+
+                            <ul class="slds-m-top_x-small slds-m-left_medium slds-text-align_center">
+                                <template for:each={staff.conflictDates} for:item="conflict">
+                                    <li key={conflict.key} class="conflict-row slds-grid slds-grid_align-center slds-text-align_center">
+                                        <span class="conflict-date">
+                                            {conflict.displayDate}:
+                                        </span>
+                                        <span class="conflict-reason">
+                                            {conflict.reason}
+                                        </span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </li>
+                    </template>
+                  </ul>
+              </div>
+
+          </div>
+        </div>
+           <!-- Centered Buttons -->
+        <footer class="slds-modal__footer">
+        <div class="slds-grid slds-grid_align-center slds-gutters_xx-small">
+            <div class="slds-col">
+              <lightning-button
+                label="Cancel"
+                variant="brand"
+                onclick={handleCloseUnavailabletemplate}
+              ></lightning-button>
+            </div>
+            <div class="slds-col" >
+                <lightning-button
+                  label="Proceed"
+                  variant="brand"
+                  onclick={hanleProceedWithShiftCompliance}
+                ></lightning-button>
+            </div>
+          </div>
+
+        </footer>
+
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={showFormsModal}>
+    <section role="dialog" tabindex="-1"
+        class="slds-modal slds-fade-in-open">
+
+        <div class="slds-modal__container">
+
+           <header class="slds-modal__header slds-text-align_center"
+                     style="background:#002a52;">
+
+                <h2 id="modal-heading-02"
+                    class="slds-text-heading_small slds-text-color_inverse"
+                    style="margin:0; font-weight:700;">
+                      Participant Forms
+                </h2>
+
+          </header>
+
+            <!-- BODY -->
+            <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                <div class="slds-grid slds-wrap">
+
+                    <template for:each={allParticipantForms} for:item="form">
+                        <div key={form.formId}
+                             class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+
+                            <div class="slds-box slds-theme_default">
+                                <lightning-input
+                                    type="checkbox"
+                                    label={form.formName}
+                                    value={form.formId}
+                                    checked={form.isSelected}
+                                    onchange={handleFormSelection}>
+                                </lightning-input>
+                            </div>
+
+                        </div>
+                    </template>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+
+            <footer class="slds-modal__footer">
+
+               <button class="slds-button slds-button_neutral" onclick={closeFormsModal}>Cancel</button>
+                <button class="slds-button slds-button_brand" onclick={applySelectedForms}>Apply</button>
+               
+            </footer>
+
+        </div>
+    </section>
+
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={openRecurCheckList}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 37%">
+        <header class="slds-modal__header" style="background: #002a52">
+          
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+             Recurring Shifts
+            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeWarningMessage}>
+                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+              </button>
+          </h2>
+        </header>
+        <div class="slds-modal__content modal-content">
+            <div style="text-align: center; font-weight: bold">
+            
+               <template if:true={recurredShiftsDelete}>
+                      <c-recurring-day-selector
+                            initial-selected-dates={recurringDatesForChild}
+                            onselectedchange={handleChildSelection}
+                            typeofaction="checklist"
+                            slectedchecklistdates={recuringShiftsToDelete}> 
+                      </c-recurring-day-selector>   
+
+                        <footer class="slds-modal__footer"> 
+                              
+                              <lightning-button 
+                                  label="Apply"
+                                  class="slds-m-left_small"
+                                  variant="brand"
+                                  onclick={closeWarningMessage}>
+                              </lightning-button> 
+                              </footer>  
+                </template>
+            </div>
+
+           <!-- <div class="button-container">
+                          <lightning-button
+                            label="No"
+                            variant="brand"
+                            onclick={closeWarningMessage}
+                          ></lightning-button>
+                          <lightning-button
+                            label="Apply"
+                            variant="brand"
+                            onclick={closeWarningMessageForCheckList}
+                          ></lightning-button>
+            </div> -->
+        </div>
+        
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>
