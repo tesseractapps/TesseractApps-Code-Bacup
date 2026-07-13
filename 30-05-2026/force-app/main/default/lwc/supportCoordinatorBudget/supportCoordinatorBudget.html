@@ -1,0 +1,628 @@
+<template>
+<div class="main-container">
+    <div class="calendar-container">
+        <div class="calendar-header" style="display: flex;align-items: center;gap: 1%;">
+            <div>
+                <lightning-button-icon
+                    icon-name="utility:chevronleft"
+                    onclick={prevMonth}
+                    style="background: white; color: red; border-radius: 5px;"
+                    alternative-text="Previous Month">
+                </lightning-button-icon>
+        
+                <lightning-button
+                    style="margin: 0 5px;"
+                    label={monthAndYear}
+                    onclick={navigateToToday}>
+                </lightning-button>
+        
+                <lightning-button-icon
+                    icon-name="utility:chevronright"
+                    onclick={nextMonth}
+                    style="background: white; border-radius: 5px;"
+                    alternative-text="Next Month">
+                </lightning-button-icon>
+            </div>
+
+            <!-- RIGHT SECTION -->
+            <div>
+                <lightning-button
+                    label="Back"
+                    onclick={handleBudgetClose}
+                    variant="neutral">
+                </lightning-button>
+            </div>
+
+        </div>        
+        <div class="calendar-grid custom-scroll">
+            <template for:each={daysOfWeek} for:item="day">
+                <div class="day-name" key={day}>{day}</div>
+            </template>
+            <template for:each={calendarDays} for:item="day">
+                <div key={day.key} class={day.class} title={day.tooltip}>
+                    <!-- Main content area -->
+                    <div class="main-content">
+                        <div class="left-info">
+                            <!-- <template for:each={day.visibleSlots} for:item="entry">
+                                <div key={entry.name} style={entry.style}>
+                                    <div class="service-name description" style="font-weight: bold;  text-align:left; display: flex; justify-content: space-between; align-items: center;">
+                                                 <span>{entry.shiftType}</span>
+                                      <template if:false={entry.isAssigned}>           
+                                            <a href="javascript:void(0)" 
+                                    data-id={entry.id} 
+                                    onclick={handleDelete} 
+                                    title="Delete"
+                                    style="text-decoration: none;">
+                                    
+                                    <i class="material-icons delete-icon">delete</i>
+                                    </a>
+                                    </template>
+                                    </div>
+                                    <template if:true={entry.isAssigned}>
+                                        <div class="service-time description" style="text-align:left; cursor: pointer;"> {entry.timeRange}</div>  
+                                    </template>
+                                    
+                                    <template if:false={entry.isAssigned}>
+                                        <div>
+                                            
+                                        <a
+                                            class="service-time description"
+
+                                            data-id={entry.id}
+                                            data-starttime={entry.startTime}
+                                            data-endtime={entry.endTime}
+                                            data-startdate={entry.startDate}
+
+                                            data-servicetype={entry.selectedServiceType}
+                                            data-serviceitemname={entry.selectedServiceItem}
+
+                                            data-unitprice={entry.selectedAmount}
+                                            data-totalhours={entry.totalHours}
+                                            data-totalamount={entry.calculatedAmount}
+                                            style="text-align:left;"
+                                            data-uploadedfiles={entry.uploadedFiles}
+                                            onclick={handleEditClick}>
+
+                                            {entry.timeRange}
+
+                                        </a>
+
+                                        <span class={entry.availableClass} title={entry.availableClass}>⬤</span> 
+                                        </div>
+                                    </template>
+                                    
+                                
+                                </div>
+                            </template> -->
+
+                            <template for:each={day.visibleSlots} for:item="entry">
+                                <div key={entry.name} style={entry.style}>
+                                    <div class="service-name" style="font-weight: bold; text-align:left; display: flex; align-items: center; gap: 4px; min-width: 0;">
+                                        <span class="description" style="flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            {entry.shiftType}
+                                        </span>
+                                        <template if:false={entry.isAssigned}>
+                                            <a href="javascript:void(0)" 
+                                                data-id={entry.id} 
+                                                onclick={handleDelete} 
+                                                title="Delete"
+                                                style="text-decoration: none; flex-shrink: 0;">
+                                                <i class="material-icons delete-icon">delete</i>
+                                            </a>
+                                        </template>
+                                    </div>
+
+                                    <template if:true={entry.isAssigned}>
+                                        <div class="service-time description" style="text-align:left; cursor: pointer;">{entry.timeRange}</div>
+                                    </template>
+
+                                    <template if:false={entry.isAssigned}>
+                                        <div style="display:flex; align-items:center; min-width:0;">
+                                            <a class="service-time description"
+                                                data-id={entry.id}
+                                                data-starttime={entry.startTime}
+                                                data-endtime={entry.endTime}
+                                                data-startdate={entry.startDate}
+                                                data-servicetype={entry.selectedServiceType}
+                                                data-serviceitemname={entry.selectedServiceItem}
+                                                data-unitprice={entry.selectedAmount}
+                                                data-totalhours={entry.totalHours}
+                                                data-totalamount={entry.calculatedAmount}
+                                                data-actualamount={entry.actualAmount}
+                                                data-uploadedfiles={entry.uploadedFiles}
+                                                onclick={handleEditClick}
+                                                style="text-align:left; flex:1 1 0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                                {entry.timeRange}
+                                            </a>
+                                            <span class={entry.availableClass} title={entry.availableClass} style="flex-shrink:0;">⬤</span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+
+
+                        </div>
+                        <div style="font-weight: bold;">{day.date}</div>
+                    </div>
+            
+                    <!-- Bottom footer: +more and icon -->
+                    <div class="bottom-bar">
+                        <div if:true={day.date}>
+                        <template if:true={day.hasMore}>
+                            <div style="position:relative; z-index: 999;">
+                            <a class="more-link" data-date={day.dateStr} style="font-style: italic;" onclick={handleServiceClick}> more</a>
+                        </div></div><!-- +{day.moreCount} -->
+                            
+                        </template>
+                    </div>
+                    <div if:true={day.date}>
+                        <template if:false={day.isOnLeave}>
+                            <div  if:true={day.noService}>
+                                 <lightning-icon
+                                    icon-name="utility:add"
+                                    data-date={day.dateStr1}
+                                    size="x-small"
+                                    class="add-icon"
+                                    style="position: absolute;bottom: 38%;right: 43%;transform: scale(0.65);"
+                                    onclick={handleAddDescription}
+                                ></lightning-icon>
+                            </div>
+                            <div  if:false={day.noService}>
+                                <i
+                                    class="material-icons add-icon"
+                                    title="Create Budget"
+                                    style="position: absolute;bottom: 4px;right: 0px;"
+                                    data-date={day.dateStr1}
+                                    onclick={handleAddDescription}
+                                    >add_circle</i
+                                >
+                            </div>
+                        </template>
+                                
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+        <!-- <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-color today-indicator"></span> Today
+            </div>
+             <div class="legend-item">
+                <span class="legend-color has-service-indicator"></span> Available
+            </div>
+            <div class="legend-item">
+                <span class="legend-color no-service-indicator"></span> Unavailable
+            </div> 
+            <div class="legend-item">
+                <span class="legend-color holiday-indicator"></span> Holiday
+            </div>
+            <div class="legend-item">
+                <span class="legend-color has-leave-indicator"></span> Leave
+            </div>
+        </div> -->
+    </div>
+
+    </div>
+    <template if:true={isPopoverVisible}>
+        <div class="popup custom-scroll" style={popupStyle}><!-- style={popupStyle} -->
+            <span class="close-icon" style="cursor: pointer; display: flex; justify-content: flex-end;" onclick={closePopover}>✖</span>
+            <h3 class="slds-m-bottom_small" style="font-weight:bold;">Available on {selectedDate}</h3>
+            <ol class="styled-list">
+                <template for:each={selectedavailability} for:item="service" for:index="index" >
+                    <li key={service.Id} class="slds-m-bottom_x-small">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>{service.shiftType}</strong><br/>
+                          <template if:false={service.Assigned_Service_OR_Shift__c}>           
+                                            <a href="javascript:void(0)" 
+                                    data-id={service.Id} 
+                                    onclick={handleDelete} 
+                                    title="Delete"
+                                    style="text-decoration: none;">
+                                    
+                                    <i class="material-icons delete-icon">delete</i>
+                                    </a>
+                                    </template> 
+                        </div>
+                        <template if:true={service.Assigned_Service_OR_Shift__c}>
+                                {service.startTimeFormatted} - {service.endTimeFormatted}
+                        </template>
+                         <template if:false={service.Assigned_Service_OR_Shift__c}>
+                            <a
+                                href="javascript:void(0);"
+                                data-id={service.id}
+                                data-starttime={service.startTimeFormatted}
+                                data-endtime={service.endTimeFormatted}
+                                data-startdate={service.Start_Date__c}
+                                data-servicetype={service.serviceType}
+                                data-serviceitemname={service.serviceItemName}
+                                data-unitprice={service.selectedAmount}
+                                data-totalhours={service.totalHours}
+                                data-totalamount={service.calculatedAmount}
+                                data-actualamount={service.actualAmount}
+                                data-uploadedfiles={service.uploadedFiles}
+                                onclick={handleEditClick}>
+
+                                ({service.startTimeFormatted} - {service.endTimeFormatted})
+
+                            </a>
+                        </template>
+                      
+                    </li>
+                </template>
+            </ol>
+        </div>
+    </template>
+
+    <template if:true={editButtonModule}>
+        <div class="blur-overlay"></div>
+        <div class="right-align1 fade-in" style="width:45%;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1% 1% 2% 1%;">
+            <p style="font-weight: bold; font-size: 140%;">{headingLabel}</p>
+        </div>        
+        <div class="container-box">
+            <div  class="toggle-bar" onclick={handleSectionToggle} data-id="staffDetails1" style="display: flex; justify-content: center; align-items: center;">
+             <span>{todayDateforheader}</span>    
+            </div>
+            <div class="section-content" data-section="staffDetails1">
+            </br>
+            <template if:true={sectionFlags.staffDetails1}>
+            <div class="slds-grid slds-wrap">
+        
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Start Time</span>
+             
+                <c-tesseract-apps-time-picker 
+                    selected-hour={startTimeSelectedHour} 
+                    selected-minute={startTimeSelectedMinute} 
+                    displayed-time={AddShiftStartTimeAMPM} 
+                    is-am={startTimeAMPM}
+                    ontimepickeropen={handleTimePickerOpen}
+                    onsavetimefromchild={handleStartTimeChange}>
+                </c-tesseract-apps-time-picker>
+            </div>
+        </div>  
+        
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">End Time</span>
+                <!-- <c-time-picker selected-hour={endTimeSelectedHour}   selected-minute={endTimeSelectedMinute} is-am={endTimeAMPM} displayed-time={AddShiftEndTimeAMPM} onsavetimefromchild={handleEndTimeChange} ></c-time-picker> -->
+                <c-tesseract-apps-time-picker 
+                    selected-hour={endTimeSelectedHour} 
+                    selected-minute={endTimeSelectedMinute} 
+                    is-am={endTimeAMPM} 
+                    displayed-time={AddShiftEndTimeAMPM} 
+                    onsavetimefromchild={handleEndTimeChange}>
+                </c-tesseract-apps-time-picker>
+             
+            </div>
+        </div> 
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Service Type</span>
+                <lightning-combobox
+                    label="Primary Charge Level"
+                    name="ServiceType"
+                    options={serviceTypeOptions}
+                    value={selectedServiceType}
+                    onchange={handleServiceTypeChange}
+                    variant="label-hidden">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+                <span class="label-text-drop">Service Item</span>
+                <lightning-combobox
+                    label="Primary Charge Level"
+                    name="ServiceItem"
+                    options={serviceItemOptions}
+                    value={selectedServiceItem}
+                    onchange={handleServiceItemChange}
+                    variant="label-hidden">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+
+                <span class="label-text-drop">
+                    Unit Price($)
+                </span>
+
+                <lightning-input
+                    type="number"
+                    value={selectedAmount}
+                    onchange={handleAmountChange}
+                    formatter="currency"
+                    step="0.01"
+                    variant="label-hidden">
+                </lightning-input>
+
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+
+                <span class="label-text-drop">
+                    Total Hours
+                </span>
+
+                <lightning-input
+                    type="number"
+                    value={totalHours}
+                    step="0.01"
+                    variant="label-hidden"
+                    disabled>
+                </lightning-input>
+
+            </div>
+        </div>
+
+        <div class="slds-size_1-of-2 slds-p-around_small">
+            <div class="floating-label">
+
+                <span class="label-text-drop">
+                    Approximate Amount($)
+                </span>
+
+                <lightning-input
+                    type="number"
+                    value={calculatedAmount}
+                    formatter="currency"
+                    step="0.01"
+                    variant="label-hidden"
+                    disabled>
+                </lightning-input>
+
+            </div>
+        </div>
+
+        <template if:true={isEditBudget}>
+
+            <div class="slds-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+
+                    <span class="label-text-drop">
+                        Actual Amount($)
+                    </span>
+
+                    <lightning-input
+                        type="number"
+                        value={actualAmount}
+                        formatter="currency"
+                        step="0.01"
+                        variant="label-hidden"
+                        onchange={handleActualAmountChange}>
+                    </lightning-input>
+
+                </div>
+            </div>
+            
+            <div class="slds-size_1-of-1 slds-p-around_small">
+                <c-aws-batch-lwc
+                    module-name="SupportCoordinatorBudget"
+                    organisation-id={organisationId}
+                    onuploadsuccess={handleUploadSuccess}
+                    existing-files-json={existingFilesJson}>
+                </c-aws-batch-lwc>
+            </div>
+
+        </template>
+                
+        <!-- <div>
+            <label style="display: flex; gap: 10px; padding: 3% 0 0% 10%; align-items: center; margin-left: 4px;">
+                <lightning-input 
+                    type="checkbox" 
+                    variant="label-hidden" 
+                    checked={AddShiftRecurringCheckboxValue} 
+                    onchange={handleReccuringChange}>
+                </lightning-input>
+                <span>Recurring</span>
+            </label>  
+        </div> -->
+    
+  </div>
+    
+        <template if:true={isRecurring}>
+            <div class="slds-grid slds-wrap">
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Recur</span>
+                        <lightning-combobox 
+                            name="typeOfRecurOption"  
+                            class="typeOfRecurOption" 
+                            variant="label-hidden" 
+                            options={recurOptions}  
+                            value={RecurValue} 
+                            onchange={handleRecurChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+              <div class="slds-size_1-of-3 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">Recur Every</span>
+                    <lightning-combobox 
+                        placeholder="Select Recurrence" 
+                        class="recurEvery" 
+                        name="recurEvery" 
+                        variant="label-hidden" 
+                        options={recurEveryOptions}  
+                        value={recurEveryValue} 
+                        onchange={handleRecurEveryChange}>
+                    </lightning-combobox>
+                </div>
+              </div>
+              <div class="slds-size_1-of-3 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">End Date</span>
+                    <lightning-input 
+                        type="date"  
+                        name="recurEndDate" 
+                        class="recurEndDate" 
+                        value={recurEndDate} 
+                        variant="label-hidden" 
+                        onchange={handleRecurEndDateChange}>
+                    </lightning-input>
+                </div>
+              </div>
+              <template if:true={isRecurWeekFlag}>
+              <div class="slds-grid slds-wrap">
+                <template for:each={weekDays} for:item="day">
+                    <div key={day} class="slds-size_1-of-7 slds-p-around_small">
+                        <span>{day}</span>
+                        <lightning-input 
+                            type="checkbox" 
+                            name={day} 
+                            variant="label-hidden" 
+                            class="slds-p-left_small"
+                            onchange={handleCheckboxChange}>
+                        </lightning-input>
+                    </div>
+                </template>
+              </div>
+              </template>
+
+              <template if:true={isRecurmontlyFlag}>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <p class="slds-p-left_small">Set for Day</p>
+                </div>
+                <div class="slds-size_1-of-4 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">Recur Every</span>
+                        <lightning-combobox 
+                            name="monthLyOptions" 
+                            class="monthLyOptions" 
+                            variant="label-hidden" 
+                            options={monthLyOptions} 
+                            value={monthOfDay} 
+                            onchange={handleMonthlyOptionChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+                <div class="slds-size_1-of-2 slds-p-around_small"></div>
+            </template>
+              </div>
+        </template>
+    
+    </template>
+    </div>
+    </div>
+    <div class="slds-align_absolute-center slds-m-around_small">
+        <lightning-button label="Cancel" variant="brand-outline" onclick={handleClose} ></lightning-button>
+        <lightning-button type="submit" variant="brand" onclick={handlesavebutton} label={savebutton} disabled={isSaveDisabled} class="slds-m-left_small"></lightning-button>
+        
+    </div>
+    </div>
+        
+    </template>  
+     <template if:true={DeleteFlag}>
+    <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+    
+        <div class="slds-modal__container modal-container" style="max-width:25%;">
+         <header class="slds-modal__header" style="background: #002A52;">
+            
+            <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+        </header> 
+        <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+            <div class="slds-m-around_small" style="text-align:center">
+                <div><p style="text-align: center;">Are you sure you want to delete this budget?</p></div>
+                <div class="button-container slds-m-top_medium">
+                    <lightning-button label="No" variant="brand" onclick={handleclose}
+                    class="slds-m-around_small"></lightning-button>
+                    <lightning-button label="Yes" variant="brand"  onclick={handleConfirmBudgetDelete} class="slds-m-around_small" ></lightning-button>
+                    
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template> 
+<template if:true={showErrorModal}>
+    <section class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+        <div class="slds-modal__container" style="max-width: 30%; min-width: 400px;">
+            <!-- Modal Header -->
+            <header class="slds-modal__header" style="background: #002a52;">
+                <h2 class="slds-text-heading_medium" style="color: white; text-align: center;">
+                    <template if:true={AddShiftRecurringCheckboxValue}>
+                        Recurring Availability Conflicts
+                    </template>
+                    <template if:false={AddShiftRecurringCheckboxValue}>
+                        Availability creation Failed
+                    </template>
+                </h2>
+            </header>
+            
+            <!-- Modal Body -->
+            <div class="slds-modal__content slds-p-around_medium slds-text-align_center custom-scroll">
+                <!-- Conditional Message -->
+                <template if:true={AddShiftRecurringCheckboxValue}>
+                    <p>Conflicts found in recurring dates:</p>
+                    <div class="slds-text-color_weak slds-m-bottom_small">
+                        <small><strong>Note: </strong> Conflicting dates will be skipped during creation</small>
+                    </div>
+                </template>
+                <template if:false={AddShiftRecurringCheckboxValue}>
+                    <p class="slds-m-bottom_medium">Cannot proceed with Availability creation. Issues found:</p>
+                </template>
+
+                  <div class="center-list">
+                  <ul class="uIStyle">
+                      <template for:each={staffDateConflicts} for:item="staff">
+                          <li key={staff.staffId}>
+                              <ul class="slds-m-top_xx-small uIStyle ">
+                                  <template for:each={staff.conflictDates} for:item="conflict">
+                                      <li key={conflict.date} class="conflict-row">
+                                          <span class="conflict-date">{conflict.displayDate}:</span>
+                                          <span class="conflict-reason">{conflict.reason}</span>
+                                      </li>
+                                  </template>
+                              </ul>
+                          </li>
+                      </template>
+                  </ul>
+                  </div>
+
+            </div>
+            
+            <!-- Modal Footer -->
+            <footer class="slds-modal__footer" >
+               <template if:true={AddShiftRecurringCheckboxValue}>
+                    <div class="slds-align_absolute-center">
+                        <lightning-button
+                            label="Cancel"
+                            variant="brand"
+                            onclick={closeErrorModal}
+                        ></lightning-button>
+                        <lightning-button class="slds-p-left_medium"
+                            label="Create Shifts" 
+                            onclick={hanleRecurShiftsCreation} 
+                            variant="brand"
+                        ></lightning-button>
+                    </div>
+                </template>
+
+                <template if:false={AddShiftRecurringCheckboxValue}>
+                    <lightning-button 
+                        label="OK" 
+                        onclick={closeErrorModal} 
+                        variant="brand">
+                    </lightning-button>
+
+                </template>
+              
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+</template>

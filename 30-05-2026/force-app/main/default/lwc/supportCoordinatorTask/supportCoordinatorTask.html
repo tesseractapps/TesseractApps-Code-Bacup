@@ -1,0 +1,878 @@
+<template>
+
+    <template if:true={taskflag}>
+        <div class="page-container">
+
+            <div class="menu-container ">
+                <div class="menu-left">
+                    <div class="menu-item1">Task & Calendar Management</div>
+                </div>
+
+                <div class="search-box">
+                    <!-- <lightning-input 
+                        type="search"
+                        placeholder="Search Provider or Email"
+                        variant="label-hidden"
+                        value={searchProvider}
+                        onchange={handleSearchProvider}>
+                    </lightning-input> -->
+                </div>
+
+                <div class="slds-button-group custom-button-group" role="group">
+
+                 <div class="slds-size_xx-small slds-grow_none">
+                    <lightning-combobox
+                        name="frequency"
+                        label="Select Frequency"
+                        variant="label-hidden"
+                        value={selectedFrequency}
+                        placeholder="Select Frequency"
+                        options={frequencyOptions}
+                        class="combo-custom"
+                        onchange={handleFrequencyChange}>
+                    </lightning-combobox>
+                </div>   
+                    <lightning-button
+                        label="Create Task"
+                        variant="brand"
+                        class="slds-m-right_small"
+                        onclick={handleAddTask}>
+                    </lightning-button>
+                </div>
+            </div>  
+            <!-- DAILY VIEW -->
+            <!-- ===================================================
+            DAILY VIEW  –  paste inside your isDaily template
+            =================================================== -->
+
+        <div class="slds-p-around_medium">
+            <template if:true={isDaily}>
+
+                <!-- ── TOP BAR ─────────────────────────────────────── -->
+                <div class="daily-topbar">
+
+                    <div class="daily-topbar__left">
+                        <lightning-icon
+                            icon-name="utility:date_time"
+                            size="small"
+                            class="daily-topbar__icon">
+                        </lightning-icon>
+                        <div>
+                            <div class="daily-topbar__daylabel">{selectedDayLabel}</div>
+                            <div class="daily-topbar__sub">Daily view</div>
+                        </div>
+                    </div>
+
+                    <div class="daily-topbar__right">
+                        <lightning-button
+                            label="Prev"
+                            icon-name="utility:chevronleft"
+                            onclick={prevDay}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Today"
+                            variant="brand-outline"
+                            onclick={goToday}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Next"
+                            icon-name="utility:chevronright"
+                            icon-position="right"
+                            onclick={nextDay}>
+                        </lightning-button>
+
+                        <lightning-input
+                            type="date"
+                            variant="label-hidden"
+                            value={selectedDate}
+                            onchange={handleDateChange}
+                            class="daily-date-input">
+                        </lightning-input>
+                    </div>
+
+                </div>
+
+                <!-- ── STAT STRIP ──────────────────────────────────── -->
+                <div class="daily-stats">
+
+                    <div class="daily-stat-card">
+                        <div class="daily-stat-card__lbl">Today's Task</div>
+                        <div class="daily-stat-card__num daily-stat-card__num--blue">
+                            {dailyStats.total}
+                        </div>
+                    </div>
+
+                    <div class="daily-stat-card">
+                        <div class="daily-stat-card__lbl">Billable</div>
+                        <div class="daily-stat-card__num daily-stat-card__num--green">
+                            {dailyStats.billable}
+                        </div>
+                        
+                    </div>
+
+                    <div class="daily-stat-card">
+                        <div class="daily-stat-card__lbl">Total Hours</div>
+                        <div class="daily-stat-card__num daily-stat-card__num--amber">
+                            {dailyStats.hours}
+                        </div>
+                        
+                    </div>
+
+                    <!-- <div class="daily-stat-card">
+                        <div class="daily-stat-card__num daily-stat-card__num--gray">
+                            {dailyStats.maxConcurrent}
+                        </div>
+                        <div class="daily-stat-card__lbl">max concurrent</div>
+                    </div> -->
+
+                </div>
+
+                <!-- ── TIMELINE ─────────────────────────────────────── -->
+                <div class="daily-tl-wrap custom-scroll">
+
+                    <!-- TIME GUTTER -->
+                    <div class="daily-tl-gutter">
+                        <template for:each={timeSlots} for:item="slot">
+                            <div key={slot} class="daily-tl-gutter__tick">
+                                {slot}
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- EVENT AREA  (position:relative anchor for absolute cards) -->
+                    <div class="daily-tl-events">
+
+                        <!-- hour stripes (background grid lines) -->
+                        <template for:each={timeSlots} for:item="slot">
+                            <div key={slot} class="daily-tl-events__stripe"></div>
+                        </template>
+
+                        <!-- EVENT CARDS -->
+                        <template for:each={dailyTasks} for:item="task">
+                            <div key={task.id} class={task.cardClass} style={task.style}>
+
+                                <div class="daily-evt__inner">
+
+                                    <!-- LEFT: time + title + desc -->
+                                    <div class="daily-evt__left">
+                                        <div class={task.timeClass}>{task.timeLabel}</div>
+                                        <div class={task.titleClass}>{task.title}</div>
+                                        <template if:true={task.showDesc}>
+                                            <div class="daily-evt__desc">{task.description}</div>
+                                        </template>
+                                    </div>
+
+                                    <!-- RIGHT: badge + avatar -->
+                                    <template if:true={task.showBottom}>
+                                        <div class="daily-evt__right">
+                                            <template if:true={task.billable}>
+                                                <span class="daily-evt__badge daily-evt__badge--bill">Billable</span>
+                                            </template>
+                                            <div class={task.avatarClass} title={task.participant}>
+                                                {task.participantInitials}
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                </div>
+
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+
+            </template>
+
+            <!-- WEEKLY VIEW -->
+            <template if:true={isWeekly}>
+
+                <!-- ── HEADER ──────────────────────────────────────────── -->
+                <div class="weekly-topbar">
+
+                    <div class="weekly-topbar__nav">
+                        <div>
+                            <lightning-button
+                                label="Prev"
+                                icon-name="utility:chevronleft"
+                                onclick={prevWeek}>
+                            </lightning-button>
+                        </div>
+
+                        <div>
+                            <span class="weekly-topbar__label">Week of {weekLabel}</span>
+                        </div>
+
+                        <div>
+                            <lightning-button
+                                label="Next"
+                                icon-name="utility:chevronright"
+                                icon-position="right"
+                                onclick={nextWeek}>
+                            </lightning-button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── STAT STRIP ──────────────────────────────────────── -->
+                <div class="weekly-stats">
+                    <div class="weekly-stat-card">
+                        <div class="weekly-stat-card__lbl">Tasks this Week</div>
+                        <div class="weekly-stat-card__num weekly-stat-card__num--blue">{weeklyStats.total}</div>
+                    </div>
+                    <div class="weekly-stat-card">
+                        <div class="weekly-stat-card__lbl">Billable</div>
+                        <div class="weekly-stat-card__num weekly-stat-card__num--green">{weeklyStats.billable}</div>
+                    </div>
+                    <div class="weekly-stat-card">
+                        <div class="weekly-stat-card__lbl">Total Hours</div>
+                        <div class="weekly-stat-card__num weekly-stat-card__num--amber">{weeklyStats.hours}</div>
+                    </div>
+                </div>
+
+                <!-- ── WEEKLY GRID ──────────────────────────────────────── -->
+                <div class="weekly-grid">
+
+                    <template for:each={weeklyDays} for:item="day">
+                        <div key={day.date} class="weekly-col">
+
+                            <!-- DAY HEADER -->
+                            <div class={day.headerClass}>
+                                <div class="weekly-col__dayname">{day.label}</div>
+                                <div class="weekly-col__date">{day.displayDate}</div>
+                                <div class="weekly-col__count">{day.taskCount} tasks</div>
+                            </div>
+
+                            <!-- DROP ZONE -->
+                            <div class="weekly-col__body"
+                                data-date={day.date}
+                                ondragover={handleDragOver}
+                                ondrop={handleDrop}>
+
+                                <!-- TASK CARDS -->
+                                <template for:each={day.tasks} for:item="task">
+                                    <div key={task.id}
+                                        class={task.weekCardClass}
+                                        draggable="true"
+                                        data-taskid={task.id}
+                                        ondragstart={handleDragStart}>
+
+                                        <!-- INNER: left + right -->
+                                        <div class="weekly-task__inner">
+
+                                            <!-- LEFT -->
+                                            <div class="weekly-task__left">
+                                                <div class={task.weekTimeClass}>{task.time}</div>
+                                                <div class={task.weekTitleClass}>{task.title}</div>
+                                                <template if:true={task.participant}>
+                                                    <div class="weekly-task__owner">{task.participant}</div>
+                                                </template>
+                                            </div>
+
+                                            <!-- RIGHT -->
+                                            <div class="weekly-task__right">
+                                                <template if:true={task.billable}>
+                                                    <span class="weekly-task__badge weekly-task__badge--bill">Billable</span>
+                                                </template>
+                                                <template if:false={task.billable}>
+                                                    <span class={task.weekBadgeClass}>{task.status}</span>
+                                                </template>
+                                                <div class={task.weekAvatarClass} title={task.participant}>
+                                                    {task.participantInitials}
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </template>
+
+                                <!-- EMPTY STATE -->
+                                <template if:true={day.isEmpty}>
+                                    <div class="weekly-col__empty">
+                                        <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                                        <span>Drop task here</span>
+                                    </div>
+                                </template>
+
+                            </div>
+
+                        </div>
+                    </template>
+
+                </div>
+
+            </template>
+
+            <!-- Monthly VIEW -->
+            <template if:true={isMonthly}>
+
+                <!-- ── HEADER ── -->
+                <div class="monthly-topbar">
+                    <div class="monthly-topbar__nav">
+                        <lightning-button-icon
+                            icon-name="utility:chevronleft"
+                            alternative-text="Previous Month"
+                            onclick={prevMonth}>
+                        </lightning-button-icon>
+                        <span class="monthly-topbar__label">{monthName} {year}</span>
+                        <lightning-button-icon
+                            icon-name="utility:chevronright"
+                            alternative-text="Next Month"
+                            onclick={nextMonth}>
+                        </lightning-button-icon>
+                    </div>
+                    <div class="monthly-topbar__stats">
+                        <span class="monthly-topbar__stat monthly-topbar__stat--blue">{monthlyStats.total} Tasks</span>
+                        <span class="monthly-topbar__stat monthly-topbar__stat--green">{monthlyStats.billable} Billable</span>
+                        <span class="monthly-topbar__stat monthly-topbar__stat--amber">{monthlyStats.hours} hrs</span>
+                    </div>
+                </div>
+
+                <!-- ── CALENDAR GRID ── -->
+                <div class="monthly-grid custom-scroll">
+
+                    <!-- WEEKDAY HEADERS -->
+                    <template for:each={weekdayLabels} for:item="day">
+                        <div key={day} class="monthly-grid__dayhead">{day}</div>
+                    </template>
+
+                    <!-- CELLS -->
+                    <template for:each={calendarDays} for:item="dayObj">
+                        <div key={dayObj.key}
+                            class={dayObj.cellClass}
+                            data-date={dayObj.dateString}
+                            ondragover={handleDragOver}
+                            ondrop={handleDrop}
+                            onclick={handleDayClick}>
+
+                            <!-- DATE NUMBER (top-right) -->
+                            <div class={dayObj.dateNumClass}>{dayObj.day}</div>
+
+                            <!-- TASK PILLS -->
+                            <div class="monthly-cell__tasks">
+                                <template if:true={dayObj.tasksToShow}>
+                                    <template for:each={dayObj.tasksToShow} for:item="t">
+                                        <div key={t.id}
+                                            class={t.monthCardClass}
+                                            draggable="true"
+                                            data-taskid={t.id}
+                                            ondragstart={handleDragStart}
+                                            onclick={handleTaskClick}>
+
+                                            <!-- LEFT: title + time -->
+                                            <div class="monthly-task__left">
+                                                <div class={t.monthTitleClass}>{t.title}</div>
+                                                <div class={t.monthTimeClass}>{t.time}</div>
+                                            </div>
+
+                                            <!-- RIGHT: avatar -->
+                                            <div class={t.monthAvatarClass} title={t.participant}>
+                                                {t.participantInitials}
+                                            </div>
+
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <!-- MORE LINK -->
+                                <template if:true={dayObj.hasMore}>
+                                    <div class="monthly-cell__more"
+                                        data-date={dayObj.dateString}
+                                        onclick={openMoreModal}>
+                                        +{dayObj.extraCount} more
+                                    </div>
+                                </template>
+
+                            </div>
+
+                        </div>
+                    </template>
+
+                </div>
+
+            </template>
+        </div>
+
+        </div>
+    </template>
+
+    <!-- MORE MODAL -->
+    <template if:true={showMoreModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <header class="slds-modal__header">
+                    <h2 class="slds-modal__title">Tasks on {modalDate}</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <template for:each={modalTasks} for:item="t">
+                        <div key={t.id} class="modal-task-item">
+                            <strong>{t.title}</strong>
+                            <div class="task-time">{t.time}</div>
+                        </div>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button 
+                        variant="neutral" 
+                        label="Close" 
+                        onclick={closeMoreModal}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- ============================================================
+     DROP THIS BLOCK into calendarView.html
+     Replace your existing <template if:true={showTaskPopup}> block
+     ============================================================ -->
+
+    <template if:true={showTaskPopup}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            aria-label="Create Task"
+            class="slds-modal slds-fade-in-open"
+        >
+            <div class="slds-modal__container task-modal-container">
+
+                <header class="slds-modal__header headercustom modal-header-custom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">Create Task</h2> 
+                    <button
+                        class="slds-button slds-button_icon close-btn"
+                        title="Close"
+                        onclick={closeTaskPopup}>
+
+                        <lightning-icon
+                            icon-name="utility:close"
+                            alternative-text="close"
+                            size="small">
+                        </lightning-icon>
+                    </button>                                  
+                </header>                 
+
+                <!-- BODY -->
+                <div class="slds-modal__content tm-body custom-scroll">
+                    <div class="tm-layout">
+
+                        <!-- ═══════════════════════════════════════
+                            LEFT PANEL
+                        ════════════════════════════════════════ -->
+                        <div class="tm-left custom-scroll">
+
+                            <!-- TASK DETAILS -->
+                            <div class="tm-card">
+                                <div class="tm-card__title">
+                                    <lightning-icon icon-name="utility:form" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Task Details
+                                </div>
+
+                                <div class="tm-grid">
+
+                                    <!-- Task Title (full width) -->
+                                    <div class="slds-form-element tm-col-2">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">*</abbr>Task Title
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                name="title"
+                                                data-field="title"
+                                                value={taskForm.title}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                placeholder="e.g. Provider coordination call"
+                                                required>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Participant -->
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">*</abbr>Participant
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-combobox
+                                                name="participant"
+                                                data-field="participant"
+                                                value={taskForm.participant}
+                                                options={participantOptions}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                placeholder="Select participant"
+                                                required>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+
+                                    <!-- Priority -->
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">*</abbr>Priority
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-combobox
+                                                name="priority"
+                                                data-field="priority"
+                                                value={taskForm.priority}
+                                                options={priorityOptions}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                placeholder="Select priority"
+                                                required>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+
+                                    <!-- Start Time -->
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">*</abbr>Start Time
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                type="time"
+                                                name="startTime"
+                                                data-field="startTime"
+                                                value={taskForm.startTime}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                required>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Due Date -->
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">*</abbr>Due Date
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                type="date"
+                                                name="date"
+                                                data-field="date"
+                                                value={taskForm.date}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                required>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Duration Hours -->
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">
+                                            <abbr class="slds-required" title="required">*</abbr>Duration (Hours)
+                                        </label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                type="number"
+                                                name="duration"
+                                                data-field="duration"
+                                                value={taskForm.duration}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                min="0"
+                                                step="1"
+                                                required>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Duration Minutes -->
+                                    <div class="slds-form-element">
+                                        <label class="slds-form-element__label">Duration (Minutes)</label>
+                                        <div class="slds-form-element__control">
+                                            <lightning-input
+                                                type="number"
+                                                name="durationMinutes"
+                                                data-field="durationMinutes"
+                                                value={taskForm.durationMinutes}
+                                                onchange={handleFieldChange}
+                                                variant="label-hidden"
+                                                min="0"
+                                                max="59">
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- BILLABLE SECTION -->
+                            <div class="tm-card slds-m-top_medium">
+                                <div class="tm-card__header">
+                                    <div class="tm-card__title">
+                                        <lightning-icon icon-name="utility:moneybag" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        Billable Time Entry
+                                    </div>
+                                    <div class="tm-toggle-wrap">
+                                        <span class="tm-toggle-label">{billableToggleLabel}</span>
+                                        <lightning-input
+                                            type="toggle"
+                                            label="Billable"
+                                            data-field="billable"
+                                            checked={isBillable}
+                                            onchange={handleFieldChange}
+                                            variant="label-hidden">
+                                        </lightning-input>
+                                    </div>
+                                </div>
+
+                                <div class={billableFieldsClass}>
+                                    <div class="slds-grid slds-wrap slds-gutters_x-small slds-grid_vertical-align-end">
+
+                                        <!-- Total Duration -->
+                                        <div class="slds-col slds-large-size_3-of-12 slds-size_12-of-12">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">Total Duration</label>
+                                                <div class="slds-form-element__control">
+                                                    <lightning-input
+                                                        value={durationDisplay}
+                                                        variant="label-hidden"
+                                                        disabled>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Service Type -->
+                                        <div class="slds-col slds-large-size_4-of-12 slds-size_12-of-12">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">
+                                                    <template if:true={isBillable}>
+                                                        <abbr class="slds-required" title="required">*</abbr>
+                                                    </template>
+                                                    Service Type
+                                                </label>
+                                                <div class="slds-form-element__control">
+                                                    <lightning-combobox
+                                                        name="ServiceType"
+                                                        data-field="ServiceType"
+                                                        value={taskForm.ServiceType}
+                                                        options={serviceTypeOptions}
+                                                        onchange={handleFieldChange}
+                                                        variant="label-hidden"
+                                                        placeholder="Select type"
+                                                        disabled={isNonBillable}
+                                                        required={isBillable}>
+                                                    </lightning-combobox>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Service Item -->
+                                        <div class="slds-col slds-large-size_3-of-12 slds-size_12-of-12">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">
+                                                    <template if:true={isBillable}>
+                                                        <abbr class="slds-required" title="required">*</abbr>
+                                                    </template>
+                                                    Service Item
+                                                </label>
+                                                <div class="slds-form-element__control">
+                                                    <lightning-combobox
+                                                        name="ServiceItem"
+                                                        data-field="ServiceItem"
+                                                        value={taskForm.ServiceItem}
+                                                        options={serviceItemOptions}
+                                                        onchange={handleFieldChange}
+                                                        variant="label-hidden"
+                                                        placeholder="Select item"
+                                                        disabled={isServiceItemDisabled}
+                                                        required={isBillable}>
+                                                    </lightning-combobox>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rate -->
+                                        <div class="slds-col slds-large-size_2-of-12 slds-size_12-of-12">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">Rate</label>
+                                                <div class="slds-form-element__control">
+
+                                                    <template if:true={isEditingQty}>
+                                                        <div class="tm-rate-edit">
+                                                            <lightning-input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                variant="label-hidden"
+                                                                value={editableRate}
+                                                                onchange={handleRateChange}>
+                                                            </lightning-input>
+                                                            <lightning-button-icon
+                                                                icon-name="utility:check"
+                                                                size="small"
+                                                                variant="brand"
+                                                                alternative-text="Save rate"
+                                                                onclick={saveRate}>
+                                                            </lightning-button-icon>
+                                                        </div>
+                                                    </template>
+
+                                                    <template if:false={isEditingQty}>
+                                                        <div class="tm-rate-display">
+                                                            <span class="tm-rate-val">${formattedEditableRate}</span>
+                                                            <lightning-button-icon
+                                                                icon-name="utility:edit"
+                                                                size="x-small"
+                                                                variant="bare"
+                                                                alternative-text="Edit rate"
+                                                                onclick={enableQtyEdit}
+                                                                disabled={isNonBillable}>
+                                                            </lightning-button-icon>
+                                                        </div>
+                                                    </template>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Entry Cost Bar -->
+                                    <template if:true={isBillable}>
+                                        <div class="tm-cost-bar slds-m-top_small">
+                                            <div class="tm-cost-bar__left">
+                                                <lightning-icon icon-name="utility:currency" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                                <span>Estimated entry cost</span>
+                                            </div>
+                                            <span class="tm-cost-val">${entryCost}</span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- DESCRIPTION -->
+                            <div class="tm-card slds-m-top_medium">
+                                <div class="tm-card__title">
+                                    <lightning-icon icon-name="utility:description" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Description
+                                </div>
+                                <lightning-textarea
+                                    label="Task Description"
+                                    data-field="description"
+                                    value={taskForm.description}
+                                    onchange={handleFieldChange}
+                                    placeholder="Enter task details, goals, and any relevant context..."
+                                    required>
+                                </lightning-textarea>
+                            </div>
+
+                        </div>
+
+                        <!-- ═══════════════════════════════════════
+                            RIGHT PANEL
+                        ════════════════════════════════════════ -->
+                        <div class="tm-right">
+
+                            <!-- BUDGET CARD -->
+                            <div class="tm-budget-card">
+                                <div class="tm-budget-card__hdr">
+                                    <lightning-icon icon-name="utility:chart" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Budget Overview
+                                </div>
+
+                                <div class={budgetPctClass}>{fundingInfo.percentUsed}%</div>
+
+                                <div class="tm-prog-track">
+                                    <div class="tm-prog-fill" style={progressStyle}></div>
+                                </div>
+
+                                <div class="tm-budget-rows">
+                                    <div class="tm-budget-row">
+                                        <span class="tm-budget-row__lbl">Total Budget</span>
+                                        <span class="tm-budget-row__val">${fundingInfo.totalBudget}</span>
+                                    </div>
+                                    <div class="tm-budget-row">
+                                        <span class="tm-budget-row__lbl">Current Spending</span>
+                                        <span class="tm-budget-row__val tm-val--danger">${fundingInfo.currentSpending}</span>
+                                    </div>
+                                    <div class="tm-budget-row">
+                                        <span class="tm-budget-row__lbl">This Entry</span>
+                                        <span class="tm-budget-row__val tm-val--success">+${entryCost}</span>
+                                    </div>
+                                    <div class="tm-budget-row tm-budget-row--top-border">
+                                        <span class="tm-budget-row__lbl">Remaining</span>
+                                        <span class="tm-budget-row__val tm-val--success">${fundingInfo.remaining}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STATUS CARD -->
+                            <div class={budgetStatusCardClass}>
+                                <lightning-icon
+                                    icon-name={budgetStatusIcon}
+                                    size="small"
+                                    class="slds-m-right_x-small">
+                                </lightning-icon>
+                                <div>
+                                    <p class="slds-text-heading_small">{budgetStatusTitle}</p>
+                                    <p class="slds-text-body_small slds-m-top_xx-small">{budgetStatusMsg}</p>
+                                </div>
+                            </div>
+
+                            <!-- PARTICIPANT PILL -->
+                            <template if:true={selectedParticipantName}>
+                                <div class="tm-participant slds-m-top_small">
+                                    <div class="tm-participant__avatar">{participantInitials}</div>
+                                    <div>
+                                        <span class="tm-participant__name">{selectedParticipantName}</span>
+                                        <span class="tm-participant__sub">Selected participant</span>
+                                    </div>
+                                </div>
+                            </template>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer tm-footer">
+                    <div class="tm-footer__left">
+                        <template if:true={isBillable}>
+                            <span class="slds-badge slds-badge_lightest">
+                                <lightning-icon icon-name="utility:moneybag" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                Billable &middot; ${entryCost}
+                            </span>
+                        </template>
+                    </div>
+                    <div class="tm-footer__right">
+                        <lightning-button
+                            variant="neutral"
+                            label="Cancel"
+                            onclick={closeTaskPopup}
+                            class="slds-m-right_x-small">
+                        </lightning-button>
+                        <lightning-button
+                            variant="brand"
+                            label="Create Task"
+                            onclick={saveTask}>
+                        </lightning-button>
+                    </div>
+                </footer>
+
+            </div>
+        </section>
+        <template if:true={taskflag}>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </template>
+
+</template>

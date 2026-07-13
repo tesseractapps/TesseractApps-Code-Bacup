@@ -1,0 +1,199 @@
+<template>
+       
+
+    <template if:true={weeklyView}>
+    <section class="calendar-page slds-p-around_medium">
+
+            <!-- HEADER -->
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium header">
+                
+                <!-- Left: month + toggle -->
+                <div class="roster-toggle-container">
+                    <div class="tab-view-wrapper">
+
+                        <button
+                            class={weeklyTabClass}
+                            onclick={showWeeklyView}>
+                            Weekly
+                        </button>
+
+                        <button
+                            class={monthlyTabClass}
+                            onclick={showMonthlyView}>
+                            Monthly
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- Right: search -->
+                <div class="slds-size_1-of-3">
+                    <lightning-input 
+                        type="search"
+                        variant="label-hidden"
+                        placeholder="Search by name..."
+                        class="calendar-search" 
+                        onchange={handleSearchChange}>
+                    </lightning-input>
+                </div>
+
+                <div class="calendarDiv">
+
+                    <button class="slds-button slds-button_icon slds-m-right_small"
+                            title="Previous week"
+                            onclick={handlePrevWeek}>
+                        <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                    </button>
+
+                    <!-- Date picker in the middle -->
+                    <div class="slds-m-horizontal_small" style="min-width: 160px;">
+                        <lightning-input 
+                            type="date"
+                            variant="label-hidden"
+                            value={selectedDate}
+                            onchange={handleWeekPick}>
+                        </lightning-input>
+                    </div>
+
+                    <button class="slds-button slds-button_icon slds-m-left_small"
+                            title="Next week"
+                            onclick={handleNextWeek}>
+                        <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                    </button>
+
+                    <lightning-button
+                        label="Back"
+                        variant="brand"
+                        onclick={backToHome}>
+                    </lightning-button>
+
+                </div>
+            </div>
+
+            <!-- LEGEND -->
+            <div class="slds-grid slds-m-bottom_small slds-text-body_small">
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_requested slds-m-right_x-small"></span>
+                    <span>Requested</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_approved slds-m-right_x-small"></span>
+                    <span>Approved</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_rejected slds-m-right_x-small"></span>
+                    <span>Rejected</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_withdrawn slds-m-right_x-small"></span>
+                    <span>Withdrawn</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <span class="legend-dot legend-dot_cancelled slds-m-right_x-small"></span>
+                    <span>Cancelled</span>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="slds-scrollable_x">
+    <div class="calendar-table-container">
+        <table class="slds-table slds-table_cell-buffer calendar-table">
+            <thead>
+                <tr>
+                    <th scope="col" class="calendar-th_employee">
+                        <div class="slds-p-around_small">
+                            Employee
+                        </div>
+                    </th>
+
+                    <template for:each={weekDays} for:item="day">
+                        <th key={day.name} scope="col" class="calendar-th_day">
+                            <div class="slds-p-around_small">
+                                <div class="calendar-day-label">
+                                    {day.label}
+                                </div>
+                                <div class="calendar-day-number">
+                                    {day.date}
+                                </div>
+                            </div>
+                        </th>
+                    </template>
+                </tr>
+            </thead>
+
+                    <tbody>
+                        <template for:each={employees} for:item="emp">
+                            <tr key={emp.id}>
+                                <!-- employee cell -->
+                               <td class="calendar-td_employee">
+    <div class="slds-p-around_small">
+        <div class="slds-grid slds-grid_vertical-align-center">
+            <!-- ✅ use a single expression -->
+            <div class={emp.avatarClass}>
+                <span class="calendar-avatar__initials">{emp.initials}</span>
+            </div>
+
+            <div>
+                <div class="calendar-emp-name">{emp.name}</div>
+                <div class="calendar-emp-hours">{emp.hours}</div>
+            </div>
+        </div>
+    </div>
+</td>
+
+
+                                <!-- day cells -->
+                                <template for:each={emp.cells} for:item="cell">
+                                    <td key={cell.id} class="calendar-td_day">
+                                        <div class="slds-p-around_small">
+                                            <template if:true={cell.typeApproved}>
+                                                <div class={cell.approvedClass} title={cell.label}>
+                                                    <template if:true={cell.label}>
+                                                        {cell.label}
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <template if:true={cell.typeRequested}>
+                                                <div class="calendar-pill calendar-pill_requested" title={cell.label}>
+                                                    {cell.label}
+                                                </div>
+                                            </template>
+
+                                            <template if:true={cell.typeRejected}>
+                                                <div class={cell.rejectedClass} title={cell.label}>
+                                                    <template if:true={cell.label}>
+                                                        {cell.label}
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <template if:true={cell.typeCancelled}>
+    <span class={cell.cancelledClass} title={cell.label}>{cell.label}</span>
+</template>
+
+<template if:true={cell.typeWithdrawn}>
+    <span class={cell.withdrawnClass} title={cell.label}>{cell.label}</span>
+</template>
+
+                                        </div>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+    </template>
+
+    <template if:true={monthlyView}>
+        <c-monthly-leave-calendar orgid={orgid} onbacktohome={handleBackToHome} onshowweekly={handleShowWeekly}></c-monthly-leave-calendar>
+    </template>
+
+</template>

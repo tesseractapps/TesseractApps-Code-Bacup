@@ -1,0 +1,513 @@
+<template>
+  <template if:false={isOpenModalFlag}>
+    <div class="participantlayout">
+      <div class="slds-float_right" style="padding-bottom: 10px">
+        <lightning-button
+          variant="brand"
+          label="Risk Identification"
+          onclick={handleRiskManagement}
+          slot="actions"
+          style="margin-right: 10px"
+        ></lightning-button>
+
+        <button
+          class="slds-button slds-button_icon slds-button_icon-border"
+          title="Refresh"
+          onclick={fetchRefreshRiskIndex}
+        >
+          <svg class="slds-button__icon" aria-hidden="true">
+            <use
+              xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"
+            ></use>
+          </svg>
+        </button>
+      </div>
+
+      <template if:true={staffFeedbackData}>
+        <div>
+          <div>
+            <table
+              class="slds-table"
+              style="table-layout: fixed; border-radius: 10px; overflow: hidden"
+            >
+              <thead>
+                <tr>
+                  <th class="slds-cell-wrap th">Area</th>
+                  <th class="slds-cell-wrap th">Risk Identified</th>
+                  <th class="slds-cell-wrap th">Risk Index</th>
+                  <th class="slds-cell-wrap th">Date</th>
+                  <th class="slds-cell-wrap th">Person Responsible</th>
+                  <th class="slds-cell-wrap th">Comments</th>
+                  <th class="slds-cell-wrap th" style="width: 6%;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={displayedRiskRecords} for:item="record">
+                  <tr key={record.Id} class="tr1">
+                    <td
+                      class="slds-cell-wrap description"
+                      title={record.Area__c}
+                    >
+                      {record.Area__c}
+                    </td>
+                    <td
+                      class="slds-cell-wrap description"
+                      title={record.Category__c}
+                    >
+                      {record.Category__c}
+                    </td>
+                    <td class="slds-cell-wrap">{record.Risk_Index__c}</td>
+                    <td class="slds-cell-wrap">{record.dateCompleted}</td>
+                    <td class="slds-cell-wrap description" title={record.Person_Responsible__c}>
+                      {record.Person_Responsible__c}
+                    </td>
+                    <td class="slds-cell-wrap description" title={record.Risk_Strategy__c}>{record.Risk_Strategy__c}</td>
+                    <td>
+                      <a
+                        href="javascript:void(0)"
+                        data-id={record.Id}
+                        onclick={handleEdit}
+                        title="Edit"
+                      >
+                        <i class="material-icons edit-icon"
+                          >edit_document</i
+                        > </a
+                      >&nbsp;
+                      <a
+                        href={record.AmazonURL}
+                        data-id={record.Id}
+                        data-url={record.AmazonURL}
+                        onclick={handleView}
+                        title="View Attachment"
+                        ><i class="material-icons view-icon">visibility</i></a
+                      >
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!--Pagination Start-->
+        <div
+          class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+          style="padding-top: 0.5em; width: 95%; margin-left: 2%"
+        >
+          <!-- RECORDS PER PAGE -->
+          <div class="slds-col">
+            <div class="slds-list_inline">
+              <span style="margin-right: 5px; margin-top: 5px">Page Size:</span>
+              <label class="slds-text-color_weak" for="recordsPerPage"></label
+              ><!--slds-p-horizontal_x-small-->
+              <div class="slds-select_container">
+                <select
+                  class="slds-select"
+                  id="recordsPerPage"
+                  onchange={handleRecordsPerPage}
+                >
+                  <template for:each={pageSizeOptions} for:item="option">
+                    <option key={option} value={option}>{option}</option>
+                  </template>
+                </select>
+              </div>
+            </div>
+          </div>
+          <!-- PAGE NAVIGATION -->
+          <div class="slds-align_absolute-center" style="height: 5rem">
+            <lightning-button
+              disabled={bDisableFirst}
+              icon-name="utility:jump_to_left"
+              label="First"
+              alternative-text="first page"
+              onclick={firstPage}
+              style="margin-right: 10px"
+            ></lightning-button
+            ><!--class="slds-p-horizontal_x-small" -->
+            <lightning-button
+              disabled={bDisableFirst}
+              icon-name="utility:chevronleft"
+              label="Previous"
+              alternative-text="Previous"
+              onclick={previousPage}
+              style="margin-right: 5px"
+            ></lightning-button>
+            &nbsp;
+            <span class="slds-badge"
+              >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+              &nbsp;&nbsp;Page(s)</span
+            >
+            &nbsp;
+            <lightning-button
+              disabled={bDisableLast}
+              icon-name="utility:chevronright"
+              label="Next"
+              alternative-text="Next"
+              onclick={nextPage}
+              class="slds-p-horizontal_x-small"
+              icon-position="right"
+            ></lightning-button>
+            <lightning-button
+              disabled={bDisableLast}
+              icon-name="utility:jump_to_right"
+              label="Last"
+              alternative-text="last page"
+              onclick={lastPage}
+              icon-position="right"
+            ></lightning-button>
+          </div>
+          <div class="slds-clearfix">
+            <div class="slds-float_right">
+              <span class="slds-badge"> Total Records: {totalRecords}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template if:true={staffFeedbackNoData}>
+        <div class="no-data">
+          <p>No records found</p>
+        </div>
+      </template>
+    </div>
+  </template>
+  <template if:true={isOpenModal}>
+    <div class="blur-overlay"></div>
+    <div class="right-align fade-in">
+      <div style="padding: 1%">
+        <!-- Risk Identification Header with Back Button -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <p style="font-weight: bold; font-size: 140%; margin-left: 2%">
+            Risk Identification
+          </p>
+          <!-- <lightning-button label="Back" style="margin-right: 1.5%;" variant="brand" onclick={hideModalBox}></lightning-button> -->
+        </div>
+
+        <!-- New Section for Inputs (Attachment Name & Manual Handling) -->
+        <div
+          class="slds-p-around_medium custom-scroll"
+          style="height: 70vh; overflow-y: auto"
+        >
+          <div class="container-box">
+            <div
+              class="toggle-bar"
+              onclick={handleSectionToggle}
+              data-id="RiskDetails"
+              style="cursor: pointer"
+            >
+              <span>Risk</span>
+              <span>{sectionIcons.RiskDetails}</span>
+            </div>
+            <div class="section-content" data-section="RiskDetails">
+              <div
+                class="slds-grid slds-wrap"
+                style="padding-top: 20px; margin-left: 20px"
+              >
+                <template
+                  for:each={processedCategoryGroups}
+                  for:item="group"
+                  for:index="index"
+                >
+                  <div
+                    key={group.heading}
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
+                  >
+                    <h3 class="slds-text-title_bold slds-m-vertical_small">
+                      {group.heading}
+                    </h3>
+
+                    <template for:each={group.options} for:item="option">
+                      <lightning-input
+                        type="checkbox"
+                        key={option.value}
+                        label={option.label}
+                        data-value={option.value}
+                        data-group={group.heading}
+                        onchange={handleSelection}
+                        checked={option.checked}
+                      >
+                      </lightning-input>
+
+                      <template if:true={option.Other}>
+                        <lightning-input
+                          type="text"
+                          key={group.heading}
+                          value={option.otherText}
+                          placeholder="Enter other text"
+                          maxlength="150"
+                          data-group={group.heading}
+                          onchange={handleOtherTextChange}
+                        >
+                        </lightning-input>
+                      </template>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="container-box">
+            <div
+              id="RiskManage"
+              class="toggle-bar"
+              onclick={handleSectionToggle}
+              data-id="RiskManage"
+              style="cursor: pointer"
+            >
+              <span>Risk Management Plan</span>
+              <span style="cursor: default">{sectionIcons.RiskManage}</span>
+            </div>
+
+            <div class="section-content" data-section="RiskManage">
+              <template if:true={sectionFlags.RiskManage}>
+                <div>
+                  <div style="padding:1%">
+                    <table class="slds-table" style="table-layout: fixed">
+                      <thead>
+                        <tr class="slds-text-title_bold">
+                          <th class="th">Area</th>
+                          <th class="slds-cell-wrap th">Risks Identified</th>
+                          <th class="slds-cell-wrap th">Impact on Whom</th>
+                          <th class="slds-cell-wrap th">Likelihood</th>
+                          <th class="slds-cell-wrap th">Consequences</th>
+                          <th class="slds-cell-wrap th">Risk Index</th>
+                          <th class="slds-cell-wrap th">
+                            Risk Management Strategy
+                          </th>
+                          <th class="slds-cell-wrap th" style="width: 13%">
+                            Plan
+                          </th>
+                          <th class="slds-cell-wrap th">Person Responsible</th>
+                          <th class="slds-cell-wrap th">Date Completed</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template for:each={selectedCategories} for:item="row">
+                          <tr key={row.category}>
+                            <td class="description" title={row.area}>
+                              {row.area}
+                            </td>
+                            <!-- <td class="slds-cell-wrap description">{row.category}</td> -->
+
+                            <td class="description" title={row.category}>
+                              {row.category}
+                              <template if:true={row.otherText}>
+                                <!-- {row.category} -->
+                                -{row.otherText}
+                              </template>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-combobox
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="impact"
+                                options={impactOptions}
+                                value={row.impact}
+                                onchange={handleInputChange}
+                              >
+                              </lightning-combobox>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-combobox
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="likelihood"
+                                options={likelihoodOptions}
+                                value={row.likelihood}
+                                onchange={handleInputChange}
+                              >
+                              </lightning-combobox>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-combobox
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="consequences"
+                                options={consequencesOptions}
+                                value={row.consequences}
+                                onchange={handleInputChange}
+                              >
+                              </lightning-combobox>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-input
+                                type="text"
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="riskRating"
+                                value={row.riskRating}
+                                disabled
+                              >
+                              </lightning-input>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-input
+                                type="text"
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="strategy"
+                                value={row.strategy}
+                                onchange={handleInputChange}
+                                maxlength="60"
+                              >
+                              </lightning-input>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-input
+                                type="file"
+                                data-uniqueid={row.uniqueId}
+                                name="file"
+                                variant="label-hidden"
+                                onchange={handleDocumentchange}
+                                style="width: 2%"
+                              ></lightning-input>
+
+                              <div class="slds-text-body_small">
+                                {row.fileName}
+                                <template if:true={showSpinner}>
+                                  <lightning-spinner
+                                    alternative-text="Uploading the file......"
+                                    size="medium"
+                                  >
+                                  </lightning-spinner>
+                                </template>
+
+                                <template if:true={isattachError}>
+                                  <p style="color: red">
+                                    File Size Cannot exceed 512MB
+                                  </p>
+                                </template>
+                              </div>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-input
+                                type="text"
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="responsiblePerson"
+                                value={row.responsiblePerson}
+                                onchange={handleInputChange}
+                                maxlength="60"
+                              >
+                              </lightning-input>
+                            </td>
+
+                            <td class="slds-cell-wrap">
+                              <lightning-input
+                                type="date"
+                                data-id={row.category}
+                                data-area={row.area}
+                                data-field="dateCompleted"
+                                value={row.dateCompleted}
+                                onchange={handleInputChange}
+                              >
+                              </lightning-input>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <div class="slds-align_absolute-center slds-m-around_small">
+          <lightning-button
+            label="Cancel"
+            variant="brand-outline"
+            onclick={hideModalBox}
+            class="slds-m-around_small"
+          ></lightning-button>
+          <lightning-button
+            label="Save"
+            variant="brand"
+            class="slds-m-around_small"
+            onclick={handleSave}
+            disabled={isSaveDisabled}
+          ></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+  <template if:true={isViewModalOpen}>
+    <div class="slds-p-around_medium">
+      <lightning-button
+        class="slds-m-left_medium"
+        slot="footer"
+        label="Back"
+        variant="brand"
+        onclick={closeRiskManagement}
+        style="float: right; margin-bottom: 5px"
+      ></lightning-button>
+
+      <iframe src={currentUrl} width="100%" height="1300px"></iframe>
+    </div>
+  </template>
+  <template if:true={showSpinner}>
+    <lightning-spinner
+      alternative-text="Uploading the file......"
+      size="medium"
+    >
+    </lightning-spinner>
+  </template>
+  <template if:true={submissionFlag}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 25%">
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Please Confirm
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small" style="text-align: center">
+            <div>
+              <p style="text-align: center">
+                Are you sure you want to save the changes to the Risk Management
+                Plan?
+              </p>
+            </div>
+            <div class="button-container slds-m-top_medium">
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={handlesubmissionclose}
+                class="slds-m-around_small"
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handleConfirmation}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>
