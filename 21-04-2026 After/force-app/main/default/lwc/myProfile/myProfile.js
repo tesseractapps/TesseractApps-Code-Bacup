@@ -3069,7 +3069,7 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
 
     buildHierarchicalFromFacility(result) {
         const withMandatoryMark = (doc, baseLabel) =>
-            doc.mandatory === true ? `${baseLabel} *` : baseLabel;
+        doc.mandatory === true ? `${baseLabel} *` : baseLabel;
 
         if (!Array.isArray(result)) return [];
 
@@ -3081,7 +3081,7 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
         const trainingDocs = result.filter(d => d.complianceCategory === 'Trainings');
 
         // ---------------------------------------
-        // GROUP IDENTITY
+        // GROUP IDENTITY (PRIMARY / SECONDARY / OTHER)
         // ---------------------------------------
         const groupedIdentity = {
             Primary: [],
@@ -3097,49 +3097,10 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
 
             groupedIdentity[category].push(doc);
 
-            // Maps (based on doc.name as requested)
+            // Build lookup maps
             this.documentPointsMap[doc.name] = Number(doc.points) || 0;
             this.documentMetaMap[doc.name] = doc;
         });
-
-        // ---------------------------------------
-        // COMMON DISPLAY NAME BUILDER
-        // ---------------------------------------
-        const getDisplayName = (doc) => {
-            if (doc.isDefault) {
-                return doc.name;
-            } else if (doc.facilityId) {
-                return doc.facilityName
-                    ? `${doc.name} - ${doc.facilityName}`
-                    : `${doc.name} - Facility`;
-            } else {
-                return `${doc.name} - Organisation`;
-            }
-        };
-
-        const getDisplayCatagoryName = (doc) => {
-            // Base Name Logic (existing)
-            let baseName;
-
-            if (doc.isDefault) {
-                baseName = doc.name;
-            } else if (doc.facilityId) {
-                baseName = doc.facilityName
-                    ? `${doc.name} - ${doc.facilityName}`
-                    : `${doc.name} - Facility`;
-            } else {
-                baseName = `${doc.name} - Organisation`;
-            }
-
-            // Category Logic (NEW)
-            const category =
-                doc.Identity_Category__c ||
-                doc.Documents_Category__c ||
-                doc.Training_Category__c;
-
-            // Final Output
-            return baseName + (category ? ` - (${category})` : '');
-        };
 
         // ---------------------------------------
         // ROOT NODES
@@ -3176,20 +3137,13 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
             label: 'Primary Identity Documents',
             value: 'primary-identity',
             children: groupedIdentity.Primary.length
-                ? groupedIdentity.Primary.map(doc => {
-                    const displayName = getDisplayName(doc);
-                    const catagoryDisplayName = getDisplayCatagoryName(doc);
-
-                    return {
-                        id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                        label: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        value: withMandatoryMark(doc, catagoryDisplayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''), // ✅ ONLY base name
-                        points: doc.points || 0,
-                        children: []
-                    };
-                })
+                ? groupedIdentity.Primary.map(doc => ({
+                    id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
+                    points: doc.points || 0,
+                    children: []
+                }))
                 : [{
                     id: 'no-primary',
                     label: 'No Documents Available',
@@ -3205,19 +3159,13 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
             label: 'Secondary Identity Documents',
             value: 'secondary-identity',
             children: groupedIdentity.Secondary.length
-                ? groupedIdentity.Secondary.map(doc => {
-                    const displayName = getDisplayName(doc);
-
-                    return {
-                        id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                        label: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        value: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        points: doc.points || 0,
-                        children: []
-                    };
-                })
+                ? groupedIdentity.Secondary.map(doc => ({
+                    id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
+                    points: doc.points || 0,
+                    children: []
+                }))
                 : [{
                     id: 'no-secondary',
                     label: 'No Documents Available',
@@ -3227,26 +3175,19 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
                 }]
         });
 
-        // ---------- OTHER ----------
+        // ---------- 🔥 OTHER (FIXED & ADDED) ----------
         identitySections.push({
             id: 'other-identity',
             label: 'Other Identity Documents',
             value: 'other-identity',
             children: groupedIdentity.Other.length
-                ? groupedIdentity.Other.map(doc => {
-                    const displayName = getDisplayName(doc);
-                    const catagoryDisplayName = getDisplayCatagoryName(doc);
-
-                    return {
-                        id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                        label: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        value: withMandatoryMark(doc, catagoryDisplayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        points: doc.points || 0,
-                        children: []
-                    };
-                })
+                ? groupedIdentity.Other.map(doc => ({
+                    id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
+                    points: doc.points || 0,
+                    children: []
+                }))
                 : [{
                     id: 'no-other',
                     label: 'No Documents Available',
@@ -3266,15 +3207,11 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
                 this.documentPointsMap[doc.name] = Number(doc.points) || 0;
                 this.documentMetaMap[doc.name] = doc;
 
-                const displayName = getDisplayName(doc);
-                const catagoryDisplayName = getDisplayCatagoryName(doc);
-
                 return {
                     id: `doc-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                    label: withMandatoryMark(doc, displayName) +
-                        (doc.points ? ` (${doc.points} points)` : ''),
-                    value: withMandatoryMark(doc, catagoryDisplayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
+                    //label: doc.name,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
                     children: []
                 };
             })
@@ -3294,15 +3231,11 @@ event.stopPropagation(); // Prevent triggering the outside click listener when c
                 this.documentPointsMap[doc.name] = Number(doc.points) || 0;
                 this.documentMetaMap[doc.name] = doc;
 
-                const displayName = getDisplayName(doc);
-                const catagoryDisplayName = getDisplayCatagoryName(doc);
-
                 return {
                     id: `training-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                    label: withMandatoryMark(doc, displayName) +
-                        (doc.points ? ` (${doc.points} points)` : ''),
-                    value: withMandatoryMark(doc, catagoryDisplayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
+                    //label: doc.name,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
                     children: []
                 };
             })

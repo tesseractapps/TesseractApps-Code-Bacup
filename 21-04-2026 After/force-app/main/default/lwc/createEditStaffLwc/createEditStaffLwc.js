@@ -5413,7 +5413,7 @@ removeOutsideListenerIfNeeded() {
 
     buildHierarchicalFromFacility(result) {
         const withMandatoryMark = (doc, baseLabel) =>
-            doc.mandatory === true ? `${baseLabel} *` : baseLabel;
+        doc.mandatory === true ? `${baseLabel} *` : baseLabel;
 
         if (!Array.isArray(result)) return [];
 
@@ -5425,7 +5425,7 @@ removeOutsideListenerIfNeeded() {
         const trainingDocs = result.filter(d => d.complianceCategory === 'Trainings');
 
         // ---------------------------------------
-        // GROUP IDENTITY
+        // GROUP IDENTITY (PRIMARY / SECONDARY / OTHER)
         // ---------------------------------------
         const groupedIdentity = {
             Primary: [],
@@ -5441,25 +5441,10 @@ removeOutsideListenerIfNeeded() {
 
             groupedIdentity[category].push(doc);
 
-            // Maps (based on doc.name as requested)
+            // Build lookup maps
             this.documentPointsMap[doc.name] = Number(doc.points) || 0;
             this.documentMetaMap[doc.name] = doc;
         });
-
-        // ---------------------------------------
-        // COMMON DISPLAY NAME BUILDER
-        // ---------------------------------------
-        const getDisplayName = (doc) => {
-            if (doc.isDefault) {
-                return doc.name;
-            } else if (doc.facilityId) {
-                return doc.facilityName
-                    ? `${doc.name} - ${doc.facilityName}`
-                    : `${doc.name} - Facility`;
-            } else {
-                return `${doc.name} - Organisation`;
-            }
-        };
 
         // ---------------------------------------
         // ROOT NODES
@@ -5496,19 +5481,13 @@ removeOutsideListenerIfNeeded() {
             label: 'Primary Identity Documents',
             value: 'primary-identity',
             children: groupedIdentity.Primary.length
-                ? groupedIdentity.Primary.map(doc => {
-                    const displayName = getDisplayName(doc);
-
-                    return {
-                        id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                        label: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        value: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''), // ✅ ONLY base name
-                        points: doc.points || 0,
-                        children: []
-                    };
-                })
+                ? groupedIdentity.Primary.map(doc => ({
+                    id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
+                    points: doc.points || 0,
+                    children: []
+                }))
                 : [{
                     id: 'no-primary',
                     label: 'No Documents Available',
@@ -5524,19 +5503,13 @@ removeOutsideListenerIfNeeded() {
             label: 'Secondary Identity Documents',
             value: 'secondary-identity',
             children: groupedIdentity.Secondary.length
-                ? groupedIdentity.Secondary.map(doc => {
-                    const displayName = getDisplayName(doc);
-
-                    return {
-                        id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                        label: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        value: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        points: doc.points || 0,
-                        children: []
-                    };
-                })
+                ? groupedIdentity.Secondary.map(doc => ({
+                    id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
+                    points: doc.points || 0,
+                    children: []
+                }))
                 : [{
                     id: 'no-secondary',
                     label: 'No Documents Available',
@@ -5546,25 +5519,19 @@ removeOutsideListenerIfNeeded() {
                 }]
         });
 
-        // ---------- OTHER ----------
+        // ---------- 🔥 OTHER (FIXED & ADDED) ----------
         identitySections.push({
             id: 'other-identity',
             label: 'Other Identity Documents',
             value: 'other-identity',
             children: groupedIdentity.Other.length
-                ? groupedIdentity.Other.map(doc => {
-                    const displayName = getDisplayName(doc);
-
-                    return {
-                        id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                        label: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        value: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
-                        points: doc.points || 0,
-                        children: []
-                    };
-                })
+                ? groupedIdentity.Other.map(doc => ({
+                    id: `id-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
+                    points: doc.points || 0,
+                    children: []
+                }))
                 : [{
                     id: 'no-other',
                     label: 'No Documents Available',
@@ -5584,14 +5551,11 @@ removeOutsideListenerIfNeeded() {
                 this.documentPointsMap[doc.name] = Number(doc.points) || 0;
                 this.documentMetaMap[doc.name] = doc;
 
-                const displayName = getDisplayName(doc);
-
                 return {
                     id: `doc-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                    label: withMandatoryMark(doc, displayName) +
-                        (doc.points ? ` (${doc.points} points)` : ''),
-                    value: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
+                    //label: doc.name,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
                     children: []
                 };
             })
@@ -5611,14 +5575,11 @@ removeOutsideListenerIfNeeded() {
                 this.documentPointsMap[doc.name] = Number(doc.points) || 0;
                 this.documentMetaMap[doc.name] = doc;
 
-                const displayName = getDisplayName(doc);
-
                 return {
                     id: `training-${doc.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-                    label: withMandatoryMark(doc, displayName) +
-                        (doc.points ? ` (${doc.points} points)` : ''),
-                    value: withMandatoryMark(doc, displayName) +
-                            (doc.points ? ` (${doc.points} points)` : ''),
+                    //label: doc.name,
+                    label: withMandatoryMark(doc, doc.name) + (doc.points ? ` (${doc.points} points)` : ''),
+                    value: doc.name,
                     children: []
                 };
             })
