@@ -1,0 +1,673 @@
+@isTest
+public class ClientFundTransferHandlerTest {    
+	@testsetup Static void TestClientData(){
+        
+        Organisation__c org = new Organisation__c();
+        org.Name='Ashfield Consultants';
+        org.ABN__c='12223345676';
+        org.ACN__c='878787878';
+        org.Contact_No__c='6132899740';
+        org.RCTI__c='RCTI1';
+        org.Email__c='dsfdsfsd@gmail.com';
+        org.Bank__c='Bank Test';
+        org.BSB__c='BSB Test';
+        org.Account_Name__c='Test Account';
+        org.Account_Number__c='1111111111';
+        org.Description__c='test Desc';
+        org.Address_Latest__Street__s='101';
+        org.Address_Latest__City__s='Himas Waterhen';
+        org.Address_Latest__PostalCode__s='2060';
+        org.Address_Latest__CountryCode__s='AU';
+        org.Address_Latest__StateCode__s='NSW';
+        org.NDIS_Provider__c='12341234565';
+        org.BMSI_Identifier__c ='TEST BMSI';
+        org.SoftwareId__c = 'jhdfn18328';
+        org.Branch_code__c = 'BS123';
+        org.Contact_Name__c = 'Test Contact';
+        org.User_Type__c = 'NDIS Org Admin';
+        insert org;
+        
+        //system.debug(org.name);
+        Profile prof = [select id,Name from profile where name LIKE '%Admin%'];
+        User user = new User(Alias = 'praveen', Email= 'manualtesting.2029463734@hotmail.com', 
+                             EmailEncodingKey='UTF-8', LastName='StaffOne209463', LanguageLocaleKey='en_US', 
+                             LocaleSidKey='en_US', ProfileId = prof.Id, TimeZoneSidKey='America/New_York', 
+                             User_Type__c='NDIS Org Admin', UserName='manualtesting.2029463734@hotmail.com',Organization_Name__c ='Ashfield Consultants');
+        insert user;
+           System.runAs(user){   
+        
+            Facility__c fac = new Facility__c();
+            fac.Name='Ashfield Consultants';
+            fac.Address__City__s='Crace';
+            fac.Address__Street__s = '8 Keewong Street';
+            fac.Address__StateCode__s='ACT';
+            fac.Address__PostalCode__s='2911';
+            fac.Address__CountryCode__s='AU';
+            fac.Email__c= 'testonefacility@gmail.com';
+            fac.Status__c=true;
+            fac.Organisation__c= org.Id;
+            fac.ABN__c='12223345676';
+            fac.Phone__c = '12323432';
+            fac.ABN__c='12223345676';
+            fac.Phone__c = '12323432';
+            fac.Type_of_Service__c='NDIS';
+            insert fac;
+            
+        
+        Client__c cli =  new Client__c();
+        cli.First_Name__c = 'Test';
+        cli.Last_Name__c = 'Participant';
+        cli.Gendar__c = 'Male';
+        cli.Date_Of_Birth__c = Date.newInstance(1991, 2, 17);
+        cli.Address__Street__s='8 Keewong Street';
+        cli.Address__City__s = 'Crace';
+        cli.Address__StateCode__s='ACT';
+        cli.Address__PostalCode__s='2911';
+        cli.Contact_Number__c='4331237651';
+        cli.Drivers_Licence__c = '123456789012';
+        cli.Primay_Contact_First_Name__c='Jason';
+        cli.Primay_Contact_Last_Name__c='Smith';
+        cli.Relationship__c='Parent';
+        cli.Primary_Contact_Number__c='0433123123';
+         cli.Facility__c=fac.Id;
+        insert cli;
+        
+        Funds_Tracker__c funds = new Funds_Tracker__c();
+        funds.Registration_Group__c='Assistance Animals';
+        funds.Amount_approved__c=5000;
+        funds.Client__c=cli.Id;
+        funds.Plan_Type__c = 'Plan Managed';
+        funds.Amount_approved__c=30000;
+        funds.Registration_Group__c='Assistance Animals'; 
+        funds.Approved_Date__c = date.newInstance(2001, 02, 04);
+        insert funds;
+        
+        // Create one existing fund_split__c record for testing getFundSplits
+       /* fund_split__c fs = new fund_split__c(
+            Name = 'Q2 Split',
+            Funds_Tracker__c = funds.Id,
+            Allocated__c = 2500,
+            Carry_Forward__c = 0,
+            Start_Date__c = Date.newInstance(2025, 1, 1),
+            End_Date__c = Date.newInstance(2025, 3, 31),
+            Status__c = 'Active'
+        );
+        insert fs; */
+        // Add one fund_split__c for getFundSplits test
+        insert new fund_split__c(
+            Name = 'H1 - 2025',
+            Funds_Tracker__c = funds.Id,
+            Allocated__c = 10000,
+            Carry_Forward__c = 0,
+            Start_Date__c = Date.newInstance(2025, 1, 1),
+            End_Date__c = Date.newInstance(2025, 6, 30),
+            Status__c = 'Active'
+        );
+        
+        NDIS_Support_Catalogue__c NSC = new NDIS_Support_Catalogue__c();
+            NSC.Name = 'Assistance Animals';
+            NSC.ACT__c = 100;
+            NSC.NSW__c =100;
+            NSC.NT__c = 100;
+            NSC.QLD__c = 100;
+            NSC.SA__c = 100;
+            NSC.TAS__c = 100;
+            NSC.VIC__c = 100;
+            NSC.WA__c = 100;
+            insert NSC;
+        
+        ClientFundTrackerJN__c fundJunction = new ClientFundTrackerJN__c();
+        fundJunction.Funds_Tracker__c = funds.Id;
+        fundJunction.Participant__c = cli.Id;
+        fundJunction.NDIS_Support_Catalogue__c = NSC.Id;
+        insert fundJunction;
+                
+        Fund_Transfer_Amount__c	fundsTransfer = new Fund_Transfer_Amount__c();
+        fundsTransfer.Funds_Tracker__c = funds.Id;
+        fundsTransfer.Amount__c = 900;
+        insert fundsTransfer;
+        
+        Test.startTest();
+        	ClientFundTransferHandler.fetchfundTracker(cli.Id);
+        Test.stopTest();
+           }
+    }
+    @isTest
+    public static void CallMe(){
+        string name='test record';
+        List<Fund_Transfer_Amount__c> fudList = [select id,Amount_incl_GST__c,Funds_Tracker__c,Amount__c,GST__c,Service_Date__c,Description__c,Status__c from Fund_Transfer_Amount__c];
+        ClientFundTransferHandler.fundTrackerSpent(name);
+    }
+    
+    @isTest
+    public static void fundTrackerSpentAmountTest(){
+        Client__c cid = [select id from Client__c ];
+        string clientid=cid.id;
+        ClientFundTransferHandler.fundTrackerSpentAmount(clientid,'1000','2000', '1000');
+    }
+     @isTest
+    public static void TestsaveFundTracker(){
+        Fund_Transfer_Amount__c FTA = [select id, Funds_Tracker__c from Fund_Transfer_Amount__c ];
+        string FTAID=FTA.Funds_Tracker__c;
+        String Year = '2023';
+        String Month = '4';
+        String Day = '5';
+        String string_type = Year + '-' + Month + '-' + Day;        //string dt1=stringValueof
+        ClientFundTransferHandler.saveFundTracker(FTAID, '1000','120.00', 'test',string_type, 'testStatus');
+    }
+    @isTest
+    public static void testfundTrackerRecord(){
+          User u1= [SELECT Id from User where email='manualtesting.2029463734@hotmail.com' LIMIT 1];
+        System.runAs(u1){
+        Client__c cid = [select id from Client__c ];
+          Facility__c facs = [SELECT ID from Facility__c limit 1];
+        string clientid=cid.id;
+        ClientFundTransferHandler.fundTrackerRecord(clientid);
+        ClientFundTransferHandler.getOrganisation();
+        ClientFundTransferHandler.updateClient(cid);
+        ClientFundTransferHandler.getClients(cid.Id);
+        ClientFundTransferHandler.getClientDetails('Search',facs.Id);
+        }
+    }
+     @isTest
+    public static void TestsavFundTransfer(){
+        Client__c cid = [select id from Client__c ];
+        Facility__c facList = [SELECT Id From Facility__c];
+        Funds_Tracker__c fund = [SELECT Id FROM Funds_Tracker__c];
+        List<Funds_Tracker__c> fundList = [SELECT Id FROM Funds_Tracker__c];
+        List<NDIS_Support_Catalogue__c> ndisList = [SELECT ID from NDIS_Support_Catalogue__c];
+        List<Id> ndisId = new List<Id>();
+        for(NDIS_Support_Catalogue__c catalog: ndisList){
+            ndisId.add(catalog.Id);
+        }
+        List<ClientFundTrackerJN__c> clientJun = [SELECT ID FROM ClientFundTrackerJN__c];
+        List<Id> cliIds = new List<Id>();
+        for(ClientFundTrackerJN__c cliJu : clientJun){
+            cliIds.add(cliJu.Id);
+        }
+        string clientid=cid.id;
+        String Year = '2023';
+        String Month = '4';
+        String Day = '5';
+        String string_type = Year + '-' + Month + '-' + Day;
+        Date startDate = Date.newInstance(2023, 11, 10);
+        String approvedDate = '2024-04-10';
+        String amountApprovedValue = '1500.75';
+       //ClientFundTransferHandler.savFundTransfer(clientid,'1000', string_type);
+       	ClientFundTransferHandler.getSelectedSupportItems(fund.Id, cid.Id, 'ACT__c');
+        ClientFundTransferHandler.getNDISCatalog(ndisId);
+        ClientFundTransferHandler.checkFundExists(cid.Id, 'Community Nursing Care');//,'text'
+        ClientFundTransferHandler.deletedSelectedId(cliIds);
+        //ClientFundTransferHandler.savFundTransfer(cid.Id, amountApprovedValue, approvedDate);
+        Facility__c result = ClientFundTransferHandler.getFacilityDetails(facList.Id);
+        // Create NEW fund with a DIFFERENT group
+        Funds_Tracker__c newFund = new Funds_Tracker__c(
+            Client__c = cid.Id,
+            Registration_Group__c = 'Community Nursing Care',
+            Plan_Type__c = 'Self Managed',
+            Amount_approved__c = 5000,
+            Approved_Date__c = Date.today()
+        );
+       // FundTrackerHandler.PreventDuplicateFunds(fundList);
+       new FundTrackerHandler().PreventDuplicateFunds(new List<Funds_Tracker__c>{ newFund });
+    }
+    @isTest
+    static void testGetFundSplits_withValidId() {
+        // Arrange
+        Funds_Tracker__c fundTracker = [SELECT Id FROM Funds_Tracker__c LIMIT 1];
+
+        // Act
+        Test.startTest();
+        List<fund_split__c> results = ClientFundTransferHandler.getFundSplits(fundTracker.Id);
+        Test.stopTest();
+
+        // Assert
+        System.assertNotEquals(0, results.size(), 'Should return at least one fund split');
+        System.assertEquals(fundTracker.Id, results[0].Funds_Tracker__c, 'Parent ID should match');
+    }
+    
+    @isTest
+    static void testGetFundSplits_withNullId() {
+        Test.startTest();
+        List<fund_split__c> results = ClientFundTransferHandler.getFundSplits(null);
+        Test.stopTest();
+
+        System.assertEquals(0, results.size(), 'Should return empty list when ID is null');
+    }
+    
+    @isTest
+    static void testSaveFundSplits_withValidData() {
+        // Arrange
+        Funds_Tracker__c tracker = [SELECT Id FROM Funds_Tracker__c LIMIT 1];
+        
+        fund_split__c newSplit = new fund_split__c(
+            Name = 'Q1 - 2026',
+            Funds_Tracker__c = tracker.Id,
+            Allocated__c = 10000,
+            Carry_Forward__c = 0,
+            Start_Date__c = Date.newInstance(2025, 1, 1),
+            End_Date__c = Date.newInstance(2025, 6, 30),
+            Status__c = 'Active'
+        );
+    
+        List<fund_split__c> splits = new List<fund_split__c>{ newSplit };
+    
+        // Act
+        Test.startTest();
+        List<fund_split__c> savedSplits = ClientFundTransferHandler.saveFundSplits(tracker.Id, splits);
+        Test.stopTest();
+    
+        // Assert
+        System.assertNotEquals(0, savedSplits.size(), 'Expected at least one fund split after save');
+        System.assertEquals(tracker.Id, savedSplits[0].Funds_Tracker__c, 'Parent Tracker Id should match');
+        System.assertEquals(10000, savedSplits[0].Allocated__c, 'Allocated amount should match');
+        System.assertEquals('Active', savedSplits[0].Status__c, 'Status should be Active');
+    }
+    
+    @isTest
+    static void testSaveFundSplits_withEmptyList() {
+        Funds_Tracker__c tracker = [SELECT Id FROM Funds_Tracker__c LIMIT 1];
+        Boolean exceptionThrown = false;
+    
+        try {
+            Test.startTest();
+            ClientFundTransferHandler.saveFundSplits(tracker.Id, new List<fund_split__c>());
+            Test.stopTest();
+        } catch (AuraHandledException e) {
+            exceptionThrown = true;
+            System.debug('⚠️ Caught exception: ' + e.getMessage());
+            // ✅ Don’t assert on message text — just confirm exception type
+            System.assert(true, 'AuraHandledException caught as expected');
+        }
+    
+        System.assert(exceptionThrown, 'Expected AuraHandledException for empty list');
+    }
+
+	@isTest
+    static void testPreviewSpentForPeriods() {
+    
+        Client__c client = [SELECT Id FROM Client__c LIMIT 1];
+           Funds_Tracker__c tracker = [SELECT Id FROM Funds_Tracker__c LIMIT 1];
+    
+        List<Map<String, Object>> periods = new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'label' => 'Period 1',
+                'startDate' => String.valueOf(Date.today().addDays(-1)),
+                'endDate'   => String.valueOf(Date.today().addDays(1))
+            }
+        };
+    
+        Test.startTest();
+      Map<String, Decimal> result =
+            ClientFundTransferHandler.previewSpentForPeriods(
+                client.Id,
+                tracker.ID,
+                periods
+            );
+        Test.stopTest();
+        
+         
+        
+        
+    }
+	
+    @isTest
+    static void testRecalculateFundPeriods() {
+    
+        Funds_Tracker__c tracker = [SELECT Id, Client__c FROM Funds_Tracker__c LIMIT 1];
+    
+        // Make dates FUTURE so "Completed" logic is NOT triggered
+        fund_split__c fs = [SELECT Id, Start_Date__c, End_Date__c FROM fund_split__c LIMIT 1];
+    
+        fs.Start_Date__c = Date.today().addDays(1);
+        fs.End_Date__c   = Date.today().addMonths(6);
+        fs.Status__c     = 'Active'; // must be VALID picklist value
+        update fs;
+        
+        fund_split__c split = [SELECT Id, Allocated__c, Status__c FROM fund_split__c LIMIT 1];
+        
+        // Modify an existing record
+        split.Allocated__c = split.Allocated__c + 1000;
+        split.Status__c = 'Active'; // MUST be valid picklist value
+    
+        Test.startTest();
+        List<fund_split__c> result =
+            ClientFundTransferHandler.recalculateFundPeriods(tracker.Id,tracker.Client__c);
+            List<fund_split__c> result1 = ClientFundTransferHandler.updateFundSplits( tracker.Id,new List<fund_split__c>{ split });
+        	//ClientFundTransferHandler.updateFundSplits(null, new List<fund_split__c>());
+        Test.stopTest();    
+        System.assert(!result.isEmpty());
+    }
+@isTest
+static void testReplaceFundSplits() {
+    Funds_Tracker__c tracker =
+        [SELECT Id FROM Funds_Tracker__c LIMIT 1];
+
+    fund_split__c fs = new fund_split__c(
+        Name='Replace Test',
+        Allocated__c=2000,
+        Start_Date__c=Date.today(),
+        End_Date__c=Date.today().addMonths(3),
+        Status__c='Active'
+    );
+
+    Test.startTest();
+    List<fund_split__c> result =
+        ClientFundTransferHandler.replaceFundSplits(
+            tracker.Id,
+            new List<fund_split__c>{ fs }
+        );
+    Test.stopTest();
+
+    System.assertEquals(1, result.size());
+}
+@isTest
+static void testGetNDISData() {
+   String Year = '2024';
+        String Month = '10';
+        String Day = '16';
+        String service_date = Year + '-' + Month + '-' + Day;  
+     Client__c client = [SELECT Id FROM Client__c LIMIT 1];
+    Test.startTest();
+    Map<String, Object> result =ClientFundTransferHandler.getNDISData(service_date);     
+   // ClientFundTransferHandler.savFundTransfer(client.Id, '100', service_date);
+    Test.stopTest();
+
+    System.assertNotEquals(null, result);
+} 
+  @isTest
+static void testFundTrackerRecord_NoFunds() {
+
+    Client__c cli = new Client__c(
+        First_Name__c = 'No',
+        Last_Name__c  = 'Funds',
+        Gendar__c     = 'Male',
+        Date_Of_Birth__c = Date.newInstance(1995, 1, 1),
+
+        // Address (MANDATORY)
+        Address__Street__s     = '10 Test Street',
+        Address__City__s       = 'Test City',
+        Address__StateCode__s  = 'ACT',
+        Address__PostalCode__s = '2911',
+        Address__CountryCode__s= 'AU',
+
+        // Contact details (MANDATORY in your org)
+        Contact_Number__c = '0400000000',
+
+        // Primary contact (MANDATORY)
+        Primay_Contact_First_Name__c = 'Test',
+        Primay_Contact_Last_Name__c  = 'Contact',
+        Relationship__c              = 'Parent',
+        Primary_Contact_Number__c    = '0411111111'
+    );
+
+    insert cli;
+
+    // ⚠️ IMPORTANT: Do NOT create Funds_Tracker__c for this client
+    // This forces the ELSE branch
+
+    List<Funds_Tracker__c> result =
+        ClientFundTransferHandler.fundTrackerRecord(cli.Id);
+
+    System.assertEquals(
+        null,
+        result,
+        'Expected NULL when client has no fund trackers'
+    );
+}
+@isTest
+static void testCreateClient_Success() {
+
+    Client__c newClient = new Client__c(
+        First_Name__c = 'Create',
+        Last_Name__c  = 'Client',
+        Gendar__c     = 'Male',
+        Date_Of_Birth__c = Date.newInstance(1994, 5, 10),
+
+        Address__Street__s      = '12 Create Street',
+        Address__City__s        = 'Canberra',
+        Address__StateCode__s   = 'ACT',
+        Address__PostalCode__s  = '2600',
+        Address__CountryCode__s = 'AU',
+
+        Contact_Number__c = '0412345678',
+
+        Primay_Contact_First_Name__c = 'Parent',
+        Primay_Contact_Last_Name__c  = 'One',
+        Relationship__c              = 'Parent',
+        Primary_Contact_Number__c    = '0499999999'
+    );
+
+    Test.startTest();
+    Client__c result =
+        ClientFundTransferHandler.createClient(newClient);
+    Test.stopTest();
+
+}
+    @isTest
+static void testCreateClient_Exception() {
+    Boolean thrown = false;
+
+    try {
+        ClientFundTransferHandler.createClient(null);
+    } catch (AuraHandledException e) {
+        thrown = true;
+    }
+
+}
+
+@isTest
+static void testCheckThresholds_BreachesExist() {
+    // Create client with a Fund Tracker that exceeds threshold
+    Client__c client = new Client__c(
+        First_Name__c = 'Threshold', Last_Name__c = 'Test',
+        Gendar__c = 'Male', Date_Of_Birth__c = Date.newInstance(1990,1,1),
+        Address__Street__s = '123 Test St', Address__City__s = 'Test City',
+        Address__StateCode__s = 'NSW', Address__PostalCode__s = '2000',
+        Address__CountryCode__s = 'AU', Contact_Number__c = '0412345678',
+        Primay_Contact_First_Name__c = 'Parent', Primay_Contact_Last_Name__c = 'Contact',
+        Relationship__c = 'Parent', Primary_Contact_Number__c = '0499999999'
+    );
+    insert client;
+
+    Funds_Tracker__c fund = new Funds_Tracker__c(
+        Client__c = client.Id,
+        Name = 'Test Fund',
+        Amount_approved__c = 1000,
+        Spent_Amt__c = 850,          // 85% usage
+        Usage_Threshold__c = 80,
+        Registration_Group__c ='Innovative Community Participation',// threshold 80% -> breach
+        Plan_Type__c = 'Plan Managed',
+        Approved_Date__c = Date.today()
+    );
+    insert fund;
+
+    fund_split__c split = new fund_split__c(
+        Name = 'Test Split',
+        Funds_Tracker__c = fund.Id,
+        Allocated__c = 500,
+        Spent_Amount__c = 450,       // 90% usage
+        Usage_Threshold__c = 80,     // breach
+        Status__c = 'Active',
+        Start_Date__c = Date.today(),
+        End_Date__c = Date.today().addMonths(6)
+    );
+    insert split;
+
+    Test.startTest();
+    ClientFundTransferHandler.checkThresholds(client.Id);
+    Test.stopTest();
+}
+
+@isTest
+static void testCheckThresholds_NoBreaches() {
+    Client__c client = new Client__c(
+        First_Name__c = 'NoBreach', Last_Name__c = 'Test',
+        Gendar__c = 'Male', Date_Of_Birth__c = Date.newInstance(1990,1,1),
+        Address__Street__s = '123 Test St', Address__City__s = 'Test City',
+        Address__StateCode__s = 'NSW', Address__PostalCode__s = '2000',
+        Address__CountryCode__s = 'AU', Contact_Number__c = '0412345678',
+        Primay_Contact_First_Name__c = 'Parent', Primay_Contact_Last_Name__c = 'Contact',
+        Relationship__c = 'Parent', Primary_Contact_Number__c = '0499999999'
+    );
+    insert client;
+
+    Funds_Tracker__c fund = new Funds_Tracker__c(
+        Client__c = client.Id,
+        Amount_approved__c = 1000,
+        Spent_Amt__c = 500,          // 50% usage
+        Usage_Threshold__c = 80,
+        Plan_Type__c = 'Plan Managed',
+          Registration_Group__c ='Innovative Community Participation',
+        Approved_Date__c = Date.today()
+    );
+    insert fund;
+
+    fund_split__c split = new fund_split__c(
+        Name = 'Test Split',
+        Funds_Tracker__c = fund.Id,
+        Allocated__c = 500,
+        Spent_Amount__c = 200,       // 40% usage
+        Usage_Threshold__c = 80,
+        Status__c = 'Active',
+        Start_Date__c = Date.today(),
+        End_Date__c = Date.today().addMonths(6)
+    );
+    insert split;
+
+    Test.startTest();
+    ClientFundTransferHandler.checkThresholds(client.Id);
+    Test.stopTest();
+}
+
+@isTest
+static void testCheckThresholds_ZeroApprovedAmount() {
+    Client__c client = new Client__c(
+        First_Name__c = 'ZeroApp', Last_Name__c = 'Test',
+        Gendar__c = 'Male', Date_Of_Birth__c = Date.newInstance(1990,1,1),
+        Address__Street__s = '123 Test St', Address__City__s = 'Test City',
+        Address__StateCode__s = 'NSW', Address__PostalCode__s = '2000',
+        Address__CountryCode__s = 'AU', Contact_Number__c = '0412345678',
+        Primay_Contact_First_Name__c = 'Parent', Primay_Contact_Last_Name__c = 'Contact',
+        Relationship__c = 'Parent', Primary_Contact_Number__c = '0499999999'
+    );
+    insert client;
+
+    Funds_Tracker__c fund = new Funds_Tracker__c(
+        Client__c = client.Id,
+        Amount_approved__c = 0,      // triggers continue
+        Spent_Amt__c = 100,
+        Usage_Threshold__c = 80,
+        Plan_Type__c = 'Plan Managed',
+          Registration_Group__c ='Innovative Community Participation',
+        Approved_Date__c = Date.today()
+    );
+    insert fund;
+
+    Test.startTest();
+    ClientFundTransferHandler.checkThresholds(client.Id);
+    Test.stopTest();
+}    
+    @isTest
+static void testGenerateNotifications_BreachesExist() {
+    // Create a real User with email and organization name
+    Profile prof = [SELECT Id FROM Profile WHERE Name LIKE '%Admin%' LIMIT 1];
+    User testUser = new User(
+        Alias = 'notifusr', Email = 'test@example.com',
+        EmailEncodingKey = 'UTF-8', LastName = 'Notification',
+        LanguageLocaleKey = 'en_US', LocaleSidKey = 'en_US',
+        ProfileId = prof.Id, TimeZoneSidKey = 'America/New_York',
+        UserName = 'notif.user@test.com', Organization_Name__c = 'Test Org'
+    );
+    insert testUser;
+
+    System.runAs(testUser) {
+        Client__c client = new Client__c(
+            First_Name__c = 'Notify', Last_Name__c = 'Client',
+            Gendar__c = 'Male', Date_Of_Birth__c = Date.newInstance(1990,1,1),
+            Address__Street__s = '123 Test St', Address__City__s = 'Test City',
+            Address__StateCode__s = 'NSW', Address__PostalCode__s = '2000',
+            Address__CountryCode__s = 'AU', Contact_Number__c = '0412345678',
+            Primay_Contact_First_Name__c = 'Parent', Primay_Contact_Last_Name__c = 'Contact',
+            Relationship__c = 'Parent', Primary_Contact_Number__c = '0499999999'
+        );
+        insert client;
+
+        Funds_Tracker__c fund = new Funds_Tracker__c(
+            Client__c = client.Id,
+            Name = 'Test Fund',
+            Amount_approved__c = 1000,
+            Spent_Amt__c = 850,          // breach
+            Usage_Threshold__c = 80,
+            Plan_Type__c = 'Plan Managed',
+             Registration_Group__c ='Innovative Community Participation',
+            Approved_Date__c = Date.today()
+        );
+        insert fund;
+
+        fund_split__c split = new fund_split__c(
+            Name = 'Test Split',
+            Funds_Tracker__c = fund.Id,
+            Allocated__c = 500,
+            Spent_Amount__c = 450,       // breach
+            Usage_Threshold__c = 80,
+            Status__c = 'Active',
+            Start_Date__c = Date.today(),
+            End_Date__c = Date.today().addMonths(6)
+        );
+        insert split;
+
+        Test.startTest();
+        ClientFundTransferHandler.generateThresholdNotifications(client.Id);
+        Test.stopTest();
+    }
+}
+
+@isTest
+static void testGenerateNotifications_NoBreaches() {
+    Profile prof = [SELECT Id FROM Profile WHERE Name LIKE '%Admin%' LIMIT 1];
+    User testUser = new User(
+        Alias = 'abs', Email = 'nobreach@example.com',
+        EmailEncodingKey = 'UTF-8', LastName = 'NoBreach',
+        LanguageLocaleKey = 'en_US', LocaleSidKey = 'en_US',
+        ProfileId = prof.Id, TimeZoneSidKey = 'America/New_York',
+        UserName = 'nobreach.user@test.com', Organization_Name__c = 'Test Org'
+    );
+    insert testUser;
+
+    System.runAs(testUser) {
+        Client__c client = new Client__c(
+            First_Name__c = 'NoBreach', Last_Name__c = 'Client',
+            Gendar__c = 'Male', Date_Of_Birth__c = Date.newInstance(1990,1,1),
+            Address__Street__s = '123 Test St', Address__City__s = 'Test City',
+            Address__StateCode__s = 'NSW', Address__PostalCode__s = '2000',
+            Address__CountryCode__s = 'AU', Contact_Number__c = '0412345678',
+            Primay_Contact_First_Name__c = 'Parent', Primay_Contact_Last_Name__c = 'Contact',
+            Relationship__c = 'Parent', Primary_Contact_Number__c = '0499999999'
+        );
+        insert client;
+
+        Funds_Tracker__c fund = new Funds_Tracker__c(
+            Client__c = client.Id,
+            Amount_approved__c = 1000,
+            Spent_Amt__c = 500,          // no breach
+            Usage_Threshold__c = 80,
+            Plan_Type__c = 'Plan Managed',
+             Registration_Group__c ='Innovative Community Participation',
+            Approved_Date__c = Date.today()
+        );
+        insert fund;
+
+        Test.startTest();
+        ClientFundTransferHandler.generateThresholdNotifications(client.Id);
+        Test.stopTest();
+    }
+}
+
+@isTest
+static void testGenerateNotifications_NullClientId() {
+    Test.startTest();
+    ClientFundTransferHandler.generateThresholdNotifications(null);
+    Test.stopTest();
+}
+}
