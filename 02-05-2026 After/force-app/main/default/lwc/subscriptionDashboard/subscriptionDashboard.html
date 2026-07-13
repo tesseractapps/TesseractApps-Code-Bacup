@@ -1,0 +1,464 @@
+<template>
+    <div class="subscription-dashboard-root">
+        <template if:false={isPreviewOpen}>
+    <div class="slds-grid slds-p-around_medium slds-gutters_xx-small">
+            <!-- LEFT SECTION -->
+            <div class="slds-col slds-size_3-of-4">
+                <lightning-card>
+                    <!-- STATS (5 cards) -->
+                    <div class="slds-grid slds-wrap slds-p-around_medium slds-border_bottom">
+                        <template for:each={stats} for:item="item">
+                            <div key={item.label}
+                                 class="slds-col slds-size_1-of-5 slds-p-around_medium slds-border_right">
+                                <p class="slds-text-heading_medium">{item.value}</p>
+                                <p class="slds-text-title">{item.label}</p>
+                            <template if:true={isStartPlan}>
+                                <lightning-progress-bar value={item.percent} variant={item.progressVariant}></lightning-progress-bar>
+                            </template>   
+                            <template if:true={isStartPlan}>
+                                <p class="slds-text-body_small slds-m-top_x-small">{item.subText}</p>
+                            </template>                            
+                        </div>
+                        </template>
+                    </div>
+                    <!-- SERVICE AGREEMENTS with fixed arrows -->
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                            <h3 class="slds-text-heading_small slds-text-title_bold">
+                                Service Agreements
+                            </h3>
+                        </div>
+                        <div class="agreements-wrapper">
+                            <button class="scroll-arrow left" onclick={scrollAgreementsLeft}>
+                                <lightning-icon icon-name="utility:chevronleft" size="x-small"></lightning-icon>
+                            </button>
+                            <div class="agreements-scroll-container" id="agreementsScrollContainer">
+                                <div class="roster-grid">
+                                    <!-- Add Card -->
+                                    <template if:true={allowAddAgreement}>
+                                      <div class="roster-card add-card" onclick={handleAddClick}>
+                                            <div class="avatar">
+                                                <lightning-icon icon-name="utility:add" size="medium"></lightning-icon>
+                                            </div>
+                                            <div class="info">
+                                                <div class="name">Add Agreement</div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <!-- Existing Agreements -->
+                                    <template for:each={agreements} for:item="item">
+                                        <div key={item.id} class="roster-card">
+                                            <div class="avatar">
+                                                <lightning-icon icon-name="standard:contract" size="medium"></lightning-icon>
+                                            </div>
+                                            <div class="info">
+                                                <div class="name">{item.name}</div>
+                                                <div class="role">Service Agreement</div>
+                                            </div>
+                                            <div class="actions">
+
+                                                <!-- Download -->
+                                                <button class="icon-button">
+                                                    <i class="material-icons action-icon"
+                                                    data-url={item.fileUrl}
+                                                    onclick={handleDownloadAgreement}
+                                                    title="Download">
+                                                        download
+                                                    </i>
+                                                </button>
+
+                                                <!-- View -->
+                                                <button class="icon-button">
+                                                    <i class="material-icons action-icon"
+                                                    data-url={item.fileUrl}
+                                                    onclick={handleViewAgreement}
+                                                    title="View">
+                                                        visibility
+                                                    </i>
+                                                </button>
+
+                                                <!-- Conditional -->
+                                                <template if:true={allowAddAgreement}>
+
+                                                    <!-- Edit -->
+                                                    <button class="icon-button">
+                                                        <i class="material-icons action-icon"
+                                                        data-id={item.id}
+                                                        onclick={handleEditAgreement}
+                                                        title="Edit">
+                                                            edit
+                                                        </i>
+                                                    </button>
+
+                                                    <!-- Delete -->
+                                                    <button class="icon-button">
+                                                        <i class="material-icons action-icon"
+                                                        data-id={item.id}
+                                                        onclick={handleDeleteAgreement}
+                                                        title="Delete">
+                                                            delete
+                                                        </i>
+                                                    </button>
+
+                                                </template>
+
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <button class="scroll-arrow right" onclick={scrollAgreementsRight}>
+                                <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BILLING HISTORY -->
+                    <div class="slds-p-around_medium">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                            <h3 class="slds-text-heading_small slds-text-title_bold">
+                                Billing History
+                            </h3>
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <!-- lightning-button label="Upload" variant="base" 
+                                                  icon-name="utility:upload"
+                                                  class="slds-m-right_small"
+                                                  onclick={handleOpenUploadModal}>
+                                </lightning-button-->
+                                <lightning-button label="Export All" variant="base" 
+                                                  onclick={handleExportAll}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                        <div class="slds-box slds-theme_default">
+                            <table class="slds-table slds-table_cell-buffer" style="width:100%; table-layout:fixed;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:15%;">Invoice Number</th>
+                                        <th style="width:25%;">Description</th>
+                                        <th style="width:15%;">Amount</th>
+                                        <th style="width:15%;">Status</th>
+                                        <th style="width:15%;">Date</th>
+                                        <th style="width:15%;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={billingDisplayData} for:item="item">
+                                        <tr key={item.id}>
+                                            <td class="slds-cell-wrap">{item.invoice}</td>
+                                            <td class="description slds-cell-wrap" title={item.allDescriptions}>
+                                                {item.description}
+                                            </td>
+                                            <td>${item.amount}</td>
+                                            <td><span class={item.statusClass}>{item.status}</span></td>
+                                            <td>{item.date}</td>
+                                            <td>
+                                               <lightning-button label="View" variant="base"
+                                                    data-url={item.fileUrl}
+                                                    onclick={handleViewInvoice}>
+                                                </lightning-button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                            <template if:true={billingDisplayData.length}>
+
+                                <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_medium">
+
+                                    <!-- Page Size -->
+                                    <div class="slds-list_inline">
+                                        <span class="slds-m-right_small">Page Size:</span>
+                                        <div class="slds-select_container">
+                                            <select class="slds-select" onchange={handleBillingPageSize}>
+                                                <template for:each={billingPageSizeOptions} for:item="option">
+                                                    <option key={option} value={option}>{option}</option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pagination Controls -->
+                                    <div class="slds-align_absolute-center">
+
+                                        <lightning-button 
+                                            disabled={isFirstPage}
+                                            icon-name="utility:jump_to_left"
+                                            label="First"
+                                            onclick={firstBillingPage}>
+                                        </lightning-button>
+
+                                        <lightning-button 
+                                            disabled={isFirstPage}
+                                            class="slds-p-around_small"
+                                            icon-name="utility:chevronleft"
+                                            label="Previous"
+                                            onclick={previousBillingPage}>
+                                        </lightning-button>
+
+                                        <span class="slds-badge slds-m-horizontal_small">
+                                            Showing {billingPageNumber} of {billingTotalPages} Page(s)
+                                        </span>
+
+                                        <lightning-button 
+                                            disabled={isLastPage}
+                                            icon-name="utility:chevronright"
+                                            label="Next"
+                                            onclick={nextBillingPage}
+                                            icon-position="right">
+                                        </lightning-button>
+
+                                        <lightning-button 
+                                            disabled={isLastPage}
+                                            icon-name="utility:jump_to_right"
+                                            class="slds-p-around_small"
+                                            label="Last"
+                                            onclick={lastBillingPage}
+                                            icon-position="right">
+                                        </lightning-button>
+
+                                    </div>
+
+                                    <!-- Total Records -->
+                                    <div class="slds-float_right">
+                                        <span class="slds-badge">
+                                            Total Records: {billingTotalRecords}
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                            </template>
+                        </div>
+                    </div>
+                </lightning-card>
+            </div>
+
+            <!-- RIGHT SECTION -->
+            <div class="slds-col slds-size_1-of-4">
+                <div class="slds-box slds-theme_default slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-text-title_bold">
+                        Your Plan
+                    </h3>
+                   <p class="slds-m-top_small">
+                        <b>Plan Type:</b> {planTypeDisplay}
+                    </p>
+                    <div class="slds-m-top_small">
+                        <p><b>Setup Fee:</b> ${setupFeeDisplay}</p>
+                        <p><b>Billing Type:</b> {billingTypeDisplay}</p>
+                        <p><b>Contract Period:</b> {contractPeriod}</p>
+                        <p><b>Start Date:</b> {startDateDisplay}</p>
+                    </div>
+                </div>
+                <div class="slds-box slds-theme_default slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small">Payment Details</h3>
+                    <div class="slds-m-top_small">
+                       <p><b>Account Name : </b> {paymentDetails.accountName}</p>
+                        <p><b>Account Number : </b> {paymentDetails.accountNumber}</p>
+                        <p><b>Reference : </b> {paymentDetails.reference}</p>
+                        <p><b>Date : </b> {paymentDateDisplay}</p>
+                    </div>
+                </div>
+                <div class="slds-box slds-theme_default">
+
+                <!-- 🔹 Heading (left aligned) -->
+                <h3 class="slds-text-heading_small slds-text-align_left">
+                    GoCardless Payment
+                </h3>
+
+                <!-- 🔹 QR Section (centered) -->
+                <div class="qr-container">
+                    <img src={qrCodeUrl}
+                        alt="QR Code"
+                        class="slds-m-top_small"
+                        style="width:120px; height:120px;" />
+
+                    <p class="slds-m-top_small">
+                        Scan the QR code to pay via GoCardless.
+                    </p>
+                </div>
+
+            </div>
+            </div>
+        </div>
+</template>
+        <!-- MODAL: Upload Service Agreement -->
+        <!-- template if:true={isUploadModalOpen}>
+            <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container modal-custom">
+                    <header class="slds-modal__header headercustom">
+                        <h2 class="slds-modal__title slds-text-heading_medium h2custom">Upload Service Agreement</h2>
+                        <button class="slds-button slds-button_icon slds-modal__close" onclick={handleCloseUploadModal}>
+                            <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                        </button>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                        <div class="slds-form">
+                            <div class="slds-form-element slds-m-bottom_medium">
+                                <label class="slds-form-element__label"><strong>Invoice Number</strong></label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" class="slds-input" placeholder="e.g., INV-2026-001"
+                                           value={uploadForm.invoiceNumber} onchange={handleUploadFormChange} data-field="invoiceNumber">
+                                </div>
+                            </div>
+                            <div class="slds-form-element slds-m-bottom_medium">
+                                <label class="slds-form-element__label"><strong>Description</strong></label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" class="slds-input" placeholder="e.g., Setup Fee"
+                                           value={uploadForm.description} onchange={handleUploadFormChange} data-field="description">
+                                </div>
+                            </div>
+                            <div class="slds-form-element slds-m-bottom_medium">
+                                <label class="slds-form-element__label"><strong>Amount</strong></label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" class="slds-input" placeholder="e.g., 1500.00"
+                                           value={uploadForm.amount} onchange={handleUploadFormChange} data-field="amount">
+                                </div>
+                            </div>
+                            <div class="slds-form-element slds-m-bottom_medium">
+                                <label class="slds-form-element__label"><strong>Status</strong></label>
+                                <div class="slds-form-element__control">
+                                    <select class="slds-select" value={uploadForm.status} onchange={handleUploadFormChange} data-field="status">
+                                        <option value="Paid">Paid</option>
+                                        <option value="Generated">Generated</option>
+                                        <option value="Pending">Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            < Drag & drop zone >
+                            <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                                <div class="slds-box drag-drop"
+                                    ondragover={handleDragOver}
+                                    ondrop={handleDrop}>
+                                    <p class="slds-text-align_center">
+                                        Drag and drop files here<br/>
+                                        <a href="javascript:void(0);" onclick={triggerFileInput}>
+                                            Click to browse
+                                        </a>
+                                    </p>
+                                    <input type="file" class="hidden-file-input"
+                                           onchange={handleFileUploadInputChange}
+                                           multiple={allowMultiple}/>
+                                </div>
+                                <template if:true={isFileExpand}>
+                                    <c-document-office-service
+                                        record-id={recordIdForFileUpload}
+                                        module-path-from-parent="ticket"
+                                        onawsuploadcomplete={handleAwsUploadComplete}
+                                        onfiledeleted={handleFileDeleted}
+                                        onfilecancel={handleFileCancel}>
+                                    </c-document-office-service>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Cancel" onclick={handleCloseUploadModal}></lightning-button>
+                        <lightning-button variant="brand" label="Upload" class="slds-m-left_small" onclick={handleSaveUpload} disabled={isUploading}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template --->
+
+        <!-- MODAL: Add Service Agreement -->
+        <template if:true={isModalOpen}>
+            <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container modal-custom">
+                    <header class="slds-modal__header headercustom">
+                        <h2 class="slds-modal__title slds-text-heading_medium h2custom">Add Service Agreement</h2>
+                        <button class="slds-button slds-button_icon slds-modal__close" onclick={handleCloseModal}>
+                            <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                        </button>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                        <div class="slds-form">
+                            <div class="slds-form-element slds-m-bottom_medium">
+                                <label class="slds-form-element__label"><strong>Agreement Name</strong></label>
+                                <div class="slds-form-element__control">
+                                    <input type="text" class="slds-input" placeholder="e.g., Start Package"
+                                           value={agreementNameValue} onchange={handleAgreementNameChange}>
+                                </div>
+                            </div>
+                            <!-- Drag & drop zone -->
+                             <!-- <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                                <div class="slds-box drag-drop"
+                                    ondragover={handleDragOver}
+                                    ondrop={handleDrop}>
+                                    <p class="slds-text-align_center">
+                                        Drag and drop files here<br/>
+                                        <a href="javascript:void(0);" onclick={triggerFileInput}>
+                                            Click to browse
+                                        </a>
+                                    </p>
+                                    <input type="file" class="hidden-file-input"
+                                           onchange={handleFileUploadInputChange}
+                                           multiple={allowMultiple}/>
+                                </div>
+                                <template if:true={uploadedFiles.length}>
+                                        <div class="upload-wrapper">
+
+                                            <template for:each={uploadedFiles} for:item="file">
+                                                <div key={file.originalName} class="upload-card">
+
+                                                 
+                                                    <div class="file-info">
+                                                        <span class="file-name">
+                                                            {file.originalName} ({file.size} B)
+                                                        </span>
+                                                    </div>
+
+                                           
+                                                    <div class="status-section">
+                                                        {file.progress}% &nbsp; {file.status}
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                            </div> -->
+
+                              <c-aws-batch-lwc
+                                    base-path={basePath}
+                                    accepted-formats={acceptedFormats}
+                                    max-file-size={maxFileSize}
+                                    allow-multiple={allowMultiple}
+                                    max-file-count={maxFileCount}
+                                    onuploadsuccess={handleUploadSuccess}
+                                    is-unlimited={isUnlimited}>
+                                </c-aws-batch-lwc>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Cancel" onclick={handleCloseModal}></lightning-button>
+                        <lightning-button variant="brand" label="Save Agreement" class="slds-m-left_small" onclick={handleSaveAgreement} disabled={showSpinner}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>    
+        <template if:true={isPreviewOpen}>
+    <div class="preview-page">
+
+        <!-- HEADER -->
+        <div class="preview-header">
+
+            <!-- BACK BUTTON (LEFT SIDE) -->
+            <button class="back-btn" onclick={closePreview}>
+                ← Back
+            </button>
+
+            <!-- TITLE -->
+            <span class="title">Preview</span>
+
+        </div>
+
+        <!-- BODY -->
+        <div class="preview-body">
+            <iframe src={previewUrl}></iframe>
+        </div>
+
+    </div>
+</template>  
+    </div>
+</template>

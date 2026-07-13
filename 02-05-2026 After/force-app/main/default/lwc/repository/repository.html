@@ -1,0 +1,1032 @@
+<template>  
+  <div class="main-container">
+      
+      
+      <div class="summary-container">
+        <div class="summary-card green-card" data-name="org" onclick={handleCardClick} >
+          <div class="card-row">
+          <div class="title">Organisation</div>
+          <template if:true={OrgFlag}>
+            <i class="material-iconsInvoice">task_alt</i>
+          </template>
+          </div>
+        </div>
+
+    
+    <div class="summary-card pink-card" data-name="staff" onclick={handleCardClick}>
+        <div class="card-row">
+        <div class="title">Staff</div>
+        <template if:true={staffFlag}>
+              <i class="material-iconsInvoice">task_alt</i>
+        </template>
+        </div>
+    </div>
+      <template if:true={Ndisflag}>
+      <div class="summary-card blue-card" data-name="participant" onclick={handleCardClick}>
+      <div class="card-row">
+      <div class="title">Participant</div>
+      <template if:true={ParticipantFlag}>
+            <i class="material-iconsInvoice">task_alt</i>
+      </template>
+      </div>
+      </div>
+      </template>
+
+      </div>
+      <template if:true={OrgFlag}>
+        <template if:true={isHome}> 
+        
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="title-block">
+                <h1>Organisation Documents & Policies</h1>
+                <p class="sub">Manage facility licenses, insurance, policies, and operational documents</p>
+              </div>
+            <div style="display: flex; align-items: center;  margin-right:1%; gap:10px;">
+                <!-- <button 
+                    class="icon-btn" 
+                    title="Refresh" 
+                    onclick={fetchNotifications}>
+                    <span class="material-icons-not">Notifications</span>
+                </button> -->
+                    <button 
+                    class="slds-button slds-button_icon slds-button_icon-border" 
+                    title="Refresh" 
+                    onclick={fetchReplist}>
+                    <svg class="slds-button__icon" aria-hidden="true">
+                        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                    </svg>
+                </button>
+                <button class="custom-create-btn" onclick={handleAttachment} title="Add Attachment(Ctrl + Shift + C)">
+                    Add Attachment
+                </button>
+                
+            </div>
+        </div>
+
+
+        <template if:true={isOpenModal}>
+        <div class="blur-overlay"></div>
+        <div class="right-align " style="width:40%;padding-right:1%;">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 3% 0 0 3%;">Add Attachment</h3>
+
+                <!-- <lightning-button class="slds-m-left_small" label="Back" onclick={hideModalBox} variant="brand" style="padding-right: 3.5%;padding-top:2%;"></lightning-button> -->
+            </div>
+            
+                <div class=" slds-p-around_medium  ">
+                    <lightning-record-edit-form object-api-name="Repository__c" onsuccess={handleSuccess} onsubmit={handleSubmit}  onerror={handleError} record-id={recordId} >
+                        <lightning-messages></lightning-messages>
+                        <div class="seperator right-content custom-scroll">
+                            <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                            <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Name</span>
+                                    <lightning-input-field field-name="Name" required="true" variant="label-hidden"> </lightning-input-field>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Uploaded by</span>
+                                    <lightning-input-field field-name="User__c" required="true" value={uploadedByUser} variant="label-hidden" disabled> </lightning-input-field>
+                                </div>
+                            </div>
+                            <!-- <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Type</span>
+                                    <lightning-input-field field-name="Document_Type__c" required="true" variant="label-hidden" onchange={changeExpense}> </lightning-input-field>
+                                </div>
+                            </div> -->
+
+<div class="slds-col slds-size_1-of-2 slds-p-around_small">
+    <div class="floating-label">
+
+        <span class="label-text-drop">
+            <span style="color:red">*</span>Type
+        </span>
+
+        <div class="dropdown-container" data-dropdown="true">
+
+            <!-- Dropdown Button -->
+            <button
+                type="button"
+                class="dropdown-button1"
+                onclick={toggleDropdown}
+                aria-expanded={isOpen}
+            >
+                <span class="selected-text" title={selectedValue}>
+                    {displayText}
+                </span>
+
+                <lightning-icon
+                    icon-name="utility:chevrondown"
+                    size="x-small"
+                    class="chevron-icon">
+                </lightning-icon>
+            </button>
+
+            <!-- Dropdown Panel -->
+            <template if:true={isOpen}>
+                <div class="dropdown-menu">
+
+                    <!-- Add Section -->
+                <template if:true={isExec}>
+                    <div class="add-option-section">
+                        <div class="input-container">
+
+                            <lightning-input
+                                type="text"
+                                placeholder="Add new type..."
+                                value={newOptionText}
+                                onchange={handleInputChange}
+                                variant="label-hidden">
+                            </lightning-input>
+
+                            <lightning-button
+                                label="Add"
+                                variant="brand"
+                                onclick={handleAddOption}
+                                disabled={isAddDisabled}>
+                            </lightning-button>
+
+                        </div>
+                    </div>
+                </template>
+
+                    <!-- Divider -->
+                    <div class="dropdown-divider"></div>
+
+                    <!-- Options -->
+                    <div class="options-list custom-scroll">
+                        <template for:each={options} for:item="opt">
+                            <div key={opt.id} class="option-item">
+                                <button
+                                    key={opt}
+                                    type="button"
+                                    class="option-button"
+                                    data-value={opt}
+                                    title={opt}
+                                    onclick={handleSelectOption}>
+                                    {opt}
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+            </template>
+
+        </div>
+    </div>
+</div>
+
+                        <template if:true={textboxFlag}>
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label" >
+                            <span class="label-text-drop">Please Specify</span>
+                            <lightning-input-field field-name="Other_Comments__c" variant="label-hidden"> </lightning-input-field>
+                        </div>
+                        </div>
+                        </template>
+                        <template if:false={textboxFlag}>
+                                    
+                        </template>
+
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Date</span>
+                                <lightning-input-field field-name="Date__c" date-style="long" required="true" variant="label-hidden" onchange={changeExpense}> </lightning-input-field>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+                            <div class="floating-label" style="height:63px">
+                                <span class="label-text-drop">Comments</span>
+                                <lightning-input-field field-name="Comments__c" variant="label-hidden" > </lightning-input-field>
+                            </div>
+                        </div>
+
+                        <!-- <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                
+                                <input type="file" id="fileInput" onchange={onFileUpload} accept=".jpg, .jpeg, .png, .gif" name="uploadFile" style="display: none;">
+                                <button type="button" onclick={triggerFileInput} class="file-upload-button">
+                                    &#8684; Upload File
+                                </button>
+                                <div class="slds-text-body_small">{fileName}
+                                    <template if:true={showSpinner}>
+                                        <lightning-spinner alternative-text="Uploading the file......" size="medium">                        
+                                            </lightning-spinner>
+                                    </template>
+                                    </div>
+                                <template if:true={isattachError}>
+                                <p style="color:red">File Size Can not exceed 512MB </p>  
+                                </template>
+                            </div>
+                        </div> -->
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+                            
+                            
+                            <div class="slds-box slds-m-top_medium drag-drop" ondragover={handleDragOver} ondrop={handleDrop}>
+                                                <p class="slds-text-align_center">
+                                                    Drag and drop files here<br />
+                                                    <a href="javascript:void(0);"  onclick={triggerFileInput}>Click to browse</a>
+                                                </p>
+
+                                                <input type="file" class="hidden-file-input"  onchange={handleFileUploadInputChange} multiple={allowMultiple}/><!-- accept=".pdf,.png,.jpg,.jpeg"-->
+                                            </div>
+                            <!--  <template if:true={isEdit}>
+                                <div class="slds-text-body_small" style="display: flex;align-items:center;">
+                                    {fileName}  
+                                </div>
+                            </template> -->
+                            <template if:true={isFileExpand}>
+                                    <c-document-office-service
+                                        record-id={recordId}
+                                        module-path-from-parent="ticket"
+                                        onuploadcomplete={handleAwsUploadComplete}
+                                        onfiledeleted={handleFileDeleted}
+                                        oncancel={handlefilecancel}>
+
+                                    </c-document-office-service>
+                                </template>
+                        </div>
+
+                    </div>
+                    </div>
+                    <!-- modal footer start-->
+                    <div class="slds-grid slds-grid_align-center">
+                        <lightning-button  label="Cancel" onclick={hideModalBox} variant="brand-outline"></lightning-button>
+                        <lightning-button type="submit" variant="brand" label="Save" class="slds-m-left_small"></lightning-button>
+                        
+                    </div>                        
+                    </lightning-record-edit-form>  
+                
+            </div>
+        </div>
+        </template>  
+      
+        
+      </template>
+      
+        
+        
+      
+      <template if:true={isHome}> 
+        
+                <template if:true={showNotifications}>
+                                <div class="table-options custom-scroll">
+                                            <div class="slds-p-around_x-small" onclick={stopPropagation}>
+                                                
+                                            </div>
+                                            <ul
+                                                class="slds-dropdown__list"
+                                                role="listbox"
+                                                style="text-align: left"
+                                            >
+                                                <template for:each={filterednotification} for:item="opt"><!--  data-index={opt.index} -->
+                                                    <li
+                                                        key={opt.value}
+                                                        class="slds-dropdown__item dropdown-option"
+                                                    
+                                                        data-field="notification"
+                                                        data-value={opt.value}
+                                                        data-label={opt.label}
+                                                        onclick={handleDropdownSelect}
+                                                        role="option"
+                                                    >
+                                                        <div class="slds-truncate">
+                                                            <p><strong>{opt.label}</strong></p>
+                                                            <p class="slds-text-body_small">{opt.description}</p>
+                                                            <p class="slds-text-color_weak slds-text-body_small">{opt.createdDate}</p>
+                                                        </div>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                        </div>
+              </template> 
+        
+    <template if:true={data}>
+
+    <!-- Search + Filter + Export Row -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 1% 15px 1%;">
+
+        <!-- Search Bar -->
+        <div style="flex:1; margin-right: 10px;">
+            <lightning-input 
+                type="search"
+                placeholder="Search by Name or Uploader..."
+                title="Search by Name or Uploader..."
+                value={searchKey}
+                onchange={handleSearch}
+                variant="label-hidden"
+                style="background:#f5f6f9; border-radius:8px;">
+            </lightning-input>
+        </div>
+
+        <!-- Type Dropdown -->
+        <div style="margin-right: 10px;">
+            <lightning-combobox
+                value={selectedType}
+                options={typeOptions}
+                onchange={handleTypeFilter}
+                variant="label-hidden"
+                style="min-width:150px;">
+            </lightning-combobox>
+        </div>
+
+        <!-- Export Button -->
+        <!-- <button 
+            onclick={exportCSV}
+            class="custom-create-btn"
+            style="margin-left:10px; background:white; color:#022951; border:1px solid #d0d5dd;">
+            ⬇ Export
+        </button> -->
+
+            <button class="export-btn" onclick={exportCSV}>
+            <span class="material-icons-export Export">file_download</span>
+            Export 
+            </button>
+
+    </div>
+
+
+      <div class="content-wrapper">
+        <div class="table-container custom-scroll" style="padding: 1%;">
+
+          <!-- Table -->
+         <template if:false={noRecordsFlag}>
+    <template if:true={isDocTypeView}>
+        <template for:each={data} for:item="group">
+           <!--  <template if:true={group.attachmentCount}> -->
+            <div key={group.key} class="staff-card">
+
+                <!-- DOCUMENT TYPE HEADER -->
+                <div class="staff-header"
+                     data-id={group.key}
+                     onclick={toggleSection}>
+                    <div class="left">
+                        <span class="material-icons arrow">
+                            <template if:true={group.expand}>keyboard_arrow_down</template>
+                            <template if:false={group.expand}>keyboard_arrow_right</template>
+                        </span>
+
+                        <span class="doc-type-title">
+                            {group.documentTypeName}
+                        </span>          
+
+                        <span class="doc-count">
+                            {group.attachmentCount} document
+                        </span>
+                        
+                        <template if:true={isExec}>
+                            <template if:true={group.showEdit}>
+                                <span class="material-icons edit-folder-icon"
+                                    data-type={group.key}
+                                    onclick={handleEditFolder}>
+                                    edit
+                                </span>
+                            </template>
+
+                            <template if:true={group.showDelete}>
+                                <span class="material-icons delete-icon"
+                                    data-type={group.key}
+                                    onclick={handleDeleteFolder}>
+                                    delete
+                                </span>
+                            </template>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- EXPANDED -->
+                <template if:true={group.expand}>
+
+                    <!-- 🔴 MISSING LOOP – THIS IS REQUIRED -->
+                    <template for:each={group.repositories} for:item="repo">
+
+                        <!-- SAFETY CHECK -->
+                        <template if:true={repo.Repository_Attachments__r}>
+
+                            <!-- ONE ROW PER ATTACHMENT -->
+                            <template for:each={repo.Repository_Attachments__r} for:item="att">
+                                <div key={att.Id} class="doc-row">
+
+                                    <!-- LEFT (PARENT INFO) -->
+                                    <div class="doc-left">
+                                        <div class="doc-title">
+                                        <template if:false={isExec}>
+                                            <span class="file-name" title={att.File_Name__c}>
+                                                {att.File_Name__c}
+                                            </span>&nbsp;
+                                        </template>
+                                        <template if:true={isExec}>
+                                            <a href="javascript:void(0);"
+                                                data-id={repo.Id}
+                                                    data-child={att.Id}
+                                                onclick={handleShowRepositoryHistory}
+                                                class="repo-link">
+                                                {repo.Name}
+                                            </a>
+                                        </template>
+                                            <span class="file-size">
+                                                {att.Size__c}
+                                            </span>
+
+                                        </div>
+                                    
+                                        <!-- <div class="doc-meta">
+                                            Uploaded by {repo.User_Name__c}
+                                            • {repo.Date_Format__c} • {repo.Comments__c}
+                                        </div> -->
+                                        <div class="doc-meta">
+                                            <span class="uploaded-by">
+                                                Uploaded by {repo.User_Name__c}
+                                            </span>
+                                            <span class="separator"> • </span>
+                                            <span class="uploaded-date">
+                                                {repo.Date_Format__c}
+                                            </span>
+                                            <span class="separator"> • </span>
+                                            <span class="doc-comments" title={repo.Comments__c}>
+                                                {repo.Comments__c}
+                                            </span>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- RIGHT (CHILD) -->
+                                    <div class="doc-actions inline-attachments">
+                                        <div class="attachment-pill">
+
+                                            <span class="file-name" title={repo.Name}>
+                                                {repo.Name}
+                                            </span>
+
+                                            <template if:true={att.HasReadAccess}>
+                                                <span class="material-icons view-icon"
+                                                      data-url={att.Awsurl__c}  data-child={att.Id}  data-id={repo.Id}
+                                    
+                                                    data-key={att.key__c}
+                                                      onclick={handleView} title="View">
+                                                    visibility
+                                                </span>
+                                            </template>
+
+                                            <template if:true={att.HasEditAccess}>
+                                                <span class="material-icons edit-icon"
+                                                      data-id={repo.Id}
+                                                    data-child={att.Id} 
+                                                    data-key={att.key__c}
+                                                      onclick={handleEdit} title="Edit">
+                                                    edit_document
+                                                </span>
+                                            </template>
+
+                                            <template if:true={att.HasDeleteAccess}>
+                                                <span class="material-icons delete-icon"
+                                                      data-id={att.Id}  data-child={att.Id} 
+                                                    data-key={att.key__c}
+                                                      onclick={handleDeleteattachment} title="Delete">
+                                                    delete
+                                                </span>
+                                            </template>
+
+                                            <template if:true={isExec}>
+                                                <span class="material-icons rule-icon"
+                                                       data-id={repo.Id}
+                                                    data-child={att.Id} 
+                                                        onclick={handlePermission}
+                                                        title="Permissions">
+                                                    passkey
+                                                </span>
+                                            </template>
+
+                                              <template if:true={isExec}>
+                                                <span class="material-icons rule-icon"
+                                                       data-id={repo.Id}
+                                                    data-child={att.Id} 
+                                                      onclick={handleConsent} title="Consent">
+                                                    assignment_turned_in
+                                                </span>
+                                            </template>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </template>
+
+                        </template>
+                    </template>
+
+                </template>
+            </div>
+            <!-- </template> -->
+        </template>
+    </template>
+</template>
+
+
+          <!-- No Records -->
+          <template if:true={noRecordsFlag}>
+            <div class="no-data">
+              <p>No records found</p>
+            </div>
+          </template>
+
+        </div>
+      </div>
+    </template>
+
+
+
+        
+
+          <template if:true={showSpinner}>         
+            <lightning-spinner alternative-text="Loading page....." size="medium"> Your page is loading</lightning-spinner>         
+          </template>
+          <template if:false={noRecordsFlag}>
+          <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large fixed-pagination" style="padding-top: 0.5em;">
+          <!--RECORDS PER PAGE-->
+          <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                  <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                  <div class="slds-select_container">
+                      <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                            <template for:each={pageSizeOptions} for:item="option">
+                              <option key={option} value={option}>{option}</option>
+                            </template>
+                      </select>
+                  </div>
+                </div>
+          </div>
+
+          <!--PAGE NAVIGATION-->
+          <div class="slds-align_absolute-center" style="height:5rem">
+                <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+                <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+                &nbsp;
+                <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                &nbsp;
+                <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+          </div>
+          <!--TOTAL RECORDS-->
+          <div class="slds-clearfix slds-m-right_xx-large">
+                <div class="slds-float_right">
+                  <span class="slds-badge"> Total Records: {totalRecords}</span>
+                </div>
+          </div>
+          </div>  
+          </template>    
+      </template> 
+       <template if:true={Consentflag}>
+         <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:2%;">Consent Summary</h3>
+             <lightning-button class="slds-m-left_medium" style="margin-right:1%;" variant="brand" label="Back" onclick={handleBack}></lightning-button>
+        </div> 
+   
+    <table class="slds-table slds-table_cell-buffer" style="table-layout: fixed;border-radius:10px; overflow: hidden;">
+        <thead>
+            <tr> 
+                 <th class="slds-cell-wrap th">Name</th> 
+                  <th class="slds-cell-wrap th">Type</th>
+                   <th class="slds-cell-wrap th">File Name</th>
+                <th class="slds-cell-wrap th">Staff</th>
+               
+                <th class="slds-cell-wrap th">Consent Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template for:each={ConsentList} for:item="rec">
+                <tr key={rec.Id} class="tr1">
+                     <td>{rec.Repository__r.Name}</td> 
+                     <td>{rec.Repository__r.Document_Type__c}</td>
+                     <td title={rec.Repository_Attachment__r.File_Name__c}>{rec.Repository_Attachment__r.File_Name__c}</td>
+                    <!-- <td>{rec.User__r.Name}</td> -->
+                     <td>{rec.staffName}</td>
+                    
+                    <td ><label class={rec.Consent_Status__c}>{rec.Consent_Status__c}</label></td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+</template>
+      </template>
+      <template if:true={staffFlag}>
+        <!-- <div class="table-container custom-scroll" style="padding:1%;"> -->
+        <c-staff-documents-lwc></c-staff-documents-lwc>
+        <!-- </div> -->
+      </template>
+      <template if:true={ParticipantFlag}>
+        <!-- <div class="table-container custom-scroll" style="padding:0 1%;"> -->
+        <c-participant-documents-lwc adminflag={isExec}></c-participant-documents-lwc>
+        <!-- </div> -->
+      </template>
+      <template if:true={isModalOpen}>
+        <div class="slds-grid slds-grid_align-end">
+          <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                    onclick={closeRepository} style="margin-right:1%;margin-top: 1%;"></lightning-button>
+                    </div>
+                    <div class="main-container-iframe custom-scroll">
+          
+            <iframe src={currentUrl} width="100%" height="1200px" ></iframe>
+             <template if:true={consentRequired}>
+              <div class=" slds-p-around_medium ">
+          <lightning-input
+              type="checkbox"
+              label="I have read and accept the consent"
+              onchange={handleConsentChange}
+              checked={isConsentAccepted}
+              disabled={isConsentAccepted}>
+          </lightning-input>
+      </div>
+      </template>
+        
+          </div>
+      </template>
+      <template if:true={isOpenPermission}>
+            <div class="blur-overlay"></div>            
+            <div class="right-align" style="width:75%;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:2%;"></h3>
+                    
+                </div> 
+                <div class="container2" >
+                    <lightning-button class="slds-m-left_medium" style="display:flex;justify-content:flex-end;" variant="brand" label="Back" onclick={handleBack}></lightning-button>      
+                    <div class="containerpermission">      
+                        <div class="slds-col slds-size_1-of-2" style="padding-left: 1%;padding-right: 1%;padding-top: 2%;">
+                            <div class="floating-label-role" style="width: 100%;">
+                                <span class="label-text-drop" style="padding-top:1%;">Select Groups</span>
+                                    <lightning-dual-listbox name="roles" class="list-box" style="padding-bottom: 1%;"
+                                        label="Select Roles"
+                                        source-label="Available"
+                                        selected-label="Selected"
+                                        variant="label-hidden"
+                                        options={userTypeOption} value={selectedRoles}
+                                        onchange={handleRoleSelection}></lightning-dual-listbox>   
+                                        
+                                            <!-- <lightning-dual-listbox name="roles" class="list-box" style="padding-bottom: 1%;"
+                                                                    label="Select Users"
+                                                                    source-label="Available"
+                                                                    selected-label="Selected"
+                                                                    variant="label-hidden"
+                                                                    options={filteredUserTypeOption} value={selectedRoles}
+                                                                    onchange={handleRoleSelection}></lightning-dual-listbox> -->
+                                    
+                                        
+                            </div></div>      
+                        <!-- User List Table -->
+                        <template if:true={userListTable}>
+                            <lightning-input
+                                type="search"
+                                label="Search Users"
+                                placeholder="Search by name, email, or user type"
+                                 title="Search by name, email, or user type"
+                                onchange={handleSearch2}
+                                class="slds-p-left_small slds-p-top_small slds-size_1-of-3" variant="label-hidden">
+                            </lightning-input>
+                            <div class="table-round-wrapper">
+                            <div class="table-container-permission custom-scroll">
+                            <table class="slds-table slds-table_cell-buffer" style="table-layout:fixed">
+                                <thead>
+                                    <tr>
+                                        
+                                        <th class="slds-cell-wrap th">User Name</th>
+                                        <th class="slds-cell-wrap th">User Type</th>
+                                        <th class="slds-cell-wrap th">Email ID</th> 
+                                        <th class="slds-cell-wrap th" >
+                                           <!--  <lightning-input
+                                            type="checkbox"
+                                            label="View Access"
+                                            checked={isAllViewSelected}
+                                            onchange={handleSelectAllView} variant="label-hidden">
+                                        </lightning-input>View Access -->
+                                        <div class="slds-grid slds-grid_vertical-align-center">
+                                                <lightning-input
+                                                    type="checkbox"
+                                                    checked={isAllViewSelected}
+                                                    onchange={handleSelectAllView}
+                                                    variant="label-hidden">
+                                                </lightning-input>
+                                                <span class="slds-m-left_x-small">View Access</span>
+                                            </div>
+                                    </th>
+                                        <th class="slds-cell-wrap th">
+                                           <!-- <lightning-input
+                                            type="checkbox"
+                                            label="Consent Required"
+                                            checked={isAllConsentSelected}
+                                            onchange={handleSelectAllConsent} variant="label-hidden">
+                                         </lightning-input>Consent Required -->
+                                         <div class="slds-grid slds-grid_vertical-align-center">
+                                            <lightning-input
+                                                type="checkbox"
+                                                checked={isAllConsentSelected}
+                                                onchange={handleSelectAllConsent}
+                                                variant="label-hidden">
+                                            </lightning-input>
+                                            <span class="slds-m-left_x-small">Consent Required</span>
+                                        </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={finalUsers} for:item="user">
+                                        <tr key={user.Id} class="tr1">
+                                           
+                                            <!-- <td class="slds-cell-wrap description">{user.FirstName} {user.LastName}</td> -->
+                                            <td class="slds-cell-wrap description">{user.staffName}</td>
+                                            <td class="slds-cell-wrap description" title={user.User_Type__c}>{user.User_Type__c}</td>
+                                            <td class="slds-cell-wrap description" title={user.Email}>{user.Email}</td> 
+                                             <td><lightning-input type="checkbox" data-id={user.Id} data-type="view" checked={user.hasViewPermission} onchange={handleUserPermissionChange}></lightning-input></td>
+                                            <td>
+                                              <lightning-input
+                                                  type="checkbox"
+                                                  data-id={user.Id}
+                                                  data-type="consent"
+                                                  checked={user.consentRequired}
+                                                  disabled={user.disableConsent}
+                                                  onchange={handleUserPermissionChange}>
+                                              </lightning-input>
+                                          </td>
+                                            
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table> 
+                            </div>
+                            </div>
+                             <template if:false={noRecordsFlag1}>
+                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread  fixed-pagination" style="padding-top: 0.5em;">
+                            <!--RECORDS PER PAGE-->
+                            <div class="slds-col">
+                                    <div class="slds-list_inline slds-p-bottom_xx-small">
+                                    <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                                    <div class="slds-select_container">
+                                        <select class="slds-select"  onchange={handleRecordsPerPage1}>
+                                                <template for:each={pageSizeOptions1} for:item="option">
+                                                <option key={option} value={option}>{option}</option>
+                                                </template>
+                                        </select>
+                                    </div>
+                                    </div>
+                            </div>
+
+                            <!--PAGE NAVIGATION-->
+                            <div class="slds-align_absolute-center" style="height:5rem">
+                                    <lightning-button disabled={bDisableFirst1} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage1}></lightning-button>
+                                    <lightning-button disabled={bDisableFirst1} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage1}></lightning-button>
+                                    &nbsp;
+                                    <span class="slds-badge">Showing {pageNumber1} &nbsp;of&nbsp; {totalPages1} &nbsp;&nbsp;Page(s)</span>
+                                    &nbsp;
+                                    <lightning-button disabled={bDisableLast1} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage1} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                                    <lightning-button disabled={bDisableLast1} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage1} icon-position="right"></lightning-button>
+                            </div>
+                            <!--TOTAL RECORDS-->
+                            <div class="slds-clearfix slds-m-right_xx-large">
+                                    <div class="slds-float_right">
+                                    <span class="slds-badge"> Total Records: {totalRecords1}</span>
+                                    </div>
+                            </div>
+                            </div>  
+                            </template> 
+                        </template>          
+
+                        <!-- Permissions Checkboxes -->
+                        <div class="permissions">
+                        
+                            <div style="flex: 1; display: flex; justify-content: flex-start;">
+                                <template if:true={isViewEnable}> 
+                                    <lightning-input type="checkbox" name="view" label="View" onclick={handlePermissionChange} ></lightning-input>
+                                </template>
+                            </div> 
+                              
+                            
+                            <div style="flex: 1; display: flex; justify-content:center; gap: 10px; margin-right:32%;">
+                                <lightning-button label="Cancel" variant="brand-outline" onclick={hideModalBox} ></lightning-button>
+                                <lightning-button label="Submit" variant="brand" onclick={handleSubmitPermissions}  disabled={saveDisabled}></lightning-button>
+                            </div>
+                        </div>   
+                        <!-- Submit and Close Buttons -->
+                    </div>     
+                </div>
+            </div>
+      </template>
+    
+  </div>
+  <template if:true={DeleteFlag}>
+      <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+          class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+      
+          <div class="slds-modal__container modal-container" style="max-width:25%;">
+          <header class="slds-modal__header" style="background: #002A52;">
+              
+              <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+          </header> 
+          <div class="slds-modal__content slds-p-around_medium modal-content" >                                
+              <div class="slds-m-around_small" style="text-align:center">
+                  <div><p style="text-align: center;">Are you sure you want to delete this attachment?</p></div>
+                  <div class="button-container slds-m-top_medium">
+                      <lightning-button label="No" variant="brand" onclick={handleclose}
+                      class="slds-m-around_small"></lightning-button>
+                      <lightning-button label="Yes" variant="brand"  onclick={handleDelete} class="slds-m-around_small" ></lightning-button>
+                      
+                  </div>
+              </div>
+          </div>
+          </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+ <template if:true={showLoadingSpinner}>
+      <div class="overlay-logo"></div>
+        
+            <div class="spinner-wrapper">
+                <div class="loader-container">
+                    <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                    <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                </div>
+        
+                <!-- Progress text instead of progress bar -->
+                <p class="progress-text"></br>Please Wait...</p>
+            </div>
+  </template>
+
+    <template if:true={showFormHistoryModal}>
+        <div class="incident-history-backdrop">
+            <div class="incident-history-modal">
+
+            <!-- Header -->
+            <div class="incident-history-header">
+                <h2 class="slds-text-heading_medium h2custom">
+                    Document History
+                </h2>
+                <button
+                class="incident-history-close"
+                onclick={closeFormHistory}
+                aria-label="Close"
+                >
+                ×
+                </button>
+            </div>
+
+            <!-- Timeline -->
+            <div class="history-timeline custom-scroll">
+
+                <template for:each={groupedFormHistory} for:item="group">
+                <div key={group.date} class="history-date-section">
+
+                    <div class="history-date-label">
+                    {group.date}
+                    </div>
+
+                    <template for:each={group.entries} for:item="entry">
+                    <div key={entry.timestamp} class="history-entry">
+
+                        <!-- Left rail -->
+                        <div class="entry-time">
+                        <span class="timeline-dot"></span>
+                        {entry.time}
+                        </div>
+
+                        <!-- Content -->
+                        <div class="entry-content">
+                        <div class="entry-header">
+                            <div class="avatar-circle">
+                            {entry.initials}
+                            </div>
+
+                            <div class="entry-meta">
+                            <span class="entry-user">
+                                {entry.user}
+                            </span>
+                            <span class="entry-action">
+                                {entry.action}
+                            </span>
+                            </div>
+                        </div>
+
+                        <lightning-formatted-rich-text
+                            value={entry.changes}
+                        ></lightning-formatted-rich-text>
+                        </div>
+
+                    </div>
+                    </template>
+
+                </div>
+                </template>
+
+                <template if:false={hasFormHistory}>
+                <div class="no-history-message">
+                    No history available.
+                </div>
+                </template>
+
+            </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- RENAME MODAL -->
+    <template if:true={isRenameModalOpen}>
+        <section role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <!-- Header -->
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 class="slds-text-heading_medium" style="color: white;">
+                        Rename Folder
+                    </h2>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <lightning-input
+                        label="Folder Name"
+                        value={renameValue}
+                        maxlength="50"
+                        onchange={handleRenameInputChange}
+                        message-when-too-long="Maximum 50 characters allowed">
+                    </lightning-input>
+
+                    <template if:true={renameError}>
+                        <div class="slds-text-color_error slds-m-top_x-small">
+                            {renameError}
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={closeRenameModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Save"
+                        class="slds-m-left_small"
+                        onclick={handleRenameSave}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <template if:true={isDeleteModalOpen}>
+        <section role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <!-- Header -->
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 class="slds-text-heading_medium" style="color: white;">
+                        Confirm Delete
+                    </h2>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    Are you sure you want to delete the folder
+                    <strong>{folderToDelete}</strong>?
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={closeDeleteModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        variant="destructive"
+                        label="Delete"
+                        class="slds-m-left_small"
+                        onclick={confirmDeleteFolder}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+ 
+
+</template>
