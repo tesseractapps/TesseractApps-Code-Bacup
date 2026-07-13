@@ -1,0 +1,739 @@
+<template>
+  <div class="main-container" style="background: #f3f5f7">
+    <header class="header">
+      <div class="search-section">
+        <div>
+          <p style="font-weight: bold; padding-left: 1%; font-size: 140%">
+            Roster Settings
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="tab-container">
+      <div class="tab-navigation">
+        <button
+          class={participantTabClass}
+          onclick={handleParticipantTab}
+          data-tab="participant"
+        >
+          Standard Shifts
+        </button>
+        <button class={staffTabClass} onclick={handleStaffTab} data-tab="staff">
+          Custom Shifts
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Standard shifts View Content -->
+      <template if:true={isParticipantView}>
+        <div
+          class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small"
+          style="padding-right: 10%"
+        >
+          <div class="floating-label">
+            <span class="label-text-drop">Facility</span>
+            <lightning-combobox
+              label="Facility"
+              variant="label-hidden"
+              value={facilityValue}
+              placeholder="Select Facility"
+              options={facilityoptions}
+              onchange={handleFacilityChnage}
+            >
+            </lightning-combobox>
+          </div>
+        </div>
+        <div class="major-cont custom-scroll">
+          <div class="content-cardforStandard">
+            <div class="slds-m-bottom_large">
+              <div class="slds-grid slds-gutters slds-wrap slds-align_spread">
+                <div class="slds-col">
+                  <h2 class="slds-text-heading_medium">Default Shifts</h2>
+                </div>
+              </div>
+
+              <template for:each={shifts} for:item="shift" for:index="index">
+                <div
+                  key={shift.id}
+                  class="slds-m-bottom_small"
+                  style="padding: 1rem"
+                >
+                  <div class="slds-grid slds-wrap slds-gutters_small">
+                    <!-- Shift Name -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Shift Name</span>
+                        <lightning-input
+                          label="Shift Name"
+                          variant="label-hidden"
+                          value={shift.name}
+                          placeholder="Enter Shift Name"
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          onchange={handleNameChange}
+                        >
+                        </lightning-input>
+                      </div>
+                    </div>
+
+                    <!-- Shift Type -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Shift Type</span>
+                        <lightning-combobox
+                          label="Shift Type"
+                          variant="label-hidden"
+                          value={shift.shiftType}
+                          placeholder="Select Shift Type"
+                          options={shiftTypeOptions}
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          onchange={handleShiftTypeChange}
+                        >
+                        </lightning-combobox>
+                      </div>
+                    </div>
+
+                    <!-- Start Time -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Start Time</span>
+                        <!-- <c-time-picker
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          selected-hour={shift.startHour}
+                          selected-minute={shift.startMinute}
+                          is-am={shift.startAMPM}
+                          displayed-time={shift.displayedStartTime}
+                          onsavetimefromchild={handleStartTimeChange}
+                        >
+                        </c-time-picker> -->
+                        <c-tesseract-apps-time-picker
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          selected-hour={shift.startHour}
+                          selected-minute={shift.startMinute}
+                          is-am={shift.startAMPM}
+                          displayed-time={shift.displayedStartTime}
+                          onsavetimefromchild={handleStartTimeChange}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <!-- End Time -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">End Time</span>
+                        <!-- <c-time-picker
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          selected-hour={shift.endHour}
+                          selected-minute={shift.endMinute}
+                          is-am={shift.endAMPM}
+                          displayed-time={shift.displayedEndTime}
+                          onsavetimefromchild={handleEndTimeChange}
+                        >
+                        </c-time-picker> -->
+                        <c-tesseract-apps-time-picker
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          selected-hour={shift.endHour}
+                          selected-minute={shift.endMinute}
+                          is-am={shift.endAMPM}
+                          displayed-time={shift.displayedEndTime}
+                          onsavetimefromchild={handleEndTimeChange}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <!--Max Duration-->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Maximum Duration</span>
+                        <lightning-input
+                          type="number"
+                          step="0.00"
+                          variant="label-hidden"
+                          value={shift.duration}
+                          data-id={shift.computedId}
+                          data-salesforceid={shift.salesforceId}
+                          disabled={maxDurationDisable}
+                          onchange={handleTempMaxDurationChange}
+                        >
+                        </lightning-input>
+                      </div>
+                    </div>
+
+                    <!-- Address  Selection -->
+                      <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"> 
+                       <div class="floating-label">
+                        <span class="label-text-drop">Address</span>
+                        <lightning-combobox 
+                         name={shift.id}
+                          label="address"
+                          variant="label-hidden"
+                          value={shift.address}
+                          placeholder="Select Address"
+                          options={addressOptions}
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          onchange={handleAdressChange}
+                        >
+                        </lightning-combobox>
+                      </div>
+                      </div>
+
+                    <!-- Color Selection -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                    >
+                      <div
+                        class="slds-grid slds-gutters_xx-small slds-align_absolute-center"
+                      >
+                        <div class="slds-col slds-no-flex">
+                          <div
+                            class="color-preview-box"
+                            style={shift.colorStyle}
+                          ></div>
+                        </div>
+                        <div class="slds-col slds-no-flex" style="width: 150px;">
+                          <lightning-combobox
+                            name={shift.id}
+                            value={shift.color}
+                            placeholder="Select Color"
+                            options={colorOptions}
+                            data-id={shift.id}
+                            data-salesforceid={shift.salesforceId}
+                            onchange={handleColorChange}
+                            variant="label-hidden"
+                          >
+                          </lightning-combobox>
+                        </div>
+                      </div>
+                    </div>
+                
+                  </div>
+                </div>
+              </template>
+
+              <!-- Cost Information -->
+              <div class="slds-grid slds-wrap" style="padding-left: 1.5%">
+                <!-- Cost per Km (Fuel) -->
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5">
+                  <div class="floating-label">
+                    <span class="label-text-drop">Cost per Km (Fuel)</span>
+                    <lightning-input
+                      label="Cost per Km (Fuel)"
+                      variant="label-hidden"
+                      value={costPerKmFuel}
+                      onchange={handleCostperKmfuelChange}
+                    >
+                    </lightning-input>
+                  </div>
+                </div>
+
+                <!-- Cost per Km (Electric) -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5">
+                  <div class="floating-label">
+                    <span class="label-text-drop">Cost per Km (Electric)</span>
+                    <lightning-input
+                      label="Cost per Km (Electric)"
+                      variant="label-hidden"
+                      value={costPerKmElectric}
+                      onchange={handleCostperKmElectricChange}
+                    >
+                    </lightning-input>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slds-m-bottom_large">
+              <div class="slds-grid slds-gutters slds-wrap slds-align_spread">
+                <div class="slds-col">
+                  <h2 class="slds-text-heading_medium">Design Your Shifts</h2>
+                </div>
+              </div>
+
+              <template for:each={shiftsforDesign} for:item="shift">
+                <div key={shift.id} class="slds-m-bottom_small"
+                  style="padding: 1rem">
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+
+                    
+                  <!-- Shift Name Input -->
+                  <div
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop">Shift Name</span>
+                      <lightning-input
+                        type="text"
+                        value={shift.name}
+                        placeholder="Shift name"
+                        data-id={shift.id}
+                        data-salesforceid={shift.salesforceId}
+                        data-field="name"
+                        onchange={handleNameChangeforDesign}
+                        variant="label-hidden"
+                        class="custom-input"
+                      >
+                      </lightning-input>
+                    </div>
+                  </div>
+
+                  <!-- Shift Type Dropdown -->
+                  <div
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop">Shift Type</span>
+                      <lightning-combobox
+                        value={shift.shiftType}
+                        options={shiftTypeOptions}
+                        data-id={shift.id}
+                        data-salesforceid={shift.salesforceId}
+                        data-field="type"
+                        onchange={handleTypeChange}
+                        variant="label-hidden"
+                        class="custom-combobox"
+                      >
+                      </lightning-combobox>
+                    </div>
+                  </div>
+
+                  <!-- Start Time Input -->
+                  <div
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop">Start Time</span>
+                      <!-- <c-time-picker
+                        data-id={shift.id}
+                        selected-hour={shift.startHour}
+                        selected-minute={shift.startMinute}
+                        data-salesforceid={shift.salesforceId}
+                        is-am={shift.startAMPM}
+                        displayed-time={shift.displayedStartTime}
+                        onsavetimefromchild={handleStartTimeChangeforDesign}
+                      >
+                      </c-time-picker> -->
+                      <c-tesseract-apps-time-picker
+                        data-id={shift.id}
+                        selected-hour={shift.startHour}
+                        selected-minute={shift.startMinute}
+                        data-salesforceid={shift.salesforceId}
+                        is-am={shift.startAMPM}
+                        displayed-time={shift.displayedStartTime}
+                        onsavetimefromchild={handleStartTimeChangeforDesign}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+
+                  <!-- End Time Input -->
+                  <div
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop">End Time</span>
+                      <!-- <c-time-picker
+                        data-id={shift.id}
+                        data-salesforceid={shift.salesforceId}
+                        selected-hour={shift.endHour}
+                        selected-minute={shift.endMinute}
+                        is-am={shift.endAMPM}
+                        displayed-time={shift.displayedEndTime}
+                        onsavetimefromchild={handleEndTimeChangeforDesign}
+                      >
+                      </c-time-picker> -->
+                      <c-tesseract-apps-time-picker
+                        data-id={shift.id}
+                        data-salesforceid={shift.salesforceId}
+                        selected-hour={shift.endHour}
+                        selected-minute={shift.endMinute}
+                        is-am={shift.endAMPM}
+                        displayed-time={shift.displayedEndTime}
+                        onsavetimefromchild={handleEndTimeChangeforDesign}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+
+                  <!--Max Duration-->
+                  <div
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop">Maximum Duration</span>
+                      <lightning-input
+                        type="number"
+                        step="0.00"  
+                        variant="label-hidden"
+                        value={shift.duration}
+                        data-id={shift.id}
+                        data-salesforceid={shift.salesforceId}
+                        onchange={handleMaxDurationInputForDesign}
+                        >
+                        <!-- onblur={handleMaxDurationBlurForDesign} -->
+                      </lightning-input>
+                    </div>
+                  </div>
+
+                  <!-- Address  Selection -->
+                  <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"> 
+                       <div class="floating-label">
+                        <span class="label-text-drop">Address</span>
+                        <lightning-combobox 
+                         name={shift.id}
+                          label="address"
+                          variant="label-hidden"
+                          value={shift.address}
+                          placeholder="Select Address"
+                          options={addressOptions}
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          onchange={handleAdressChangeforDesign}
+                        >
+                        </lightning-combobox>
+                      </div>
+                  </div>
+
+                  <!-- Selection Dropdown -->
+                  <div
+                    class="slds-col slds-size_1-of-1 slds-medium-size_1-of-7"
+                  >
+                    <div
+                      class="slds-grid slds-gutters_xx-small slds-align_absolute-center"
+                      style={shift.gridStyle}
+                    >
+                      <div class="slds-col slds-no-flex">
+                        <div
+                          class="color-preview-box"
+                          style={shift.colorStyle}
+                        ></div>
+                      </div>
+                      <div class="slds-col slds-no-flex" style="width: 128px;">
+                        <lightning-combobox
+                          name={shift.id}
+                          value={shift.color}
+                          placeholder="Select Color"
+                          options={colorOptions}
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          onchange={handleColorChange1}
+                          variant="label-hidden"
+                        >
+                        </lightning-combobox>
+                      </div>
+                      <template if:false={shift.isSalesforceRecord}>
+                        <lightning-button-icon
+                          icon-name="utility:delete"
+                          alternative-text="Delete shift"
+                          title="Delete shift"
+                          data-id={shift.id}
+                          data-salesforceid={shift.salesforceId}
+                          onclick={handleDeleteShift}
+                          variant="bare"
+                          class="delete-button"
+                        >
+                        </lightning-button-icon>
+                      </template>
+                      <template if:true={shift.isSalesforceRecord}>
+                        <div class="delete-placeholder"></div>
+                      </template>
+                    </div>
+                  </div>
+               </div>
+                  <!-- Delete Button -->
+                  <!-- <div class="delete-container">
+                                        <lightning-button-icon
+                                            icon-name="utility:delete"
+                                            alternative-text="Delete shift"
+                                            title="Delete shift"
+                                            data-id={shift.id}
+                                            onclick={handleDeleteShift}
+                                            variant="bare"
+                                            class="delete-button">
+                                        </lightning-button-icon>
+                                    </div> -->
+                </div>
+              </template>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <lightning-button
+                  label="Add Shift"
+                  icon-name="utility:add"
+                  onclick={handleAddShift}
+                  variant="brand"
+                  class="add-button"
+                >
+                </lightning-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- custom Shifts View Content -->
+      <template if:true={isStaffView}>
+        <div
+          class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small"
+          style="padding-right: 10%"
+        >
+          <div class="floating-label">
+            <span class="label-text-drop">Facility</span>
+            <lightning-combobox
+              label="Facility"
+              variant="label-hidden"
+              value={facilityValue}
+              placeholder="Select Facility"
+              options={facilityoptions}
+              onchange={handleFacilityChnage}
+            >
+            </lightning-combobox>
+          </div>
+        </div>
+        <div class="content-card custom-scroll">
+          <template for:each={templates} for:item="template">
+            <div key={template.id}>
+              <!-- Custom Shift Name -->
+              <div class="slds-grid slds-gutters_medium slds-m-bottom_medium">
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
+                  style="display: flex; gap: 20px"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop">Custom Shift Name</span>
+                    <lightning-input
+                      type="text"
+                      variant="label-hidden"
+                      value={template.customShiftName}
+                      placeholder="Enter custom shift name"
+                      data-template-id={template.id}
+                      onchange={handleTemplateNameChange}
+                    >
+                    </lightning-input>
+                  </div>
+
+                  <!-- Plus Icon Row - Show when less than 4 shifts -->
+                  <template if:true={template.showAddButton}>
+                    <div class="add-row">
+                      <button
+                        class="add-btn"
+                        data-template-id={template.id}
+                        onclick={handleAddShiftforCustom}
+                        title="Add shift"
+                      >
+                        <lightning-icon
+                          icon-name="utility:add"
+                          size="x-small"
+                        ></lightning-icon>
+                      </button>
+                    </div>
+                  </template>
+
+                  <div class="slds-col slds-no-flex">
+                    <div
+                      class="color-preview-box"
+                      style={template.colorStyle}
+                    ></div>
+                  </div>
+                  <div class="slds-col slds-no-flex" style="width: 170px;">
+                    <lightning-combobox
+                      options={colorOptions}
+                      value={template.selectedColor}
+                      data-template-id={template.id}
+                      onchange={handleColorChangeforCustom}
+                      variant="label-hidden"
+                    >
+                    </lightning-combobox>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shifts Grid -->
+              <div class="shifts-container">
+                <template
+                  for:each={template.shifts}
+                  for:item="shift"
+                  for:index="index"
+                >
+                  <div key={shift.id} class="shift-rowCustom">
+                    <!-- Shift Type -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Shift Type</span>
+                        <lightning-combobox
+                          label="Shift Type"
+                          variant="label-hidden"
+                          value={shift.type}
+                          placeholder="Select Shift Type"
+                          options={shiftTypeOptionsforCustom}
+                          data-template-id={template.id}
+                          data-shift-id={shift.id}
+                          data-field="type"
+                          onchange={handleShiftFieldChange}
+                        >
+                        </lightning-combobox>
+                      </div>
+                    </div>
+
+                    <!-- Start Time -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Start Time</span>
+                        <!-- <c-time-picker
+                          data-template-id={template.id}
+                          data-shift-id={shift.id}
+                          value={shift.startTime}
+                          selected-hour={shift.startHour}
+                          selected-minute={shift.startMinute}
+                          is-am={shift.startAMPM}
+                          displayed-time={shift.displayedStartTime}
+                          onsavetimefromchild={handleStartTimeChangeforCustom}
+                        >
+                        </c-time-picker> -->
+                        <c-tesseract-apps-time-picker
+                          data-template-id={template.id}
+                          data-shift-id={shift.id}
+                          value={shift.startTime}
+                          selected-hour={shift.startHour}
+                          selected-minute={shift.startMinute}
+                          is-am={shift.startAMPM}
+                          displayed-time={shift.displayedStartTime}
+                          onsavetimefromchild={handleStartTimeChangeforCustom}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <!-- End Time -->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">End Time</span>
+                        <!-- <c-time-picker
+                          data-template-id={template.id}
+                          data-shift-id={shift.id}
+                          selected-hour={shift.endHour}
+                          selected-minute={shift.endMinute}
+                          is-am={shift.endAMPM}
+                          displayed-time={shift.displayedEndTime}
+                          onsavetimefromchild={handleEndTimeChangeforCustom}
+                        >
+                        </c-time-picker> -->
+                        <c-tesseract-apps-time-picker
+                          data-template-id={template.id}
+                          data-shift-id={shift.id}
+                          selected-hour={shift.endHour}
+                          selected-minute={shift.endMinute}
+                          is-am={shift.endAMPM}
+                          displayed-time={shift.displayedEndTime}
+                          onsavetimefromchild={handleEndTimeChangeforCustom}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <!--Max Duration-->
+                    <div
+                      class="slds-col slds-size_1-of-1 slds-medium-size_1-of-5"
+                    >
+                      <div class="floating-label">
+                        <span class="label-text-drop">Maximum Duration</span>
+                        <lightning-input
+                          variant="label-hidden"
+                          type="number"
+                          step="0.01"  
+                          value={shift.duration}
+                          data-template-id={template.id}
+                          data-shift-id={shift.id}
+                          data-field="duration"
+                          disabled={maxDurationDisable}
+                          onchange={handleMaxDurationInputForCustom} 
+                        >
+                        </lightning-input>
+                      </div>
+                    </div>
+
+                    <template if:false={shift.isSalesforceRecord}>
+                      <!-- Delete Icon -->
+                      <button
+                        class="delete-btn"
+                        data-template-id={template.id}
+                        data-shift-id={shift.id}
+                        onclick={handleDeleteShiftforCustom}
+                        title="Delete shift"
+                      >
+                        <lightning-icon
+                          icon-name="utility:delete"
+                          size="x-small"
+                        ></lightning-icon>
+                      </button>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <!-- Add Template Button -->
+           <div  style="margin-left: 1px; display: flex; justify-content: flex-end">
+          <lightning-button
+            variant="brand"
+            label="+ Add Template"
+            title="Add Template"
+            onclick={handleAddTemplate}
+           
+          >
+          </lightning-button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Loading Spinner -->
+    <template if:true={isSaving}>
+      <lightning-spinner
+        alternative-text="Saving..."
+        size="medium"
+      ></lightning-spinner>
+    </template>
+
+    <div class="action-section">
+      <lightning-button
+        variant="Neutral"
+        label="Cancel"
+        title="Cancel"
+        onclick={HandleBack}
+        style="margin-left: 1px"
+      ></lightning-button>
+      <lightning-button
+        label="Save"
+        variant="brand"
+        disabled={savebuttonDisable}
+        onclick={handleSaveAllShifts}
+      ></lightning-button>
+    </div>
+  </div>
+</template>
