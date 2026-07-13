@@ -1,0 +1,591 @@
+<template>
+<div class="main-container">
+
+        <template if:true={homeflag}>
+          
+ <div class="header">
+ <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={fetchAwards}>
+                    <svg class="slds-button__icon" aria-hidden="true">
+                        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                    </svg>
+                    
+                </button>
+                  <button class="custom-create-btn" onclick={handleAward} title="Issue Award (Ctrl + Shift + C)">
+                  Issue Award
+              </button>
+                 
+                </div>
+      
+          
+
+
+              <div class="content-wrapper">
+              <template if:true={orgadmin}>
+                <!-- <div class="table-container slds-p-around_medium custom-scroll">
+                <template if:false={noRecordsFlag}>
+                <table class="slds-table slds-table_cell-buffer fixed-table">
+                    <thead>
+                        <tr>
+                            <th>Award</th>
+                            <th>{facilityPreferredName}</th>
+                            <th>{staffPreferredName}</th>
+                            <th>Date</th>
+                            <th>Issued by</th>
+                            <th>Certificate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={orgAwards} for:item="Award">
+                            <tr key={Award.Id} class="tr1">
+                                <td>{Award.Award_Name__c}</td>
+                                <td>{Award.facilityName}</td>
+                                <td>{Award.fullName}</td>
+                                <td>{Award.Todate}</td>
+                                <td>{Award.Issued_by__c}</td>
+                                <td  class="slds-cell-wrap">
+                                    <div if:true={Award.Certificate__c} class="slds-align_absolute-center"> 
+                                        <a href={Award.Certificate__c} data-url={Award.Certificate__c} data-awardname={Award.Awards__c}  title="View"
+                                        onclick={handleView}>
+                                        <i class="material-icons view-icon">visibility</i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        
+                    </tbody>
+                </table>
+                </template>
+                <template if:true={noRecordsFlag}>
+                    <div class="no-data">
+                        <p>No records found</p>
+                    </div>
+                </template>
+            </div> -->
+ 
+                <div class="table-container awardsTable adminTable">
+
+                    <!-- HEADER -->
+                    <div class="header-wrapper">
+                        <table class="staff-table">
+                            <thead>
+                                <tr>
+                                    <th class="table-th" title="Award">Award</th>
+                                    <th class="table-th" title={facilityPreferredName}>{facilityPreferredName}</th>
+                                    <th class="table-th" title={staffPreferredName}>{staffPreferredName}</th>
+                                    <th class="table-th" title="Date">Date</th>
+                                    <th class="table-th" title="Issued by">Issued by</th>
+                                    <th class="table-th center" title="Certificate">Certificate</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <!-- BODY -->
+                    <div class="body-scroll custom-scroll adminTableHeight">
+                        <table class="staff-table">
+                            <tbody>
+
+                                <template if:false={noRecordsFlag}>
+                                    <template for:each={orgAwards} for:item="Award">
+                                        <tr key={Award.Id} class="table-row">
+
+                                            <td class="table-td" title={Award.Award_Name__c}>
+                                                {Award.Award_Name__c}
+                                            </td>
+
+                                            <td class="table-td" title={Award.facilityName}>
+                                                {Award.facilityName}
+                                            </td>
+
+                                            <td class="table-td" title={Award.fullName}>
+                                                {Award.fullName}
+                                            </td>
+
+                                            <td class="table-td" title={Award.Todate}>
+                                                {Award.Todate}
+                                            </td>
+
+                                            <td class="table-td" title={Award.Issued_by__c}>
+                                                {Award.Issued_by__c}
+                                            </td>
+
+                                            <td class="table-td center" title="View Certificate">
+                                                <div if:true={Award.Certificate__c}>
+                                                    <a href={Award.Certificate__c}
+                                                    data-url={Award.Certificate__c}
+                                                    data-awardname={Award.Awards__c}
+                                                    onclick={handleView}>
+                                                        <i class="material-icons view-icon">visibility</i>
+                                                    </a>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    </template>
+                                </template>
+
+                                <!-- NO DATA -->
+                                <template if:true={noRecordsFlag}>
+                                    <tr>
+                                        <td class="no-data">
+                                            <p>No records found</p>
+                                        </td>
+                                    </tr>
+                                </template>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div> 
+ 
+                <!--Pagination Start-->
+                  <template if:false={noRecordsFlag}>
+                  <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination" style="padding-top: 0.5em;width:95%;margin-left:2%">
+                    <!-- RECORDS PER PAGE -->
+                    <div class="slds-col">
+                        <div class="slds-list_inline ">
+                            <span style="margin-right:5px;margin-top:5px;">Page Size:</span>
+                            <label class="slds-text-color_weak" for="recordsPerPage"></label><!--slds-p-horizontal_x-small-->
+                            <div class="slds-select_container">
+                                <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                    <template for:each={pageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>{option}</option>
+                                    </template> 
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- PAGE NAVIGATION -->
+                    <div class="slds-align_absolute-center" style="height:5rem;">
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} style="margin-right:10px;"></lightning-button><!--class="slds-p-horizontal_x-small" -->
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} style="margin-right:5px;"></lightning-button>
+                        &nbsp;
+                        <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+                        &nbsp;
+                        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                    </div>
+                    <!-- TOTAL RECORDS -->
+                    <div class="slds-clearfix">
+                        <div class="slds-float_right">
+                            <span class="slds-badge"> Total Records: {totalRecords}</span>
+                        </div>
+                    </div>
+                  </div>
+                  </template>
+              </template>
+              </div>
+            </template>
+     
+      <template if:true={staffuser}>
+        <div class="content-wrapper">
+            <div class="table-container awardsTable staffTable">
+
+                <!-- HEADER -->
+                <div class="header-wrapper">
+                    <table class="staff-table">
+                        <thead>
+                            <tr>
+                                <th class="table-th" title="Award">Award</th>
+                                <th class="table-th" title={facilityPreferredName}>{facilityPreferredName}</th>
+                                <th class="table-th" title="Date">Date</th>
+                                <th class="table-th" title="Issued by">Issued by</th>
+                                <th class="table-th center" title="Certificate">Certificate</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                <!-- BODY -->
+                <div class="body-scroll custom-scroll staffTableHeight">
+                    <table class="staff-table">
+                        <tbody>
+
+                            <template if:false={noRecordsFlag1}>
+                                <template for:each={staffPagedData} for:item="Award">
+                                    <tr key={Award.Id} class="table-row">
+
+                                        <td class="table-td" title={Award.Award_Name__c}>
+                                            {Award.Award_Name__c}
+                                        </td>
+
+                                        <td class="table-td" title={Award.facilityName}>
+                                            {Award.facilityName}
+                                        </td>
+
+                                        <td class="table-td" title={Award.Todate}>
+                                            {Award.Todate}
+                                        </td>
+
+                                        <td class="table-td" title={Award.Issued_by__c}>
+                                            {Award.Issued_by__c}
+                                        </td>
+
+                                        <td class="table-td center" title="View Certificate">
+                                            <div if:true={Award.Certificate__c}>
+                                                <a href={Award.Certificate__c}
+                                                data-url={Award.Certificate__c}
+                                                onclick={handleView}>
+                                                    <i class="material-icons view-icon">visibility</i>
+                                                </a>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                </template>
+                            </template>
+
+                            <!-- NO DATA -->
+                            <template if:true={noRecordsFlag1}>
+                                <tr>
+                                    <td class="no-data">
+                                        <p>No records found</p>
+                                    </td>
+                                </tr>
+                            </template>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>    
+        </div>
+        <!-- STAFF PAGINATION -->
+        <template if:false={noRecordsFlag1}>
+        <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds slds-p-around_medium"> 
+
+            <!-- PAGE SIZE -->
+            <div class="slds-list_inline"> 
+                <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span> 
+                <div class="slds-select_container"> 
+                    <select class="slds-select" onchange={handleStaffPageSize}> 
+                        <template for:each={pageSizeOptions} for:item="option"> 
+                            <option key={option} value={option}>{option}</option> 
+                        </template> 
+                    </select> 
+                </div> 
+            </div> 
+
+            <!-- NAVIGATION -->
+            <div class="slds-align_absolute-center"> 
+
+                <lightning-button disabled={staffDisableFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    onclick={staffFirstPage}
+                    style="margin-right: 10px;">
+                </lightning-button> 
+
+                <lightning-button disabled={staffDisableFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    onclick={staffPreviousPage}
+                    style="margin-right: 5px;">
+                </lightning-button> 
+
+                <span class="slds-badge">
+                    Showing {staffPageNumber} of {staffTotalPages} Page(s)
+                </span> 
+
+                <lightning-button disabled={staffDisableLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    onclick={staffNextPage}
+                    class="slds-p-horizontal_x-small"
+                    icon-position="right">
+                </lightning-button> 
+
+                <lightning-button disabled={staffDisableLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    onclick={staffLastPage}
+                    icon-position="right">
+                </lightning-button> 
+
+            </div> 
+
+            <!-- TOTAL -->
+            <div class="slds-clearfix"> 
+                <div class="slds-float_right"> 
+                    <span class="slds-badge">
+                        Total Records: {staffTotalRecords}
+                    </span> 
+                </div> 
+            </div> 
+
+        </div>
+        </template>
+      </template>
+        <template if:true={isModalOpen}>
+        
+            <div class="slds-p-around_medium custom-scroll" style="overflow-y: auto;">
+                <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+                onclick={closepdf} style="float:right;margin-bottom:5px;"></lightning-button>
+
+            <iframe src={currentUrl} width="100%"  class={awardClass}></iframe>
+            </div>
+        
+        </template>
+          
+      </div>
+    <template if:true={Awardflag}>
+        <div class="blur-overlay"></div>
+        <div class="right-align">
+
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:2%;">Issue Award</h3>
+                <!-- <div style="display: flex; align-items: center; gap: 10px;margin-right:2.2%;margin-top:1%;">
+                    <lightning-button label="Back" variant="brand" onclick={handleCancel} ></lightning-button> 
+            </div> -->
+            </div>
+
+            
+        <lightning-record-edit-form object-api-name="Award__c"   onsuccess={handleSuccess} onsubmit={handleSubmit}>
+            <lightning-messages></lightning-messages>
+        <div class="seperator">
+            <div style="display:flex;flex-direction:row">
+            <div style="display:flex;flex-direction:column">
+          <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+              
+              
+               <!--  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>Awards</span>
+                        <lightning-input-field field-name="Awards__c" onchange={handleInput} disabled={isdisablefields} required="true" variant="label-hidden" ></lightning-input-field>
+                    </div>
+                </div> -->
+
+                <!-- Awards (Custom Dropdown) -->
+                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                    <div class="floating-label">
+                        <span class="label-text-drop">
+                            <span style="color:red">*</span>Awards
+                        </span>
+
+                        <div class="dropdown-container">
+                            <!-- Dropdown Button -->
+                            <button
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleAwardDropdown}
+                                aria-expanded={isAwardOpen}
+                            >
+                                <span class={selectedAwardClass} title={awardDisplayText}>
+                                    {awardDisplayText}
+                                </span>
+                                <lightning-icon
+                                    icon-name={awardChevronIcon}
+                                    size="x-small"
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div if:true={isAwardOpen} class="dropdown-menu">
+
+                                <!-- Add New Award -->
+                                <div class="add-option-section">
+                                    <div class="input-container">
+                                        <lightning-input
+                                            type="text"
+                                            value={newAwardText}
+                                            placeholder="Add new award..."
+                                            onchange={handleAwardInput}
+                                            onkeypress={handleAwardKeyPress} maxlength="30"
+                                            variant="label-hidden">
+                                        </lightning-input>
+
+                                        <lightning-button
+                                            label="Add"
+                                            variant="brand"
+                                            onclick={addAward}
+                                            disabled={disableAddAward}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+
+                                <!-- Award Options -->
+                                <div class="options-list custom-scroll">
+                                    <template for:each={awardOptions} for:item="award">
+                                        <div key={award.id} class="option-item">
+                                            <button
+                                                type="button"
+                                                class="option-button"
+                                                data-id={award.id}
+                                                data-label={award.label}
+                                                onclick={selectAward}>
+                                                {award.label}
+                                            </button>
+
+                                            <!-- Delete -->
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                variant="bare"
+                                                size="small"
+                                                data-label= {award.label}
+                                                onclick={deleteAward}>
+                                            </lightning-button-icon>
+                                        </div>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+              
+              <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Facility</span>
+                    <lightning-input-field field-name="Facility__c" onchange={handlefacility} required="true" variant="label-hidden"></lightning-input-field>
+                </div>
+            </div> -->
+             <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Facility</span>
+                    <lightning-combobox  data-id="facility" name="StaffFacility" class="StaffFacility" variant="label-hidden" options={finalListFacilities} value={StaffFacility} required onchange={handlefacility} 
+                                  ></lightning-combobox>
+                </div>
+            </div>
+              
+              <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Staff</span>
+                    <lightning-input-field field-name="Staff__c" onchange={handleInput} disabled={isdisablefields} required="true" onclick={handleStartDateChange} variant="label-hidden"></lightning-input-field>
+                </div>
+            </div> -->
+            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Staff</span>
+                   <lightning-combobox  data-id="staff" name="selectedStaff" class="StaffFacility" variant="label-hidden" options={staffOptions} value={selectedStaff} onchange={handleStaffChange} disabled={isdisablefields} required onclick={handleStartDateChange} 
+                                  ></lightning-combobox>
+                </div>
+            </div>
+              
+              <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Issued by</span>
+                    <lightning-input-field field-name="Issued_by__c" onchange={handleInput} disabled={isdisablefields} required="true" value={manager} variant="label-hidden"></lightning-input-field>
+                </div>
+            </div>
+              
+              <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Date</span>
+                    <lightning-input-field field-name="Date__c" value={currentDate} variant="label-hidden"></lightning-input-field>
+                </div>
+            </div>
+              
+              
+          </div>
+
+ 
+<div class="template-carousel">
+
+    <!-- LEFT ARROW -->
+    <lightning-button-icon
+        class="carousel-arrow"
+        icon-name="utility:chevronleft"
+        variant="bare"
+        onclick={handlePrev}
+        disabled={isPrevDisabled}>
+    </lightning-button-icon>
+
+    <!-- IMAGES -->
+    <div class="template-grid">
+        <template for:each={visibleCertificates} for:item="cert">
+            <div
+                key={cert.id}
+                class="template-card"
+                data-id={cert.id}
+                data-label={cert.label}
+                onclick={handleTemplateSelect}
+            >
+                <img
+                    src={cert.url}
+                    alt={cert.label}
+                    class="template-thumbnail" />
+
+                <div class="template-info">
+                    <p class="template-name">{cert.label}</p>
+                </div>
+
+                <template if:true={cert.isSelected}>
+                    <div class="checkmark">✔</div>
+                </template>
+            </div>
+        </template>
+    </div>
+
+    <!-- RIGHT ARROW -->
+    <lightning-button-icon
+        class="carousel-arrow"
+        icon-name="utility:chevronright"
+        variant="bare"
+        onclick={handleNext}
+        disabled={isNextDisabled}>
+    </lightning-button-icon>
+
+</div>
+</div>
+
+ <div class="preview-section">
+        <h3 class="section-title">Preview</h3>
+        <p class="section-subtitle">See how your certificate will look</p>
+
+        <template if:true={selectedCertificateImage}>
+            <div class="preview-box">
+                <img
+                    src={selectedCertificateImage}
+                    alt="Certificate Preview"
+                    class="preview-image" />
+            </div>
+        </template>
+    </div>
+</div>
+
+
+<!-- ================= END CERTIFICATE TEMPLATE SECTION ================= -->
+
+          
+          </div>
+          
+          <div class="slds-align_absolute-center">
+             <lightning-button label="Cancel" variant="brand-outline" onclick={handleCancel}
+            class="slds-m-around_small"></lightning-button> 
+            <lightning-button type="submit" variant="brand" label="Submit" disabled={saveButtonDisable}></lightning-button>
+           
+        </div>
+        
+      </lightning-record-edit-form>
+    
+    </div>
+      </template>
+     <!--  <template if:true={showSpinner}>
+        <lightning-spinner alternative-text="Refreshing Data" size="medium"></lightning-spinner>
+      </template> -->
+
+      <template if:true={showSpinner}>
+        <!-- <lightning-spinner alternative-text="Refreshing Data" size="medium"></lightning-spinner> -->
+
+            <div class="overlay-logo"></div>
+            <div class="spinner-wrapper">
+                <div class="loader-container">
+                    <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                    <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                </div>
+                <p class="progress-text">Loading</br>Please Wait...</p>
+            </div>
+      </template>
+
+      <!--  GLOBAL UPGRADE MODAL -->
+            <template if:true={showUpgradeModal}>
+                <c-upgrade-modal 
+                    is-open={showUpgradeModal} 
+                    onclose={closeUpgradeModal}>
+                </c-upgrade-modal>
+            </template>
+
+
+</template>

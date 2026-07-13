@@ -1,0 +1,341 @@
+<apex:page controller="ShiftReportsController" renderAs="pdf" 
+           applyHtmlTag="false" applyBodyTag="false"
+           showHeader="false" sidebar="false">
+
+<html>
+<head>
+    <style>
+       @page {
+    size: A4;
+
+    @bottom-center {
+        content: "Page " counter(page) " of " counter(pages);
+        font-size: 10px;
+        color: #555;
+    }
+}
+
+        body {
+    font-family: 'Roboto', Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #222;
+}
+
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .header-box {
+            margin-bottom: 15px;
+        }
+
+        .shift-card {
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 8px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid #ddd;
+            padding: 4px;
+        }
+
+        .no-border td {
+            border: none;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="title">Shift Report</div>
+
+    <table class="no-border header-box">
+        <tr>
+            <td><b>Organisation:</b> {!orgName}</td>
+            <td>
+    <b>Start Date:</b>
+    <apex:outputText value="{0,date,dd/MM/yyyy}">
+        <apex:param value="{!DATEVALUE(startDate)}"/>
+    </apex:outputText>
+</td>
+
+<td>
+    <b>End Date:</b>
+    <apex:outputText value="{0,date,dd/MM/yyyy}">
+        <apex:param value="{!DATEVALUE(endDate)}"/>
+    </apex:outputText>
+</td>
+        </tr>
+    </table>
+
+    <!-- ================= SHIFT CARDS ================= -->
+    <apex:repeat value="{!shiftDetails}" var="item">
+        <apex:variable var="shift" value="{!item['shift']}" />
+
+        <div class="shift-card">
+
+            <!-- TOP SUMMARY -->
+            <table class="no-border">
+                <tr>
+                    <td><b>Staff:</b> {!shift.Staff__r.Display_Nickname__c}</td>
+                    <td>
+                        <b>Date:</b>
+                        <apex:outputText value="{0,date,dd/MM/yyyy}">
+                            <apex:param value="{!shift.Date__c}" />
+                        </apex:outputText>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td><b>Shift Type:</b> {!shift.Type_of_shift__c}</td>
+                    <td><b>Shift Time:</b> {!shift.Add_Shift__r.Shift_Start_End_Time__c}</td>
+                </tr>
+
+               <!--  <tr>
+                    <td colspan="2">
+                        <b>Participants:</b> {!item['participants']}
+                    </td>
+ 
+                </tr> -->
+<tr>
+    <td style="width:50%;">
+        <b>Participants:</b>
+        {!item['participants']}
+    </td>
+
+    <td style="width:50%; text-align:left;">
+        <b>Staff Login Details:</b>
+
+        {!IF(
+            VALUE(LEFT(TEXT(shift.Log_In_Date_Time__c),2)) > 12,
+            VALUE(LEFT(TEXT(shift.Log_In_Date_Time__c),2)) - 12,
+            VALUE(LEFT(TEXT(shift.Log_In_Date_Time__c),2))
+        )}
+        :
+        {!MID(TEXT(shift.Log_In_Date_Time__c),4,2)}
+        {!IF(VALUE(LEFT(TEXT(shift.Log_In_Date_Time__c),2)) >= 12,' PM',' AM')}
+
+        -
+
+        {!IF(
+            VALUE(LEFT(TEXT(shift.Log_Out_Date_Time__c),2)) > 12,
+            VALUE(LEFT(TEXT(shift.Log_Out_Date_Time__c),2)) - 12,
+            VALUE(LEFT(TEXT(shift.Log_Out_Date_Time__c),2))
+        )}
+        :
+        {!MID(TEXT(shift.Log_Out_Date_Time__c),4,2)}
+        {!IF(VALUE(LEFT(TEXT(shift.Log_Out_Date_Time__c),2)) >= 12,' PM',' AM')}
+    </td>
+</tr>
+            </table>
+
+            <!-- SHIFT INFORMATION -->
+            <apex:outputPanel rendered="{!showShiftInformation}">
+                <div class="section-title">Shift Information</div>
+                <table>
+                    <tr>
+                        <td><b>Staff</b></td>
+                        <td>{!shift.Staff__r.Display_Nickname__c}</td>
+                        <td><b>Role</b></td>
+                        <td>{!shift.Role_formula__c}</td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+
+            <!-- INCIDENT REGISTER -->
+<!--             <apex:outputPanel rendered="{!showIncidentRegister}">
+                <div class="section-title">Incident Register</div>
+                <table>
+                    <tr>
+                        <th>Case</th>
+                        <th>Status</th>
+                    </tr>
+                    <apex:repeat value="{!item['incidents']}" var="inc">
+                        <tr>
+                            <td>{!inc.CaseNumber}</td>
+                            <td>{!inc.Status}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </apex:outputPanel> -->
+<!-- <apex:outputPanel rendered="{!showIncidentRegister}">
+    <div class="section-title">Incident Register</div>
+    <table>
+        <tr>
+            <th>Case</th>
+            <th>Status</th>
+        </tr>
+
+        <apex:repeat value="{!item['incidents']}" var="inc">
+            <tr>
+                <td>{!inc['name']}</td>
+                <td>{!inc['status']}</td>
+            </tr>
+        </apex:repeat>
+    </table>
+</apex:outputPanel> -->  <!-- incident register commented -->
+            <!-- FORMS -->
+            <!-- <apex:outputPanel rendered="{!showForms}">
+                <div class="section-title">Forms</div>
+
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                    </tr>
+
+                    <apex:repeat value="{!item['forms']}" var="f">
+                        <tr>
+                            <td>{!f.Name__c}</td>
+                            <td>{!f.Form_Type__c}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+    </apex:outputPanel> -->
+<apex:outputPanel rendered="{!AND(showForms, NOT(ISNULL(item['formsTable'])))}">
+    <div class="section-title">Forms</div>
+
+    <table>
+        <tr>
+            <th>Form Name</th>
+            <th>Form Type</th>
+        </tr>
+
+        <apex:repeat value="{!item['formsTable']}" var="f">
+            <tr>
+                <td>{!f['name']}</td>
+                <td>{!f['type']}</td>
+            </tr>
+        </apex:repeat>
+    </table>
+</apex:outputPanel>
+    <!-- PARTICIPANT JOURNAL -->
+    <apex:outputPanel rendered="{!showParticipantJournal}">
+        <div class="section-title">Participant Journal</div>
+
+        <apex:repeat value="{!item['journals']}" var="j">
+            <table style="margin-bottom:8px;">
+                <tr>
+                    <td><b>Notes</b></td>
+                    <td>
+                        <apex:outputText value="{!j.Care_Notes__c}" escape="false"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Description</b></td>
+                    <td>
+                        <apex:outputText value="{!j.Description__c}" escape="false"/>
+                    </td>
+                </tr>
+            </table>
+        </apex:repeat>
+    </apex:outputPanel>
+    <!-- ACTIVITY LOGS -->
+    <apex:outputPanel rendered="{!showActivityLogs}">
+        <div class="section-title">Activity Logs</div>
+
+        <table>
+            <apex:repeat value="{!shift.ShiftWithStaff_Activities__r}" var="a">
+                <tr>
+                    <td>{!a.Notes__c}</td>
+                </tr>
+            </apex:repeat>
+        </table>
+    </apex:outputPanel>
+    <!-- CHECKLIST -->
+    <apex:outputPanel rendered="{!showChecklist}">
+        <div class="section-title">Checklist</div>
+
+        <table>
+            <tr>
+                <th>Description</th>
+                <th>Completed</th>
+            </tr>
+
+            <apex:repeat value="{!item['checklist']}" var="c">
+                <tr>
+                    <td>{!c.Description__c}</td>
+                    <td>{!c.Completed__c}</td>
+                </tr>
+            </apex:repeat>
+        </table>
+    </apex:outputPanel>
+            <!-- SERVICES -->
+            <apex:outputPanel rendered="{!showServicesDelivered}">
+                <div class="section-title">Services Delivered</div>
+                <table>
+                    <tr>
+                        <th>Service</th>
+                        <th>Hours</th>
+                    </tr>
+                    <apex:repeat value="{!shift.Services_and_Support_Plans__r}" var="s">
+                        <tr>
+                            <td>{!s.Service_Type_Name__c}</td>
+                            <td>{!s.Qty__c}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </apex:outputPanel>
+
+            <!-- REIMBURSEMENTS -->
+            <apex:outputPanel rendered="{!showReimbursements}">
+                <div class="section-title">Reimbursements</div>
+                <table>
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Amount</th>
+                        <th>Comments</th>
+                        <th>Status</th>
+                    </tr>
+                    <apex:repeat value="{!shift.Reimbursements__r}" var="r">
+                        <tr>
+                            <td>{!r.Type_of_Vehicle__c}</td>
+                            <td>{!r.Total_Amount__c}</td>
+                            <td>{!r.Comments__c}</td>
+                            <td>{!r.Approval_Status__c}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+            </apex:outputPanel>
+
+            <!-- NOTES -->
+            <apex:outputPanel rendered="{!showShiftNotes}">
+                <div class="section-title">Shift Notes</div>
+                <p>{!shift.SignIn_Notes__c}</p>
+            </apex:outputPanel>
+
+            <!-- SIGNATURE -->
+            <apex:outputPanel rendered="{!showSignature}">
+                <div class="section-title">Signature</div>
+                <p>
+                    <apex:outputText value="{!IF(ISBLANK(shift.Client_Signature__c), 'Not Signed', 'Signed')}" />
+                </p>
+            </apex:outputPanel>
+
+        </div>
+
+    </apex:repeat>
+
+</body>
+</html>
+
+</apex:page>

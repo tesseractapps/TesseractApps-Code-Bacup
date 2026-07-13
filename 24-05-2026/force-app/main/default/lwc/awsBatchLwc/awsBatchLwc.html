@@ -1,0 +1,122 @@
+<template>
+    <lightning-card title="File Upload">
+
+        <!-- Upload Area -->
+        <div class="upload-container">
+
+            <!-- Hidden Input -->
+            <input 
+                type="file"
+                multiple={allowMultiple}
+                accept={acceptedFormats}
+                onchange={handleFileSelection}
+                class="hidden-input"
+                data-id="fileInput"/>
+
+            <!-- Click / Drag Area -->
+            <div class={uploadBoxClass}
+                onclick={openFileDialog}
+                ondragover={handleDragOver}
+                ondragleave={handleDragLeave}
+                ondrop={handleDrop}>
+    
+                <div class="upload-content">
+
+                    <i class="material-icons upload-icon">cloud_upload</i>
+
+                    <p class="upload-text">
+                        Click to Upload or Drag & Drop
+                    </p>
+
+                    <p class="upload-subtext">
+                        Supported: {formattedFormats}
+                    </p>
+
+                    <template if:false={isUnlimited}>
+                        <p class="upload-subtext size-text">
+                            Max Size: {formattedMaxSize}
+                        </p>
+                    </template>
+
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- 🔥 SELECTED FILES (NEW SECTION) -->
+        <template if:true={uploadFileList.length}>
+            <div class="file-list">
+
+                <p class="section-title">{fileSectionTitle}</p>
+
+                <template for:each={uploadFileList} for:item="file" for:index="index">
+                   <div key={file.name} class="file-row">
+
+                        <!-- LEFT -->
+                        <div class="file-left">
+                            <i class={file.fullIconClass}>{file.icon}</i>
+
+                            <div class="file-meta">
+                                <div class="file-name">{file.name}</div>
+                                <div class="file-size">{file.sizeFormatted}</div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="file-right">
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style={file.progressStyle}></div>
+                            </div>
+
+                            <div class="file-actions">
+
+                                <!-- Uploading -->
+                                <template if:true={file.isUploading}>
+                                    <i class="material-icons action-icon cancel"
+                                    data-index={index}
+                                    onclick={handleRemoveSelected}>
+                                    close
+                                    </i>
+                                </template>
+
+                                <!-- Uploaded -->
+                                <template if:true={file.isUploaded}>
+                                   <i class="material-icons action-icon success"
+                                    title="Uploaded successfully">
+                                    check_circle
+                                    </i>
+
+                                    <i class="material-icons action-icon delete"
+                                    data-key={file.key}
+                                    onclick={handleDelete}
+                                    title="Delete file">
+                                    delete
+                                    </i>
+                                </template>
+
+                                <!-- Error -->
+                                <template if:true={file.isError}>
+                                    <i class="material-icons action-icon error">error</i>
+
+                                    <button class="retry-btn"
+                                            data-index={index}
+                                            onclick={handleRetry}>
+                                        Retry
+                                    </button>
+                                </template>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+
+            </div>
+        </template>
+
+
+    </lightning-card>
+</template>

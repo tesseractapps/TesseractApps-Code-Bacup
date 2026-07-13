@@ -1,0 +1,663 @@
+<template>
+    <div class="main-container">
+         <template if:true={showUpgradeModal}>
+                <c-upgrade-modal 
+                    is-open={showUpgradeModal} 
+                    onclose={closeUpgradeModal}>
+                </c-upgrade-modal>
+        </template>
+        <template if:true={isHomeMainContainer}>
+              <!-- Menu Container -->
+            <div class="menu-container">
+                <div class={myPmsClass} onclick={handleMyPms}>Performance Review</div>
+                <div class={myCoachingClass} onclick={handleMyCoaching}>Coaching Sessions</div>
+                <div class={myPipClass} onclick={handleMyPip}>PIP</div>
+                <div class={myGoalsClass} onclick={handleMyGoals}>Development Goals</div>
+                
+            </div>
+            <div class="major-cont custom-scroll">
+                <template if:true={isHome}>   
+                    <template if:true={myPmsFlag}>
+                        <!--  <div >
+                        <h2 class="heading">Performance Review</h2>
+                        <p class="subheading">Complete your self-assessment below</p>
+
+                        <template for:each={templates} for:item="template">
+                            <div key={template.Id} class="review-card">
+
+                                <div class="card-left">
+                                    <div class="review-title">
+                                        Review Cycle name
+                                    </div>
+
+                                    <div class="review-details">
+                                        <span>KPIs : <b>{template.kpiCount}</b></span>
+                                        <span>OKRs : <b>{template.okrCount}</b></span>
+                                        <span>Competences : <b>{template.competencyCount}</b></span>
+                                        <span>Role : <b>{template.Role_Title__c}</b></span>
+                                        <span>Template Name : <b>{template.Role_Title__c}</b></span>
+                                    </div>
+                                </div>
+
+                                <div class="card-right">
+                                    <lightning-button 
+                                        label="View Details"
+                                        variant="neutral"
+                                        onclick={handleView}>
+                                    </lightning-button>
+                                </div>
+
+                            </div>
+                        </template>
+                        </div> 
+                        <div>-->
+                        <h2 class="heading">Performance Review</h2>
+                        <p class="subheading">Complete your self-assessment below</p>
+
+                        <template for:each={templates} for:item="template">
+                            <div key={template.templateId} class="review-card">
+
+                                <div class="card-left">
+
+                                    <div class="review-title">
+                                    {template.ReviewcycleName} 
+                                    </div>
+
+                                    <div class="review-details">
+                                        <span>Manager :{template.managerName}</span>
+                                        <span>Effective Date : 
+                                            <b>{template.effectiveDateFormatted}</b>
+                                        </span>
+                                        <span>KPIs : <b>{template.kpiCount}</b></span>
+                                        <span>OKRs : <b>{template.okrCount}</b></span>
+                                        <span>Competences : <b>{template.competencyCount}</b></span>
+                                        <span>Role : <b>{template.roleTitle}</b></span>
+                                        <span>Template : <b>{template.roleTitle}</b></span>
+                                        
+                                    </div>
+
+                                </div>
+
+                                <div class="card-right">
+                                    <lightning-button 
+                                        data-id={template.templateId}
+                                        label="View Details"
+                                        variant="neutral"
+                                        onclick={handleView}>
+                                    </lightning-button>
+                                </div>
+
+                            </div>
+                        </template>
+
+                    </template>
+                </template>
+
+                <template if:true={showDetails}>    
+                <template if:true={selectedTemplate}>
+
+            <div class="pms-wrapper">
+
+                <!-- HEADER -->
+                <div class="header">
+                    <h2>Performance Review</h2>
+                    <p>Complete your self-assessment below</p>
+                </div>
+
+                <!-- PROGRESS SECTION -->
+                <!-- <div class="progress-card">
+
+                    <div class="progress-top">
+                        <span>Progress</span>
+                        <span>33%</span>
+                    </div>
+
+                    <lightning-progress-bar value="33" size="large"></lightning-progress-bar>
+
+                    <div class="progress-scale">
+                        <span>0%</span>
+                        <span>100%</span>
+                    </div>
+
+                    
+                    <div class="summary-section">
+
+                        <div class="summary-box">
+                            <div class="summary-title">KPIs 50% weight</div>
+                            <lightning-slider value="79"></lightning-slider>
+                            <div class="percent">79%</div>
+                        </div>
+
+                        <div class="summary-box">
+                            <div class="summary-title">OKRs 35% weight</div>
+                            <lightning-slider value="79"></lightning-slider>
+                            <div class="percent green">79%</div>
+                        </div>
+
+                        <div class="summary-box">
+                            <div class="summary-title">Behaviors 15% weight</div>
+                            <lightning-slider value="79"></lightning-slider>
+                            <div class="percent purple">79%</div>
+                        </div>
+
+                    
+                        <div class="final-score-box">
+                            <div class="status-badge">Unsatisfactory</div>
+                            <div class="score-value">0.00</div>
+                            <div class="score-sub">Out of 5.0</div>
+                            <div class="score-desc">Significant performance concerns</div>
+                        </div>
+
+                    </div>
+
+                    <div class="live-score">
+                        <strong>Live Score Preview</strong>
+                        <span>
+                            Your self-assessment scores • Weightage:
+                            KPI 50% / OKR 35% / Behavior 15%
+                        </span>
+                    </div>
+
+                </div> -->
+
+                <!-- TABS -->
+                <lightning-tabset variant="scoped">
+
+                    <!-- KPI TAB -->
+                    <lightning-tab label={selectedTemplate.kpiTabLabel}>
+
+                        <template for:each={selectedTemplate.kpis} for:item="kpi">
+                            <div key={kpi.Id} class="kpi-card">
+
+                                <div class="kpi-header">
+                                    <div>
+                                        <strong>{kpi.Name}</strong>
+                                        <span class="badge">{kpi.Category__c}</span>
+                                        <div class="kpi-desc">
+                                            {kpi.KPI_Description__c}
+                                        </div>
+                                    </div>
+
+                                    <div class="kpi-meta">
+                                        <span>Target : <b>{kpi.KPI_Target__c}%</b></span>
+                                        <span>Weight : <b>{kpi.KPI_Weight__c}%</b></span>
+                                    </div>
+                                </div>
+
+                                <div class="kpi-body">
+
+                                    <div class="rating-block">
+                                        <label>Your Rating</label>
+                                        <lightning-combobox
+                                            data-id={kpi.Id}
+                                            options={ratingOptions}
+                                            value={kpi.staffRating}
+                                            onchange={handleKpiRatingChange}
+                                            variant="label-hidden" disabled={selectedTemplate.EditDisabled}>
+                                        </lightning-combobox>
+                                    </div>
+
+                                <!--  <div class="attachment-block">
+                                        <label>Attachments</label>
+                                        <div class="upload-box">
+                                            Choose File
+                                        </div>
+                                    </div> -->
+
+                                </div>
+
+                                <div class="comment-block">
+                                    <label>Comments & Achievements</label>
+                                    <lightning-textarea
+                                        data-id={kpi.Id}
+                                        value={kpi.staffComment}
+                                        onchange={handleKpiCommentChange} disabled={selectedTemplate.EditDisabled}>
+                                    </lightning-textarea>
+                                </div>
+
+                            </div>
+                        </template>
+
+                    </lightning-tab>
+
+                    <lightning-tab label={selectedTemplate.okrTabLabel}>
+                        <template for:each={selectedTemplate.okrs} for:item="okr">
+                        <div key={okr.Id} class="kpi-card">
+
+                            <div class="kpi-header">
+                                <div>
+                                    <strong>{okr.OKR_Objective__c}</strong>
+                                <!--  <span class="badge">{okr.OKR_Objective__c}</span> -->
+                                    <div class="kpi-desc">
+                                        {okr.OKR_Description__c}
+                                    </div>
+                                </div>
+
+                                <div class="kpi-meta">
+                                    <span>Target : <b>{okr.Key_Target__c}%</b></span>
+                                    <span>Weight : <b>{okr.OKR_Weight__c}%</b></span>
+                                </div>
+                            </div>
+
+                            <div class="kpi-body">
+
+                                <div class="rating-block">
+                                    <label>Your Rating</label>
+                                    <lightning-combobox
+                                        data-id={okr.Id}
+                                        options={ratingOptions}
+                                        value={okr.staffRating}
+                                        onchange={handleOkrRatingChange} disabled={selectedTemplate.EditDisabled}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+
+                            </div>
+
+                            <div class="comment-block">
+                                <label>Comments & Achievements</label>
+                                <lightning-textarea
+                                    data-id={okr.Id}
+                                    value={okr.staffComment}
+                                    onchange={handleOkrCommentChange} disabled={selectedTemplate.EditDisabled}>
+                                </lightning-textarea>
+                            </div>
+
+                        </div>
+                    </template>
+                    </lightning-tab>
+
+                    <lightning-tab label={selectedTemplate.competencyTabLabel}>
+                        <template for:each={selectedTemplate.competencies} for:item="comp">
+                        <div key={comp.Id} class="kpi-card">
+
+                            <div class="kpi-header">
+                                <div>
+                                    <strong>{comp.Name}</strong>
+                                    <span class="badge">{comp.Competency_Category__c}</span>
+                                    <div class="kpi-desc">
+                                        {comp.Competency_Description__c}
+                                    </div>
+                                </div>
+
+                                <div class="kpi-meta">
+                                <!--   <span>Target : <b>{comp.KPI_Target__c}%</b></span> -->
+                                    <span>Weight : <b>{comp.Competency_Weight__c}%</b></span>
+                                </div>
+                            </div>
+
+                            <div class="kpi-body">
+
+                                <div class="rating-block">
+                                    <label>Your Rating</label>
+                                <lightning-combobox
+                                        data-id={comp.Id}
+                                        options={ratingOptions}
+                                        value={comp.staffRating}
+                                        onchange={handleCompetencyRatingChange} disabled={selectedTemplate.EditDisabled}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+
+                            </div>
+
+                            <div class="comment-block">
+                                <label>Comments</label>
+                                <lightning-textarea
+                                    data-id={comp.Id}
+                                    value={comp.staffComment}
+                                    onchange={handleCompetencyCommentChange} disabled={selectedTemplate.EditDisabled}>
+                                </lightning-textarea>
+                            </div>
+
+                        </div>
+                    </template>
+
+                    </lightning-tab>
+
+                </lightning-tabset>
+
+                <!-- FOOTER -->
+                <div class="footer">
+                    <lightning-button label="Close" onclick={handleClose}></lightning-button>
+                    <lightning-button label="Save Draft" variant="neutral" onclick={handleSaveDraft} disabled={selectedTemplate.EditDisabled}></lightning-button>
+                    <lightning-button label="Submit Review" variant="brand" onclick={handleSubmitreview} disabled={selectedTemplate.EditDisabled}></lightning-button>
+                </div>
+
+            </div>
+
+            </template>
+                </template>
+
+                <template if:true={myGoalsFlag}>
+                <!-- <c-tesseract-apps-rejected-shift-reports
+                    orgid={orgid}
+                    onbacktorejectedshifts={handleCloseChild}
+                ></c-tesseract-apps-rejected-shift-reports> -->
+                    <!-- <div>
+                        <h2 class="heading">Development</h2>
+                        <p class="subheading">Reading, developmentmplans and goals</p>
+
+                        <template for:each={goalsList} for:item="goal">
+                            <div key={goal.goalId} class="review-card">
+
+                                <div class="card-left">
+
+                                    <div class="review-title">
+                                    {goal.goalName} 
+                                    </div>
+
+                                    <div class="review-details">
+                                        <span>{goal.description}</span>
+                                        <span> Date : 
+                                            <b>{goal.dateFormatted}</b>
+                                        </span>
+                                        <span>Manager Name:{goal.managerName}</span>
+                                        
+                                        <span>status : <b>{goal.status}</b></span>
+                                    
+                                        
+                                    </div>
+
+                                </div>
+
+                                <div class="card-right">
+                                    <lightning-button 
+                                        data-id={goal.goalId}
+                                        label="View Details"
+                                        variant="neutral"
+                                        onclick={handleGoalsView}>
+                                    </lightning-button>
+                                </div>
+
+                            </div>
+                        </template>
+                    </div> -->
+                    <div class="development-header">
+
+                        <div class="header-left">
+                            <h2 class="heading">Development</h2>
+                            <p class="subheading">Review, development plans, and goals</p>
+                        </div>
+
+                        <div class="header-stats">
+
+                            <div class="goal-count development">
+                                <span>Development Goals</span>
+                                <b>{developmentGoalCount}</b>
+                            </div>
+
+                            <div class="goal-count completed">
+                                <span>Completed</span>
+                                <b>{completedGoalCount}</b>
+                            </div>
+
+                        </div>
+
+                        <div class="header-action">
+                            <lightning-button
+                                label="Create Goals"
+                                variant="brand"
+                                onclick={handleCreateGoal}>
+                            </lightning-button>
+                        </div>
+
+                    </div>
+
+                    <hr class="divider">
+                    <template for:each={goalsList} for:item="goal">
+                        <div key={goal.goalId} class="review-card">
+
+                            <div class="card-left">
+
+                                <div class="review-title">
+                                {goal.goalName} 
+                                </div>
+
+                                <div class="review-details">
+                                
+                                    <span>{goal.description}</span>
+                                    <span>
+                                          <span><strong>Date:</strong></span>
+                                        <span class="slds-text-color_weak">{goal.dateFormatted}</span>
+                                    </span>
+                                    
+                                    <span>
+                                         <span><strong>Manager Name:</strong></span>
+                                        <span class="slds-text-color_weak">{goal.managerName}</span>
+                                    </span>
+                                    
+                                    <span>
+                                         <span><strong>Status:</strong></span>
+                                        <span class="slds-text-color_weak">{goal.status}</span>
+                                    </span>
+                                    
+                                </div>
+
+                            </div>
+
+                            <div class="card-right">
+                                <lightning-button 
+                                    data-id={goal.goalId}
+                                    label="View Details"
+                                    variant="neutral"
+                                    onclick={handleGoalsView}>
+                                </lightning-button>
+                            </div>
+
+                        </div>
+                    </template>
+                </template>    
+                
+                <template if:true={myCoachingFlag}>
+                    <div class="development-header">
+
+                        <div class="header-stats">
+
+                            <div class="goal-count development1">
+                                <span>Total Sessions</span>
+                                <b>{totalCoachingSessionCount}</b>
+                            </div>
+
+                            <div class="goal-count development">
+                                <span>Pending Acknowledgement</span>
+                                <b>{pendingAcknowledgementCount}</b>
+                            </div>
+
+                            <div class="goal-count completed">
+                                <span>Acknowledged</span>
+                                <b>{acknowledgedCount}</b>
+                            </div>
+
+                        </div>
+
+                        <!-- <div class="header-action">
+                            <lightning-button
+                                label="Create "
+                                variant="brand"
+                                onclick={handleCreateGoal}>
+                            </lightning-button>
+                        </div> -->
+
+                    </div>
+
+                    <!-- <hr class="divider"> -->
+                    <div class="slds-grid slds-align-center slds-p-top_medium">
+
+                        <div class="slds-shrink-none">
+                            <p class="slds-text-title_bold slds-m-bottom_none">
+                                My Coaching Sessions
+                            </p>
+                        </div>
+
+                        <div class="slds-grow slds-p-left_small">
+                            <div class="section-line slds-m-top_small"></div>
+                        </div>
+
+                    </div>
+
+                    <template if:true={staffCoachingRecords}>
+                        <template for:each={staffCoachingRecords} for:item="rec">
+
+                            <div key={rec.Id} class="slds-box slds-m-around_small">
+
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+
+                                    <div class="slds-col slds-size_3-of-4">
+
+                                        <span class="slds-text-heading_small slds-text-title_bold slds-m-right_small">
+                                            {rec.coachingTitle}
+                                        </span>
+
+                                        <!-- <span class="slds-badge slds-theme_warning slds-badge_light slds-truncate coaching-badge" -->
+                                          <span class={rec.createdTypeClass}
+                                            title={rec.coachingCreatedtype}>
+                                            {rec.coachingCreatedtype}
+                                        </span>
+
+                                       <!-- <span  class={rec.statusClass}
+                                            title={rec.statusBadge}
+                                            style="margin-left:6px;">
+                                            {rec.statusBadge}
+                                        </span> -->
+
+                                    </div>
+                                    <div class="slds-col slds-size_3-of-4">
+
+                                        <span class="slds-text-heading_small slds-m-right_small">
+                                            {rec.coachingDescription}
+                                        </span>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-4 slds-text-align_right">
+                                        <lightning-button
+                                            label={rec.buttonLabel}
+                                            variant="brand"
+                                            data-id={rec.Id}
+                                            onclick={handleStaffReview}>
+                                           
+                                        </lightning-button>
+                                    </div>
+
+                                </div>
+
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    
+                                    
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Session Date:</strong>
+                                        <p class="slds-text-color_weak">{rec.coachingCreatedDate}</p>
+                                    </div>
+                                    <template if:true={rec.isCreatedByRc}>
+                                        <div class="slds-col slds-size_1-of-5">
+                                            <strong>Review Cycle Name:</strong>
+                                            <p class="slds-text-color_weak slds-truncate" title={rec.reviewCycleName}>{rec.reviewCycleName}</p>
+                                        </div>
+                                    </template>
+                                    <template if:true={rec.isCreatedByRc}>
+                                        <div class="slds-col slds-size_1-of-5">
+                                            <strong>Template Name:</strong>
+                                            <p class="slds-text-color_weak slds-truncate" title={rec.criteria}>{rec.criteria}</p>
+                                        </div>
+                                    </template>
+                                    
+                                    <!-- <div class="slds-col slds-size_1-of-5">
+                                        <strong>Employee:</strong>
+                                        <p class="slds-text-color_weak">{rec.employeeName}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Email:</strong>
+                                        <p class="slds-text-color_weak">{rec.email}</p>
+                                    </div> -->
+
+                                    <!-- <div class="slds-col slds-size_1-of-5">
+                                        <strong>Role:</strong>
+                                        <p class="slds-text-color_weak">{rec.role}</p>
+                                    </div> -->
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Manager:</strong>
+                                        <p class="slds-text-color_weak">{rec.manager}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Email:</strong>
+                                        <p class="slds-text-color_weak">{rec.managerEmail}</p>
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="slds-grid slds-wrap slds-m-top_small">
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Strengths Identified:</strong>
+                                        <p class="slds-text-color_weak">{rec.strengthsCount}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Development Areas:</strong>
+                                        <p class="slds-text-color_weak">{rec.developmentAreasCount}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Support:</strong>
+                                        <p class="slds-text-color_weak">{rec.supportCount}</p>
+                                    </div>
+
+                                    <!-- <div class="slds-col slds-size_1-of-5">
+                                        <strong>Review Completed:</strong>
+                                        <p class="slds-text-color_weak">{rec.reviewDate}</p>
+                                    </div> -->
+                                    <!-- <div class="slds-col slds-size_1-of-5">
+                                        <strong>Coaching Created:</strong>
+                                        <p class="slds-text-color_weak">{rec.coachingCreatedDate}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Last Updated on:</strong>
+                                        <p class="slds-text-color_weak">{rec.coachingLastUpdated}</p>
+                                    </div> -->
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>HR:</strong>
+                                        <p class="slds-text-color_weak">{rec.hrContact}</p>
+                                    </div>
+
+
+                                </div>
+                                <!-- <div class="slds-grid slds-wrap slds-m-top_small">
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Strengths Identified:</strong>
+                                        <p class="slds-text-color_weak">{rec.strengthsCount}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-5">
+                                        <strong>Development Areas:</strong>
+                                        <p class="slds-text-color_weak">{rec.developmentAreasCount}</p>
+                                    </div>
+
+                                </div> -->
+
+                            </div>
+
+                        </template>
+                    </template>
+                </template>
+                <template if:true={myPipFlag}>
+
+                </template>
+            </div>
+        </template>
+         <template if:true={isReviewCoaching}>
+            <c-tesseract-apps-pms-create-edit-coaching-lwc staff-id={staffId} view-mode={isCoachingViewMode} coaching-id={coachingRecordId} onback={handleBackFromCoachingCreateEdit} is-staff={isStaff}></c-tesseract-apps-pms-create-edit-coaching-lwc>
+        </template>  
+       
+
+    </div>
+          
+    <template if:true={isCreateGoal}>
+       <c-tesseract-apps-pms-create-edit-goal-lwc staff-id={staffId} goal-id={selectedgoalId} is-staff={isStaff} is-edit-goal={isEditGoal} onclosegoal={handleCloseGoal}></c-tesseract-apps-pms-create-edit-goal-lwc> <!-- staff-name={staffName} manager-name={managerName} -->
+    </template>
+   
+</template>
