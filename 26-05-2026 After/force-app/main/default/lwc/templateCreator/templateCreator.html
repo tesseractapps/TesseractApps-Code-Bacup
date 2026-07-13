@@ -1,0 +1,911 @@
+<template>
+    <template if:false={isFileUploaded}>
+      <div class="main-outer-container  custom-scroll">
+        <template if:true={isHome}>
+          <div class="input-row">
+            <!-- Hidden input for File Name (used for backend only) -->
+            <input
+              type="hidden"
+              name="fileName"
+              value={fileName}
+              onchange={handleFileNameChange}
+            />
+
+            <!-- Upload PDF with styled button -->
+            <div class="upload-button-container">
+              <label for="uploadPdf" class="upload-label">
+                <svg
+                  class="icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  width="48"
+                  height="48"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <p>Click here to upload a PDF(Max: 10MB) or Word file (Max: 10MB)</p>
+              </label>
+              <input
+                type="file"
+                id="uploadPdf"
+                accept=".pdf, .docx, .doc, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onchange={onFileUpload}
+                onclick={handleUploadOption}
+                class="visually-hidden"
+              />
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-p-around_small" style="padding: 40px;">
+            <template if:true={isFileExpand}>
+                  <c-document-office-service
+                      record-id={recordId}
+                      module-path-from-parent="ticket"
+                      onuploadcomplete={handleAwsUploadComplete}
+                      onfiledeleted={handleFileDeleted}
+                      oncancel={handlefilecancel}>
+                  </c-document-office-service>
+            </template>
+            <template if:true={isFileExpand1}>
+        <c-convert-word-to-pdf-lwc
+        record-id={recordId}
+        module-path-from-parent="ticket"
+        onuploadcomplete={handleAwsUploadComplete}>
+      </c-convert-word-to-pdf-lwc>
+    </template>
+            </div>
+
+            <!-- Logo Section -->
+            <div class="logo-container">
+              <img src={logo} alt="Te_sign Logo" class="logo-image" />
+            </div>
+          </div>
+        </template>
+      </div>      
+    </template>
+
+    <!-- Error Message Display -->
+    <template if:true={errorMessage}>
+      <div class="error-message">
+        <lightning-icon
+          icon-name="utility:error"
+          alternative-text="Error"
+        ></lightning-icon>
+        <p>{errorMessage}</p>
+      </div>
+    </template>
+
+    <template if:true={isLoading}>
+      <div class="overlay-logo"></div>
+
+      <div class="spinner-wrapper">
+        <div class="loader-container">
+          <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+          <img src={imageUrl} alt="T Logo" class="Tlogo" />
+        </div>
+
+        <!-- Progress text instead of progress bar -->
+        <p class="progress-text">Uploading file, please wait...</p>
+      </div>
+    </template>
+
+    <template if:true={isFileUploaded}>
+      <div class="main-inner-container custom-scroll">
+        <!-- Main Container -->
+        <div class="main-container">
+          <!-- Placeholder Selection Section -->
+
+          <!-- Custom Loading Animation -->
+
+          <!-- Image Display Section -->
+
+          <template if:true={imageSrc}>
+            <div
+              class="image-container"
+              ondrop={handleDrop}
+              ondragover={allowDrop}
+            >
+              <img src={imageSrc} alt="Rendered PDF Page" />
+              <!-- Render Dropped Placeholders -->
+              <template
+                for:each={placeholdersForCurrentPage}
+                for:item="placeholder"
+              >
+                <div
+                  key={placeholder.id}
+                  class="placeholder-container"
+                  style={placeholder.style}
+                  data-id={placeholder.id}
+                >
+                  <button
+                    class="rearrange-placeholder"
+                    onmousedown={handleRearrangeStart}
+                    data-id={placeholder.id}
+                  >
+                    ☰
+                  </button>
+                  <template if:true={placeholder.isName}>
+                    <div class="email-badge">
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="text"
+                      class="placeholder-input"
+                      placeholder="Enter First Name"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+                  <!-- Full Name Placeholder -->
+                  <template if:true={placeholder.isFullName}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="text"
+                      class="placeholder-input"
+                      placeholder="Enter Full Name"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+                  <template if:true={placeholder.isLastName}>
+                    <!-- Email Badge -->
+                    <div class="email-badge">
+                      {placeholder.formattedRecipient}
+                    </div>
+
+                    <input
+                      type="text"
+                      class="placeholder-input"
+                      placeholder="Enter Last Name"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+                  <!-- Email Placeholder -->
+                  <template if:true={placeholder.isEmail}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="email"
+                      class="placeholder-input"
+                      placeholder="Enter Email"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+
+                  <!-- Contact Number Placeholder -->
+                  <template if:true={placeholder.isContactNumber}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="text"
+                      class="placeholder-input"
+                      placeholder="Enter Contact No"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+
+                  <!-- Address Placeholder -->
+                  <template if:true={placeholder.isAddress}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <textarea
+                      class="placeholder-textarea"
+                      placeholder="Enter Address"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    ></textarea>
+                  </template>
+
+                  <!-- Date Placeholder -->
+                  <template if:true={placeholder.isDate}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="date"
+                      class="placeholder-input"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+
+                  <!-- Date of Signing Placeholder -->
+                  <template if:true={placeholder.isDateOfSigning}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="date"
+                      class="placeholder-input"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+
+                  <!-- Initials Placeholder -->
+                  <template if:true={placeholder.isInitials}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="text"
+                      maxlength="4"
+                      class="placeholder-input"
+                      placeholder="Enter Initials"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                    <!-- Dropdown for initials (if needed) -->
+                    <select
+                      class="placeholder-dropdown"
+                      onchange={handleInitialsSelection}
+                      data-id={placeholder.id}
+                    >
+                      <option value="">Select Initials</option>
+                      <option value="Mr">Mr</option>
+                      <option value="Mrs">Mrs</option>
+                      <option value="Miss">Miss</option>
+                      <option value="Dr">Dr</option>
+                    </select>
+                  </template>
+
+                  <!-- ABN Placeholder -->
+                  <template if:true={placeholder.isABN}>
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+                    <input
+                      type="text"
+                      class="placeholder-input"
+                      placeholder="Enter ABN"
+                      value={placeholder.value}
+                      disabled
+                      data-id={placeholder.id}
+                    />
+                  </template>
+
+                  <!-- For Signature Placeholder -->
+                  <template if:true={placeholder.isSignature}>
+                    <!-- Email Badge -->
+                    <div
+                      class="email-badge"
+                      data-id={placeholder.id}
+                      onclick={handleRecipientBadgeClick}
+                      title="Change recipient or text style"
+                    >
+                      {placeholder.formattedRecipient}
+                    </div>
+
+                    <!-- Upload Signature Button -->
+                    <button
+                      class="placeholder-upload"
+                      disabled
+                      data-id={placeholder.id}
+                    >
+                      Upload Signature
+                    </button>
+                  </template>
+                  <button
+                    class="delete-placeholder"
+                    onclick={deletePlaceholder}
+                    data-id={placeholder.id}
+                  >
+                    X
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <div class="placeholders">
+              <!-- Email Entry Section -->
+              <div class="email-entry-section">
+                <h3 class="slds-text-heading_small">Recipient Email</h3>
+                <template for:each={recipientEmails} for:item="recipient">
+                  <div class="email-row" key={recipient.key}>
+                    <lightning-input
+                      type="email"
+                      label={recipient.label}
+                      value={recipient.email}
+                      data-index={recipient.key}
+                      onchange={handleEmailChange}
+                    >
+                    </lightning-input>
+                    <template if:true={recipient.canRemove}>
+                      <button
+                        class="delete-badge"
+                        onclick={removeRecipient}
+                        data-index={recipient.key}
+                        aria-label="Remove recipient"
+                      >
+                        ✕
+                      </button>
+                    </template>
+                  </div>
+                </template>
+                <button class="add-recipient-btn" onclick={addRecipient}>
+                  <span class="add-icon">+</span> Add Recipient
+                </button>
+              </div>
+              <div class="drag-container">
+                <h3 class="slds-text-heading_small">Drag Placeholders</h3>
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="FullName"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Full Name"
+                >
+                  Full Name
+                </div>
+
+                <!-- <div 
+                      class="placeholder" 
+                      draggable="true" 
+                      data-type="Name" 
+                      ondragstart={handleDragStart}
+                      aria-label="Draggable placeholder for Name">
+                      First Name
+                  </div>
+                  <div 
+                      class="placeholder" 
+                      draggable="true" 
+                      data-type="LastName" 
+                      ondragstart={handleDragStart}
+                      aria-label="Draggable placeholder for Last Name">
+                      Last Name
+                  </div> -->
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="Email"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Email"
+                >
+                  Email
+                </div>
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="ContactNumber"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Contact Number"
+                >
+                  Contact Number
+                </div>
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="Address"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Address"
+                >
+                  Address
+                </div>
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="Date"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Date"
+                >
+                  Date
+                </div>
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="DateOfSigning"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Date of Signing"
+                >
+                  Date of Signing
+                </div>
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="Initials"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Initials"
+                >
+                  Initials
+                </div>
+
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="ABN"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for ABN"
+                >
+                  ABN
+                </div>
+
+                <div
+                  class="placeholder"
+                  draggable="true"
+                  data-type="Signature"
+                  ondragstart={handleDragStart}
+                  aria-label="Draggable placeholder for Signature"
+                >
+                  <span class="upload-symbol">&#128390;</span> Signature
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <!-- Pagination Controls -->
+        <template if:true={isPaginationVisible}>
+          <div class="pagination-controls">
+            <lightning-button
+              label="Previous"
+              icon-name="utility:chevronleft"
+              onclick={showPreviousPage}
+              disabled={isFirstPage}
+            >
+            </lightning-button>
+            <span>Showing {currentPage} of {totalPages} Page(s)</span>
+            <lightning-button
+              label="Next"
+              icon-name="utility:chevronright"
+              icon-position="right"
+              onclick={showNextPage}
+              disabled={isLastPage}
+            >
+            </lightning-button>
+          </div>
+        </template>
+
+        <template if:true={showRecipientModal}>
+          <section role="dialog" tabindex="-1" class="recipient-modal-container">
+            <div class="recipient-modal">
+              <header class="recipient-modal-header">
+                <h2 class="recipient-modal-title">Select Recipient</h2>
+                <button
+                  class="recipient-modal-close"
+                  onclick={cancelRecipientSelection}
+                  aria-label="Close Modal"
+                >
+                  ✖
+                </button>
+              </header>
+              <div class="recipient-modal-content">
+                <lightning-radio-group
+                  name="recipientRadio"
+                  options={recipientRadioOptions}
+                  value={selectedRecipient}
+                  onchange={handleRecipientSelection}
+                >
+                </lightning-radio-group>
+          <template if:true={showTextStylePanel}>
+                  <!-- Text Style Panel -->
+                  <div class="style-panel">
+                    <div class="style-panel-header">
+                      <div class="style-panel-icon">Aa</div>
+                      <div class="style-panel-header-text">
+                        <h3 class="style-panel-title">Text style</h3>
+                        <p class="style-panel-subtitle">Customize how this field will look in the document.</p>
+                      </div>
+                      <lightning-input
+                        type="toggle"
+                        class="style-panel-toggle"
+                        checked={useCustomInlineStyle}
+                        onchange={handleCustomInlineStyleToggle}>
+                      </lightning-input>
+                    </div>
+
+                    <div class={stylePanelGridClass}>
+                      <!-- LEFT: controls -->
+                      <div class="style-panel-left">
+                        <div class="slds-m-bottom_small">
+                          <div class="floating-label">
+                                  <span class="label-text-drop">Font family</span>
+                          <lightning-combobox
+                          name="fontFamily" 
+                            variant="label-hidden"
+                            value={styleOptions.fontFamily}
+                            options={fontFamilyOptions}
+                            onchange={handleStyleOptionChange}>
+                          </lightning-combobox>
+                          </div>
+                        </div>
+
+                        <div class="slds-m-bottom_small">
+                          <div class="floating-label">
+                                  <span class="label-text-drop">Font size</span>
+                          <lightning-combobox
+                          name="fontSize" 
+                            variant="label-hidden"
+                            value={styleOptions.fontSize}
+                            options={fontSizeOptions}
+                            onchange={handleStyleOptionChange}>
+                          </lightning-combobox>
+                          </div>
+                        </div>
+
+                        <div class="style-panel-toggle-row slds-m-bottom_small">
+                          <button
+                            type="button"
+                            class={boldToggleClass}
+                            data-style-name="bold"
+                            onclick={handleStyleToggleClick}>
+                            B
+                          </button>
+                          <button
+                            type="button"
+                            class={italicToggleClass}
+                            data-style-name="italic"
+                            onclick={handleStyleToggleClick}>
+                            I
+                          </button>
+                          <button
+                            type="button"
+                            class={underlineToggleClass}
+                            data-style-name="underline"
+                            onclick={handleStyleToggleClick}>
+                            U
+                          </button>
+                        </div>
+
+                        <div class="style-panel-color-row">
+                          <lightning-input
+                            type="color"
+                            name="color"
+                            label="Text color"
+                            value={styleOptions.color}
+                            onchange={handleStyleOptionChange}>
+                          </lightning-input>
+                        </div>
+                      </div>
+
+                      <!-- RIGHT: live preview -->
+                      <div class="style-panel-right">
+                        <div class="style-preview-card">
+                          <div class="style-preview-label">Live preview</div>
+                        <div class="style-preview-body" style={stylePreviewCss}>
+                    Example: This is how text in this field will appear to the recipient.
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+          </template>
+
+
+              </div>
+              <footer class="recipient-modal-footer">
+                <button
+                  class="recipient-modal-cancel-btn"
+                  onclick={cancelRecipientSelection}
+                >
+                  Cancel
+                </button>
+                <button
+                  class="recipient-modal-confirm-btn"
+                  onclick={confirmRecipientSelection}
+                >
+                  Confirm
+                </button>
+              </footer>
+            </div>
+            <div class="recipient-modal-backdrop"></div>
+          </section>
+        </template>
+
+        <template if:true={isConfirmationPopupVisible}>
+          <div class="confirmation-popup-backdrop">
+            <div class="confirmation-popup">
+              <header class="confirmation-popup-header">
+                <h2>Confirm Submission</h2>
+                <!-- <button class="close-popup-btn" onclick={closeConfirmationPopup}>✖</button> -->
+              </header>
+              <div class="confirmation-popup-content">
+                <p>Are you sure you want to send this document for signature?</p>
+                <div class="document-details">
+                  <h3>Recipients:</h3>
+                  <ul>
+                    <template for:each={recipientEmails} for:item="recipient">
+                      <li key={recipient.key}>Email: {recipient.email}</li>
+                    </template>
+                  </ul>
+                </div>
+                <p class="warning-text">
+                  Please review the details above carefully.<br />
+                  Once sent, you will not be able to make any changes.
+                </p>
+              </div>
+              <footer class="confirmation-popup-footer">
+                <button class="cancel-btn" onclick={closeConfirmationPopup}>
+                  Cancel
+                </button>
+                <button class="send-btn" onclick={handleSendConfirmation}>
+                  Send
+                </button>
+              </footer>
+            </div>
+          </div>
+        </template>
+
+        <template if:true={imageSrc}>
+          <div class="button-container">
+            <div class="save-section">
+              <lightning-button
+                label="Reset"
+                variant="brand-outline"
+                onclick={handleReset}
+              >
+              </lightning-button>
+              <br />
+
+              <lightning-button
+                label="Send"
+                variant="brand"
+                onclick={showConfirmationPopup}
+              >
+              </lightning-button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <template if:true={isLoadingCircle}>
+      <div class="loading-screen-container">
+        <div class="loading-content">
+          <!-- Rotating Loader Circle -->
+          <div class="loading-circle"></div>
+          <h2 class="loading-text">Processing your request...</h2>
+        </div>
+      </div>
+    </template>
+
+    <template if:true={showSuccessScreen}>
+      <div class="success-screen-container">
+        <div class="success-content">
+          <!-- Animated Green Checkmark -->
+          <div class="checkmark-wrapper">
+            <svg
+              class="checkmark"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 52 52"
+            >
+              <circle
+                class="checkmark-circle"
+                cx="26"
+                cy="26"
+                r="25"
+                fill="none"
+              />
+              <path class="checkmark-check" fill="none" d="M14 27l10 10L39 16" />
+            </svg>
+          </div>
+
+          <!-- Success Message -->
+          <h1 class="success-title">Document Sent Successfully</h1>
+          <p class="success-description">
+            Thank you for using our service.<br />
+            You will receive a notification once the document is signed and
+            completed.
+          </p>
+
+          <!-- Close Button -->
+          <button class="success-close-btn" onclick={handleCloseScreen}>
+            Done
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <template if:true={isTemplateUploadChoiceModal}>
+      <div class="template-modal-overlay">
+        <div class="template-modal">
+          <div class="template-modal-header">
+            <span class="template-modal-title">Choose Upload Option</span>
+            <button
+              class="template-modal-close"
+              onclick={closeTemplateUploadChoiceModal}
+            >
+              ×
+            </button>
+          </div>
+
+          <div
+            class="template-modal-body slds-align_absolute-center slds-p-around_medium"
+          >
+            <lightning-button
+              label="Use Existing Template"
+              variant="brand-outline"
+              class="slds-m-right_small"
+              onclick={handleUseExistingTemplate}
+            ></lightning-button>
+            <lightning-button
+              label="Upload New File"
+              variant="brand"
+              onclick={triggerNativeFileUpload}
+            ></lightning-button>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template if:true={showExistingTemplatesTable}>
+      <div class="template-modal-overlay">
+        <div class="template-modal1 large">
+          <div class="template-modal-header">
+            <span class="template-modal-title">Select a Created Template</span>
+            <button
+              class="template-modal-close"
+              onclick={closeExistingTemplatesTable}
+            >
+              ×
+            </button>
+          </div>
+
+          <div class="template-modal-body custom-scroll">
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+              <thead>
+                <tr>
+                  <th style="width: 10%">Select</th>
+                  <th>Template Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template
+                  for:each={cretPaginatedListWithChecked}
+                  for:item="template"
+                >
+                  <tr key={template.Id}>
+                    <td>
+                      <input
+                        type="radio"
+                        name="selectedTemplate"
+                        value={template.Id}
+                        data-id={template.Id}
+                        data-url={template.AWS_Document__c}
+                        onchange={handleTemplateRadioChange}
+                        checked={template.isChecked}
+                      />
+                    </td>
+                    <td>{template.Document_Name__c}</td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <template if:true={cretTemplateTotalRecords}>
+            <div
+              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_small fixed-pagination"
+            >
+              <!-- PAGE NAVIGATION -->
+              <div class="slds-align_absolute-center" style="height: 5rem">
+                <lightning-button
+                  disabled={cretDisableFirst}
+                  icon-name="utility:jump_to_left"
+                  label="First"
+                  class="slds-p-horizontal_x-small"
+                  alternative-text="First page"
+                  onclick={handleCretFirst}
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={cretDisableFirst}
+                  icon-name="utility:chevronleft"
+                  label="Previous"
+                  alternative-text="Previous"
+                  onclick={handleCretPrevious}
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                  Showing {cretPageNumber} of {cretTotalPages} Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                  disabled={cretDisableLast}
+                  icon-name="utility:chevronright"
+                  label="Next"
+                  alternative-text="Next"
+                  onclick={handleCretNext}
+                  class="slds-p-horizontal_x-small"
+                  icon-position="right"
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={cretDisableLast}
+                  icon-name="utility:jump_to_right"
+                  label="Last"
+                  alternative-text="Last page"
+                  onclick={handleCretLast}
+                  icon-position="right"
+                ></lightning-button>
+              </div>
+
+              <!-- TOTAL RECORDS -->
+              <div class="slds-clearfix">
+                <div class="slds-float_right">
+                  <span class="slds-badge">
+                    Total Records: {cretTemplateTotalRecords}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <div class="template-modal-footer">
+            <lightning-button
+              variant="brand"
+              label="Continue"
+              onclick={handleContinueWithSelectedTemplate}
+            ></lightning-button>
+          </div>
+        </div>
+      </div>
+    </template>
+  <template if:true={showUpgradeModal}>
+        <c-upgrade-modal
+            is-open={showUpgradeModal}
+            onclose={closeUpgradeModal}>
+        </c-upgrade-modal>
+  </template>
+</template>

@@ -1,0 +1,2520 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 06-12-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>
+  <template if:true={fundtracker}>
+    <div class="participantlayout" style="margin-bottom: 20px">
+<!--       <div class="slds-grid"> -->
+        <div>
+        <div>
+          <!--  <lightning-card title="Funds Tracker"> -->
+           <template if:true={displayFundTracker}>
+  <lightning-record-view-form
+    record-id={clientId}
+    object-api-name={objectApiName}
+  >
+    <div class="summary-container">
+      
+      <!-- 🟩 Card 1: Total Approved Amounts -->
+      <!-- <div class="summary-card peach-card">
+        <div class="title">Total Approved Amounts</div>
+        <div class="value">
+          
+          <lightning-output-field
+            field-name="Total_Approved_Amounts__c"
+            variant="label-hidden"
+          ></lightning-output-field>
+        </div>
+        <div class="title">Total Support Items</div>
+        <div class="value formatted-value">{totalSupportItems}</div>
+      </div> -->
+      <div class="summary-card green-card">
+      <div class="title">Total Approved Amounts</div>
+      <div class="value formatted-value">
+        <lightning-formatted-number
+          value={totalApprovedAmount}
+          format-style="currency"
+          currency-code="AUD"
+          minimum-fraction-digits="2"
+          maximum-fraction-digits="2">
+        </lightning-formatted-number>
+      </div>
+
+      <!-- <div class="title">Total Support Items</div>
+      <div class="value formatted-value">{totalSupportItems}</div> -->
+     </div>
+
+      <!-- 🟨 Card 2: Total Spent Funds -->
+     <!--  <div class="summary-card green-card">
+        <div class="title">Total Spent Funds</div>
+        <div class="value">
+          <lightning-output-field
+            field-name="Total_Spent_Funds__c"
+            variant="label-hidden"
+          ></lightning-output-field>
+        </div>
+        <div class="title">Average Support Amount</div>
+        <div class="value">
+          <lightning-formatted-number
+            value={averageSupportAmount}
+            format-style="currency"
+            currency-code="AUD"
+          ></lightning-formatted-number>
+        </div>
+      </div> -->
+        <div class="summary-card pink-card">
+    <div class="title">Total Spent Funds</div>
+    <div class="value formatted-value">
+      <lightning-formatted-number
+        value={totalSpentFunds}
+        format-style="currency"
+        currency-code="AUD"
+        minimum-fraction-digits="2"
+        maximum-fraction-digits="2">
+      </lightning-formatted-number>
+    </div>
+
+   <!--  <div class="title">Average Support Amount</div>
+    <div class="value formatted-value">
+      <lightning-formatted-number
+        value={averageSupportAmount}
+        format-style="currency"
+        currency-code="AUD">
+      </lightning-formatted-number>
+    </div> -->
+  </div>
+      <!-- 🟦 Card 3: Total Available Funds -->
+     <!--  <div class="summary-card yellow-card">
+        <div class="title">Total Available Funds</div>
+        <div class="value">
+          <lightning-output-field
+            field-name="Total_Available_Funds__c"
+            variant="label-hidden"
+          ></lightning-output-field>
+        </div>
+      </div> -->
+      <div class="summary-card blue-card">
+    <div class="title">Total Available Funds</div>
+    <div class="value formatted-value">
+      <lightning-formatted-number
+        value={totalAvailableFunds}
+        format-style="currency"
+        currency-code="AUD"
+        minimum-fraction-digits="2"
+        maximum-fraction-digits="2">
+      </lightning-formatted-number>
+    </div>
+  </div>
+
+     <div class="summary-card peach-card">
+      
+
+      <div class="title">Total Support Items</div>
+      <div class="value formatted-value">{totalSupportItems}</div>
+     </div>
+
+      <!-- 🟧 Card 4: Pie Chart -->
+     <!--  <div class="summary-card chart-card">
+        <c-pie-chart-lwc client-id={clientId}></c-pie-chart-lwc>
+      </div> -->
+
+    </div>
+  </lightning-record-view-form>
+</template>
+
+          <!-- </lightning-card>  -->
+          
+          <template if:true={displayFundTracker}>
+          <!--   <lightning-card title="Approved Services"> -->
+              <div style="display: flex;justify-content: flex-end;">
+            <lightning-button
+                variant="brand"
+                label={AddNewFund}
+                title="Add New Fund"
+                slot="actions"
+                onclick={handleFundSpent}
+                class="slds-float_right"
+              ></lightning-button>
+              </div> 
+
+              <template if:false={createAddNew}>
+                <template if:true={newAddFundTracker}>
+                  <div class="slds-grid slds-wrap" style="padding-top: 6px">
+                    <!-- <lightning-datatable data={accList} columns={columns} key-field="Id" hide-checkbox-column="false" column-width-mode="fixed" 
+                                  onrowaction={handleRowActions}>
+                                  </lightning-datatable> -->
+                    <template if:false={noRecordsFlag}>
+                      <table
+                        class="slds-table slds-table_cell-buffer slds-table_fixed-layout no-hover1"
+                        style="border-radius: 10px; overflow: hidden;"
+                      >
+                        <thead>
+                          <tr>
+                            <th style="width: 20%">Service Type</th>
+                            <template if:true={ndisflag}>
+                            <th>Plan Type</th>
+                            </template>
+                            <template if:true={ndisflag}>
+                            <th>Approved Date</th>
+                            </template>
+                            <th>Support Items</th>
+                            <template if:false={ndisflag}>
+                            <th>Start Date</th>
+                            </template>
+                            <template if:true={ndisflag}>
+                            <th>Approved Fund</th>
+                            </template>
+                             <template if:true={ndisflag}>
+                            <th>Spent</th>
+                            <th style="align-items: center">Available Funds</th>
+                            </template>
+                            <th style="align-items: center">Status</th>
+                            <th style="align-items: center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <template for:each={accList} for:item="acc">
+                            <tr key={acc.id} class="tr1">
+                              <!-- <td
+                                class="description"
+                                title={acc.registrationGroup}
+                              >
+                              <button
+                                class="slds-button slds-button_icon slds-m-right_x-small"
+                                data-id={acc.id}
+                                onclick={toggleExpand}
+                                title="Expand/Collapse"
+                              >
+                                <template if:true={acc.isExpanded}>
+                                  <lightning-icon
+                                    icon-name="utility:chevrondown"
+                                    size="x-small"
+                                  ></lightning-icon>
+                                </template>
+                                <template if:false={acc.isExpanded}>
+                                  <lightning-icon
+                                    icon-name="utility:chevronright"
+                                    size="x-small"
+                                  ></lightning-icon>
+                                </template>
+                              </button>
+                                   
+                                  <span>
+                                      {acc.registrationGroup}
+                                  </span>
+
+                                  <template if:true={acc.hasUnreadBadge}>
+                                          <div class="new-badge">
+                                              New
+                                          </div>
+                                  </template>
+
+                              </td> -->
+
+<td class="description" title={acc.registrationGroup}>
+<div class="staff-name-link">
+<button
+            class="slds-button slds-button_icon"
+            data-id={acc.id}
+            onclick={toggleExpand}
+            title="Expand/Collapse"
+            style="flex-shrink: 0;"
+>
+<template if:true={acc.isExpanded}>
+<lightning-icon icon-name="utility:chevrondown" size="x-small"></lightning-icon>
+</template>
+<template if:false={acc.isExpanded}>
+<lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+</template>
+</button>
+ 
+        <span class="staff-name-text">{acc.registrationGroup}</span>
+ 
+        <template if:true={acc.hasUnreadBadge}>
+<div class="new-badge">New</div>
+</template>
+</div>
+</td>                              
+                              <!-- For NDIS -->
+                              <template if:true={ndisflag}>
+                                <td>{acc.plantype}</td>
+                                <td>{acc.approvedDate}</td>
+                                <td>{acc.supportItemCount}</td> <!-- ✅ Correct order -->
+                                <td>
+                                  <lightning-formatted-number
+                                    value={acc.amountApproved}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                  ></lightning-formatted-number>
+                                </td>
+                                <td>
+                                  <lightning-formatted-number
+                                    value={acc.spentAmount}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2"
+                                  ></lightning-formatted-number>
+                                </td>
+                                <td>
+                                  <lightning-formatted-number
+                                    value={acc.availableFunds}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2"
+                                  ></lightning-formatted-number>
+
+                                  
+                                </td>
+                              </template>
+
+                              <!-- For non-NDIS -->
+                              <template if:false={ndisflag}>
+                                <td>{acc.supportItemCount}</td> <!-- ✅ Support Items first -->
+                                <td>{acc.approvedDate}</td> <!-- ✅ Then Start Date (renamed) -->
+                              </template>
+                               <td><span class={acc.statusClass}>{acc.status}</span></td>
+                              <td>
+                                <!-- <lightning-icon data-accid={acc.id} data-state={acc.state} data-fundname={acc.registrationGroup} data-approveddate={acc.approvedDate} icon-name="action:edit" data-name="edit" alternative-text="Edit" onclick={handleRowActions} size="xx-small" style="cursor:pointer;color:white;background:#0099DE; margin-right:2%;"></lightning-icon> -->
+                                <a
+                                  href="javascript:void(0)"
+                                  data-accid={acc.id}
+                                  data-state={acc.state}
+                                  data-fundname={acc.registrationGroup}
+                                  data-approveddate={acc.approvedDate}
+                                  data-amount={acc.amountApproved}
+                                  data-availablefunds ={acc.availableFunds}
+                                  data-spentamount ={acc.spentAmount}
+                                  data-name="edit"
+                                  title="Edit"
+                                  onclick={handleRowActions}
+                                  style="text-decoration: none"
+                                >
+                                  <i class="material-icons edit-icon"
+                                    >edit_document</i
+                                  >
+                                </a>
+                              </td>
+                            </tr>
+               <!-- <changes vamshi>  for text to appear above and below child table-->
+                          <template if:true={acc.isExpanded}>
+                            <tr key={acc.id}>
+                              <td colspan="9" class="slds-p-left_large slds-p-top_small slds-border_top slds-border_bottom" style="background-color: rgba(242, 242, 242, 0.42);">
+
+                                <!-- 🔹 Section header -->
+                                <div class="slds-p-around_small">
+                                  <p class="slds-text-title_bold" style="font-size:16px;">
+                                    Support Items Breakdown - Services Used So Far
+                                  </p>
+
+                              <div class="slds-grid slds-align-center slds-align-spread slds-p-top_x-small" style="justify-content: space-between;align-items: center;">
+                                  <!-- Left side: Plan Type and Approved Date -->
+                                  <div class="slds-grid slds-align-center slds-grow-none">
+                                      <lightning-badge label={acc.plantype} class="custom-badge slds-m-right_small"></lightning-badge>
+                                      <p class="slds-text-body_regular">Approved: {acc.approvedDate}</p>
+                                  </div>
+
+                                  <!-- Right side: Fund Available -->
+                                  <div class="slds-grow-none">
+                                      <div class="blueBadge slds-p-horizontal_small slds-p-vertical_xx-small fund-badge">
+                                          Fund Available:
+                                          <span class="fund-green slds-m-left_xx-small slds-m-right_xx-small">
+                                              <lightning-formatted-number
+                                                  value={acc.availableFunds}
+                                                  format-style="currency"
+                                                  currency-code="AUD"
+                                                  style="color: green;">
+                                              </lightning-formatted-number>
+                                          </span>
+                                          of
+                                          <span class="slds-m-left_xx-small">
+                                              <lightning-formatted-number
+                                                  value={acc.amountApproved}
+                                                  format-style="currency"
+                                                  currency-code="AUD">
+                                              </lightning-formatted-number>
+                                          </span>
+                                      </div>
+                                  </div>
+                                </div>
+
+
+
+                              </div>
+
+                               
+                                <!-- 🔹 Child table -->
+                                <div class="table-container no-hover">
+                                <div class="table-wrapper">
+                                <table class="staff-table "
+                                      style="table-layout:fixed; ">
+                                  <thead>
+                                    <tr>
+                                      <th class="table-th">Support Item Name</th>
+                                      <template if:true={ndisflag}>
+                                        <th class="table-th">Support Item Number</th>
+                                      </template> 
+                                      <th class="table-th">State</th>
+                                      <th class="table-th">Shift Mapping</th>
+                                      <th class="table-th">Amount</th>
+                                    </tr>
+                                  </thead>
+
+                                  <tbody>
+                                    <template if:true={acc.childItems}>
+                                      <template for:each={acc.childItems} for:item="child">
+                                        <tr key={child.Id}>
+                                          <td class="table-td description" title={child.Name} >{child.Name}</td>
+                                          <template if:true={ndisflag}>
+                                            <td class="table-td">{child.Support_Item_Number__c}</td>
+                                          </template>
+                                            <td class="table-td">{child.statechild}</td>
+                                          
+                                          <!-- 🔹 If ndisflag is false, show State column anyway to keep table aligned -->
+
+                                          <td class="table-td">
+                                            <div class="shift-mapping">
+                                              <template for:each={child.shiftBadges} for:item="badge">
+                                                <span key={badge} class="shift-badge">{badge}</span>
+                                              </template>
+                                            </div>
+                                          </td>
+                                          <td class="table-td">
+                                            <lightning-formatted-number
+                                              value={child.Amount__c}
+                                              format-style="currency"
+                                              currency-code="AUD">
+                                            </lightning-formatted-number>
+                                          </td>
+                                        </tr>
+                                      </template>
+
+                                      <!-- 🔹 Total row styled like Image 2 -->
+                                      <tr style="background:#f3f6fb;font-weight:600;">
+                                        <td class="table-td" colspan={colspanValue}>Total Spent Across All Items</td>
+                                        <td class="table-td">
+                                          <lightning-formatted-number
+                                            value={acc.spentAmount}
+                                            format-style="currency"
+                                            currency-code="AUD"
+                                            >
+                                          </lightning-formatted-number>
+                                        </td>
+                                      </tr>
+                                    </template>
+
+                                    <template if:false={acc.childItems}>
+                                      <tr>
+                                        <td class="table-td" colspan="4">No child records found.</td>
+                                      </tr>
+                                    </template>
+                                  </tbody>
+                                </table>
+                                </div>
+                                </div>
+
+                                <!-- 🔹 Info note moved BELOW table (as in Image 2) -->
+                                <div class="slds-p-top_small slds-p-left_xx-small">
+                                  <p class="slds-text-body_small" style="color:#706e6b;">
+                                    Spending is tracked as services are delivered.
+                                    All items draw from the approved fund of &nbsp;
+                                    <lightning-formatted-number
+                                      value={acc.amountApproved}
+                                      format-style="currency"
+                                      currency-code="AUD">
+                                    </lightning-formatted-number>.
+                                  </p>
+                                </div>
+
+                              </td>
+                            </tr>
+                          </template>
+
+                              <!-- <till here> -->    
+                          
+                            
+                          </template>
+                        </tbody>
+                      </table>
+                    </template>
+                  </div>
+                  <template if:true={noRecordsFlag}>
+                    <div class="no-data">
+                      <p>No records found</p>
+                    </div>
+                  </template>
+                </template>
+              </template>
+              <template if:false={noRecordsFlag}>
+                <template if:true={paginationVisible}>
+                  <div
+                    class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+                    style="padding-top: 0.5em; padding-top: 1%"
+                  >
+                    <!--RECORDS PER PAGE-->
+                    <div class="slds-col">
+                      <div class="slds-list_inline slds-p-bottom_xx-small">
+                        <label
+                          class="slds-text-color_weak slds-p-horizontal_x-small"
+                          for="recordsPerPage"
+                          >Page Size:</label
+                        >
+                        <div class="slds-select_container">
+                          <select
+                            class="slds-select"
+                            id="recordsPerPage"
+                            onchange={handleRecordsPerPage}
+                          >
+                            <template
+                              for:each={pageSizeOptions}
+                              for:item="option"
+                            >
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            </template>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!--PAGE NAVIGATION-->
+                    <div class="slds-align_absolute-center" style="height: 5rem">
+                      <lightning-button
+                        disabled={bDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        class="slds-p-horizontal_x-small"
+                        alternative-text="first page"
+                        onclick={firstPage}
+                      ></lightning-button>
+                      <lightning-button
+                        disabled={bDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        alternative-text="Previous"
+                        onclick={previousPage}
+                      ></lightning-button>
+                      &nbsp;
+                      <span class="slds-badge"
+                        >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+                        &nbsp;&nbsp;Page(s)</span
+                      >
+                      &nbsp;
+                      <lightning-button
+                        disabled={bDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        alternative-text="Next"
+                        onclick={nextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right"
+                      ></lightning-button>
+                      <lightning-button
+                        disabled={bDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        alternative-text="last page"
+                        onclick={lastPage}
+                        icon-position="right"
+                      ></lightning-button>
+                    </div>
+                    <!--TOTAL RECORDS-->
+                    <div class="slds-clearfix">
+                      <div class="slds-float_right">
+                        <span class="slds-badge">
+                          Total Records: {totalRecords}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </template>
+              <!--Spinner Starting-->
+              <div if:true={showLoadingSpinner}>
+                <lightning-spinner
+                  alternative-text="Loading"
+                  size="large"
+                ></lightning-spinner>
+              </div>
+            <!-- </lightning-card> -->
+          </template>
+        </div>
+        
+      </div>
+    </div>
+    <template if:true={createAddNew}>
+      <div class="blur-overlay"></div>
+      <div class="right-align" style="width: 75%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <p
+            style="
+              font-weight: bold;
+              font-size: 140%;
+              margin: 0;
+              padding: 3% 0 0 3%;
+            "
+          >
+            {headeringName}
+          </p>
+
+          <!-- <div style="display: flex; align-items: center; gap: 10px;margin-right:3%;margin-top:2%;">
+                      <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     
+                  </div> -->
+        </div>
+
+        <div class="slds-p-around_medium">
+          <lightning-record-edit-form
+            object-api-name="Funds_Tracker__c"
+            onsuccess={handleSuccess}
+            onsubmit={handleSubmit}
+            onerror={handleError}
+            record-id={recordId}
+          >
+            <!-- <lightning-messages></lightning-messages> -->
+
+            <div class="container-box custom-scroll">
+              <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px">
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span ></span>Entity Name</span
+                    >
+                    <lightning-combobox
+                      class="EntityNameValue"
+                      name="EntityNameType"
+                      variant="label-hidden"
+                      options={EntityNameOptions}
+                      value={EntityNameValue}
+                      onchange={handleEntityNameChange}
+                    ></lightning-combobox>
+                  </div>
+                </div>
+
+              <template if:true={ndisflag}>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Plan Type</span
+                    >
+                    <lightning-input-field
+                      field-name="Plan_Type__c"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                </template>
+                     <!--manendra-->
+                
+
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+
+                  <div class="service-type-wrapper dropdown-container2" onmousedown={handleServiceTypeContainerClick}>
+                    <div class="floating-label">
+                      <span class="label-text-drop">
+                        <span style="color:red">*</span>Service Type
+                      </span>
+
+                      <lightning-input
+                          type="text"
+                          value={serviceTypeName}
+                          placeholder="Search Service Type"
+                          onchange={handleServiceTypeSearch}
+                          onfocus={openServiceTypeDropdown}
+                          onblur={validateServiceType}
+                          onmousedown={handleServiceTypeInputMouseDown}
+                          variant="label-hidden">
+                      </lightning-input>
+
+
+                      <template if:true={showServiceTypeDropdown}>
+                        <div class="slds-dropdown slds-dropdown_fluid slds-dropdown_length-5 custom-scroll">
+                          <ul class="slds-listbox slds-listbox_vertical">
+                            <template for:each={filteredServiceTypeOptions} for:item="opt">
+                              <li
+                                key={opt.value}
+                                class="slds-listbox__item"
+                                data-value={opt.value}
+                                data-label={opt.label}
+                                onmousedown={handleServiceTypeSelect}>
+                                <div class="slds-listbox__option slds-media">
+                                  <span class="slds-media__body">
+                                    <span class="slds-truncate slds-var-p-around_x-small">{opt.label}</span>
+                                  </span>
+                                </div>
+                              </li>
+                            </template>
+                          </ul>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Amount</span
+                    >
+                    <lightning-input-field
+                      data-id="amountField"
+                      field-name="Amount_approved__c"
+                      variant="label-hidden"
+                       onchange={handleAmountChange}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Approved Date</span
+                    >
+                    <lightning-input-field
+                      field-name="Approved_Date__c"
+                      name="approvedDate"
+                      variant="label-hidden"
+                      data-name="approvedDate"
+                      onchange={handleServiceChange}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop">Status</span>
+                    <lightning-input-field
+                      field-name="Status__c"
+                      variant="label-hidden" onchange={handleStatusChange}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>State</span
+                    >
+                    <lightning-combobox
+                      variant="label-hidden"
+                      options={stateOptions}
+                      value={stateValue}
+                      onchange={handleServiceStateChange}
+                        required="true"
+                    ></lightning-combobox>
+                  </div>
+                </div>
+                <template if:true={showFundLevelThreshold}>
+                        <div
+          class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+        >
+          <div class="floating-label">
+            <span class="label-text-drop">
+              Usage Threshold
+            </span>
+            <lightning-input-field
+              field-name="Usage_Threshold__c"
+              variant="label-hidden">
+            </lightning-input-field>
+          </div>
+        </div>
+        </template>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label" style="height: 62px">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Description</span
+                    >
+                    <lightning-input-field
+                      field-name="Description__c"
+                      variant="label-hidden"
+                      required="true"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+              </div>
+
+              <template if:true={NdisServiceGroupName}>
+                <div style="padding: 1%">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="table-td-service" style="width: 6.5%;">Select</th>
+                        <th class="table-td-service">Support Item Name</th>
+                        <template  if:true={ndisflag}>
+                        <th class="table-td-service">Support Item Number</th>
+                        </template>
+                        <th style="width: 19%">Shift Names</th> <!-- manendra -->
+                        <th class="table-td-service" style="width: 19%">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template for:each={serviceGroupName} for:item="row">
+                        <tr key={row.Id} class="tr1">
+                          <td class="table-td-service"
+                            style="
+                              text-align: center;
+                              vertical-align: middle;
+                              padding-top: 5px;
+                              box-sizing: border-box;
+                            "
+                          >
+                            <input
+                              type="checkbox"
+                              data-id={row.Id}
+                              data-name={row.Name}
+                              onchange={handleCheckboxSelection}
+                              checked={row.isSelected}
+                            />
+                          </td>
+                          <td class="table-td-service">
+                              <template if:true={otherThanNdis}>
+                                <template if:true={row.isEditingName}>
+
+                                  <div class="qty-edit-container">
+                                      <lightning-input
+                                          type="text"
+                                          value={row.serviceSupportItem}
+                                          onchange={handleFieldChange}
+                                          data-id={row.Id}
+                                          data-field="serviceSupportItem"
+                                          onkeydown={handleQtyKeyDown}
+                                          class="qty-value"
+                                          label="Support Item Name"
+                                          variant="label-hidden"
+                                          style="width: 70%">
+                                        </lightning-input>
+
+                                        <a
+                                            href="javascript:void(0)"
+                                            data-id={row.Id}
+                                            data-field="Name"
+                                            title="Save"
+                                            onclick={handleSave}>
+                                            <i class="material-icons save-icon">check</i>
+                                          </a>
+
+                                  </div>
+                                    <!-- <td>{row.serviceSupportItem}</td> -->
+                                </template>
+                                <template if:false={row.isEditingName}>
+                                  <div class="qty-edit-container">
+                                  {row.serviceSupportItem}
+                                    <a
+                                      href="javascript:void(0)"
+                                      data-id={row.Id}
+                                      data-field="Name"
+                                      title="Edit"
+                                      onclick={handleToggleEdit}>
+                                      <i class="material-icons edit-icon">edit</i>
+                                      </a>
+                                  </div>
+                                  
+                                </template>
+
+                              </template>
+                              <template if:false={otherThanNdis}>
+                                <template if:false={Miscellaneous}>
+                                      {row.serviceSupportItem}
+                                </template>
+                                <template if:true={Miscellaneous}>
+                                        <template if:true={row.isEditingName}>
+                                            <div class="qty-edit-container">
+                                              <lightning-input
+                                                  type="text"
+                                                  value={row.serviceSupportItem}
+                                                  onchange={handleFieldChange}
+                                                  data-id={row.Id}
+                                                  data-field="serviceSupportItem"
+                                                  onkeydown={handleQtyKeyDown}
+                                                  class="qty-value"
+                                                  label="Support Item Name"
+                                                  variant="label-hidden"
+                                                  style="width: 70%">
+                                                </lightning-input>
+
+                                              <a
+                                                  href="javascript:void(0)"
+                                                  data-id={row.Id}
+                                                  data-field="Name"
+                                                  title="Save"
+                                                  onclick={handleSave}>
+                                                  <i class="material-icons save-icon">check</i>
+                                          </a>
+                                              
+                                            </div>
+                                        </template>
+
+                                          <template if:false={row.isEditingName}>
+                                            <div class="qty-edit-container">
+                                              {row.serviceSupportItem}
+                                              <a
+                                                href="javascript:void(0)"
+                                                data-id={row.Id}
+                                                data-field="Name"
+                                                title="Edit"
+                                                onclick={handleToggleEdit}>
+                                                <i class="material-icons edit-icon">edit</i>
+                                                </a>
+                                            </div>
+                                          </template>
+                                </template>
+                              </template>
+                        </td>
+                        <template  if:true={ndisflag}>
+                          <td class="table-td-service">{row.Support_Item_Number__c}</td>
+                        </template>
+                         <!-- manendra start for shift name  -->
+                          <td style="padding:2px;">
+                          <div class="floating-label" style="width: 100%; height:27px">
+                          <!--   <span class="label-text-drop">
+                              <span style="color: red">*</span>Shift Name
+                            </span> -->
+
+                            <div class="dropdown-container1">
+                              <!-- Dropdown Button -->
+                              <button
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleShiftNameDropdown}
+                                data-row-id={row.Id}
+                                aria-expanded={row.isShiftNameOpen}
+                                aria-haspopup="listbox">
+                                <span class={row.shiftNameSelectedClass}>
+                                  {row.shiftNameDisplayText}
+                                </span>
+                                <lightning-icon
+                                  icon-name={chevronIcon}
+                                  size="x-small"
+                                  class="chevron-icon">
+                                </lightning-icon>
+                              </button>
+
+                              <!-- Dropdown Menu -->
+                              <div if:true={row.isShiftNameOpen} class="dropdown-menu">
+                                <div class="options-list custom-scroll">
+                                  <template for:each={row.shiftOptions} for:item="shift">
+                                    <div key={shift.id} class="option-item">
+                                      <!-- Shift Label -->
+                                      <button
+                                          type="button"
+                                          class={shift.buttonClass}
+                                          data-row-id={row.Id}
+                                          data-shift-id={shift.id}
+                                          onclick={handleShiftClick}
+                                          onmousedown={stopClick}
+                                          disabled={shift.isDisabled}>
+                                          {shift.label}
+                                      </button>
+ <!-- onclick={handleSelectShiftName} -->
+
+                                      <!-- Badge + Toggle -->
+                                      <div class="option-controls">
+                                        <!-- <span class={shift.badgeClass}>{shift.statusText}</span> -->
+                                        <div class="toggle-switch-container" onclick={stopClick} onmousedown={stopClick}>
+
+                                          <lightning-input
+                                              type="toggle"
+                                              data-row-id={row.Id}
+                                              data-shift-id={shift.id}
+                                              checked={shift.checked}
+                                              onchange={handleToggleShiftName}
+                                              message-toggle-active=""
+                                              message-toggle-inactive=""
+                                              style="transform: scale(0.8);"
+                                              variant="label-hidden">
+                                          </lightning-input>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </template>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                         <!-- manendra end for shift name  -->
+                          <td class="table-td-service">
+                            <template if:true={otherThanNdis}>
+                              <template if:true={row.isEditingAmount}>
+                                <div class="qty-edit-container">
+                                <lightning-input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={row.amount}
+                                    onchange={handleFieldChange}
+                                    data-id={row.Id}
+                                    data-field="amount"
+                                    onkeydown={handleQtyKeyDown}
+                                    class="qty-value"
+                                    label="Amount"
+                                    variant="label-hidden"
+                                    style="width: 50%">
+                                  </lightning-input>
+
+                                  <a
+                                      href="javascript:void(0)"
+                                      data-id={row.Id}
+                                      data-field="Amount"
+                                      title="Save"
+                                      onclick={handleSave}>
+                                      <i class="material-icons save-icon">check</i>
+                                    </a>
+
+                                </div>
+                              </template>
+
+                              <template if:false={row.isEditingAmount}>
+                                <div class="qty-edit-container">
+                                  <lightning-formatted-number
+                                    value={row.amount}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2"
+                                    class="qty-value"
+                                  >
+                                  </lightning-formatted-number>
+                                        <a
+                                          href="javascript:void(0)"
+                                          data-id={row.Id}
+                                          data-field="Amount"
+                                          title="Edit"
+                                          onclick={handleToggleEdit}>
+                                          <i class="material-icons edit-icon">edit</i>
+                                        </a>
+                                </div>
+                              </template>
+                            </template>
+
+                            <template if:false={otherThanNdis}>
+                              <template if:false={Miscellaneous}>
+                                <lightning-formatted-number
+                                  value={row.amount}
+                                  format-style="currency"
+                                  currency-code="AUD"
+                                  minimum-fraction-digits="2"
+                                  maximum-fraction-digits="2"
+                                ></lightning-formatted-number>
+                              </template>
+                              <template if:true={Miscellaneous}>
+                                <template if:true={row.isEditingAmount}>
+                                  <div class="qty-edit-container">
+                                    <lightning-input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      value={row.amount}
+                                      onchange={handleFieldChange}
+                                      data-id={row.Id}
+                                      data-field="amount"
+                                      onkeydown={handleQtyKeyDown}
+                                      class="qty-value"
+                                      label="Amount"
+                                      variant="label-hidden"
+                                      style="width: 50%">
+                                    </lightning-input>
+
+                                  <a
+                                        href="javascript:void(0)"
+                                        data-id={row.Id}
+                                        data-field="Amount"
+                                        title="Save"
+                                        onclick={handleSave}>
+                                        <i class="material-icons save-icon">check</i>
+                                      </a>
+
+                                  
+                                  </div>
+                                </template>
+
+                                <template if:false={row.isEditingAmount}>
+                                  <div class="qty-edit-container">
+                                    <lightning-formatted-number
+                                      value={row.amount}
+                                      format-style="currency"
+                                      currency-code="AUD"
+                                      minimum-fraction-digits="2"
+                                      maximum-fraction-digits="2"
+                                      class="qty-value"
+                                    ></lightning-formatted-number>
+                                    <a
+                                      href="javascript:void(0)"
+                                      data-id={row.Id}
+                                      data-field="Amount"
+                                      title="Edit"
+                                      onclick={handleToggleEdit}>
+                                      <i class="material-icons edit-icon">edit</i>
+                                    </a>
+                                  </div>
+                                </template>
+                              </template>
+                            </template>
+                          </td>
+                        </tr>
+                      </template>
+                      
+                    </tbody>
+                  </table>
+
+                </div>
+              
+                <br />
+
+                <template if:true={paginationVisible}>
+                  <div
+                    class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+                    style="padding-top: 0.5em; padding: 1%"
+                  >
+                    <!--RECORDS PER PAGE-->
+                    <div class="slds-col">
+                      <div class="slds-list_inline slds-p-bottom_xx-small">
+                        <label
+                          class="slds-text-color_weak slds-p-horizontal_x-small"
+                          for="recordsPerPage"
+                          >Page Size:</label
+                        >
+                        <div class="slds-select_container">
+                          <select
+                            class="slds-select"
+                            id="recordsPerPage1"
+                            onchange={handleRecordsPerPage}
+                          >
+                            <template
+                              for:each={pageSizeOptions1}
+                              for:item="option"
+                            >
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            </template>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!--PAGE NAVIGATION-->
+                    <div class="slds-align_absolute-center" style="height: 5rem">
+                      <lightning-button
+                        disabled={bDisableFirst1}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        class="slds-p-horizontal_x-small"
+                        alternative-text="first page"
+                        onclick={firstPage1}
+                      ></lightning-button>
+                      <lightning-button
+                        disabled={bDisableFirst1}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        alternative-text="Previous"
+                        onclick={previousPage1}
+                      ></lightning-button>
+                      &nbsp;
+                      <span class="slds-badge"
+                        >Showing {pageNumber1} &nbsp;of&nbsp; {totalPages1}
+                        &nbsp;&nbsp;Page(s)</span
+                      >
+                      &nbsp;
+                      <lightning-button
+                        disabled={bDisableLast1}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        alternative-text="Next"
+                        onclick={nextPage1}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right"
+                      ></lightning-button>
+                      <lightning-button
+                        disabled={bDisableLast1}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        alternative-text="last page"
+                        onclick={lastPage1}
+                        icon-position="right"
+                      ></lightning-button>
+                    </div>
+                    <!--TOTAL RECORDS-->
+                    <div class="slds-clearfix">
+                      <div class="slds-float_right">
+                        <span class="slds-badge">
+                          Total Records: {totalRecords1}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </template> </template
+              ><br />
+
+                  <!-- <Period Management for Create <h2>pm create</h2>>-->
+               <div class="period-management-section slds-p-around_medium slds-m-top_medium">
+ 
+               <!-- Header -->
+                <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                  <div>
+                    <h2 class="slds-text-heading_small slds-m-bottom_xx-small">
+                      Period Management
+                    </h2>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                      Break fund into periods for better tracking and carry-forward
+                    </p>
+                  </div>
+              
+                  <!-- Toggle -->
+                  <div>
+                    <lightning-input
+                      type="toggle"
+                      label={toggleLabel}
+                      checked={isPeriodManagementEnabled}
+                      onchange={handlePeriodToggle}
+                      message-toggle-active=""
+                      message-toggle-inactive=""
+                      style="transform: scale(0.8);">
+                    </lightning-input>
+                  </div>
+                </div>
+              
+              <template if:true={isPeriodManagementEnabled}>
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-p-around_small">
+                  <!-- <label class="slds-m-bottom_x-small">Number of Periods</label> -->
+                  <div class="slds-grid slds-wrap slds-text-body_medium">
+                      <div class="slds-size_1-of-1 slds-grid slds-wrap slds-m-bottom_x-small">
+
+                        <div class="slds-col slds-size_1-of-3">
+                            <span class="metric-label1">Approved Date:</span>
+                            <span class="metric-value1">{formatApprovedDate}</span>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-3">
+                            <span class="metric-label1">Current Date:</span>
+                            <span class="metric-value1">{todayDate}</span>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                          <!-- <span class="metric-label1"></span>
+                            <span class="metric-value1"></span> -->
+                        </div>
+
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="slds-size_1-of-1  slds-grid slds-wrap">
+
+                        <div class="slds-col slds-size_1-of-3">
+                            <span class="metric-label1">Approved Amount:</span>
+                            <span class="metric-value1">{approvedAmount}</span>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-3">
+                            <span class="metric-label1">Amount Spent:</span>
+                            <span class="metric-value1">{spentAmount}</span>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-3">
+                            <span class="metric-label1">Available Amount:</span>
+                            <span class="metric-value1">{availablefunds}</span>
+                        </div>
+
+                    </div>
+                  </div>
+                </div>
+              </template>
+                <!-- ⚙️ Show dropdown + Generate button only when toggle is enabled -->
+                <template if:true={isPeriodManagementEnabled}>
+                  <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-p-around_small boxColor1">
+                    <!-- <label class="slds-m-bottom_x-small">Number of Periods</label> -->
+                    <div class="slds-grid slds-grid_align-spread slds-wrap">
+                      <div class="slds-col slds-size_2-of-3">
+                      <div class="floating-label">
+                        <span class="label-text-drop"
+                          >Number of Periods</span
+                        >
+                        <lightning-combobox
+                          value={selectedPeriodType}
+                          options={periodOptions}
+                          onchange={handlePeriodChange}
+                          placeholder="Select an Option"
+                          variant="label-hidden">
+                        </lightning-combobox>
+                        </div>
+                      </div>
+                      <div>
+                        <lightning-button
+                          variant="brand"
+                          label="Generate"
+                          onclick={handleGeneratePeriods}>
+                        </lightning-button>
+                      </div>
+                    </div>
+                    <p class="slds-text-body_small slds-m-top_x-small slds-text-color_weak">
+                      This will create {selectedLabel} periods starting from the approved date.
+                    </p>
+                  </div>
+              
+              
+                  <!-- 🧾 Summary -->
+                  <!-- <template if:true={generatedPeriods.length}>
+              
+                  </template> -->
+              
+              
+                  <!-- 📅 Generated Period Cards -->
+                  <template if:true={generatedPeriods.length}>
+                    <template for:each={generatedPeriods} for:item="period" for:index="index">
+                      <div key={period.uniqueKey} class="slds-box slds-theme_default slds-m-bottom_small boxColor">
+                      <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-bottom--small">
+                          <h3 class="slds-text-title_bold ">{period.label}</h3>
+                          <!-- <button
+                            class="google-icon-button slds-float_right"
+                            data-index={index}
+                            onclick={handleDeletePeriod}
+                            title="Delete Period">
+                            <span class="material-icons-delete">delete</span>
+                          </button> -->
+                        </div>
+              
+                        <div class="slds-grid slds-wrap slds-gutters_small">
+                          <div class="slds-col slds-size_1-of-2">
+                          <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Start Date</span
+                            >
+                            <lightning-input
+                              type="date"
+                              label="Start Date"
+                              value={period.startDate}
+                              data-index={index}
+                              data-field="startDate"
+                              onchange={handleInputChange}
+                              variant="label-hidden"
+                              disabled>
+                            </lightning-input>
+                            </div>
+                          </div>
+              
+                          <div class="slds-col slds-size_1-of-2">
+                          <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >End Date</span
+                            >
+                            <lightning-input
+                              type="date"
+                              label="End Date"
+                              value={period.endDate}
+                              data-index={index}
+                              data-field="endDate"
+                              onchange={handleInputChange}
+                              variant="label-hidden"
+                              disabled>
+                            </lightning-input>
+                            </div>
+                          </div>
+              
+                          <div class="slds-col slds-size_1-of-2">
+                          <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Allocated Amount</span
+                            >
+                            <lightning-input
+                              type="text"
+                              label="Allocated Amount"
+                              value={period.amount}
+                              data-index={index}
+                              data-field="amount"
+                              onchange={handleInputChange}
+                              onblur={handleAmountBlur}
+                              variant="label-hidden">
+                            </lightning-input>
+                            </div>
+                          </div>
+
+                           <div class="slds-col slds-size_1-of-2">
+                          <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Spent Amount</span
+                            >
+                            <lightning-input
+                              type="text"
+                              label="Spent Amount"
+                              value={period.spentFormatted}
+                              data-index={index}
+                              disabled
+                              data-field="amount"
+                              onchange={handleInputChange}
+                              variant="label-hidden">
+                            </lightning-input>
+                            </div>
+                          </div>
+              
+                          <div class="slds-col slds-size_1-of-2">
+                            <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Carry Forward</span
+                            >
+                            <lightning-input
+                              type="text"
+                              label="Carry Forward"
+                              value={period.carryFormatted}
+                              data-index={index}
+                              data-field="carryForward"
+                              onchange={handleInputChange}
+                              disabled
+                              variant="label-hidden">
+                            </lightning-input>
+                            </div>
+                          </div>
+                            <div class="slds-col slds-size_1-of-2">
+                            <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Usage Threshold (%)</span>
+                      <lightning-input
+                        type="number"
+                        label="Usage Threshold (%)"
+                        value={period.threshold}
+                        data-index={index}
+                        data-field="threshold"
+                        onchange={handleInputChange}
+                        variant="label-hidden">
+                        
+                    </lightning-input>
+                            </div>
+                          </div>
+                          <div class="slds-col slds-size_1-of-2">
+                            <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Status</span
+                            >
+                            <lightning-combobox
+                              label="Status"
+                              value={period.status}
+                              data-index={index}
+                              data-field="status"
+                              options={statusOptions}
+                              onchange={handleInputChange}
+                              disabled={period.isCompleted}
+                              variant="label-hidden">
+                            </lightning-combobox>
+                            </div>
+                          </div>
+                        </div>
+              
+              
+                      </div>
+              
+                  
+                    </template>
+                    <!-- <div class="slds-box slds-theme_default slds-m-top_small boxColor1">
+                      <p class="slds-text-title_bold">
+                        Total Available Funds Across Periods:
+                        <span class="slds-float_right">{formattedAvailablefunds}</span>
+                      </p>
+                    </div> -->
+                  </template>
+              
+                      <!-- 📝 Description -->
+                  <div class="slds-m-vertical_medium">
+                    <label class="slds-form-element__label" for="description">Description (Optional)</label>
+                    <lightning-textarea
+                      name="description"
+                      value={description}
+                      placeholder="Add any additional notes..."
+                      onchange={handleDescriptionChange}
+                      variant="label-hidden">
+                    </lightning-textarea>
+                  </div>
+              
+                  <!-- 💰 Total Approved Amount -->
+                  <!-- <div class="slds-box slds-theme_default slds-m-bottom_small  slds-text-title_bold boxColor1 ">
+                    Total Approved Amount:
+                    <span class="slds-text-heading_medium slds-float_right">${approvedAmount}</span>
+                  </div>
+
+                  <div class="slds-box slds-theme_default slds-m-bottom_small  slds-text-title_bold boxColor1 ">
+                    Total Available Funds:
+                    <span class="slds-text-heading_medium slds-float_right">${availablefunds}</span>
+                  </div> -->
+                </template>
+              </div>
+
+            </div>
+            <footer class="slds-border_top slds-theme_default footer-inside">
+              <div class="slds-p-horizontal_medium">
+                <p class="slds-text-body_small slds-text-color_weak slds-m-vertical_x-small">
+                  <strong>Disclaimer:</strong> Tesseract Apps is not responsible for discrepancies from multi-provider fund management. 
+                  Participants and providers must coordinate to prevent duplicate claims and ensure accurate fund usage.
+                </p>
+              </div>
+            </footer>
+            <br/>
+            <div class="slds-align_absolute-center">
+              <button
+                class="slds-button slds-button_neutral"
+                onclick={hideModalBox}
+              >
+                Cancel</button
+              >&nbsp;&nbsp;&nbsp;
+              <lightning-button
+                type="submit"
+                variant="brand"
+                label={buttonName}
+                disabled={saveDisabled}
+              ></lightning-button>
+            </div>
+            <!-- modal footer start-->
+          </lightning-record-edit-form>
+        </div>
+
+      </div>
+
+    </template>
+
+    <template if:true={isEdit}>
+      <div class="blur-overlay"></div>
+      <div class="right-align" style="width: 70%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <p
+            style="
+              font-weight: bold;
+              font-size: 150%;
+              margin: 0;
+              padding: 2% 0 0 2%;
+            "
+          >
+            Update Services
+          </p>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-right: 4%;
+            "
+          >
+            <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     -->
+          </div>
+        </div>
+        <div class="slds-p-around_medium">
+          <lightning-record-edit-form
+            object-api-name="Funds_Tracker__c"
+            onsuccess={handleSuccess}
+            onsubmit={handleSubmit}
+            record-id={recordId}
+          >
+            <!-- <lightning-messages></lightning-messages> -->
+            <div class="container-box custom-scroll">
+              <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px">
+                
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span ></span>Entity Name</span
+                    >
+                    <lightning-combobox
+                      class="EntityNameValue"
+                      name="EntityNameType"
+                      variant="label-hidden"
+                      options={EntityNameOptions}
+                      value={EntityNameValue}
+                      onchange={handleEntityNameChange}
+                      required
+                    ></lightning-combobox>
+                  </div>
+                </div>
+
+
+                <!-- <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span ></span>Shift Name</span
+                    >
+                    <lightning-combobox
+                      class="ShiftNameValue"
+                      name="ShiftNameType"
+                      variant="label-hidden"
+                      options={shiftNameOptions}
+                      value={shiftNameValue}
+                      onchange={handleShiftNameChange}
+                     
+                    ></lightning-combobox>
+                  </div>
+                </div> Manendra comment for shift name-->
+              
+                <!-- <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                > -->
+                  <!-- <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Plan Type</span
+                    >
+                    <lightning-input-field
+                      field-name="Plan_Type__c"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div> -->
+            <template if:true={ndisflag}>
+    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+        <div class="floating-label">
+            <span class="label-text-drop">
+                <span style="color: red">*</span>Plan Type
+            </span>
+            <lightning-input-field
+                field-name="Plan_Type__c"
+                required
+                variant="label-hidden">
+            </lightning-input-field>
+        </div>
+    </div>
+</template>
+    
+          <!-- </div> -->
+ 
+                             
+
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Service Type</span
+                    >
+                    <lightning-input-field
+                      field-name="Registration_Group__c"
+                      variant="label-hidden"
+                      disabled="true"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Approved Amount</span
+                    >
+                    <lightning-input-field
+                      data-id="amountField"
+                      field-name="Amount_approved__c"
+                      formatter="currency"
+                      variant="label-hidden"
+                       onchange={handleAmountChange}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Approved Date</span
+                    >
+                    <lightning-input-field
+                      field-name="Approved_Date__c"
+                      variant="label-hidden"
+                      data-name="approvedDate"
+                      onchange={handleServiceChange}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop">Status</span>
+                    <lightning-input-field
+                      field-name="Status__c"
+                      variant="label-hidden" onchange={handleStatusChange}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>State</span
+                    >
+                    <lightning-combobox
+                      variant="label-hidden"
+                      options={stateOptions}
+                      value={stateValue}
+                        required="true"
+                      onchange={handleServiceStateChange}
+                    ></lightning-combobox>
+                  </div>
+                </div>
+                                <template if:true={showFundLevelThreshold}>
+                        <div
+          class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+        >
+          <div class="floating-label">
+            <span class="label-text-drop">
+              Usage Threshold
+            </span>
+            <lightning-input-field
+              field-name="Usage_Threshold__c"
+              variant="label-hidden">
+            </lightning-input-field>
+          </div>
+        </div>
+        </template>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label" style="height: 62px">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Description</span
+                    >
+                    <lightning-input-field
+                      field-name="Description__c"
+                      required="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+              </div>
+              <br />
+              <template if:true={NdisServiceGroupName}>
+                <div class="servicetable" style="padding: 1%">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="table-td-service" style="width: 6.5%;">Select</th>
+                        <th class="table-td-service">Support Item Name</th>
+                        <template if:true={ndisflag}>
+                        <th class="table-td-service">Support Item Number</th>
+                        </template>
+                         <th style="width: 19%">Shift Names</th> <!-- manendra -->
+                        <th class="table-td-service" style="width: 19%">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template for:each={serviceGroupName} for:item="row">
+                        <tr key={row.Id} class="tr1">
+                          <td class="table-td-service"
+                            style="
+                              text-align: center;
+                              vertical-align: middle;
+                              padding-top: 5px;
+                              box-sizing: border-box;
+                            "
+                          >
+                            <input
+                              type="checkbox"
+                              data-id={row.Id}
+                              data-name={row.Name}
+                              onchange={handleCheckboxSelection}
+                              checked={row.isSelected}
+                            />
+                          </td>
+                          <td class="table-td-service">
+                              <template if:true={otherThanNdis}>
+                                <template if:true={row.isEditingName}>
+
+                                  <div class="qty-edit-container">
+                                      <lightning-input
+                                          type="text"
+                                          value={row.serviceSupportItem}
+                                          onchange={handleFieldChange}
+                                          data-id={row.Id}
+                                          data-field="serviceSupportItem"
+                                          onkeydown={handleQtyKeyDown}
+                                          class="qty-value"
+                                          label="Support Item Name"
+                                          variant="label-hidden"
+                                          style="width: 70%">
+                                        </lightning-input>
+
+                                        <a
+                                            href="javascript:void(0)"
+                                            data-id={row.Id}
+                                            data-field="Name"
+                                            title="Save"
+                                            onclick={handleSave}>
+                                            <i class="material-icons save-icon">check</i>
+                                          </a>
+
+                                  </div>
+                                    <!-- <td>{row.serviceSupportItem}</td> -->
+                                </template>
+                                <template if:false={row.isEditingName}>
+                                  <div class="qty-edit-container">
+                                  {row.serviceSupportItem}
+                                    <a
+                                      href="javascript:void(0)"
+                                      data-id={row.Id}
+                                      data-field="Name"
+                                      title="Edit"
+                                      onclick={handleToggleEdit}>
+                                      <i class="material-icons edit-icon">edit</i>
+                                      </a>
+                                  </div>
+                                  
+                                </template>
+
+                              </template>
+                              <template if:false={otherThanNdis}>
+                                <template if:false={Miscellaneous}>
+                                      {row.serviceSupportItem}
+                                </template>
+                                <template if:true={Miscellaneous}>
+                                        <template if:true={row.isEditingName}>
+                                            <div class="qty-edit-container">
+                                              <lightning-input
+                                                  type="text"
+                                                  value={row.serviceSupportItem}
+                                                  onchange={handleFieldChange}
+                                                  data-id={row.Id}
+                                                  data-field="serviceSupportItem"
+                                                  onkeydown={handleQtyKeyDown}
+                                                  class="qty-value"
+                                                  label="Support Item Name"
+                                                  variant="label-hidden"
+                                                  style="width: 70%">
+                                                </lightning-input>
+
+                                              <a
+                                                  href="javascript:void(0)"
+                                                  data-id={row.Id}
+                                                  data-field="Name"
+                                                  title="Save"
+                                                  onclick={handleSave}>
+                                                  <i class="material-icons save-icon">check</i>
+                                          </a>
+                                              
+                                            </div>
+                                        </template>
+
+                                          <template if:false={row.isEditingName}>
+                                            <div class="qty-edit-container">
+                                              {row.serviceSupportItem}
+                                              <a
+                                                href="javascript:void(0)"
+                                                data-id={row.Id}
+                                                data-field="Name"
+                                                title="Edit"
+                                                onclick={handleToggleEdit}>
+                                                <i class="material-icons edit-icon">edit</i>
+                                                </a>
+                                            </div>
+                                          </template>
+                                </template>
+                              </template>
+                        </td>
+                        <template if:true={ndisflag}>
+                          <td class="table-td-service">{row.Support_Item_Number__c}</td>
+                        </template>
+                        <!-- manendra start for shift name  -->
+                         <td style="padding:2px;">
+                          <div class="floating-label" style="width: 100%; height:27px">
+                          <!--   <span class="label-text-drop">
+                              <span style="color: red">*</span>Shift Name
+                            </span> -->
+
+                            <div class="dropdown-container1">
+                              <!-- Dropdown Button -->
+                              <button
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleShiftNameDropdown}
+                                data-row-id={row.Id}
+                                aria-expanded={row.isShiftNameOpen}
+                                aria-haspopup="listbox">
+                                <span class={row.shiftNameSelectedClass}>
+                                  {row.shiftNameDisplayText}
+                                </span>
+                                <lightning-icon
+                                  icon-name={chevronIcon}
+                                  size="x-small"
+                                  class="chevron-icon">
+                                </lightning-icon>
+                              </button>
+
+                              <!-- Dropdown Menu -->
+                              <div if:true={row.isShiftNameOpen} class="dropdown-menu">
+                                <div class="options-list custom-scroll">
+                                  <template for:each={row.shiftOptions} for:item="shift">
+                                    <div key={shift.id} class="option-item">
+                                      <!-- Shift Label -->
+                                      <button
+                                          type="button"
+                                          class={shift.buttonClass}
+                                          data-row-id={row.Id}
+                                          data-shift-id={shift.id}
+                                          onclick={handleShiftClick}
+                                          onmousedown={stopClick}
+                                          disabled={shift.isDisabled}>
+                                          {shift.label}
+                                      </button>
+
+                                      <!-- Badge + Toggle -->
+                                      <div class="option-controls">
+                                        <!-- <span class={shift.badgeClass}>{shift.statusText}</span> -->
+                                        <div class="toggle-switch-container" onclick={stopClick} onmousedown={stopClick}>
+                                          <lightning-input
+                                            type="toggle"
+                                            data-row-id={row.Id}
+                                            data-shift-id={shift.id}
+                                            checked={shift.checked}
+                                            onchange={handleToggleShiftName}
+                                            message-toggle-active=""
+                                            message-toggle-inactive=""
+                                            style="transform: scale(0.8);"
+                                            variant="label-hidden">
+                                          </lightning-input>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </template>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                         <!-- manendra end for shift name  -->
+                          <td class="table-td-service">
+                            <template if:true={otherThanNdis}>
+                              <template if:true={row.isEditingAmount}>
+                                <div class="qty-edit-container">
+                                <lightning-input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={row.amount}
+                                    onchange={handleFieldChange}
+                                    data-id={row.Id}
+                                    data-field="amount"
+                                    onkeydown={handleQtyKeyDown}
+                                    class="qty-value"
+                                    label="Amount"
+                                    variant="label-hidden"
+                                    style="width: 50%">
+                                  </lightning-input>
+
+                                  <a
+                                      href="javascript:void(0)"
+                                      data-id={row.Id}
+                                      data-field="Amount"
+                                      title="Save"
+                                      onclick={handleSave}>
+                                      <i class="material-icons save-icon">check</i>
+                                    </a>
+
+                                </div>
+                              </template>
+
+                              <template if:false={row.isEditingAmount}>
+                                <div class="qty-edit-container">
+                                  <lightning-formatted-number
+                                    value={row.amount}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2"
+                                    class="qty-value"
+                                  >
+                                  </lightning-formatted-number>
+                                        <a
+                                          href="javascript:void(0)"
+                                          data-id={row.Id}
+                                          data-field="Amount"
+                                          title="Edit"
+                                          onclick={handleToggleEdit}>
+                                          <i class="material-icons edit-icon">edit</i>
+                                        </a>
+                                </div>
+                              </template>
+                            </template>
+
+                            <template if:false={otherThanNdis}>
+                              <template if:false={Miscellaneous}>
+                                <lightning-formatted-number
+                                  value={row.amount}
+                                  format-style="currency"
+                                  currency-code="AUD"
+                                  minimum-fraction-digits="2"
+                                  maximum-fraction-digits="2"
+                                ></lightning-formatted-number>
+                              </template>
+                              <template if:true={Miscellaneous}>
+                                <template if:true={row.isEditingAmount}>
+                                  <div class="qty-edit-container">
+                                    <lightning-input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      value={row.amount}
+                                      onchange={handleFieldChange}
+                                      data-id={row.Id}
+                                      data-field="amount"
+                                      onkeydown={handleQtyKeyDown}
+                                      class="qty-value"
+                                      label="Amount"
+                                      variant="label-hidden"
+                                      style="width: 50%">
+                                    </lightning-input>
+
+                                  <a
+                                        href="javascript:void(0)"
+                                        data-id={row.Id}
+                                        data-field="Amount"
+                                        title="Save"
+                                        onclick={handleSave}>
+                                        <i class="material-icons save-icon">check</i>
+                                      </a>
+
+                                  
+                                  </div>
+                                </template>
+
+                                <template if:false={row.isEditingAmount}>
+                                  <div class="qty-edit-container">
+                                    <lightning-formatted-number
+                                      value={row.amount}
+                                      format-style="currency"
+                                      currency-code="AUD"
+                                      minimum-fraction-digits="2"
+                                      maximum-fraction-digits="2"
+                                      class="qty-value"
+                                    ></lightning-formatted-number>
+                                    <a
+                                      href="javascript:void(0)"
+                                      data-id={row.Id}
+                                      data-field="Amount"
+                                      title="Edit"
+                                      onclick={handleToggleEdit}>
+                                      <i class="material-icons edit-icon">edit</i>
+                                    </a>
+                                  </div>
+                                </template>
+                              </template>
+                            </template>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div> </template
+              ><br />
+              
+              <template if:true={paginationVisible}>
+                <div
+                  class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+                  style="padding-top: 0.5em; padding: 1%"
+                >
+                  <!--RECORDS PER PAGE-->
+                  <div class="slds-col">
+                    <div class="slds-list_inline slds-p-bottom_xx-small">
+                      <label
+                        class="slds-text-color_weak slds-p-horizontal_x-small"
+                        for="recordsPerPage"
+                        >Page Size:</label
+                      >
+                      <div class="slds-select_container">
+                        <select
+                          class="slds-select"
+                          id="recordsPerPage2"
+                          onchange={handleRecordsPerPage}
+                        >
+                          <template for:each={pageSizeOptions1} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                          </template>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--PAGE NAVIGATION-->
+                  <div class="slds-align_absolute-center" style="height: 5rem">
+                    <lightning-button
+                      disabled={bDisableFirst1}
+                      icon-name="utility:jump_to_left"
+                      label="First"
+                      class="slds-p-horizontal_x-small"
+                      alternative-text="first page"
+                      onclick={firstPage1}
+                    ></lightning-button>
+                    <lightning-button
+                      disabled={bDisableFirst1}
+                      icon-name="utility:chevronleft"
+                      label="Previous"
+                      alternative-text="Previous"
+                      onclick={previousPage1}
+                    ></lightning-button>
+                    &nbsp;
+                    <span class="slds-badge"
+                      >Showing {pageNumber1} &nbsp;of&nbsp; {totalPages1}
+                      &nbsp;&nbsp;Page(s)</span
+                    >
+                    &nbsp;
+                    <lightning-button
+                      disabled={bDisableLast1}
+                      icon-name="utility:chevronright"
+                      label="Next"
+                      alternative-text="Next"
+                      onclick={nextPage1}
+                      class="slds-p-horizontal_x-small"
+                      icon-position="right"
+                    ></lightning-button>
+                    <lightning-button
+                      disabled={bDisableLast1}
+                      icon-name="utility:jump_to_right"
+                      label="Last"
+                      alternative-text="last page"
+                      onclick={lastPage1}
+                      icon-position="right"
+                    ></lightning-button>
+                  </div>
+                  <!--TOTAL RECORDS-->
+                  <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                      <span class="slds-badge">
+                        Total Records: {totalRecords1}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+                <!-- <period management start Vamshi> -->
+
+             <!-- PERIOD MANAGEMENT SECTION FOR EDIT-->
+          <div class="period-management-section slds-p-around_medium slds-m-top_medium">
+
+            <!-- Header -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+              <div>
+                <h2 class="slds-text-heading_small slds-m-bottom_xx-small">
+                  Period Management
+                </h2>
+                <p class="slds-text-body_small slds-text-color_weak">
+                  Break fund into periods for better tracking and carry-forward
+                </p>
+              </div>
+
+              <!-- Toggle -->
+              <div>
+                <lightning-input
+                  type="toggle"
+                  label={toggleLabel}
+                  checked={isPeriodManagementEnabled}
+                  onchange={handlePeriodToggle}
+                  message-toggle-active=""
+                  message-toggle-inactive=""
+                  style="transform: scale(0.8);">
+                </lightning-input>
+              </div>
+            </div>
+
+            <template if:true={isPeriodManagementEnabled}>
+              <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-p-around_small">
+                <!-- <label class="slds-m-bottom_x-small">Number of Periods</label> -->
+                <div class="slds-grid slds-wrap slds-text-body_medium">
+                     <div class="slds-size_1-of-1 slds-grid slds-wrap slds-m-bottom_x-small">
+
+                      <div class="slds-col slds-size_1-of-3">
+                          <span class="metric-label1">Approved Date:</span>
+                          <span class="metric-value1">{formatApprovedDate}</span>
+                      </div>
+
+                      <div class="slds-col slds-size_1-of-3">
+                          <span class="metric-label1">Current Date:</span>
+                          <span class="metric-value1">{todayDate}</span>
+                      </div>
+                      <div class="slds-col slds-size_1-of-3">
+                        <!-- <span class="metric-label1"></span>
+                          <span class="metric-value1"></span> -->
+                      </div>
+
+                  </div>
+
+                  <!-- Row 2 -->
+                  <div class="slds-size_1-of-1  slds-grid slds-wrap">
+
+                      <div class="slds-col slds-size_1-of-3">
+                          <span class="metric-label1">Approved Amount:</span>
+                          <span class="metric-value1">{approvedAmount}</span>
+                      </div>
+
+                      <div class="slds-col slds-size_1-of-3">
+                          <span class="metric-label1">Amount Spent:</span>
+                          <span class="metric-value1">{spentAmount}</span>
+                      </div>
+
+                      <div class="slds-col slds-size_1-of-3">
+                          <span class="metric-label1">Available Amount:</span>
+                          <span class="metric-value1">{availablefunds}</span>
+                      </div>
+
+                  </div>
+                </div>
+              </div>
+            </template>
+            <!-- ⚙️ Show dropdown + Generate button only when toggle is enabled -->
+            <template if:true={isPeriodManagementEnabled}>
+              <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-p-around_small boxColor1">
+                <!-- <label class="slds-m-bottom_x-small">Number of Periods</label> -->
+                <div class="slds-grid slds-grid_align-spread slds-wrap">
+                  <div class="slds-col slds-size_2-of-3">
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      >Number of Periods</span
+                    >
+                    <lightning-combobox
+                      value={selectedPeriodType}
+                      options={periodOptions}
+                      onchange={handlePeriodChange}
+                      placeholder="Select an Option"
+                      variant="label-hidden">
+                    </lightning-combobox>
+                    </div>
+                  </div>
+                  <div>
+                    <lightning-button
+                      variant="brand"
+                      label="Generate"
+                      onclick={handleGeneratePeriods}>
+                    </lightning-button>
+                  </div>
+                </div>
+                <p class="slds-text-body_small slds-m-top_x-small slds-text-color_weak">
+                  This will create {selectedLabel} periods starting from the approved date.
+                </p>
+              </div>
+
+
+              <!-- 🧾 Summary -->
+              <!-- <template if:true={generatedPeriods.length}>
+
+              </template> -->
+
+
+              <!-- 📅 Generated Period Cards -->
+              <template if:true={generatedPeriods.length}>
+                <template for:each={generatedPeriods} for:item="period" for:index="index">
+                  <div key={period.uniqueKey} class="slds-box slds-theme_default slds-m-bottom_small boxColor">
+                  <div class="slds-grid slds-grid_align-spread slds-wrap slds-m-bottom--small">
+                      <h3 class="slds-text-title_bold ">{period.label}</h3>
+                      <!-- <button
+                        class="google-icon-button slds-float_right"
+                        data-index={index}
+                        onclick={handleDeletePeriod}
+                        title="Delete Period">
+                        <span class="material-icons-delete">delete</span>
+                      </button> -->
+                    </div>
+
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                      <div class="slds-col slds-size_1-of-2">
+                      <div class="floating-label-PM">
+                        <span class="label-text-drop"
+                          >Start Date</span
+                        >
+                        <lightning-input
+                          type="date"
+                          label="Start Date"
+                          value={period.startDate}
+                          data-index={index}
+                          data-field="startDate"
+                          onchange={handleInputChange}
+                          variant="label-hidden"
+                          disabled>
+                        </lightning-input>
+                        </div>
+                      </div>
+
+                      <div class="slds-col slds-size_1-of-2">
+                      <div class="floating-label-PM">
+                        <span class="label-text-drop"
+                          >End Date</span
+                        >
+                        <lightning-input
+                          type="date"
+                          label="End Date"
+                          value={period.endDate}
+                          data-index={index}
+                          data-field="endDate"
+                          onchange={handleInputChange} 
+                          variant="label-hidden"
+                          disabled>
+                        </lightning-input>
+                        </div>
+                      </div>
+
+                      <div class="slds-col slds-size_1-of-2">
+                      <div class="floating-label-PM">
+                        <span class="label-text-drop"
+                          >Allocated Amount</span
+                        >
+                        <lightning-input
+                          type="text"
+                          label="Allocated Amount"
+                          value={period.amount}
+                          data-index={index}
+                          data-field="amount"
+                          onchange={handleInputChange} 
+                          onblur={handleAmountBlur}
+                          variant="label-hidden"
+                         >
+                        </lightning-input><!-- disabled={period.isCompleted}-->
+                        </div>
+                      </div>
+
+                      <div class="slds-col slds-size_1-of-2">
+                      <div class="floating-label-PM">
+                                      <span class="label-text-drop"
+                                        >Spent Amount</span
+                                      >
+                      <lightning-input
+                        type="text"
+                        label="Spent Amount"
+                        value={period.spentFormatted}
+                        data-index={index}
+                        data-field="amount"
+                        disabled
+                        onchange={handleInputChange}
+                        variant="label-hidden">
+                      </lightning-input>
+                      </div>
+                  </div>
+
+                      <div class="slds-col slds-size_1-of-2">
+                        <!-- <div class="floating-label-PM"> -->
+                          <div class={period.carryClass}>
+                        <span class="label-text-drop"
+                          >Carry Forward</span
+                        >
+                        <lightning-input
+                          type="text"
+                          label="Carry Forward"
+                          value={period.carryFormatted}
+                          data-index={index}
+                          data-field="carryForward"
+                          disabled
+                          onchange={handleInputChange}
+                          variant="label-hidden">
+                        </lightning-input>
+                        </div>
+                      </div>
+                      <div class="slds-col slds-size_1-of-2">
+                            <div class="floating-label-PM">
+                            <span class="label-text-drop"
+                              >Usage Threshold (%)</span>
+                      <lightning-input
+                          type="number"
+                          label="Usage Threshold (%)"
+                          value={period.threshold}
+                          data-index={index}
+                          data-field="threshold"
+                          variant="label-hidden"
+                          onchange={handleInputChange}>
+                      </lightning-input>
+                            </div>
+                          </div>
+                      <div class="slds-col slds-size_1-of-2">
+                        <div class="floating-label-PM">
+                        <span class="label-text-drop"
+                          >Status</span
+                        >
+                        <lightning-combobox
+                          label="Status"
+                          value={period.status}
+                          data-index={index}
+                          data-field="status"
+                          options={statusOptions}
+                          onchange={handleInputChange}
+                          variant="label-hidden"
+                          disabled={period.isCompleted}>
+                        </lightning-combobox>
+                        </div>
+                      </div>
+                    </div>
+
+
+                  </div>
+
+                
+                </template>
+                <!-- <div class="slds-box slds-theme_default slds-m-top_small boxColor1">
+                 <p class="slds-text-title_bold">
+                    Total Available Funds Across Periods:
+                    
+                    <span class="slds-float_right">
+                     <lightning-formatted-number
+                        value={formattedAvailablefunds}
+                        format-style="currency"
+                        currency-code="AUD"
+                        minimum-fraction-digits="2"
+                        maximum-fraction-digits="2">
+                      </lightning-formatted-number>
+                    </span>
+                  </p>
+                </div> -->  <!-- <span class="slds-float_right">${formattedAvailablefunds}</span> -->
+              </template>
+
+                  <!-- 📝 Description -->
+              <div class="slds-m-vertical_medium">
+                <label class="slds-form-element__label" for="description">Description (Optional)</label>
+                <lightning-textarea
+                  name="description"
+                  value={description}
+                  placeholder="Add any additional notes..."
+                  onchange={handleDescriptionChange}
+                  variant="label-hidden">
+                </lightning-textarea>
+              </div>
+
+              <!-- 💰 Total Approved Amount -->
+              <!-- <div class="slds-box slds-theme_default slds-m-bottom_small  slds-text-title_bold boxColor1 ">
+                Total Approved Amount:
+                <span class="slds-text-heading_medium slds-float_right">
+                  <lightning-formatted-number
+                    value={approvedAmount}
+                    format-style="currency"
+                    currency-code="AUD"
+                    minimum-fraction-digits="2"
+                    maximum-fraction-digits="2">
+                  </lightning-formatted-number>
+                </span>
+              </div>
+              <div class="slds-box slds-theme_default slds-m-bottom_small  slds-text-title_bold boxColor1 ">
+                    Total Available Funds:
+                    <span class="slds-text-heading_medium slds-float_right">
+                       <lightning-formatted-number
+                        value={availablefunds}
+                        format-style="currency"
+                        currency-code="AUD"
+                        minimum-fraction-digits="2"
+                        maximum-fraction-digits="2">
+                      </lightning-formatted-number>
+                    </span>
+                  </div> -->
+            </template>
+          </div>
+        <!-- <period management end> -->
+            </div>
+            <footer class="slds-border_top slds-theme_default footer-inside">
+              <div class="slds-p-horizontal_medium">
+                <p class="slds-text-body_small slds-text-color_weak slds-m-vertical_x-small">
+                  <strong>Disclaimer:</strong> Tesseract Apps is not responsible for discrepancies from multi-provider fund management. 
+                  Participants and providers must coordinate to prevent duplicate claims and ensure accurate fund usage.
+                </p>
+              </div>
+            </footer>
+            <div class="slds-align_absolute-center slds-m-around_small">
+              <button
+                class="slds-button slds-button_outline-brand"
+                onclick={hideModalBox}
+              >
+                Cancel</button
+              >&nbsp;&nbsp;
+              <lightning-button
+                type="submit"
+                variant="brand"
+                label="Update"
+               
+                disabled={saveDisabled}
+               
+              ></lightning-button>
+            </div>
+          </lightning-record-edit-form>
+        </div>
+      </div>
+    </template>
+
+  <footer class="slds-p-vertical_small slds-border_top slds-theme_default footer-fixed">
+    <div class="slds-grid slds-grid_align-spread slds-p-horizontal_medium">
+      <p class="slds-text-color_weak"><strong>Disclaimer:</strong> Tesseract Apps is not responsible for discrepancies from multi-provider fund management. Participants and providers must coordinate to prevent duplicate claims and ensure accurate fund usage.</p>
+    </div>
+  </footer>
+  </template>
+
+
+  <!-- <template if:true={isNewEntityFlag}>
+      <div class="right-align-company custom-scroll" style="width: 100%">
+        <c-tesseract-apps-entityin-funds-tracker  is-customer={selectedCardType} editcompanyname={companyname} selectedid={companyId} oncancel={handleCancel} onhidefacilityevent={handleHideFacilityEvent}></c-tesseract-apps-entityin-funds-tracker>   
+      </div>
+  </template> -->
+
+   <template if:true={isNewEntityFlag}>
+      <div class="right-align-company custom-scroll" style="width: 100%">
+        <c-tesseract-apps-accounting-entities
+         is-customer={selectedCardType} 
+         editcompanyname={companyname}
+          selectedid={companyId}
+           oncancel={handleCancel}
+            onhidefacilityevent={handleHideFacilityEvent}>
+       </c-tesseract-apps-accounting-entities>   
+      </div>
+  </template>
+
+  <template if:true={xeroEntityNameFlag}>
+    <c-tesseract-apps-entity-for-xero selected-name={orgId}   onbacktoxero={handleBackToFundsTracker}></c-tesseract-apps-entity-for-xero>  
+    <!-- xero-entity-first-name={entityName} xero-enity-email={entityEmail}  xero-id={entityXeroId} -->
+  </template>
+
+  <template if:true={hasFutureServices}> 
+    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+
+    <div class="slds-modal__container modal-custom "> 
+      <!-- HEADER --> 
+      <header class="slds-modal__header headercustom"> 
+        <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">Warning</h2> 
+      </header> 
+      <!-- BODY CONTENT --> 
+      <div class="slds-modal__content slds-p-around_medium custom-scroll slds-text-align_center">
+        <div class="slds-m-around_medium">
+          This support item cannot be deselected because future shifts are scheduled. To proceed, please delete the future shifts first.
+        </div>
+        <div class="slds-m-around_medium">
+          <lightning-button 
+            class="slds-m-left_small" 
+            variant="brand" 
+            label="Close" 
+            onclick={handleCloseWarningModal}>
+          </lightning-button> 
+        </div>        
+      </div> 
+      <!-- FOOTER --> 
+<!--       <footer class="slds-modal__footer"> 
+
+      </footer>  -->
+    </div> 
+    </section> 
+    <div class="slds-backdrop slds-backdrop_open"></div> 
+  </template> 
+
+</template>

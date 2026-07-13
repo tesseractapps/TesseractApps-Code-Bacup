@@ -1,0 +1,648 @@
+<template>
+    <div class="">
+
+        <!-- ═══════════════════════════
+             TOGGLE — Enable SIL
+        ════════════════════════════ -->
+        <div class="slds-m-bottom_medium">
+            <lightning-input
+                type="toggle"
+                label="Enable SIL Operations"
+                checked={enableSIL}
+                onchange={handleEnable}
+                message-toggle-active=""
+                message-toggle-inactive="">
+            </lightning-input>
+        </div>
+
+        <template if:true={enableSIL}>
+
+            <!-- ══════════════════════════════════════════════
+                 VIEW A — SIL Records table + Add SIL button
+                 Hidden while the Add SIL form is open
+            ═════════════════════════════════════════════════ -->
+            <template if:false={showForm}>
+
+            <div class="section-header slds-m-bottom_small">
+                <span class="section-title">SIL Records</span>
+                <lightning-button
+                    variant="brand"
+                    label="Add SIL"
+                    onclick={handleToggleForm}>
+                </lightning-button>
+            </div>
+
+            <!-- ══════════════════════════════════════
+                 SAVED SIL TABLE
+            ═════════════════════════════════════════ -->
+            <template if:true={isLoadingSaved}>
+                <div class="slds-align_absolute-center slds-p-around_medium">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:false={isLoadingSaved}>
+                <div class="table-container slds-m-bottom_medium">
+                    <div class="header-wrapper">
+                        <table class="sil-table" role="table">
+                            <thead>
+                                <tr class="sil-thead-row">
+                                    <th class="table-th">Participant Name</th>
+                                    <th class="table-th">Entity Name</th>
+                                    <th class="table-th">Service Type</th>
+                                    <th class="table-th">Amount</th>
+                                    <!-- //<th class="table-th">Remaining Amount</th> -->
+                                    <th class="table-th">From Date</th>
+                                    <th class="table-th">To Date</th>
+                                    <th class="table-th">Invoice Day</th>
+                                    <th class="table-th actions-col">Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="body-scroll custom-scroll tableHeight">
+                        <table class="sil-table">
+                            <tbody>
+                                <template if:true={hasSavedRecords}>
+                                    <template for:each={savedSILRecords} for:item="row">
+                                        <tr key={row.id} class="sil-tbody-row">
+                                            <td class="table-td">{row.participantName}</td>
+                                            <td class="table-td">{row.entityName}</td>
+                                            <td class="table-td">{row.serviceType}</td>
+                                            <td class="table-td">
+                                                <span class="amount-pill">${row.amount}</span>
+                                            </td>
+                                           <!--  <td class="table-td">
+                                                <span class="amount-pill">{row.remainingAmount}</span>
+                                            </td> -->
+                                            <td class="table-td">{row.startDate}</td>
+                                            <td class="table-td">{row.endDate}</td>
+                                            <td class="table-td">{row.invoiceDay}</td>
+                                            <td class="table-td actions-col">
+                                              <span class={row.startClass}
+                                                    data-id={row.id}
+                                                    onclick={handleStart}>
+                                                    Start
+                                                </span>
+
+                                                <!-- STOP -->
+                                                <span class={row.stopClass}
+                                                    data-id={row.id}
+                                                    onclick={handleStop}>
+                                                    Stop
+                                                </span>
+
+                                            <lightning-button-icon
+                                                icon-name="utility:edit"
+                                                alternative-text="Edit"
+                                                title="Edit"
+                                                variant="bare"
+                                                class="edit-icon"
+                                                data-id={row.id}
+                                                onclick={handleEdit}>
+                                            </lightning-button-icon>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </template>
+                                
+                                <template if:false={hasSavedRecords}>
+                                    <tr>
+                                        <td colspan="8" class="empty-row">No SIL records found.</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination Section -->
+                <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                    <div class="slds-list_inline">
+                        <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                        <div class="slds-select_container">
+                            <select class="slds-select" onchange={handleRecordsPerPage}>
+                                <template for:each={pageSizeOptions} for:item="option">
+                                    <option key={option} value={option}>{option}</option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="slds-align_absolute-center">
+                        <lightning-button disabled={bDisableFirst}
+                            icon-name="utility:jump_to_left"
+                            label="First"
+                            onclick={firstPage}
+                            >
+                        </lightning-button>
+                        <lightning-button disabled={bDisableFirst}
+                            icon-name="utility:chevronleft"
+                            label="Previous"
+                            onclick={previousPage}
+                            class="slds-m-horizontal_xx-small">
+                        </lightning-button>
+                        <span class="slds-badge">
+                            Showing {pageNumber} &nbsp;of&nbsp; {totalPages} Page(s)
+                        </span>
+                        <lightning-button disabled={bDisableLast}
+                            icon-name="utility:chevronright"
+                            label="Next"
+                            class="slds-m-horizontal_xx-small"
+                            onclick={nextPage}>
+                        </lightning-button>
+                        <lightning-button disabled={bDisableLast}
+                            icon-name="utility:jump_to_right"
+                            label="Last"
+                            onclick={lastPage}>
+                        </lightning-button>
+                    </div>
+
+                    <div>
+                        <span class="slds-badge">Total Records: {totalRecords}</span>
+                    </div>
+
+                </div>
+            </template><!-- end if:false={isLoadingSaved} -->
+
+            </template><!-- end VIEW A if:false={showForm} -->
+
+            <!-- ══════════════════════════════════════
+                 VIEW B — Add SIL form + Pending table
+                 Shown when showForm is true
+            ═════════════════════════════════════════ -->
+            <template if:true={showForm}>
+                <div class="">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <span class="">{formTitle}</span>
+                        <lightning-button
+                            label="Back"
+                            variant="neutral"
+                            onclick={handleBack}>
+                        </lightning-button>
+                    </div>
+
+                    <!-- ─────────────────────────────────────────────────
+                         ROW 1: Entity | Plan Type | Participant | Amount
+                    ──────────────────────────────────────────────────── -->
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Entity Name</span>
+                                <lightning-combobox
+                                    label="Entity Name"
+                                    variant="label-hidden"
+                                    options={entityOptions}
+                                    value={selectedEntity}
+                                    placeholder=" "
+                                    onchange={handleEntityChange}
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Plan Type</span>
+                                <lightning-combobox
+                                    label="Plan Type"
+                                    variant="label-hidden"
+                                    value={planType}
+                                    options={planTypeOptions}
+                                    placeholder=" "
+                                    onchange={handleChange}
+                                    data-field="Plan_Type__c">
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Participant Name</span>
+                                <lightning-combobox
+                                    label="Participant Name"
+                                    variant="label-hidden"
+                                    value={participant}
+                                    options={participantOptions}
+                                    placeholder=" "
+                                    onchange={handleChange}
+                                    data-field="SIL_To_Participant__c"
+                                    disabled={isEditMode}
+                                    required="true" >
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Amount</span>
+                                <lightning-input
+                                    type="number"
+                                    label="Amount"
+                                    variant="label-hidden"
+                                    value={amount}
+                                    placeholder=" "
+                                    onchange={handleChange}
+                                    data-field="Amount__c"
+                                    max="999999.99"
+                                    step="0.01">
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ─────────────────────────────────────────────────────────
+                         ROW 2: Start Date | End Date | Frequency | Invoice Date
+                    ────────────────────────────────────────────────────────── -->
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Start Date</span>
+                                <lightning-input
+                                    type="date"
+                                    label="Start Date"
+                                    variant="label-hidden"
+                                    value={startDate}
+                                    onchange={handleChange}
+                                    data-field="StartDate__c"
+                                    required="true" >
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>End Date</span>
+                                <lightning-input
+                                    type="date"
+                                    label="End Date"
+                                    variant="label-hidden"
+                                    value={endDate}
+                                    onchange={handleChange}
+                                    data-field="EndDate__c"
+                                    min={startDate} 
+                                    required="true" >
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text">Frequency</span>
+                                <lightning-combobox
+                                    label="Frequency"
+                                    variant="label-hidden"
+                                    value={frequency}
+                                    options={frequencyOptions}
+                                    placeholder=" "
+                                    onchange={handleChange}
+                                    data-field="Frequency__c">
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Invoice Day</span>
+                                <lightning-combobox
+                                    label="Invoice Day"
+                                    variant="label-hidden"
+                                    value={invoiceDay}
+                                    options={invoiceDayOptions}
+                                    placeholder="Select Day"
+                                    onchange={handleChange}
+                                    data-field="InvoiceDay__c"
+                                    required="true" >
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ─────────────────────────────────
+                         ROW 3: Invoice Amount (solo col)
+                    ──────────────────────────────────── -->
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Invoice Amount</span>
+                                <lightning-input
+                                    type="number"
+                                    label="Invoice Amount"
+                                    variant="label-hidden"
+                                    value={invoiceAmount}
+                                    placeholder=" "
+                                    onchange={handleChange}
+                                    data-field="InvoiceAmount__c">
+                                </lightning-input>
+                            </div>
+                        </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                        <div class="sil-floating-label">
+                            <span class="sil-label-text">Remaining Amount</span>
+                            <lightning-input
+                                type="number"
+                                variant="label-hidden"
+                                value={remainingAmount}
+                                disabled>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                        <div class="sil-floating-label">
+                            <span class="sil-label-text">Spent Amount</span>
+                            <lightning-input
+                                type="number"
+                                variant="label-hidden"
+                                value={spentAmount}
+                                disabled>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    
+                    </div>
+
+                    <!-- ──────────────────────────────────────────────────────────────
+                         ROW 4 (LAST FIELDS): Service Type SIL | State
+                         These two are intentionally placed last because selecting
+                         them triggers the NDIS support-items table below.
+                    ─────────────────────────────────────────────────────────────── -->
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_small">
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>Service Type SIL</span>
+
+                                <c-tesseract-apps-single-combobox
+                                    variant="label-hidden"
+                                    placeholder=""
+                                    value={serviceTypeValue}
+                                    options={serviceTypeOptions}
+                                    onchange={handleServiceTypeChange}>
+                                </c-tesseract-apps-single-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <div class="sil-floating-label">
+                                <span class="sil-label-text"><span style="color:red">*</span>State</span>
+                                <lightning-combobox
+                                    label="State"
+                                    variant="label-hidden"
+                                    value={stateValue}
+                                    options={stateOptions}
+                                    placeholder=" "
+                                    onchange={handleStateChange}
+                                    required="true" >
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ──────────────────────────────────────────────────────────
+                         NDIS SERVICE ITEMS TABLE
+                         Rendered only after Service Type SIL + State are selected
+                    ─────────────────────────────────────────────────────────── -->
+                    <template if:true={isLoading}>
+                        <div class="slds-align_absolute-center slds-p-around_medium">
+                            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <template if:false={isLoading}>
+                        <template if:true={hasTableData}>
+                            <div class="slds-box">
+                                <div class="slds-m-bottom_small  slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <div class="sil-floating-label">
+                                        <span class="sil-label-text">Support Item Name or Support Item Number</span>
+                                        <lightning-input
+                                            type="search"
+                                            variant="label-hidden"
+                                            placeholder="Search Support Item Name or Support Item Number"
+                                            value={serviceSearchKey}
+                                            onchange={handleServiceSearch}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                                <div class="table-container serviceTable">
+
+                                    <!-- HEADER -->
+                                    <div class="header-wrapper">
+                                        <table class="staff-table" role="table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="table-th">Select</th>
+                                                    <th class="table-th">Support Item Name</th>
+                                                    <th class="table-th">Support Item Number</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                    <!-- BODY -->
+                                    <div class="body-scroll custom-scroll tableHeight">
+                                        <table class="staff-table">
+                                            <tbody>
+                                                <template for:each={pagedServiceData} for:item="row">
+                                                    <tr key={row.id}>
+                                                        <td class="table-td">
+                                                            <lightning-input
+                                                                type="checkbox"
+                                                                variant="label-hidden"
+                                                                data-id={row.id}
+                                                                checked={row.isSelected}
+                                                                onchange={handleRowSelect}>
+                                                            </lightning-input>
+                                                        </td>
+                                                        <td class="table-td">{row.serviceName}</td>
+                                                        <td class="table-td">{row.supportItemNumber}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                                <div class="pagination-container slds-p-top_medium slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                                    <!-- LEFT: Page Size -->
+                                    <div class="slds-list_inline">
+                                        <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                                        <div class="slds-select_container">
+                                            <select class="slds-select" onchange={handleRecordsPerPage}>
+                                                <template for:each={pageSizeOptions} for:item="option">
+                                                    <option key={option} value={option}>{option}</option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- CENTER: Navigation -->
+                                    <div class="slds-align_absolute-center">
+
+                                        <lightning-button
+                                            disabled={isServiceFirstDisabled}
+                                            icon-name="utility:jump_to_left"
+                                            label="First"
+                                            onclick={firstServicePage}>
+                                        </lightning-button>
+
+                                        <lightning-button
+                                            disabled={isServiceFirstDisabled}
+                                            icon-name="utility:chevronleft"
+                                            label="Previous"
+                                            class="slds-m-horizontal_xx-small"
+                                            onclick={previousServicePage}>
+                                        </lightning-button>
+
+                                        <span class="slds-badge">
+                                            Showing {servicePageNumber} of {serviceTotalPages} Page(s)
+                                        </span>
+
+                                        <lightning-button
+                                            disabled={isServiceLastDisabled}
+                                            icon-name="utility:chevronright"
+                                            label="Next"
+                                            class="slds-m-horizontal_xx-small"
+                                            onclick={nextServicePage}>
+                                        </lightning-button>
+
+                                        <lightning-button
+                                            disabled={isServiceLastDisabled}
+                                            icon-name="utility:jump_to_right"
+                                            label="Last"
+                                            onclick={lastServicePage}>
+                                        </lightning-button>
+
+                                    </div>
+
+                                    <!-- RIGHT: Total Records -->
+                                    <div>
+                                        <span class="slds-badge">Total Records: {serviceTotalRecords}</span>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </template>
+
+                        <template if:false={hasTableData}>
+                            <template if:true={serviceTypeValue}>
+                                <template if:true={stateValue}>
+                                    <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">
+                                        No support items found for the selected service type and state.
+                                    </div>
+                                </template>
+                            </template>
+                        </template>
+                    </template>
+
+                    <!-- ─────────────────────────────────────────────
+                         ACTION BUTTONS — Clear / Add (non-edit mode)
+                    ────────────────────────────────────────────────  -->
+                    <template if:false={isEditMode}>
+                        <div class="slds-grid slds-grid_align-end slds-m-top_small btn-row">
+                            <lightning-button
+                                variant="neutral"
+                                label="Clear"
+                                onclick={handleClear}>
+                            </lightning-button>
+                            <lightning-button
+                            data-id="addBtn"
+                                variant="brand"
+                                label="Add"
+                                class="slds-m-left_small"
+                                onclick={handleAdd}>
+                            </lightning-button>
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- ══════════════════════════════════════
+                     PENDING RECORDS TABLE — inside View B
+                ═════════════════════════════════════════ -->
+                <template if:true={hasStagedRecords}>
+                    <div class="staged-section slds-m-top_medium">
+
+                        <div class="section-header slds-m-bottom_small">
+                            <span class="section-title">Pending Records ({stagedCount})</span>
+                        </div>
+
+                        <div class="table-container">
+
+                            <!-- HEADER -->
+                            <div class="header-wrapper">
+                                <table class="sil-table" role="table">
+                                    <thead>
+                                        <tr class="sil-thead-row">
+                                            <th class="table-th">Participant Name</th>
+                                            <th class="table-th">Entity Name</th>
+                                            <th class="table-th">Service Type</th>
+                                            <th class="table-th">Amount</th>
+                                            <th class="table-th">From Date</th>
+                                            <th class="table-th">To Date</th>
+                                            <th class="table-th">Invoice Day</th>
+                                            <th class="table-th actions-col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <!-- BODY -->
+                            <div class="body-scroll custom-scroll tableHeight">
+                                <table class="sil-table">
+                                    <tbody>
+                                        <template for:each={stagedRecords} for:item="card">
+                                            <tr key={card.uid} class="sil-tbody-row">
+                                                <td class="table-td">{card.participantLabel}</td>
+                                                <td class="table-td">{card.entityLabel}</td>
+                                                <td class="table-td">{card.serviceType}</td>
+                                                <td class="table-td">
+                                                    <span class="amount-pill">${card.amount}</span>
+                                                </td>
+                                                <td class="table-td">{card.startDate}</td>
+                                                <td class="table-td">{card.endDate}</td>
+                                                <td class="table-td">{card.invoiceDay}</td>
+                                                <td class="table-td actions-col">
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Delete"
+                                                    title="Delete"
+                                                    variant="bare"
+                                                    class="delete-icon"
+                                                    data-uid={card.uid}
+                                                    onclick={handleDeleteCard}>
+                                                </lightning-button-icon>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+
+                <template if:true={showSaveButton}>
+                    <div class="slds-grid slds-grid_align-end slds-m-top_small">
+                        <lightning-button
+                            variant="brand"
+                            label={saveAllLabel}
+                            onclick={handleSaveAll}>
+                        </lightning-button>
+                    </div>
+                </template>
+
+            </template><!-- end VIEW B if:true={showForm} -->
+
+        </template><!-- end if:true={enableSIL} -->
+
+    </div>
+</template>

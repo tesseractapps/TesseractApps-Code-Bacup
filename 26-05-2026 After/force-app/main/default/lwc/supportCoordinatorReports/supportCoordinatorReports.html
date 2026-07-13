@@ -1,0 +1,674 @@
+<template>
+    <div class="mainContainer custom-scroll">
+
+        <template if:true={mainTabelFlag}>
+            <div class="menu-container ">
+                <div class="menu-left">
+                    <div class={allParticipantClass} data-type="all" onclick={handleClick}>All Participants</div>
+                    <div class={pinnedParticipantClass} data-type="pinned" onclick={handleClick}>Pinned Participants</div>
+                </div>
+            </div>
+
+            <div class="reports-page-layout">
+                <div class="reports-table-panel">
+                    <div class="table-container yourTableNameHere">
+                        <!-- HEADER --> 
+                        <div class="header-wrapper"> 
+                            <table class="staff-table" role="table"> 
+                                <thead> 
+                                    <tr> 
+                                        <th class="table-th">Name</th> 
+                                        <th class="table-th">Plan Period</th> 
+                                        <th class="table-th">Approved Budget</th> 
+                                        <th class="table-th">Planned Spend</th> 
+                                        <th class="table-th">Actual Spend</th> 
+                                        <th class="table-th">Remaining Budget</th>
+                                        <th class="table-th center">Action</th> 
+                                    </tr> 
+                                </thead> 
+                            </table> 
+                        </div> 
+
+                        <!-- BODY --> 
+                        <div class="body-scroll custom-scroll yourTableHeight"> 
+                            <table class="staff-table"> 
+                                <tbody> 
+                                    <template for:each={participants} for:item="participant"> 
+                                        <tr key={participant.id} class="table-row"> 
+                                            <td class="table-td">
+                                                <div class="avatar-row">
+                                                    <div class="avatar-circle">
+                                                        {participant.initials}
+                                                    </div>
+
+                                                    <div>
+                                                        <div>{participant.name}</div>
+                                                    </div>
+                                                </div>
+                                            </td> 
+                                            <td class="table-td">{participant.planDateRange}</td> 
+                                            <td class="table-td">${participant.totalplanBudget}</td> 
+                                            <td class="table-td">${participant.plannedSpent}</td>  
+                                            <td class="table-td">${participant.actualSpent}</td> 
+                                            <td class="table-td">${participant.remainingBudget}</td> 
+                                            <td class="table-td center"> 
+                                                <a
+                                                    href="javascript:void(0)"
+                                                    data-id={participant.id}
+                                                    onclick={handleUtilizationClick}
+                                                    title="Utilization">
+                                                    <i class="material-icons table-icon">data_usage</i>
+                                                </a>
+
+                                                <a
+                                                    href="javascript:void(0)"
+                                                    data-id={participant.id}
+                                                    onclick={handleReconciliationClick}
+                                                    class="slds-m-left_small"
+                                                    title="Reconciliation">
+                                                    <i class="material-icons table-icon">receipt_long</i>
+                                                </a>
+
+                                                <a
+                                                    href="javascript:void(0)"
+                                                    data-id={participant.id}
+                                                    onclick={handleCaseNotesClick}
+                                                    class="slds-m-left_small"
+                                                    title="Case Note">
+                                                    <i class="material-icons table-icon">cases</i>
+                                                </a>
+                                            </td> 
+                                        </tr> 
+                                    </template>
+                                </tbody> 
+                            </table>
+                        </div> 
+                    </div>
+                </div>
+
+                    <template if:true={participants.length}>
+                        <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+                            <div class="slds-list_inline"> 
+                                <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span> 
+                                <div class="slds-select_container"> 
+                                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}> 
+                                        <template for:each={pageSizeOptions} for:item="option"> 
+                                            <option key={option} value={option}>{option}</option> 
+                                        </template> 
+                                    </select>
+                                </div> 
+                            </div>
+                            
+                            <div class="slds-align_absolute-center">
+                                <lightning-button 
+                                    disabled={bDisableFirst} 
+                                    icon-name="utility:jump_to_left" 
+                                    label="First" 
+                                    alternative-text="first page" 
+                                    onclick={firstPage} 
+                                    style="margin-right: 10px;">
+                                </lightning-button>
+                                <lightning-button 
+                                    disabled={bDisableFirst} 
+                                    icon-name="utility:chevronleft" 
+                                    label="Previous" 
+                                    alternative-text="Previous"
+                                    onclick={previousPage} 
+                                    style="margin-right: 5px;">
+                                </lightning-button>
+                                
+                                <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} Page(s)</span>
+                                
+                                <lightning-button 
+                                    disabled={bDisableLast} 
+                                    icon-name="utility:chevronright" 
+                                    label="Next"
+                                    alternative-text="Next"
+                                    onclick={nextPage} 
+                                    class="slds-p-horizontal_x-small"
+                                    icon-position="right">
+                                </lightning-button>
+                                <lightning-button 
+                                    disabled={bDisableLast} 
+                                    icon-name="utility:jump_to_right" 
+                                    label="Last" 
+                                    alternative-text="last page" 
+                                    onclick={lastPage} 
+                                    icon-position="right">
+                                </lightning-button> 
+                            </div>
+                            
+                            <div class="slds-clearfix">
+                                <div class="slds-float_right">
+                                    <span class="slds-badge">Total Records: {totalRecords}</span> 
+                                </div> 
+                            </div> 
+                        </div> 
+                    </template>
+            </div>
+        </template>
+    
+
+        <template if:false={mainTabelFlag}>
+
+            <template if:true={showUtilizationModal}>
+                <div class="menu-container ">
+                    <div class="menu-left">
+                        <div class={allutilizationClass} data-type="all">Utilization</div>
+                    </div>
+                    <div class="menu-right">
+                        <lightning-button
+                            label="Back"
+                            variant="neutral"
+                            class="slds-m-right_medium"
+                            onclick={handleBack}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+
+                    <!-- Left Section -->
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                        <div class="participant-avatar">
+                            {participantInitials}
+                        </div>
+
+                        <div class="slds-m-left_medium">
+                            <div class="participant-name">{participantName}</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Section -->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-gutters_small">
+
+                        <lightning-button
+                            label="Export PDF"
+                            variant="brand"
+                            class="export-btn"
+                            onclick={handleExportPdfutilization}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Export CSV"
+                            variant="brand"
+                            class="export-btn slds-m-left_medium"
+                             onclick={handleExportCsvutilization}>
+                        </lightning-button>
+
+                    </div>
+                </div>
+
+
+            <div class="utilization-layout">
+                <div class="table-container UtilizationModal">
+                    <!-- HEADER --> 
+                    <div class="header-wrapper"> 
+                        <table class="staff-table" role="table"> 
+                            <thead> 
+                                <tr> 
+                                    <th class="table-th">Service Type</th> 
+                                    <th class="table-th">Planned</th> 
+                                    <th class="table-th">Actual</th> 
+                                    <th class="table-th">Variance</th> 
+                                    <th class="table-th">Status</th> 
+                                </tr> 
+                            </thead> 
+                        </table> 
+                    </div> 
+
+                    <!-- BODY --> 
+                    <div class="body-scroll custom-scroll UtilizationModalTableHeight"> 
+                        <table class="staff-table"> 
+                            <tbody> 
+                                <template for:each={pagedUtilizationData} for:item="participant"> 
+                                    <tr key={participant.id} class="table-row"> 
+                                        <td class="table-td">{participant.supportItemName}</td> 
+                                        <td class="table-td">${participant.planned}</td> 
+                                        <td class="table-td">${participant.actual}</td> 
+                                        <td class="table-td">${participant.variance}</td>  
+                                        <td class="table-td">
+                                            <span class={participant.statusClass}>
+                                                {participant.status}
+                                            </span>
+                                        </td>
+                                    </tr> 
+                                </template>
+                            </tbody> 
+                        </table>
+                    </div> 
+                </div>
+
+                <template if:true={utilizationData.length}>
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                        <!-- Page Size -->
+                        <div class="slds-list_inline">
+                            <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                            <div class="slds-select_container">
+                                <select
+                                    class="slds-select"
+                                    id="UtilizationModarecordsPerPage"
+                                    onchange={handleUtilizationRecordsPerPageChange}>
+
+                                    <template for:each={utilizationPageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    </template>
+
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="slds-align_absolute-center">
+
+                            <lightning-button
+                                disabled={utilizationDisableFirst}
+                                icon-name="utility:jump_to_left"
+                                label="First"
+                                onclick={handleUtilizationFirstPage}
+                                style="margin-right: 10px;">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={utilizationDisableFirst}
+                                icon-name="utility:chevronleft"
+                                label="Previous"
+                                onclick={handleUtilizationPreviousPage}
+                                style="margin-right: 5px;">
+                            </lightning-button>
+
+                            <span class="slds-badge">
+                                Showing {utilizationPageNumber} of {utilizationTotalPages} Page(s)
+                            </span>
+
+                            <lightning-button
+                                disabled={utilizationDisableLast}
+                                icon-name="utility:chevronright"
+                                label="Next"
+                                onclick={handleUtilizationNextPage}
+                                class="slds-p-horizontal_x-small"
+                                icon-position="right">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={utilizationDisableLast}
+                                icon-name="utility:jump_to_right"
+                                label="Last"
+                                onclick={handleUtilizationLastPage}
+                                icon-position="right">
+                            </lightning-button>
+
+                        </div>
+
+                        <!-- Total -->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge">
+                                    Total Records: {utilizationTotalRecords}
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+            </div>
+            </template>
+
+            <template if:true={showReconciliationModal}>
+                <div class="menu-container ">
+                    <div class="menu-left">
+                        <div class={allreconciliationClass} data-type="all">Reconciliation</div>
+                    </div>
+                    <div class="menu-right">
+                         <lightning-button
+                            label="Back"
+                            variant="neutral"
+                            class="slds-m-right_medium"
+                            onclick={handleBack}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+
+                    <!-- Left Section -->
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                        <div class="participant-avatar">
+                            {reconciliationParticipantInitials}
+                        </div>
+
+                        <div class="slds-m-left_medium">
+                            <div class="participant-name">{reconciliationParticipantName}</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Section -->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-gutters_small">
+
+                        <lightning-button
+                            label="Export PDF"
+                            variant="brand"
+                            class="export-btn"
+                            onclick={handleExportPdfReconciliation}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Export CSV"
+                            variant="brand"
+                            class="export-btn slds-m-left_medium"
+                             onclick={handleExportCsvReconciliation}>
+                        </lightning-button>
+
+                    </div>
+                </div>
+
+                <div class="table-container ReconciliationModal">
+                    <!-- HEADER --> 
+                    <div class="header-wrapper"> 
+                        <table class="staff-table" role="table"> 
+                            <thead> 
+                                <tr> 
+                                    <th class="table-th">Date</th> 
+                                    <th class="table-th">Support Item Name</th> 
+                                    <th class="table-th">Planned</th> 
+                                    <th class="table-th">Actual</th> 
+                                    <th class="table-th">Variance</th> 
+                                </tr> 
+                            </thead> 
+                        </table> 
+                    </div> 
+
+                    <!-- BODY --> 
+                    <div class="body-scroll custom-scroll ReconciliationTableHeight"> 
+                        <table class="staff-table"> 
+                            <tbody> 
+                                <template for:each={pagedReconciliationData} for:item="participant"> 
+                                    <tr key={participant.id} class="table-row"> 
+                                        <td class="table-td">{participant.date}</td> 
+                                        <td class="table-td">{participant.supportItemName}</td> 
+                                        <td class="table-td">${participant.planned}</td> 
+                                        <td class="table-td">${participant.actual}</td>  
+                                        <td class="table-td">{participant.variance}</td>
+                                    </tr> 
+                                </template>
+                            </tbody> 
+                        </table>
+                    </div> 
+                </div>
+
+                <template if:true={reconciliationData.length}>
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                        <!-- Page Size -->
+                        <div class="slds-list_inline">
+                            <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                            <div class="slds-select_container">
+                                <select
+                                    class="slds-select"
+                                    id="ReconciliationModalrecordsPerPage"
+                                    onchange={handleReconciliationRecordsPerPageChange}>
+
+                                    <template for:each={reconciliationPageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    </template>
+
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="slds-align_absolute-center">
+
+                            <lightning-button
+                                disabled={reconciliationDisableFirst}
+                                icon-name="utility:jump_to_left"
+                                label="First"
+                                onclick={handleReconciliationFirstPage}
+                                style="margin-right: 10px;">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={reconciliationDisableFirst}
+                                icon-name="utility:chevronleft"
+                                label="Previous"
+                                onclick={handleReconciliationPreviousPage}
+                                style="margin-right: 5px;">
+                            </lightning-button>
+
+                            <span class="slds-badge">
+                                Showing {reconciliationPageNumber} of {reconciliationTotalPages} Page(s)
+                            </span>
+
+                            <lightning-button
+                                disabled={reconciliationDisableLast}
+                                icon-name="utility:chevronright"
+                                label="Next"
+                                onclick={handleReconciliationNextPage}
+                                class="slds-p-horizontal_x-small"
+                                icon-position="right">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={reconciliationDisableLast}
+                                icon-name="utility:jump_to_right"
+                                label="Last"
+                                onclick={handleReconciliationLastPage}
+                                icon-position="right">
+                            </lightning-button>
+
+                        </div>
+
+                        <!-- Total -->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge">
+                                    Total Records: {reconciliationTotalRecords}
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+            </template>
+
+            <template if:true={showCaseNotesModal}>
+                <div class="menu-container ">
+                    <div class="menu-left">
+                        <div class={allcaseNoteClass} data-type="all">Case Note</div>
+                    </div>
+                    <div class="menu-right">
+                        <lightning-button
+                            label="Back"
+                            variant="neutral"
+                            class="slds-m-right_medium"
+                            onclick={handleBack}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+
+                    <!-- Left Section -->
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                        <div class="participant-avatar">
+                            {caseNotesParticipantInitials}
+                        </div>
+
+                        <div class="slds-m-left_medium">
+                            <div class="participant-name">{caseNotesParticipantName}</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Section -->
+                    <div class="slds-grid slds-grid_vertical-align-center slds-gutters_small">
+
+                        <lightning-button
+                            label="Export PDF"
+                            variant="brand"
+                            class="export-btn"
+                            onclick={handleExportPdfCaseNotes}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Export CSV"
+                            variant="brand"
+                            class="export-btn slds-m-left_medium"
+                             onclick={handleExportCsvCaseNotes}>
+                        </lightning-button>
+
+                    </div>
+                </div>
+
+                <div class="table-container CaseNotesModal">
+                    <!-- HEADER --> 
+                    <div class="header-wrapper"> 
+                        <table class="staff-table" role="table"> 
+                            <thead> 
+                                <tr> 
+                                    <th class="table-th">Date</th>
+                                    <th class="table-th">Note Type</th>
+                                    <th class="table-th">Contact Method</th>
+                                    <th class="table-th">Billable</th>
+                                    <th class="table-th">Duration</th>
+                                    <th class="table-th">Rate</th>
+                                    <th class="table-th">Total Cost</th>
+                                    <th class="table-th">Service Type</th>
+                                    <th class="table-th">Service Item</th>
+                                    <th class="table-th">Activity Details</th>
+                                </tr> 
+                            </thead> 
+                        </table> 
+                    </div> 
+
+                    <!-- BODY --> 
+                    <div class="body-scroll custom-scroll CaseNotesTableHeight"> 
+                        <table class="staff-table"> 
+                            <tbody> 
+                                <template for:each={pagedCaseNotesData} for:item="participant"> 
+                                    <tr key={participant.id} class="table-row"> 
+                                        <td class="table-td">{participant.date}</td>
+                                        <td class="table-td">{participant.noteType}</td>
+                                        <td class="table-td">{participant.contactMethod}</td>
+                                        <td class="table-td">{participant.billable}</td>
+                                        <td class="table-td">{participant.duration}</td>
+                                        <td class="table-td">
+                                            ${participant.rate}
+                                        </td>
+                                        <td class="table-td">
+                                            ${participant.totalCost}
+                                        </td>
+                                        <td class="table-td">
+                                            {participant.serviceType}
+                                        </td>
+                                        <td class="table-td">
+                                            {participant.serviceItem}
+                                        </td>
+                                        <td class="table-td" title={participant.activityDetails}>
+                                            {participant.activityDetails}
+                                        </td>
+                                    </tr> 
+                                </template>
+                            </tbody> 
+                        </table>
+                    </div> 
+                </div>
+
+                <template if:true={caseNotesData.length}>
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                        <!-- Page Size -->
+                        <div class="slds-list_inline">
+                            <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                            <div class="slds-select_container">
+                                <select
+                                    class="slds-select"
+                                    id="CaseNotesModalrecordsPerPage"
+                                    onchange={handleCaseNotesRecordsPerPageChange}>
+
+                                    <template for:each={caseNotesPageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    </template>
+
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="slds-align_absolute-center">
+
+                            <lightning-button
+                                disabled={caseNotesDisableFirst}
+                                icon-name="utility:jump_to_left"
+                                label="First"
+                                onclick={handleCaseNotesFirstPage}
+                                style="margin-right: 10px;">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={caseNotesDisableFirst}
+                                icon-name="utility:chevronleft"
+                                label="Previous"
+                                onclick={handleCaseNotesPreviousPage}
+                                style="margin-right: 5px;">
+                            </lightning-button>
+
+                            <span class="slds-badge">
+                                Showing {caseNotesPageNumber} of {caseNotesTotalPages} Page(s)
+                            </span>
+
+                            <lightning-button
+                                disabled={caseNotesDisableLast}
+                                icon-name="utility:chevronright"
+                                label="Next"
+                                onclick={handleCaseNotesNextPage}
+                                class="slds-p-horizontal_x-small"
+                                icon-position="right">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={caseNotesDisableLast}
+                                icon-name="utility:jump_to_right"
+                                label="Last"
+                                onclick={handleCaseNotesLastPage}
+                                icon-position="right">
+                            </lightning-button>
+
+                        </div>
+
+                        <!-- Total -->
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge">
+                                    Total Records: {caseNotesTotalRecords}
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+            </template>
+
+
+        </template>
+
+
+    </div>
+
+    <template if:true={isLoading}>
+        <div class="spinner-backdrop">
+            <lightning-spinner
+                alternative-text="Loading Participants"
+                size="medium"
+                variant="brand">
+            </lightning-spinner>
+        </div>
+    </template>
+
+</template>
