@@ -1,0 +1,838 @@
+<template>
+
+    <div class="main-container">
+        <div class="menu-container">
+            <div class={hrViewClass} onclick={handleHrView}>Performance Reviews</div>
+        </div>
+       <template if:true={isStaffHomeTable}>
+             <div class="major-cont custom-scroll">
+          
+                <div class="dashboard-container">
+
+                    <div class="header-section">
+                        <!-- <div>
+                            <h1 class="page-title">HR Review Dashboard</h1> -->
+                            <!-- <p class="subtitle">
+                                Review and evaluate your team members' performance
+                            </p> -->
+                        <!-- </div> -->
+                        <div class="header-top">
+                            <h1 class="page-title">HR Review Dashboard</h1>
+
+                            <lightning-button
+                                label="Back"
+                                
+                                onclick={handleBack}
+                                variant="brand">
+                            </lightning-button>
+                        </div>
+
+                        <!-- SUMMARY CARDS -->
+                        <div class="summary-cards">
+
+                            <div class="summary-card orange">
+                                <div>Pending Reviews</div>
+                                <div class="count">{pendingReviewsCount}</div>
+                            </div>
+
+                            <div class="summary-card blue">
+                                <div>Coaching Notes</div>
+                                <div class="count">{coachingNotesCount}</div>
+                            </div>
+
+                        
+
+                            <div class="summary-card green">
+                                <div>Goals Created</div>
+                                <div class="count">{goalsCreatedCount}</div>
+                            </div>
+
+                            <div class="summary-card grey">
+                                <div>Finalized</div>
+                                <div class="count">{finalizedCount}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABS -->
+                    <div class="tabs">
+                        <span  class={performanceTabClass} data-tab="reviews" onclick={handleTabClick1}>Performance Reviews</span>
+                        <span  class={goalsTabClass} data-tab="goals" onclick={handleTabClick1}>Development Goals</span>
+                    </div>
+                    <template if:true={activeTabPerformance}>
+                        <template if:true={staffTemplateList.length}>
+                            <div class="table-container performanceReview">         <!-- Change Table Name in this Div--> 
+                                    <!-- HEADER --> 
+                                    <div class="header-wrapper"> 
+                                        <table class="staff-table" role="table"> 
+                                            <thead> 
+                                                <tr> 
+                                                    <th class="table-th">Employee Name</th> 
+                                                    <th class="table-th">Email</th> 
+                                                    <th class="table-th">Role</th> 
+                                                    <th class="table-th">Manager</th> 
+                                                    <th class="table-th">Review Cycle Name</th>
+                                                    <th class="table-th">Template Name</th> 
+                                                    <th class="table-th">Status</th> 
+                                                    <th class="table-th slds-text-align_center">Action</th> 
+                                                </tr> 
+                                            </thead> 
+                                        </table> 
+                                    </div> 
+                            
+                                    <!-- BODY --> 
+                                    <div class="body-scroll custom-scroll tableHeight"> 
+                                        <table class="staff-table"> 
+                                            <tbody> 
+                            
+                                                <template for:each={staffTemplateList} for:item="template"> 
+                                                    <tr key={template.Id} class="table-row"> 
+                            
+                                                        <!-- Avatar + Name (SAME TD) --> 
+                                                        <td class="table-td"> 
+                                                            <div class="avatar-name"> 
+                                                                <span class="avatar-text" title={template.staffName}> 
+                                                                    {template.staffName}   
+                                                                </span> 
+                                                            </div> 
+                                                        </td> 
+                            
+                                                        <td class="table-td"  title={template.email}>{template.email}</td> 
+                                                        <td class="table-td">{template.role}</td> 
+                                                        <td class="table-td" title={template.manager} >{template.manager}</td>
+                                                        <td class="table-td">{template.reviewCycle}</td> 
+                                                        <td class="table-td">{template.templateName}</td>  
+                                                        <td class="table-td">{template.status}</td>  
+                            
+                                                        <td class="table-td slds-text-align_center">
+                                                            <a href="javascript:void(0)" data-id={template.Id} data-staffname={template.staffName} data-email={template.email}
+                                                                data-managername={template.manager} data-status={template.status} onclick={handleView} name="view_details" title="View" style="text-decoration: none;">
+                                                                    <i class="material-icons view-icon">visibility</i>
+                                                            </a> &nbsp;   
+                                                        </td>
+                            
+                                                    
+                                                    </tr> 
+                                                </template> 
+                            
+                                            </tbody> 
+                                        </table> 
+                                    </div> 
+
+                                
+                            
+                            </div> 
+                        </template>
+                        <template if:false={staffTemplateList.length}>
+                             <div class="no-data">
+                                <p>No records found</p>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:true={activeTabGoals}>
+                        <template if:true={goalsList.length}>
+                            <template for:each={goalsList} for:item="goal">
+
+                                <div key={goal.goalId} class="goal-card">
+
+                                    <div class="goal-grid">
+
+                                        <div class="goal-col">
+                                            <div>
+                                                <strong>Employee</strong>
+                                            </div>
+                                            <div class="slds-text-color_weak">{goal.staffName}</div>
+                                            
+                                        </div>
+
+                                        <div class="goal-col goal-title">
+                                            <div>
+                                                <strong>Goal</strong>
+                                            </div>
+                                            <div class="slds-text-color_weak">{goal.goalName}</div>
+                                        </div>
+
+                                        <div class="goal-col">
+                                            <div>
+                                                <strong>Type</strong>
+                                            </div>
+                                            <div class="slds-text-color_weak">{goal.goalType}</div>
+                                        </div>
+
+                                        <div class="goal-col">
+                                            <div>
+                                                <strong>Timeline</strong>
+                                            </div>
+                                            <div class="slds-text-color_weak">{goal.dateFormatted}</div>
+                                        </div>
+
+                                        <div class="goal-col">
+                                            <div>
+                                                <strong>Status</strong>
+                                            </div>
+                                            <div class="slds-text-color_weak">{goal.status}</div>
+                                        </div>
+
+                                        <div class="goal-action">
+                                            <!-- <button class="view-btn"
+                                                data-id={goal.goalId}
+                                                onclick={handleGoalsView}>
+                                                View
+                                            </button> -->
+                                            <lightning-button
+                                                label="View"
+                                                data-id={goal.goalId}
+                                                data-staffid={goal.staffId}
+                                                variant="brand"
+                                                onclick={handleGoalsView}>
+                                            </lightning-button>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+                        </template>
+                        <template if:false={goalsList.length}>
+                             <div class="no-data">
+                                <p>No records found</p>
+                            </div>
+                        </template>
+                    </template>
+                       
+                </div>
+            <!-- <template if:true={MyGoalsFlag}>
+           
+            </template> -->       
+            </div>
+        </template>
+        <template if:true={isStaffTemplateView}>
+            <div class="major-cont custom-scroll">
+
+                <!-- HEADER -->
+                <div class="slds-grid slds-wrap slds-m-bottom_medium">
+
+                    <div class="slds-col slds-size_1-of-2">
+                        <p><b>Employee Name:</b> {templateStaffName}</p>
+                        <p><b>Email:</b> {templateStaffEmail}</p>
+                        <p><b>Manager:</b> {templateStaffmanager}</p>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="tabs">
+
+                    <!-- <span class={overviewTabClass}
+                        data-tab="overview"
+                        onclick={handleTabClick}>
+                        Overview
+                    </span> -->
+
+                    <span class={compareTabClass}
+                        data-tab="compare"
+                        onclick={handleTabClick}>
+                        Compare
+                    </span>
+
+                    <span class={talentTabClass}
+                        data-tab="talent"
+                        onclick={handleTabClick}>
+                        Talent
+                    </span>
+
+                    <span class={actionTabClass}
+                        data-tab="action"
+                        onclick={handleTabClick}>
+                        Action
+                    </span>
+
+                </div>
+               <!-- <template if:true={isOverviewTab}>
+                      <lightning-card title="Performance Score Breakdown">
+
+                                <div class="slds-p-around_medium">
+
+                                    <template for:each={scoreCards} for:item="card">
+                                        <div key={card.id} class="score-row slds-m-bottom_large">
+
+                                            <div class="slds-grid slds-wrap slds-m-bottom_x-small">
+
+                                                <div class="slds-col slds-size_9-of-12">
+                                                    <span class="metric-label">
+                                                        {card.label}
+                                                        <span class="weight-text">({card.weight}% weight)</span>
+                                                    </span>
+                                                </div>
+
+                                                <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                                                    <span class={card.scoreClass}>{card.score}%</span>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="progress-bar">
+                                                <div class={card.progressClass}
+                                                    style={card.progressStyle}>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-text-align_right slds-text-body_small slds-m-top_x-small">
+                                                {card.calculationText}
+                                            </div>
+
+                                        </div>
+                                    </template>
+
+                                    <div class="divider"></div>
+
+                                    <div class="slds-grid slds-wrap final-score">
+
+                                        <div class="slds-col slds-size_9-of-12">
+                                            <span class="final-label">
+                                                Final Weighted Score
+                                            </span>
+                                        </div>
+
+                                        <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                                            <span class="final-value">{finalScore}%</span>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                        </lightning-card>   
+                </template> -->
+
+              
+                <template if:true={isCompareTab}>
+                    <!-- KPI SECTION -->
+                     <h2 class="slds-text-heading_medium slds-text-bold slds-m-bottom_small">KPI</h2>
+                    <template if:true={staffKpiList.length}>
+                       
+                        <template for:each={staffKpiList} for:item="kpi">
+
+                            <div key={kpi.id} class="slds-box slds-theme_default slds-m-bottom_medium">
+
+                                <div class="slds-grid slds-wrap slds-m-bottom_small">
+
+                                    <div class="slds-col slds-size_1-of-2">
+
+                                        <h2 class="slds-text-heading_small">
+
+                                            {kpi.kpiTitle}
+
+                                            <!-- <span class="slds-badge slds-theme_warning slds-m-left_x-small">
+                                                {kpi.type}
+                                            </span> -->
+
+                                        </h2>
+
+                                        <p class="slds-text-color_weak">
+                                            {kpi.kpiDescription}
+                                        </p>
+
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+
+                                        Target: <b>{kpi.kpiTarget}</b>
+
+                                        <span class="slds-m-left_large">
+                                            Weight: <b>{kpi.kpiWeight}</b>
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="slds-grid slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <div class="slds-box">
+                                            <p class="slds-text-title">Employee Self Rating</p>
+                                            <h3 class="slds-text-heading_small">{kpi.employeeRating}</h3>
+                                            <p class="slds-m-top_small slds-text-title">
+                                                Comments & Achievements
+                                            </p>
+                                            <p>{kpi.employeeComment}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <div class="slds-box">
+                                            <p class="slds-text-title">Manager Rating</p>
+                                            <h3 class="slds-text-heading_small">{kpi.managerRating}</h3>
+                                            <p class="slds-m-top_small slds-text-title">
+                                                Comments & Achievements
+                                            </p>
+                                            <p>{kpi.managerComment}</p>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </template>
+                    </template>
+                    <template if:false={staffKpiList.length}>
+                            <div class="no-data">
+                            <p>No records found</p>
+                        </div>
+                    </template>
+                    <h2 class="slds-text-heading_medium  slds-text-bold slds-m-bottom_small">OKR</h2>
+                     <template if:true={staffOkrList.length}>
+                        <template for:each={staffOkrList} for:item="okr">
+                            <div key={okr.id} class="slds-box slds-m-bottom_medium">
+
+                                <h3>{okr.title}</h3>
+                                <p>{okr.description}</p>
+
+                                <div class="slds-grid slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <b>Employee Rating:</b> {okr.employeeRating}
+                                        <p>{okr.employeeComment}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <b>Manager Rating:</b> {okr.managerRating}
+                                        <p>{okr.managerComment}</p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </template>
+                    </template>
+                     <template if:false={staffOkrList.length}>
+                            <div class="no-data">
+                            <p>No records found</p>
+                        </div>
+                    </template>
+
+
+                    <!-- COMPETENCY SECTION -->
+                <h2 class="slds-text-heading_medium slds-text-bold slds-m-bottom_small">Competency</h2>
+                    <template if:true={staffCompetencyList.length}>
+                        <template for:each={staffCompetencyList} for:item="comp">
+                            <div key={comp.id} class="slds-box slds-m-bottom_medium">
+
+                                <h3>{comp.title}</h3>
+
+                                <div class="slds-grid slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <b>Employee Rating:</b> {comp.employeeRating}
+                                        <p>{comp.employeeComment}</p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <b>Manager Rating:</b> {comp.managerRating}
+                                        <p>{comp.managerComment}</p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={staffCompetencyList.length}>
+                            <div class="no-data">
+                            <p>No records found</p>
+                        </div>
+                    </template>
+
+                </template>
+
+                <template if:true={isTalentTab}>
+
+                    <div class="slds-box slds-theme_default">
+
+                        <h2 class="slds-text-heading_small">Talent Matrix</h2>
+
+                        <p class="slds-text-color_weak slds-m-bottom_medium">
+                            Assess performance vs potential for talent planning
+                        </p>
+
+                        <div class="slds-box slds-m-bottom_medium">
+
+                            <p class="slds-text-title_bold">Performance Rating</p>
+
+                            <lightning-radio-group
+                                name="performanceRating"
+                                options={performanceOptions}
+                                type="radio"
+                                value={performanceRating}
+                                disabled={isHrFieldsDisabled}
+                                onchange={handleTalentChange}>
+                            </lightning-radio-group>
+
+                        </div>
+
+                        <div class="slds-box slds-m-bottom_medium">
+
+                            <p class="slds-text-title_bold">Potential Rating</p>
+
+                            <lightning-radio-group
+                                name="potentialRating" 
+                                options={potentialOptions}
+                                type="radio"
+                                value={potentialRating} 
+                                disabled={isHrFieldsDisabled} 
+                                onchange={handleTalentChange}>
+                            </lightning-radio-group>
+
+                        </div>
+
+                        <div class="slds-box slds-m-bottom_medium">
+
+                            <p class="slds-text-title_bold">Flight Risk Level</p>
+
+                            <lightning-radio-group
+                                name="flightRiskLevel"
+                                value={flightRiskLevel} 
+                                type="radio"
+                                options={riskOptions}
+                                disabled={isHrFieldsDisabled}
+                                onchange={handleTalentChange}>
+                            </lightning-radio-group>
+
+                        </div>
+
+                        <div class="slds-box">
+
+                            <p class="slds-text-title_bold">Readiness for advancement</p>
+
+                            <lightning-radio-group
+                                name="readinessLevel"
+                                value={readinessLevel} 
+                                options={readinessOptions}
+                                 disabled={isHrFieldsDisabled}
+                                onchange={handleTalentChange}>
+                            </lightning-radio-group>
+
+                        </div>
+
+                    </div>
+
+                </template>
+                
+                <template if:true={isActionTab}>
+
+                    <div class="slds-box slds-theme_default">
+
+                    <!-- Rating Adjustment -->
+                    <div class="slds-m-bottom_large">
+
+                    <h2 class="slds-text-heading_small">
+                    Rating Adjustment (optional)
+                    </h2>
+
+                    <p class="slds-text-color_weak">
+                    Average story points completed per sprint
+                    </p>
+
+                    <div class="slds-box slds-m-top_small">
+
+                        <div class="slds-grid slds-gutters">
+
+                            <!-- <div class="slds-col slds-size_1-of-3"> 
+
+                           <p class="slds-text-title_bold">
+                            Correct Final Score : {finalScore}
+                            </p> 
+
+                             <p class="slds-text-color_weak">
+                            {adjustRating}
+                            
+                            </p> 
+
+                             </div> -->
+
+                            <div class="slds-col slds-size_1-of-3">
+
+                                <lightning-input
+                                    type="number"
+                                    step="0.01"
+                                    label="Adjust Rating"
+                                    name="adjustRating"
+                                    disabled={isHrFieldsDisabled}
+                                    value={adjustRating}
+                                    onchange={handleActionChange}>
+                                </lightning-input>   <!--  options={ratingOptions}-->
+
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-3">
+
+                                <lightning-textarea
+                                    label="Justification for Adjustment (Required)"
+                                    name="justification"
+                                    value={justification}
+                                     disabled={isHrFieldsDisabled}
+                                    onchange={handleActionChange}>
+                                </lightning-textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    </div>
+
+
+                    <!-- Compensation Decisions -->
+
+                    <div class="slds-m-bottom_large">
+
+                    <h2 class="slds-text-heading_small">
+                    Compensation Decisions
+                    </h2>
+
+                    <p class="slds-text-color_weak">
+                    Finalize salary, bonus and etc.
+                    </p>
+
+                    <div class="slds-box slds-m-top_small">
+
+                        <div class="slds-grid slds-gutters">
+
+                            <div class="slds-col slds-size_1-of-3">
+
+                                <lightning-input
+                                    type="number"
+                                    label="Salary Adjustment"
+                                    name="salaryAdjustment"
+                                    value={salaryAdjustment}
+                                    disabled={isHrFieldsDisabled}
+                                    step="0.01"
+                                    formatter="currency"
+                                    onchange={handleActionChange}>
+                                </lightning-input>
+
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-3">
+
+                                <lightning-input
+                                    type="number"
+                                    label="Bonus Adjustment"
+                                    name="bonusAdjustment"
+                                    value={bonusAdjustment}
+                                     disabled={isHrFieldsDisabled}
+                                    step="0.01"
+                                    formatter="currency"
+                                    onchange={handleActionChange}>
+                                </lightning-input>
+
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-3">
+
+                                <!-- <lightning-input
+                                    type="toggle"
+                                    label="Approve Promotion : New Job Title"
+                                    name="approvePromotion"
+                                    checked={approvePromotion}
+                                     disabled={isHrFieldsDisabled}
+                                    onchange={handleActionChange}>   
+                                </lightning-input> -->   <!-- label="Approve Promotion : New Job Title"         label="Approve Promotion"-->
+                                <div class="label-toggle-row">
+
+                                    <label class="field-label">Approve Promotion: New Job Title</label>
+
+                                    <!-- Custom Toggle -->
+                                    <div class={promotionToggleWrapperClass}          
+                                        onclick={handlePromotionToggle}>     <!-- class="custom-toggle-wrapper"-->
+
+                                        <div class={promotionToggleTrack}>
+                                            <div class={promotionToggleKnob}></div>
+                                        </div>
+
+                                        <span class={promotionToggleLabelClass}>
+                                            {promotionToggleLabel}
+                                        </span>
+
+                                    </div>
+                                </div>
+                                <div class="slds-m-top_xx-small">
+                                    <lightning-input
+                                        type="text"
+                                        name="newJobTitle"
+                                        value={newJobTitle}
+                                        variant="label-hidden"
+                                        disabled={isNewTitleDisabled}
+                                        placeholder="Enter New Job Title"
+                                        onchange={handleActionChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    </div>
+
+
+                    <!-- PIP -->
+
+                    <!-- <div class="slds-m-bottom_large">
+
+                    <h2 class="slds-text-heading_small">
+                    Performance Improvement Plan (PIP)
+                    </h2>
+
+                    <p class="slds-text-color_weak">
+                    Create PIP if Performance request formal improvement process
+                    </p>
+
+                    <div class="slds-box slds-m-top_small">
+
+                    <lightning-input
+                    type="toggle"
+                    label="Initiate Performance Improvement Plan (PIP)"
+                    checked={actionData.pipEnabled}>
+                    </lightning-input>
+
+                    </div>
+
+                    </div> -->
+
+
+                    <!-- HR Confidential Notes -->
+
+                    <div class="slds-m-bottom_large">
+
+                        <h2 class="slds-text-heading_small"> HR Confidential Notes</h2>
+
+                        <p class="slds-text-color_weak">Internal HR notes and decisions</p>
+
+                        <div class="slds-box slds-m-top_small">
+
+                            <lightning-textarea
+                                label="HR NOTE and Decisions"
+                                name="hrNotes"
+                                value={hrNotes}
+                                 disabled={isHrFieldsDisabled}
+                                onchange={handleActionChange}>
+                            </lightning-textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Manager Change Request -->
+
+                    <div class="slds-m-bottom_large">
+
+                        <h2 class="slds-text-heading_small"> Request Changes From Manager</h2>
+
+                        <p class="slds-text-color_weak">Send Review back to the manager for revision</p>
+
+                        <div class="slds-box slds-m-top_small">
+
+                            <lightning-textarea
+                                name="managerRequest"
+                                value={managerRequest}
+                                 disabled={isHrFieldsDisabled}
+                                onchange={handleActionChange}>
+                            </lightning-textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    </div>
+
+                </template>
+
+                <!-- FOOTER BUTTONS -->
+                <div class="slds-text-align_right slds-m-top_large">
+
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleCancel}>
+                    </lightning-button>
+
+                    <lightning-button
+                        label="Return for Revisions"
+                        variant="neutral"
+                        class="slds-m-left_small"
+                        disabled={isHrFieldsDisabled}
+                        onclick={handleRequestChanges}>
+                    </lightning-button>
+
+                    <lightning-button
+                        label="Approve & Finalise Review"
+                        variant="brand"
+                        class="slds-m-left_small"
+                        disabled={isHrFieldsDisabled}
+                        onclick={handleApprove}>
+                    </lightning-button>
+
+                </div>
+
+            </div>
+        </template>
+
+     </div>
+    <template if:true={handleReturnRequestFlag}>
+        <section
+            aria-describedby="modal-content-id-1"
+            aria-labelledby="modal-heading-01"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open"
+            role="dialog"
+            tabindex="-1"
+        >
+            <div class="slds-modal__container modal-container" style="max-width: 25%">
+                <header class="slds-modal__header" style="background: #002a52">
+                    <h2
+                        class="slds-text-heading_medium  slds-hyphenate"
+                        style="color: white; font-weight: bold; text-align: center; font-size: var(--lwc-fontSize7, 1.25rem) !important;"
+                    >
+                        Please Confirm
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content">
+                    <div class="slds-m-around_small" style="text-align: center">
+                        <div>
+                            <h1>
+                                The manager will be able to revise the self-review, and you will be notified once it is resubmitted. <br />
+                                Do you want to return this for edits?
+                                
+                            </h1>
+                        </div>
+                        <div class="button-container slds-m-top_medium">
+                            <lightning-button
+                                label="No"
+                                variant="brand"
+                                onclick={handleNoRequestChanges}
+                                class="slds-m-around_small"
+                            ></lightning-button>
+                            <lightning-button
+                                label="Yes"
+                                variant="brand"
+                                onclick={handleYesRequestChanges}
+                                class="slds-m-around_small"
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+     <template if:true={isCreateGoal}>
+       <c-tesseract-apps-pms-create-edit-goal-lwc staff-id={staffId} goal-id={selectedgoalId} is-hr={isHr} is-edit-goal={isEditGoal} onclosegoal={handleCloseGoal}></c-tesseract-apps-pms-create-edit-goal-lwc> <!-- staff-name={staffName} manager-name={managerName} -->
+    </template>
+    
+</template>

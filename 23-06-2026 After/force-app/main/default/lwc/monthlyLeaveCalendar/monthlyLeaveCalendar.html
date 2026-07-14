@@ -1,0 +1,190 @@
+<template>
+
+<div class="monthly-wrapper">
+
+    <!-- STAFF COLUMN -->
+    <div class="staff-column">
+        
+        <div class="roster-toggle-container">
+            <div class="tab-view-wrapper">
+
+                <button
+                    class={weeklyTabClass}
+                    onclick={showWeeklyView}>
+                    Weekly
+                </button>
+
+                <button
+                    class={monthlyTabClass}
+                    onclick={showMonthlyView}>
+                    Monthly
+                </button>
+
+            </div>
+        </div>
+
+        <div class="staff-search">
+            <lightning-input
+                type="search"
+                placeholder="Search staff..."
+                value={searchKey}
+                variant="hidden"
+                onchange={handleSearch}>
+            </lightning-input>
+        </div>
+
+        <div class="staff-list custom-scroll">
+
+        <template if:true={staffList.length}>
+            <template for:each={staffList} for:item="staff">
+                <div key={staff.staffId}
+                    class={staff.rowClass}
+                    data-id={staff.staffId}
+                    onclick={handleStaffClick}>
+
+                    <!-- Avatar with image -->
+                    <div class="avatar" if:true={staff.staffUrl} draggable="false">
+                        <lightning-avatar
+                            variant="circle"
+                            src={staff.staffUrl}
+                            class="avatar-small"
+                            fallback-icon-name="standard:person_account">
+                        </lightning-avatar>
+                    </div>
+
+                    <!-- Fallback icon -->
+                    <div class="avatar" if:false={staff.staffUrl} draggable="false">
+                        <lightning-icon
+                            icon-name="action:user"
+                            variant="error"
+                            size="small"
+                            style="background: #02275b"
+                            class="avatar-small fallback-icon">
+                        </lightning-icon>
+                    </div>
+
+                    <span class="staff-name">{staff.staffName}</span>
+
+                </div>
+            </template>
+        </template>
+
+        <template if:false={staffList.length}>
+            <div class="no-data">
+                No Staff Found
+            </div>
+        </template>
+
+        </div>
+
+    </div>
+
+
+    <!-- CALENDAR COLUMN -->
+    <div class="calendar-column">
+
+        <!-- HEADER -->
+        <div class="calendar-header">
+
+
+
+            <!-- LEGEND -->
+            <div class="slds-grid slds-text-body_small">
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_requested slds-m-right_x-small"></span>
+                    <span>Requested</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_approved slds-m-right_x-small"></span>
+                    <span>Approved</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_rejected slds-m-right_x-small"></span>
+                    <span>Rejected</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center slds-m-right_medium">
+                    <span class="legend-dot legend-dot_withdrawn slds-m-right_x-small"></span>
+                    <span>Withdrawn</span>
+                </div>
+
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <span class="legend-dot legend-dot_cancelled slds-m-right_x-small"></span>
+                    <span>Cancelled</span>
+                </div>
+            </div>
+
+            <lightning-button-icon
+                icon-name="utility:chevronleft"
+                onclick={previousMonth}
+                disabled={isLoading}>
+            </lightning-button-icon>
+
+            <c-tesseract-apps-month-picker
+                value={currentDate}
+                onchange={handleMonthChange}>
+            </c-tesseract-apps-month-picker>
+
+            <lightning-button-icon
+                icon-name="utility:chevronright"
+                onclick={nextMonth}
+                disabled={isLoading}>
+            </lightning-button-icon>
+
+            <!-- BACK BUTTON -->
+            <lightning-button
+                label="Back"
+                variant="brand"
+                onclick={backToHome}>
+            </lightning-button>
+
+        </div>
+        
+        <div class="calendar-body-scroll custom-scroll">
+            <!-- DAYS HEADER -->
+            <div class="days-header">
+
+                <template for:each={daysOfWeek} for:item="day">
+                    <div key={day} class="day-header">
+                        {day}
+                    </div>
+                </template>
+
+            </div>
+
+            <!-- CALENDAR GRID -->
+            <!-- <div class="calendar-grid"> -->
+                <div class={calendarClass}>   
+                    <template for:each={calendarDays} for:item="day">
+
+                        <!-- EMPTY CELL -->
+                        <template if:true={day.isEmpty}>
+                            <div key={day.key} class="day-cell empty"></div>
+                        </template>
+
+                        <!-- NORMAL DAY -->
+                        <template if:false={day.isEmpty}>
+                            <div key={day.key} class="day-cell">
+                                <span class="date-label">{day.date}</span>
+                                <div class="leave-container">
+                                    <template for:each={day.leaves} for:item="leave">
+                                        <div key={leave.id} class="calendar-pill-container">
+                                            <span class={leave.className} title={leave.leaveType}>
+                                                {leave.leaveType}
+                                            </span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            <!-- </div> -->
+        </div>
+
+    </div>
+</div>
+
+</template>
