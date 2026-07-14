@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Shift_Wage__c</fullName>
+    <formula>MAX(
+  0,
+  IF(
+    ISPICKVAL(Status__c, &quot;Cancelled&quot;),
+    Shift_Cancel_Payment__c,
+
+    IF(
+      OR(
+        Shift_Category__c = &quot;Sleepover Shift&quot;,
+        AND(
+          ISBLANK(Shift_Category__c),
+          ISPICKVAL(Add_Shift__r.Shift_Type__c, &quot;Sleepover Shift&quot;)
+        )
+      ),
+
+      IF(
+        OR(ISBLANK(Actual_Duration__c), Actual_Duration__c = 0),
+        0,
+        Staff_Final_Hourly_Rate__c
+      ),
+
+      IF(
+        OR(
+          Shift_Category__c = &quot;Custom&quot;,
+          AND(
+            ISBLANK(Shift_Category__c),
+            ISPICKVAL(Add_Shift__r.Shift_Type__c, &quot;Custom&quot;)
+          )
+        ),
+
+        (Long_Morning_Hourly_Rate__c * Long_Morning_Shift_Duartion__c) +
+        (Long_Afternoon_Hourly_Rate__c * Long_Afternoon_Shift_Duartion__c) +
+        (Long_Night_Hourly_Rate__c * Long_Night_Shift_Duartion__c) +
+        (Long_Morning_Rate_Two__c * Long_Morning_Duartion_Two__c) +
+        (Long_Afternoon_Rate_Two__c * Long_Afternoon_Duration_Two__c) +
+        Long_Sleepover_Allowance__c,
+
+        Staff_Final_Hourly_Rate__c * Actual_Duration__c
+      )
+    )
+  )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Shift Wages</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>
