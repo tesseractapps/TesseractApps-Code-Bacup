@@ -1,0 +1,2583 @@
+<template>
+  <div class="main-container">
+    <template if:false={tilesflag}>
+      <div style="padding: 1%">
+        <div class="metrics-grid">
+          <div
+            class="metric-card highlighted"
+            onclick={handleMetricClick}
+            data-id="Pending"
+          >
+            <div class="invoiceTiles">
+              <div>
+                <h3 class="metric-title">Pending</h3>
+                <p class="metric-value">{pendingInvoices}</p>
+              </div>
+              <!-- <template if:true="{selectedMetricId" ="" ="" ="Pending" }>
+                <i class="material-icons metric-icon">task_alt</i>
+              </template> -->
+              <template if:true={pendingInvoicestask}>
+                <i class="material-iconsInvoice">task_alt</i>
+              </template>
+            </div>
+          </div>
+
+          <div
+            class="metric-card highlighted1"
+            onclick={handleMetricClick}
+            data-id="Generated"
+          >
+            <div class="invoiceTiles">
+              <div>
+                <h3 class="metric-title">Generated</h3>
+                <p class="metric-value">{generatedInvoices}</p>
+              </div>
+              <!-- <template if:true="{selectedMetricId" ="" ="" ="Generated" }>
+                <i class="material-icons metric-icon">task_alt</i>
+              </template> -->
+              <template if:true={generatedInvoicestask}>
+                <i class="material-iconsInvoice">task_alt</i>
+              </template>
+            </div>
+          </div>
+
+          <div
+            class="metric-card highlighted2"
+            onclick={handleMetricClick}
+            data-id="Overdue"
+          >
+            <div class="invoiceTiles">
+              <div>
+                <h3 class="metric-title">Cancelled Invoices</h3>
+                <p class="metric-value">{overdueInvoices}</p>
+              </div>
+              <!-- <template if:true="{selectedMetricId" ="" ="" ="Overdue" }>
+                <i class="material-icons metric-icon">task_alt</i>
+              </template> -->
+              <template if:true={overdueInvoicestask}>
+                <i class="material-iconsInvoice">task_alt</i>
+              </template>
+            </div>
+          </div>
+
+          <div
+            class="metric-card highlighted3"
+            onclick={handleMetricClick}
+            data-id="Total"
+          >
+            <div class="invoiceTiles">
+              <div>
+                <h3 class="metric-title">Total Value</h3>
+                <p class="metric-value">${totalAmount}</p>
+              </div>
+              <!-- <template if:true="{selectedMetricId" ="" ="" ="Total" }>
+                <i class="material-icons metric-icon">task_alt</i>
+              </template> -->
+              <template if:true={totalAmounttask}>
+                <i class="material-iconsInvoice">task_alt</i>
+              </template>
+            </div>
+          </div>
+        </div>
+        <template if:true={isModalRelate}>
+          <header class="header1">
+            <div class="search-section">
+              <div class="floating-label-new">
+                <span class="label-text-drop">Start Date</span>
+                <lightning-input
+                  type="date"
+                  label="Start Date"
+                  name="start"
+                  value={startDate}
+                  variant="label-hidden"
+                  onchange={handleDateChange}
+                ></lightning-input>
+              </div>
+              <div class="floating-label-new">
+                <span class="label-text-drop">End Date</span>
+                <lightning-input
+                  type="date"
+                  label="End Date"
+                  name="end"
+                  value={endDate}
+                  variant="label-hidden"
+                  onchange={handleDateChange}
+                ></lightning-input>
+              </div>
+  <!-- <div class="floating-label-new">
+      <span class="label-text-drop">{participantPreferredName}</span>
+      <c-tesseract-apps-multi-combobox
+          placeholder="Select Participants"
+          options={ParticipantOptions}
+          value={partcipantIdList}
+          onchange={handleServiceStaffchange}>
+      </c-tesseract-apps-multi-combobox>
+  </div> -->
+              <!-- <lightning-button  variant="brand"  label="Participants" title="Participants"  onclick={handleCheckBoxVisible}> </lightning-button> -->
+              <!-- <i
+                class="material-icons"
+                title={participantPreferredName}
+                onclick={handleCheckBoxVisible}
+                >filter_alt</i
+              > -->
+            </div>
+            <div class="action-section">
+              <template if:true={addServiceVisible}>
+                <template if:false={generatedflag}>
+              <template if:false={cancelledflag}>
+                  <lightning-button
+                  variant="brand"
+                  label="Add Service"
+                  title="Add Service"
+                  onclick={handleAddService}
+                  class="slds-m-left_small"
+                >
+                </lightning-button>
+              </template>
+              </template>
+              </template>
+
+            
+              <template if:false={generatedflag}>
+                <lightning-button
+                  variant="brand"
+                  label="Generate Invoice"
+                  title="Generate Invoice"
+                  onclick={handleGenerateInvoice}
+                  disabled={disableBool}
+                >
+                </lightning-button>
+              </template>
+              <!-- <lightning-button
+                variant="brand"
+                label="Back"
+                title="Back"
+                onclick={HandleBack}
+                style="margin-left: 1px"
+              >
+              </lightning-button> -->
+            </div>
+          </header>
+        </template>
+      </div>
+    </template>
+
+    <div class="main-content-wrapper">
+      <template if:true={participantCheckBox}>
+        <div class="sidebar">
+          <div class="close-btn" onclick={handleCheckBoxVisible}>&times;</div>
+
+          <div style="border-radius: 5px 5px 0 0">
+            <h5 class="facility-header">{participantPreferredName}</h5>
+            <div
+              class="box-facility-role"
+              style="
+                margin-bottom: 10px;
+                padding: 0px 15px;
+                overflow-x: HIDDEN;
+                overflow-y: AUTO;
+                max-height: 250px;
+              "
+            >
+              <lightning-checkbox-group
+                label=""
+                name="progress"
+                options={ParticipantOptions}
+                value={partcipantIdList}
+                onchange={handleServiceStaffchange}
+              ></lightning-checkbox-group>
+            </div>
+          </div>
+          <div style="border-radius: 5px 5px 0 0">
+            <h5 class="facility-header">Status</h5>
+            <div
+              class="box-facility-role"
+              style="
+                margin-bottom: 10px;
+                padding: 0px 15px;
+                overflow-x: HIDDEN;
+                overflow-y: AUTO;
+                max-height: 120px;
+              "
+            >
+              <lightning-checkbox-group
+                label=""
+                name="progress"
+                options={serviceStatusOption}
+                value={statusService}
+                onchange={handleServiceChange}
+              ></lightning-checkbox-group>
+            </div>
+          </div>
+        </div>
+      </template>
+      
+      <template if:true={pendingflag}>
+        <template if:true={isInvoiceflag}>
+          <div style="padding: 1% 1% 0 2%; flex-shrink: 0;">
+            <header class="bulk-action-header">
+                <div class="table-title table-header">{participantPreferredName} Services</div>
+                <div class="action-section" style="padding-bottom:1%; display:flex; gap:12px; align-items:center; flex-wrap:nowrap;">
+                    <div style="min-width:150px;">
+                        <div class="floating-label-new">
+                            <span class="label-text-drop">Plan Type</span>
+                            <lightning-combobox
+                                name="planType"
+                                value={servicesPlanType}
+                                options={planTypeOptions}
+                                variant="label-hidden"
+                                onchange={handlePlanTypeChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+                    <div style="min-width:180px;">
+                        <div class="floating-label-new">
+                            <span class="label-text-drop">{staffPreferredName}</span>
+                            <lightning-input
+                                label="Client ID or Name"
+                                onchange={handleSearchInput}
+                                type="search"
+                                variant="label-hidden"
+                                value={searchKey}>
+                            </lightning-input>
+                        </div>
+                    </div>
+                    <div style="min-width:200px;">
+                        <div class="floating-label-new">
+                            <span class="label-text-drop">{participantPreferredName}</span>
+                            <c-tesseract-apps-multi-combobox
+                                placeholder="Select Participants"
+                                options={ParticipantOptions}
+                                value={partcipantIdList}
+                                onchange={handleServiceStaffchange}>
+                            </c-tesseract-apps-multi-combobox>
+                        </div>
+                    </div>
+                </div>
+            </header>
+          </div>
+          
+          <div class="slds-grow" style="min-height:0; display: flex; flex-direction: column; padding: 0 1% 1% 1%;">
+            <template if:true={noRecordsFlag}>
+              <div class="no-data">
+                <p>No records found</p>
+              </div>
+            </template>
+            <template if:false={noRecordsFlag}>
+              <div class="table-container yourInvoiceTable" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                <div class="header-wrapper">
+                  <table class="staff-table fixed-table">
+                    <thead>
+                      <tr>
+                        <th class="table-th tableCheckbox">
+                          <lightning-input
+                            type="checkbox"
+                            onchange={handleSelectAll}>
+                          </lightning-input>
+                        </th>
+                        <th class="table-th">{staffPreferredName} Name</th>
+                        <th class="table-th">{participantPreferredName} Name</th>
+                        <!-- <th class="table-th">Service Type</th> -->
+                        <th class="table-th">Service Item Name</th>
+                        <th class="table-th">Entity Name</th>
+                        <th class="table-th">Service Date</th>
+                        <th class="table-th">Billable Hours</th>
+                        <!-- <th class="table-th">Reimbursement</th> -->
+                        <th class="table-th">Claim</th>
+                        <th class="table-th">Unit Price</th>
+                        <th class="table-th">GST</th>
+                        <th class="table-th">Amount</th>
+                        <th class="table-th">Status</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
+                <div class="table-body custom-scroll">
+                  <table class="staff-table fixed-table">
+                    <tbody>
+                      <template for:each={accList} for:item="acc">
+                        <tr key={acc.Id} class="table-row">
+                          <td class="table-td tableCheckbox">
+                            <lightning-input
+                              type="checkbox"
+                              checked={acc.isChecked}
+                              data-id={acc.Id}
+                              data-status={acc.Status__c}
+                              data-bill={acc.Bill_Participant__c}
+                              data-fundstrackerid={acc.fundsTrackerId}
+                              onchange={handleCheckboxChange}
+                            ></lightning-input>
+                          </td>
+                          <td class="table-td description" title={acc.Resource_Name__c}>{acc.Resource_Name__c}</td>
+                          <td class="table-td description" title={acc.participantFullName}>
+                            {acc.participantFullName}
+                          </td>
+                          <!-- <td class="table-td description">{acc.Service_Type_Name__c}</td> -->
+                          <td class="table-td description" title={acc.Support_Item_Name__c}>{acc.Support_Item_Name__c}</td>
+                          <!-- <td class="table-td description" title={acc.serviceEntityName}>{acc.serviceEntityName}</td> -->
+                          <td class="table-td bulkInvoiceTabledropdown">
+                            <template if:true={acc.isEditingServiceEntity}>
+                              <div class="qty-edit-container">
+                                <c-tesseract-apps-single-combobox
+                                  variant="label-hidden"
+                                  value={acc.serviceEntityId}
+                                  options={entityOptions} 
+                                  data-id={acc.Id}
+                                  onchange={handleServiceEntityChange}
+                                  class="qty-value">
+                                </c-tesseract-apps-single-combobox>
+                                <a
+                                  href="javascript:void(0)"
+                                  class="save-link"
+                                  title="Save"
+                                  data-id={acc.Id}
+                                  onclick={saveServiceEntityRow}
+                                >
+                                  <i class="material-icons save-icon">check</i>
+                                </a>
+                              </div>
+                            </template>
+                            <template if:false={acc.isEditingServiceEntity}>
+                              <div class="qty-edit-container">
+                                <span class="qty-value-myob">{acc.serviceEntityName}</span>
+                                <!-- <template if:true={invoice.isXeroInvoiceMissing}> -->
+                                  <a
+                                    href="javascript:void(0)"
+                                    data-id={acc.Id}
+                                    onclick={enableServiceEntityEdit}
+                                    title="Edit Entity"
+                                  >
+                                    <i class="material-icons edit-icon">edit</i>
+                                  </a>
+                                <!-- </template> -->
+                              </div>
+                            </template>
+                          </td>
+                          <td class="table-td">{acc.ServiceDate}</td>
+                          <td class="table-td">
+                            <template if:true={acc.isEditingQty}>
+                              <div class="qty-edit-container">
+                                <lightning-input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={acc.Qty__c}
+                                  variant="label-hidden"
+                                  onchange={handleQtyChange}
+                                  data-id={acc.Id}
+                                  data-quantity={acc.Qty__c}
+                                  onkeydown={handleQtyKeyDown}
+                                  class="qty-value"
+                                ></lightning-input>
+                                <a
+                                  href="javascript:void(0)"
+                                  class="save-link"
+                                  data-id={acc.Id}
+                                  title="Save"
+                                  onclick={saveRow}
+                                >
+                                  <i class="material-icons save-icon">check</i>
+                                </a>
+                              </div>
+                            </template>
+                            <template if:false={acc.isEditingQty}>
+                              <div class="qty-edit-container">
+                                <span class="qty-value">{acc.Qty__c}</span>
+                                <a
+                                  href="javascript:void(0)"
+                                  data-id={acc.Id}
+                                  data-status={acc.Status__c}
+                                  data-quantity={acc.Qty__c}
+                                  onclick={enableQtyEdit}
+                                  title="Edit Service"
+                                >
+                                  <i class="material-icons edit-icon">edit</i>
+                                </a>
+                              </div>
+                            </template>
+                          </td>
+                          <td class="table-td">{acc.reimbursementAmount}</td>
+                          <td class="table-td">
+                            <lightning-formatted-number
+                              value={acc.unitprice}
+                              format-style="currency"
+                              currency-code="AUD">
+                            </lightning-formatted-number>
+                          </td>
+                          <td class="table-td">{acc.GST__c}</td>
+                          <td class="table-td">
+                            <lightning-formatted-number
+                              value={acc.participantInvoiceAmount}
+                              format-style="currency"
+                              currency-code="AUD">
+                            </lightning-formatted-number>
+                          </td>
+                          <td class="table-td">
+                            <span class="slds-badge status-badge pending-status">
+                              {acc.uistatus}
+                            </span>
+                            <template if:true={acc.showCreateCompanyIcon}>
+                              <a
+                                href="javascript:void(0);"
+                                data-id={acc.Id}
+                                data-facility-id={acc.matchedFacilityId}
+                                data-fundstrackerid={acc.fundsTrackerId}
+                                data-participant-id={acc.participantId}
+                                data-company-entity-id={acc.companyEntityId}
+                                data-entity-profile-id={acc.entityProfileId}
+                                onclick={handleOpenCreateCompany}
+                                title="Create Company/Entity"
+                                class="status-icon-link"
+                              >
+                                <i class="material-icons view-icon">add_home_work</i>
+                              </a>
+                            </template>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </template>
+          </div>
+          <template if:false={noRecordsFlag}>
+            <div class="fixed-pagination">
+              <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread -p-around_medium">
+                <div class="slds-list_inline slds-grid slds-grid_vertical-align-center">
+                  <span class="slds-m-right_x-small">Page Size:</span>
+                  <div class="slds-select_container">
+                    <select class="slds-select" onchange={handleRecordsPerPage}>
+                      <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option.value} value={option.value} selected={option.selected}>
+                          {option.label}
+                        </option>
+                      </template>
+                    </select>
+                  </div>
+                </div>
+                <div class="slds-align_absolute-center">
+                  <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    alternative-text="first page"
+                    onclick={firstPage}
+                    class="slds-m-right_x-small">
+                  </lightning-button>
+                  <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    alternative-text="Previous"
+                    onclick={previousPage}
+                    class="slds-m-right_x-small">
+                  </lightning-button>
+                  <span class="slds-badge slds-m-horizontal_x-small">
+                    Showing {pageNumber} of {totalPages} Page(s)
+                  </span>
+                  <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    alternative-text="Next"
+                    onclick={nextPage}
+                    icon-position="right"
+                    class="slds-m-left_x-small">
+                  </lightning-button>
+                  <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    alternative-text="last page"
+                    onclick={lastPage}
+                    icon-position="right"
+                    class="slds-m-left_x-small">
+                  </lightning-button>
+                </div>
+                <div class="slds-clearfix">
+                  <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {totalRecords}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+      </template>
+
+      <template if:true={generatedflag}>
+        <div style="padding: 1% 1% 0 2%; flex-shrink: 0;">
+          <header class="bulk-action-header">
+              <div class="table-title table-header">{participantPreferredName} Invoices</div>
+              <div class="action-section" style="padding-bottom:1%; display:flex; gap:12px; align-items:center; flex-wrap:nowrap;">
+                  <div style="min-width:180px;">
+                      <div class="floating-label-new">
+                          <span class="label-text-drop">Plan Type</span>
+                          <lightning-combobox
+                              value={invoicePlanType}
+                              options={planTypeOptions}
+                              onchange={handleInvoicePlanTypeChange}
+                              variant="label-hidden">
+                          </lightning-combobox>
+                      </div>
+                  </div>
+                  <div style="min-width:200px;">
+                      <div class="floating-label-new">
+                          <span class="label-text-drop">{participantPreferredName}</span>
+                          <c-tesseract-apps-multi-combobox
+                              placeholder="Select Participants"
+                              options={ParticipantOptions}
+                              value={invoicePartcipantIdList}
+                              onchange={handleInvoiceParticipantChange}>
+                          </c-tesseract-apps-multi-combobox>
+                      </div>
+                  </div>
+                  <template if:true={showExportCSV}>
+                      <lightning-button
+                          label="Export CSV"
+                          title="Export CSV"
+                          variant="brand"
+                          onclick={handleExportCSV}
+                          class="slds-m-left_small">
+                      </lightning-button>
+                  </template>
+                  <lightning-button
+                      variant="brand"
+                      label="Bulk Action"
+                      title="Bulk Action"
+                      onclick={handleBulkInvoiceEmail}
+                      disabled={disableBulkInvoice}>
+                  </lightning-button>
+              </div>
+          </header>
+        </div>
+        
+        <div class="slds-grow" style="min-height:0; display: flex; flex-direction: column; padding: 0 1% 1% 1%;">
+          <template if:true={noRecordsInvoiceFlag}>
+            <div class="no-data">
+              <p>No records found</p>
+            </div>
+          </template>
+          <template if:false={noRecordsInvoiceFlag}>
+            <div class={tableContainerClass} style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+              <!-- HEADER -->
+              <div class="header-wrapper">
+                <table class="staff-table fixed-table">
+                  <thead>
+                    <tr>
+                      <th class="table-th tableCheckbox">
+                        <lightning-input
+                          type="checkbox"
+                          variant="label-hidden"
+                          checked={isIssuedHeaderChecked}
+                          onchange={handleSelectAllInvoices}>
+                        </lightning-input>
+                      </th>
+                      <th class="table-th">Invoice No</th>
+                      <th class="table-th">{participantPreferredName} Name</th>
+                      <th class="table-th">Entity Name</th>
+                      <th class="table-th">Ledger Item</th>
+                      <th class="table-th">Date Generated</th>
+                      <th class="table-th">GST</th>
+                      <th class="table-th">Amount</th>
+                      <th class="table-th">Status</th>
+                      <template if:true={accountingServiceflag}>
+                        <th class="table-th">{accountingStatusLabel}</th>
+                      </template>
+                      <th class="table-th">Invoice Type</th>
+                      <th class="table-th center">Action</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <!-- BODY -->
+              <div class="table-body custom-scroll">
+                <table class="staff-table fixed-table">
+                  <tbody>
+                    <template for:each={issuedPageList} for:item="invoice">
+                      <tr key={invoice.Id} class="table-row">
+                        <td class="table-td tableCheckbox">
+                          <lightning-input
+                            type="checkbox"
+                            variant="label-hidden"
+                            checked={invoice.isChecked}
+                            data-id={invoice.Id}
+                            onchange={handleBulkInvoiceCheckboxChange}>
+                          </lightning-input>
+                        </td>
+                        <td class="table-td" title={invoice.invoiceNo}>{invoice.invoiceNo}</td>
+                        <td class="table-td">{invoice.fileReference}</td>
+                        <td class="table-td generatedtabledropdown">
+                          <template if:true={invoice.isEditingEntity}>
+                            <div class="qty-edit-container">
+                              <c-tesseract-apps-single-combobox
+                                variant="label-hidden"
+                                value={invoice.invoiceEntityName}
+                                options={entityOptions} 
+                                data-id={invoice.Id}
+                                onchange={handleEntityChange}
+                                class="qty-value">
+                              </c-tesseract-apps-single-combobox>
+                              <a
+                                href="javascript:void(0)"
+                                class="save-link"
+                                title="Save"
+                                data-id={invoice.Id}
+                                onclick={saveentityRow}
+                              >
+                                <i class="material-icons save-icon">check</i>
+                              </a>
+                            </div>
+                          </template>
+                          <template if:false={invoice.isEditingEntity}>
+                            <div class="qty-edit-container">
+                              <span class="qty-value-myob">{invoice.invoiceEntityName}</span>
+                              <template if:true={invoice.isXeroInvoiceMissing}>
+                                <a
+                                  href="javascript:void(0)"
+                                  data-id={invoice.Id}
+                                  onclick={enableEntityEdit}
+                                  title="Edit Entity"
+                                >
+                                  <i class="material-icons edit-icon">edit</i>
+                                </a>
+                              </template>
+                            </div>
+                          </template>
+                        </td>
+                        <td class="table-td">{invoice.entityLedgerItem}</td>
+                        <td class="table-td">{invoice.invoiceDate}</td>
+                        <td class="table-td">
+                          <lightning-formatted-number
+                            value={invoice.GST__c}
+                            format-style="currency"
+                            currency-code="AUD"
+                            minimum-fraction-digits="2"
+                            maximum-fraction-digits="2">
+                          </lightning-formatted-number>
+                        </td>
+                        <td class="table-td">
+                          <lightning-formatted-number
+                            value={invoice.Total_Amount__c}
+                            format-style="currency"
+                            currency-code="AUD"
+                            minimum-fraction-digits="2"
+                            maximum-fraction-digits="2">
+                          </lightning-formatted-number>
+                        </td>
+                       <!-- <td class="table-td">{invoice.Status__c}</td> -->
+                                <td class="table-td-combobox">
+                                 <template if:true={invoice.isEditingStatus}>
+                                        <div class="qty-edit-container">
+                                           
+                                           <lightning-combobox
+                                              variant="label-hidden"
+                                              value={invoice.Status__c}
+                                              options={statusOptions}
+                                              data-id={invoice.Id}
+                                              dropdown-alignment="auto"
+                                              dropdown-class="slds-dropdown_fluid"                                              
+                                              onchange={handleStatusChange}>
+                                          </lightning-combobox>
+
+                                            <a
+                                                href="javascript:void(0)"
+                                                class="save-link"
+                                                title="Save"
+                                                data-id={invoice.Id}
+                                                onclick={saveStatusRow}>
+                                                <i class="material-icons save-icon">check</i>
+                                            </a>
+                                        </div>
+                                    </template>
+
+                                    <template if:false={invoice.isEditingStatus}>
+                                        <div class="qty-edit-container">
+                                            <span class="qty-value-myob">
+                                                {invoice.Status__c}
+                                            </span>
+
+                                            <a
+                                                href="javascript:void(0)"
+                                                data-id={invoice.Id}
+                                                onclick={enableStatusEdit}
+                                                title="Edit Status">
+                                                <i class="material-icons edit-icon">edit</i>
+                                            </a>
+                                        </div>
+                                    </template>
+                                </td>
+                        <template if:true={accountingServiceflag}>
+                          <td class="table-td">{invoice.xeroInvoiceStatus}</td>
+                        </template>
+                        <td class="table-td">{invoice.invoiceType}</td>
+                        <td class="table-td action-col center">
+                          <div class="center">
+                            <a 
+                              href={invoice.amazonUrl}
+                              data-id={invoice.Id}
+                              data-url={invoice.amazonUrl}
+                              onclick={handleView}
+                              title="View Invoice"
+                            >
+                              <i class="material-icons view-icon">visibility</i>
+                            </a>
+                            <a 
+                              href={invoice.amazonUrl}
+                              data-id={invoice.Id}
+                              data-url={invoice.amazonUrl}
+                              onclick={handleCancel}
+                              title="Cancel Invoice"
+                            >
+                              <i class="material-icons view-icon">cancel</i>
+                            </a>
+                            <a href={invoice.amazonUrl}
+                              data-id={invoice.Id}
+                              data-url={invoice.amazonUrl}
+                              onclick={handleDownload}
+                              title="Download Invoice" 
+                            >
+                              <i class="material-icons view-icon">download</i>
+                            </a>
+                            &nbsp;
+                            <a      
+                              href="javascript:void(0)"
+                              data-id={invoice.Id} 
+                              data-url={invoice.amazonUrl}  
+                              data-status={invoice.Status__c}
+                              data-invoicedate={invoice.invoiceDate}  
+                              onclick={handleEmailAction}
+                              name="email" title="Send Email"
+                              style="text-decoration: none;">
+                              <i class="material-icons view-icon" data-id={invoice.Id}>outgoing_mail</i>
+                              <span class="email-count">{invoice.emailCount}</span>
+                            </a>
+                            <template if:true={accountingServiceflag}>
+                              <a
+                                href="javascript:void(0)"
+                                data-id={invoice.Id}
+                                data-url={invoice.amazonUrl}
+                                data-xerocontactid={invoice.xeroContactId}
+                                onclick={handleAddToXero}
+                                title={invoice.addToXeroTitle}
+                                class={invoice.addToXeroClass}
+                              >
+                                <i class="material-icons view-icon">inbox_text_share</i>
+                              </a>
+                            </template>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+        </div>
+        <template if:false={noRecordsInvoiceFlag}>
+          <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination">
+            <div class="slds-col">
+              <div class="slds-list_inline slds-p-bottom_xx-small">
+                <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage" style="padding-top: 4%">Page Size:</label>
+                <div class="slds-select_container">
+                  <select class="slds-select" onchange={handleRecordsPerPageIssued}>
+                    <template for:each={issuedPageSizeOptions} for:item="option">
+                      <option key={option.value} value={option.value} selected={option.selected}>{option.label}</option>
+                    </template>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="slds-align_absolute-center">
+              <lightning-button
+                disabled={issuedDisableFirst}
+                icon-name="utility:jump_to_left"
+                label="First"
+                class="slds-p-horizontal_x-small"
+                alternative-text="first page"
+                onclick={firstPageIssued}
+              ></lightning-button>
+              <lightning-button
+                disabled={issuedDisableFirst}
+                icon-name="utility:chevronleft"
+                label="Previous"
+                alternative-text="Previous"
+                onclick={previousPageIssued}
+              ></lightning-button>
+              &nbsp;
+              <span class="slds-badge">Showing {issuedPageNumber} &nbsp;of&nbsp; {issuedTotalPages} &nbsp;&nbsp;Page(s)</span>
+              &nbsp;
+              <lightning-button
+                disabled={issuedDisableLast}
+                icon-name="utility:chevronright"
+                label="Next"
+                alternative-text="Next"
+                onclick={nextPageIssued}
+                class="slds-p-horizontal_x-small"
+                icon-position="right"
+              ></lightning-button>
+              <lightning-button
+                disabled={issuedDisableLast}
+                icon-name="utility:jump_to_right"
+                label="Last"
+                alternative-text="last page"
+                onclick={lastPageIssued}
+                icon-position="right"
+              ></lightning-button>
+            </div>
+            <div class="slds-clearfix">
+              <div class="slds-float_right">
+                <span class="slds-badge"> Total Records: {issuedTotal}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </template>
+
+      <template if:true={cancelledflag}>
+        <div style="padding: 1% 1% 0 2%; flex-shrink: 0;">
+          <header class="bulk-action-header">
+              <div class="table-title table-header">{participantPreferredName} Invoices</div>
+              <div class="action-section" style="padding-bottom:1%; display:flex; gap:12px; align-items:center; flex-wrap:nowrap;">
+                  <div style="min-width:180px;">
+                      <div class="floating-label-new">
+                          <span class="label-text-drop">Plan Type</span>
+                          <lightning-combobox
+                              value={invoicePlanType}
+                              options={planTypeOptions}
+                              onchange={handleInvoicePlanTypeChange}
+                              variant="label-hidden">
+                          </lightning-combobox>
+                      </div>
+                  </div>
+                  <div style="min-width:200px;">
+                      <div class="floating-label-new">
+                          <span class="label-text-drop">{participantPreferredName}</span>
+                          <c-tesseract-apps-multi-combobox
+                              placeholder="Select Participants"
+                              options={ParticipantOptions}
+                              value={invoicePartcipantIdList}
+                              onchange={handleInvoiceParticipantChange}>
+                          </c-tesseract-apps-multi-combobox>
+                      </div>
+                  </div>
+              </div>
+          </header>
+        </div>
+        
+        <div class="slds-grow" style="min-height:0; display: flex; flex-direction: column; padding: 0 1% 1% 1%;">
+          <template if:true={noRecordsInvoiceFlag}>
+            <div class="no-data">
+              <p>No records found</p>
+            </div>
+          </template>
+          <template if:false={noRecordsInvoiceFlag}>
+            <div class="table-container cancelledInvoiceTable accounting" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+              <!-- HEADER -->
+              <div class="header-wrapper">
+                <table class="staff-table fixed-table">
+                  <thead>
+                    <tr>
+                      <th class="table-th">Invoice No</th>
+                      <th class="table-th">{participantPreferredName} Name</th>
+                      <th class="table-th">Entity Name</th>
+                      <th class="table-th">Ledger Item</th>
+                      <th class="table-th">Date Generated</th>
+                      <th class="table-th">GST</th>
+                      <th class="table-th">Amount</th>
+                      <th class="table-th">Status</th>
+                      <th class="table-th">Invoice Type</th>
+                      <th class="table-th center">Action</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <!-- BODY -->
+              <div class="table-body custom-scroll">
+                <table class="staff-table fixed-table">
+                  <tbody>
+                    <template for:each={cancelledPageList} for:item="invoice">
+                      <tr key={invoice.Id} class="table-row">
+                        <td class="table-td" title={invoice.invoiceNo}>{invoice.invoiceNo}</td>
+                        <td class="table-td">{invoice.fileReference}</td>
+                        <td class="table-td">{invoice.invoiceEntityName}</td>
+                        <td class="table-td">{invoice.entityLedgerItem}</td>
+                        <td class="table-td">{invoice.invoiceDate}</td>
+                        <td class="table-td">
+                          <lightning-formatted-number
+                            value={invoice.GST__c}
+                            format-style="currency"
+                            currency-code="AUD"
+                            minimum-fraction-digits="2"
+                            maximum-fraction-digits="2">
+                          </lightning-formatted-number>
+                        </td>
+                        <td class="table-td">
+                          <lightning-formatted-number
+                            value={invoice.Total_Amount__c}
+                            format-style="currency"
+                            currency-code="AUD"
+                            minimum-fraction-digits="2"
+                            maximum-fraction-digits="2">
+                          </lightning-formatted-number>
+                        </td>
+                        <td class="table-td">{invoice.Status__c}</td>
+                        <td class="table-td">{invoice.invoiceType}</td>
+                        <td class="table-td action-col center">
+                          <a
+                            href={invoice.amazonUrl}
+                            data-id={invoice.Id}
+                            data-url={invoice.amazonUrl}
+                            onclick={handleView}
+                            title="View Invoice"
+                          >
+                            <i class="material-icons view-icon" style="cursor: pointer">visibility</i>
+                          </a>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+        </div>
+        <template if:false={noRecordsInvoiceFlag}>
+          <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination">
+            <div class="slds-col">
+              <div class="slds-list_inline slds-p-bottom_xx-small">
+                <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage" style="padding-top: 4%">Page Size:</label>
+                <div class="slds-select_container">
+                  <select class="slds-select" onchange={handleRecordsPerPageCancelled}>
+                    <template for:each={cancelledPageSizeOptions} for:item="option">
+                      <option key={option.value} value={option.value} selected={option.selected}>{option.label}</option>
+                    </template>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="slds-align_absolute-center">
+              <lightning-button
+                disabled={cancelledDisableFirst}
+                icon-name="utility:jump_to_left"
+                label="First"
+                class="slds-p-horizontal_x-small"
+                alternative-text="first page"
+                onclick={firstPageCancelled}
+              ></lightning-button>
+              <lightning-button
+                disabled={cancelledDisableFirst}
+                icon-name="utility:chevronleft"
+                label="Previous"
+                alternative-text="Previous"
+                onclick={previousPageCancelled}
+              ></lightning-button>
+              &nbsp;
+              <span class="slds-badge">Showing {cancelledPageNumber} &nbsp;of&nbsp; {cancelledTotalPages} &nbsp;&nbsp;Page(s)</span>
+              &nbsp;
+              <lightning-button
+                disabled={cancelledDisableLast}
+                icon-name="utility:chevronright"
+                label="Next"
+                alternative-text="Next"
+                onclick={nextPageCancelled}
+                class="slds-p-horizontal_x-small"
+                icon-position="right"
+              ></lightning-button>
+              <lightning-button
+                disabled={cancelledDisableLast}
+                icon-name="utility:jump_to_right"
+                label="Last"
+                alternative-text="last page"
+                onclick={lastPageCancelled}
+                icon-position="right"
+              ></lightning-button>
+            </div>
+            <div class="slds-clearfix">
+              <div class="slds-float_right">
+                <span class="slds-badge"> Total Records: {cancelledTotal}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </template>
+
+      <template if:true={totalvalueflag}>
+        <div class="custom-scroll" style="display: flex; flex-direction: column; gap: 20px; height: 100%; min-height: 0; padding: 0 1% 1% 1%; overflow-y: auto;">
+          <template if:true={isInvoiceflag}>
+            <div class="services-card">
+              <div class="card-header" style="padding: 1% 1% 0 2%">
+                  <header class="bulk-action-header">
+                      <div class="table-title table-header">{participantPreferredName} Services</div>
+                      <div class="action-section" style="padding-bottom:1%; display:flex; gap:12px; align-items:center; flex-wrap:nowrap;">
+                          <div style="min-width:150px;">
+                              <div class="floating-label-new">
+                                  <span class="label-text-drop">Plan Type</span>
+                                  <lightning-combobox
+                                      name="planType"
+                                      value={servicesPlanType}
+                                      options={planTypeOptions}
+                                      variant="label-hidden"
+                                      onchange={handlePlanTypeChange}>
+                                  </lightning-combobox>
+                              </div>
+                          </div>
+                          <div style="min-width:180px;">
+                              <div class="floating-label-new">
+                                  <span class="label-text-drop">{staffPreferredName}</span>
+                                  <lightning-input
+                                      label="Client ID or Name"
+                                      onchange={handleSearchInput}
+                                      type="search"
+                                      variant="label-hidden"
+                                      value={searchKey}>
+                                  </lightning-input>
+                              </div>
+                          </div>
+                          <div style="min-width:200px;">
+                              <div class="floating-label-new">
+                                  <span class="label-text-drop">{participantPreferredName}</span>
+                                  <c-tesseract-apps-multi-combobox
+                                      placeholder="Select Participants"
+                                      options={ParticipantOptions}
+                                      value={partcipantIdList}
+                                      onchange={handleServiceStaffchange}>
+                                  </c-tesseract-apps-multi-combobox>
+                              </div>
+                          </div>
+                      </div>
+                  </header>
+              </div>
+              <template if:true={noRecordsFlag}>
+                <div class="no-data">
+                  <p>No records found</p>
+                </div>
+              </template>
+              <template if:false={noRecordsFlag}>
+                <div class="slds-grow" style="min-height: 0; flex: 1; display: flex; flex-direction: column; padding: 0 1% 1% 1%;">
+                  <div class="table-container yourInvoiceTable" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                    <!-- HEADER -->
+                    <div class="header-wrapper">
+                      <table class="staff-table fixed-table">
+                        <thead>
+                          <tr>
+                            <th class="table-th tableCheckbox">
+                              <lightning-input type="checkbox" onchange={handleSelectAll}></lightning-input>
+                            </th>
+                            <th class="table-th">{staffPreferredName} Name</th>
+                            <th class="table-th">{participantPreferredName} Name</th>
+                            <!-- <th class="table-th">Service Type</th> -->
+                            <th class="table-th">Service Item Name</th>
+                            <th class="table-th">Entity Name</th>
+                            <th class="table-th">Service Date</th>
+                            <th class="table-th">Billable Hours</th>
+                            <!-- <th class="table-th">Reimbursement</th> -->
+                            <th class="table-th">Claim</th>
+                            <th class="table-th">Unit Price</th>
+                            <th class="table-th">GST</th>
+                            <th class="table-th">Amount</th>
+                            <th class="table-th">Status</th>
+                          </tr>
+                        </thead>
+                      </table>
+                    </div>
+                    <!-- BODY -->
+                    <div class="table-bodytotal custom-scroll">
+                      <table class="staff-table fixed-table">
+                        <tbody>
+                          <template for:each={accList} for:item="acc">
+                            <tr key={acc.Id} class="table-row">
+                              <td class="table-td tableCheckbox">
+                                <lightning-input
+                                  type="checkbox"
+                                  checked={acc.isChecked}
+                                  data-id={acc.Id}
+                                  data-status={acc.Status__c}
+                                  data-bill={acc.Bill_Participant__c}
+                                  data-fundstrackerid={acc.fundsTrackerId}
+                                  onchange={handleCheckboxChange}
+                                ></lightning-input>
+                              </td>
+                              <td class="table-td description" title={acc.Resource_Name__c}>{acc.Resource_Name__c}</td>
+                              <td class="table-td description" title={acc.participantFullName}>{acc.participantFullName}</td>
+                              <!-- <td class="table-td description">{acc.Service_Type_Name__c}</td> -->
+                              <td class="table-td description" title={acc.Support_Item_Name__c}>{acc.Support_Item_Name__c}</td>
+                              <!-- <td class="table-td description" title={acc.serviceEntityName}>{acc.serviceEntityName}</td> -->
+                              <td class="table-td bulkInvoiceTabledropdown">
+                                  <template if:true={acc.isEditingServiceEntity}>
+                                    <div class="qty-edit-container">
+                                      <c-tesseract-apps-single-combobox
+                                        variant="label-hidden"
+                                        value={acc.serviceEntityId}
+                                        options={entityOptions} 
+                                        data-id={acc.Id}
+                                        onchange={handleServiceEntityChange}
+                                        class="qty-value">
+                                      </c-tesseract-apps-single-combobox>
+                                      <a
+                                        href="javascript:void(0)"
+                                        class="save-link"
+                                        title="Save"
+                                        data-id={acc.Id}
+                                        onclick={saveServiceEntityRow}
+                                      >
+                                        <i class="material-icons save-icon">check</i>
+                                      </a>
+                                    </div>
+                                  </template>
+                                  <template if:false={acc.isEditingServiceEntity}>
+                                    <div class="qty-edit-container">
+                                      <span class="qty-value-myob">{acc.serviceEntityName}</span>
+                                      <!-- <template if:true={invoice.isXeroInvoiceMissing}> -->
+                                        <a
+                                          href="javascript:void(0)"
+                                          data-id={acc.Id}
+                                          onclick={enableServiceEntityEdit}
+                                          title="Edit Entity"
+                                        >
+                                          <i class="material-icons edit-icon">edit</i>
+                                        </a>
+                                      <!-- </template> -->
+                                    </div>
+                                  </template>
+                                </td>
+                              <td class="table-td">{acc.ServiceDate}</td>
+                              <td class="table-td">
+                                <template if:true={acc.isEditingQty}>
+                                  <div class="qty-edit-container">
+                                    <lightning-input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      variant="label-hidden"
+                                      value={acc.Qty__c}
+                                      onchange={handleQtyChange}
+                                      data-id={acc.Id}
+                                      data-quantity={acc.Qty__c}
+                                      onkeydown={handleQtyKeyDown}
+                                      class="qty-value"
+                                    ></lightning-input>
+                                    <a href="javascript:void(0)" class="save-link" data-id={acc.Id} title="Save" onclick={saveRow}>
+                                      <i class="material-icons save-icon">check</i>
+                                    </a>
+                                  </div>
+                                </template>
+                                <template if:false={acc.isEditingQty}>
+                                  <div class="qty-edit-container">
+                                    <span class="qty-value">{acc.Qty__c}</span>
+                                    <a href="javascript:void(0)" data-id={acc.Id} data-status={acc.Status__c} data-quantity={acc.Qty__c} onclick={enableQtyEdit} title="Edit Service">
+                                      <i class="material-icons edit-icon">edit</i>
+                                    </a>
+                                  </div>
+                                </template>
+                              </td>
+                              <td class="table-td">{acc.reimbursementAmount}</td>
+                              <td class="table-td">
+                                <lightning-formatted-number value={acc.unitprice} format-style="currency" currency-code="AUD"></lightning-formatted-number>
+                              </td>
+                              <td class="table-td">{acc.GST__c}</td>
+                              <td class="table-td">
+                                <lightning-formatted-number value={acc.participantInvoiceAmount} format-style="currency" currency-code="AUD"></lightning-formatted-number>
+                              </td>
+                              <td class="table-td">
+                                <span class="status-badge pending-status">{acc.uistatus}</span>
+                                <template if:true={acc.showCreateCompanyIcon}>
+                                  <a
+                                    href="javascript:void(0);"
+                                    data-id={acc.Id}
+                                    data-facility-id={acc.matchedFacilityId}
+                                    data-fundstrackerid={acc.fundsTrackerId}
+                                    data-participant-id={acc.participantId}
+                                    data-company-entity-id={acc.companyEntityId}
+                                    data-entity-profile-id={acc.entityProfileId}
+                                    onclick={handleOpenCreateCompany}
+                                    title="Create Company/Entity"
+                                    class="status-icon-link"
+                                  >
+                                    <i class="material-icons view-icon">add_home_work</i>
+                                  </a>
+                                </template>
+                              </td>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                  <div class="fixed-pagination-total">
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread -p-around_medium">
+                      <div class="slds-list_inline slds-grid slds-grid_vertical-align-center">
+                        <span class="slds-m-right_x-small">Page Size:</span>
+                        <div class="slds-select_container">
+                          <select class="slds-select" onchange={handleRecordsPerPage}>
+                            <template for:each={pageSizeOptionsTotalServices} for:item="option">
+                              <option key={option.value} value={option.value} selected={option.selected}>{option.label}</option>
+                            </template>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="slds-align_absolute-center">
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" alternative-text="first page" onclick={firstPage} class="slds-m-right_x-small"></lightning-button>
+                        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage} class="slds-m-right_x-small"></lightning-button>
+                        <span class="slds-badge slds-m-horizontal_x-small">Showing {pageNumber} of {totalPages} Page(s)</span>
+                        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} icon-position="right" class="slds-m-left_x-small"></lightning-button>
+                        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right" class="slds-m-left_x-small"></lightning-button>
+                      </div>
+                      <div class="slds-clearfix">
+                        <div class="slds-float_right">
+                          <span class="slds-badge">Total Records: {totalRecords}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </template>
+            </div>
+            
+            <div class="services-card">
+              <div style="padding: 1% 1% 0 2%">
+                  <header class="bulk-action-header">
+                      <div class="table-title table-header">{participantPreferredName} Invoices</div>
+                      <div class="action-section" style="padding-bottom:1%; display:flex; gap:12px; align-items:center; flex-wrap:nowrap;">
+                          <div style="min-width:180px;">
+                              <div class="floating-label-new">
+                                  <span class="label-text-drop">Plan Type</span>
+                                  <lightning-combobox
+                                      value={invoicePlanType}
+                                      options={planTypeOptions}
+                                      onchange={handleInvoicePlanTypeChange}
+                                      variant="label-hidden">
+                                  </lightning-combobox>
+                              </div>
+                          </div>
+                          <div class="dropdown-wrapper" style="min-width:200px;">
+                              <div class="floating-label-new">
+                                  <span class="label-text-drop">{participantPreferredName}</span>
+                                  <div class="dropdown-host">
+                                  <c-tesseract-apps-multi-combobox
+                                      placeholder="Select Participants"
+                                      options={ParticipantOptions}
+                                      value={invoicePartcipantIdList}
+                                      onchange={handleInvoiceParticipantChange}>
+                                  </c-tesseract-apps-multi-combobox>
+                                  </div>
+                              </div>
+                          </div>
+                          <template if:true={showExportCSV}>
+                              <lightning-button
+                                  label="Export CSV"
+                                  title="Export CSV"
+                                  variant="brand"
+                                  onclick={handleExportCSV}
+                                  class="slds-m-left_small">
+                              </lightning-button>
+                          </template>
+                          <lightning-button
+                              variant="brand"
+                              label="Bulk Action"
+                              title="Bulk Action"
+                              onclick={handleBulkInvoiceEmail}
+                              disabled={disableBulkInvoice}>
+                          </lightning-button>
+                      </div>
+                  </header>
+              </div>
+              <template if:true={noRecordsInvoiceFlag}>
+                <div class="no-data">
+                  <p>No records found</p>
+                </div>
+              </template>
+              <template if:false={noRecordsInvoiceFlag}>
+                <div class="slds-grow" style="min-height: 0; flex: 1; display: flex; flex-direction: column; padding: 0% 1% 0 1%;">             
+                    <div class="table-container bulkInvoiceTable accounting" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                      <!-- HEADER -->
+                      <div class="header-wrapper">
+                        <table class="staff-table fixed-table">
+                          <thead>
+                            <tr>
+                              <th class="table-th tableCheckbox">
+                                <lightning-input
+                                  type="checkbox"
+                                  variant="label-hidden"
+                                  checked={isBulkHeaderChecked}
+                                  onchange={handleSelectAllInvoices}>
+                                </lightning-input>
+                              </th>
+                              <th class="table-th">Invoice No</th>
+                              <th class="table-th">{participantPreferredName} Name</th>
+                              <th class="table-th">Entity Name</th>
+                              <th class="table-th">Ledger Item</th>
+                              <th class="table-th">Date Generated</th>
+                              <th class="table-th">GST</th>
+                              <th class="table-th">Amount</th>
+                              <th class="table-th">Status</th>
+                              <th class="table-th">Invoice Type</th>
+                              <th class="table-th center">Action</th>
+                            </tr>
+                          </thead>
+                        </table>
+                      </div>
+                      <!-- BODY -->
+                      <div class="table-bodytotal custom-scroll">
+                        <table class="staff-table fixed-table">
+                          <tbody>
+                            <template for:each={bulkServices} for:item="invoice">
+                              <tr key={invoice.Id} class="table-row">
+                                <td class="table-td tableCheckbox">
+                                  <lightning-input
+                                    type="checkbox"
+                                    variant="label-hidden"
+                                    checked={invoice.isChecked}
+                                    data-id={invoice.Id}
+                                    onchange={handleBulkInvoiceCheckboxChange}>
+                                  </lightning-input>
+                                </td>
+                                <td class="table-td" title={invoice.invoiceNo}>{invoice.invoiceNo}</td>
+                                <td class="table-td">{invoice.fileReference}</td>
+                                <td class="table-td bulkInvoiceTabledropdown">
+                                  <template if:true={invoice.isEditingEntity}>
+                                    <div class="qty-edit-container">
+                                      <c-tesseract-apps-single-combobox
+                                        variant="label-hidden"
+                                        value={invoice.invoiceEntityName}
+                                        options={entityOptions} 
+                                        data-id={invoice.Id}
+                                        onchange={handleEntityChange}
+                                        class="qty-value">
+                                      </c-tesseract-apps-single-combobox>
+                                      <a
+                                        href="javascript:void(0)"
+                                        class="save-link"
+                                        title="Save"
+                                        data-id={invoice.Id}
+                                        onclick={saveentityRow}
+                                      >
+                                        <i class="material-icons save-icon">check</i>
+                                      </a>
+                                    </div>
+                                  </template>
+                                  <template if:false={invoice.isEditingEntity}>
+                                    <div class="qty-edit-container">
+                                      <span class="qty-value-myob">{invoice.invoiceEntityName}</span>
+                                      <template if:true={invoice.isXeroInvoiceMissing}>
+                                        <a
+                                          href="javascript:void(0)"
+                                          data-id={invoice.Id}
+                                          onclick={enableEntityEdit}
+                                          title="Edit Entity"
+                                        >
+                                          <i class="material-icons edit-icon">edit</i>
+                                        </a>
+                                      </template>
+                                    </div>
+                                  </template>
+                                </td>
+                                <td class="table-td">{invoice.entityLedgerItem}</td>
+                                <td class="table-td">{invoice.invoiceDate}</td>
+                                <td class="table-td">
+                                  <lightning-formatted-number
+                                    value={invoice.GST__c}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2">
+                                  </lightning-formatted-number>
+                                </td>
+                                <td class="table-td">
+                                  <lightning-formatted-number
+                                    value={invoice.Total_Amount__c}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2">
+                                  </lightning-formatted-number>
+                                </td>
+                                <!-- <td class="table-td">{invoice.Status__c}</td> -->
+                                <td class="table-td-combobox">
+                                 <template if:true={invoice.isEditingStatus}>
+                                        <div class="qty-edit-container">
+                                            <!-- <c-tesseract-apps-single-combobox
+                                                variant="label-hidden"
+                                                value={invoice.Status__c}
+                                                options={statusOptions}
+                                                data-id={invoice.Id}
+                                                onchange={handleStatusChange}
+                                                class="qty-value">
+                                            </c-tesseract-apps-single-combobox> -->
+                                              <lightning-combobox
+                                              variant="label-hidden"
+                                              value={invoice.Status__c}
+                                              options={statusOptions}
+                                              data-id={invoice.Id}
+                                              dropdown-alignment="auto"
+                                              dropdown-class="slds-dropdown_fluid"
+                                              onchange={handleStatusChange}>
+                                          </lightning-combobox>
+
+                                            <a
+                                                href="javascript:void(0)"
+                                                class="save-link"
+                                                title="Save"
+                                                data-id={invoice.Id}
+                                                onclick={saveStatusRow}>
+                                                <i class="material-icons save-icon">check</i>
+                                            </a>
+                                        </div>
+                                    </template>
+
+                                    <template if:false={invoice.isEditingStatus}>
+                                        <div class="qty-edit-container">
+                                            <span class="qty-value-myob">
+                                                {invoice.Status__c}
+                                            </span>
+
+                                            <a
+                                                href="javascript:void(0)"
+                                                data-id={invoice.Id}
+                                                onclick={enableStatusEdit}
+                                                title="Edit Status">
+                                                <i class="material-icons edit-icon">edit</i>
+                                            </a>
+                                        </div>
+                                    </template>
+                                </td>
+                                <td class="table-td">{invoice.invoiceType}</td>
+                                <td class="table-td center">
+                                  <div class="center">
+                                    <a
+                                        href={invoice.amazonUrl}
+                                        data-id={invoice.Id}
+                                        data-url={invoice.amazonUrl}
+                                        onclick={handleView}
+                                        title="View Invoice"
+                                    >
+                                        <i class="material-icons view-icon" style="cursor: pointer">visibility</i>
+                                    </a>
+                                    &nbsp;
+                                    <template if:false={invoice.isCancelled}>
+                                        <a
+                                            href={invoice.amazonUrl}
+                                            data-id={invoice.Id}
+                                            data-url={invoice.amazonUrl}
+                                            onclick={handleCancel}
+                                            title="Cancel Invoice"
+                                        >
+                                            <i class="material-icons view-icon" style="cursor: pointer">cancel</i>
+                                        </a>
+                                        &nbsp;
+                                        <a
+                                            href={invoice.amazonUrl}
+                                            data-id={invoice.Id}
+                                            data-url={invoice.amazonUrl}
+                                            onclick={handleDownload}
+                                            title="Download Invoice"
+                                        >
+                                            <i class="material-icons view-icon" style="cursor: pointer">download</i>
+                                        </a>
+                                    </template>
+                                    &nbsp;
+                                    <a      
+                                        href="javascript:void(0)"
+                                        data-id={invoice.Id} 
+                                        data-url={invoice.amazonUrl}  
+                                        data-status={invoice.Status__c}
+                                        data-invoicedate={invoice.invoiceDate}  
+                                        onclick={handleEmailAction}
+                                        name="email" title="Send Email"
+                                        style="text-decoration: none;">
+                                            <i class="material-icons view-icon" data-id={invoice.Id}>outgoing_mail</i>
+                                            <span class="email-count">{invoice.emailCount}</span>
+                                    </a>
+                                    <template if:false={invoice.showAddToXero}>
+                                      <a
+                                        href="javascript:void(0)"
+                                        data-id={invoice.Id}
+                                        data-url={invoice.amazonUrl}
+                                        onclick={handleAddToXero}
+                                        class={invoice.addToXeroClass}
+                                        title={invoice.addToXeroTitle}
+                                      ><i class="material-icons view-icon">inbox_text_share</i>
+                                      </a>
+                                    </template>
+                                  </div>
+                                </td>
+                              </tr>
+                            </template>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                    <div class="fixed-pagination-total">
+                      <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em" > 
+                        <div class="slds-col"> 
+                          <div class="slds-list_inline slds-p-bottom_xx-small"> 
+                            <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage" style="padding-top: 4%" >Page Size:</label > 
+                              <div class="slds-select_container"> 
+                                <select class="slds-select" onchange={handleRecordsPerPageBulk} > 
+                                  <template for:each={pageSizeOptionsBulk} for:item="option" > 
+                                    <option key={option.value} value={option.value} selected={option.selected}> {option.label} </option> 
+                                  </template> 
+                                </select> 
+                              </div> 
+                            </div> 
+                          </div> 
+                          <div class="slds-align_absolute-center"> 
+                            <lightning-button 
+                              disabled={bDisableFirstBulk} 
+                              icon-name="utility:jump_to_left" 
+                              label="First" 
+                              class="slds-p-horizontal_x-small" 
+                              alternative-text="first page" 
+                              onclick={firstPageBulk} >
+                            </lightning-button> 
+                            <lightning-button 
+                              disabled={bDisableFirstBulk} 
+                              icon-name="utility:chevronleft" 
+                              label="Previous" 
+                              alternative-text="Previous" 
+                              onclick={previousPageBulk} >
+                            </lightning-button> &nbsp; 
+                            <span class="slds-badge" >Showing {pageNumberBulk} &nbsp;of&nbsp; {totalPagesBulk} &nbsp;&nbsp;Page(s)</span > &nbsp; 
+                            <lightning-button 
+                              disabled={bDisableLastBulk} 
+                              icon-name="utility:chevronright" 
+                              label="Next" alternative-text="Next" 
+                              onclick={nextPageBulk} 
+                              class="slds-p-horizontal_x-small" 
+                              icon-position="right" >
+                            </lightning-button> 
+                            <lightning-button 
+                              disabled={bDisableLastBulk} 
+                              icon-name="utility:jump_to_right" 
+                              label="Last" 
+                              alternative-text="last page" 
+                              onclick={lastPageBulk} 
+                              icon-position="right" >
+                            </lightning-button> 
+                          </div> 
+                          <div class="slds-clearfix"> 
+                            <div class="slds-float_right"> 
+                              <span class="slds-badge"> Total Records: {totalRecordsBulk}</span > 
+                            </div> 
+                          </div> 
+                      </div>                  
+                    </div>
+                </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <template if:true={isShowSpinner}>
+        <lightning-spinner
+          alternative-text="Loading"
+          size="large"
+        ></lightning-spinner>
+      </template>
+      <template if:true={isShowSpinner1}>
+        <lightning-spinner
+          alternative-text="Loading"
+          size="large"
+        ></lightning-spinner>
+      </template>
+
+      <template if:true={isModalOpen}>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            padding-left: 1.5%;
+            padding-right: 1.5%;
+          "
+        >
+          <p style="font-weight: bold; font-size: 140%; margin: 0">
+            {participantPreferredName} Invoice
+          </p>
+          <lightning-button
+            label="Close"
+            variant="brand-outline"
+            onclick={closeaddPayrollinvoice}
+            class="slds-m-left_medium"
+            style="margin-bottom: 5px"
+          >
+          </lightning-button>
+        </div>
+
+        <div class="slds-p-around_medium listviewpdf custom-scroll">
+          <iframe src={currentUrl} width="100%" height="1300px"></iframe>
+        </div>
+      </template>
+    </div>
+    <template if:true={ServiceWarningMessage}>
+      <section
+        aria-describedby="modal-content-id-1"
+        aria-labelledby="modal-heading-01"
+        aria-modal="true"
+        class="slds-modal slds-fade-in-open"
+        role="dialog"
+        tabindex="-1"
+      >
+        <div
+          class="slds-modal__container modal-container"
+          style="max-width: 25%"
+        >
+          <header class="slds-modal__header" style="background: #002a52">
+            <h2
+              class="slds-text-heading_medium slds-hyphenate"
+              style="color: white; font-weight: bold; text-align: center"
+            >
+              Delete
+            </h2>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium modal-content">
+            <div class="slds-m-around_small" style="text-align: center">
+              <div>
+                <p style="text-align: center">
+                  Are you sure want to delete the Invoice ?
+                </p>
+              </div>
+              <div class="button-container slds-m-top_medium">
+                <lightning-button
+                  label="No"
+                  variant="brand"
+                  onclick={closeWarningMessage}
+                ></lightning-button>
+                <lightning-button
+                  label="Yes"
+                  variant="brand"
+                  onclick={handleDeleteService}
+                ></lightning-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isReimbursementModalOpen}>
+      <section
+        role="dialog"
+        tabindex="-1"
+        aria-modal="true"
+        aria-labelledby="modal-heading-01"
+        class="slds-modal slds-fade-in-open"
+      >
+        <div class="slds-modal__container reimbursement-modal">
+          <!-- Modal Header -->
+          <header class="slds-modal__header" style="background: #002a52">
+            <div class="slds-media slds-media_center slds-m-bottom_x-small">
+              <div
+                class="slds-media__body"
+                style="color: white; font-weight: bold; text-align: center"
+              >
+                <h2
+                  id="modal-heading-01"
+                  class="slds-text-heading_medium slds-m-left_x-small"
+                >
+                  Reimbursement Breakdown
+                </h2>
+                <p
+                  class="slds-text-body_small slds-m-left_x-small"
+                  if:true={selectedRecord}
+                >
+                  For: {selectedRecord.participantName} • {selectedRecord.date}
+                </p>
+              </div>
+            </div>
+            <!-- <button
+              class="slds-button slds-button_icon slds-modal__close"
+              title="Close"
+              onclick={closeReimbursementModal}
+            >
+              <lightning-icon
+                icon-name="utility:close"
+                alternative-text="close"
+                size="small"
+              ></lightning-icon>
+              <span class="slds-assistive-text">Close</span>
+            </button> -->
+          </header>
+
+          <!-- Modal Body -->
+          <div class="slds-modal__content slds-p-around_medium">
+            <template if:true={selectedRecord}>
+              <div class="breakdown-list">
+                <div
+                  class="slds-grid slds-grid_align-spread slds-p-bottom_small breakdown-header"
+                  style="padding: 0 0.75rem 0.75rem 0.75rem"
+                >
+                  <div class="slds-col slds-size_2-of-3">
+                    <span class="slds-text-title slds-text-color_weak"
+                      >ITEM</span
+                    >
+                  </div>
+                  <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                    <span class="slds-text-title slds-text-color_weak"
+                      >AMOUNT</span
+                    >
+                  </div>
+                </div>
+
+                <template
+                  for:each={selectedRecord.breakdownItems}
+                  for:item="item"
+                >
+                  <div
+                    key={item.label}
+                    class="slds-grid slds-grid_align-spread slds-p-vertical_x-small breakdown-item"
+                    style="padding: 0.75rem"
+                  >
+                    <div class="slds-col slds-size_2-of-3">
+                      <div class="slds-text-heading_small breakdown-label">
+                        {item.label}
+                      </div>
+                    </div>
+                    <div
+                      class="slds-col slds-size_1-of-3 slds-text-align_right"
+                    >
+                      <span class="slds-text-heading_small breakdown-amount"
+                        >{item.amount}</span
+                      >
+                    </div>
+                  </div>
+                </template>
+
+                <div class="breakdown-divider slds-m-vertical_small"></div>
+
+                <div
+                  class="slds-grid slds-grid_align-spread slds-p-vertical_small total-section"
+                >
+                  <div class="slds-col slds-size_2-of-3">
+                    <span class="slds-text-heading_medium"
+                      >Total Reimbursement</span
+                    >
+                  </div>
+                  <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                    <span class="slds-text-heading_medium total-amount"
+                      >{selectedRecord.participantExtraAmount}</span
+                    >
+                  </div>
+                </div>
+
+                <div
+                  class="slds-m-top_medium status-section"
+                  if:true={selectedRecord.status}
+                >
+                  <span
+                    class="slds-badge slds-theme_{selectedRecord.status === 'Approved' ? 'success' : selectedRecord.status === 'Pending' ? 'warning' : 'error'}"
+                  >
+                    Status: {selectedRecord.status}
+                  </span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Modal Footer -->
+          <footer class="slds-modal__footer slds-theme_default">
+            <button
+              class="slds-button slds-button_neutral"
+              onclick={closeReimbursementModal}
+            >
+              Close
+            </button>
+          </footer>
+        </div>
+      </section>
+
+      <!-- Backdrop -->
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    
+    <template if:true={isAddNewService}> 
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+          <div class="slds-modal__container modal-custom "> 
+              <header class="slds-modal__header headercustom"> 
+                <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">Add Service</h2> 
+              </header> 
+
+              <!-- BODY CONTENT --> 
+              <div class="slds-modal__content slds-p-around_medium custom-scroll ifcheckbox">  
+                <div class="slds-grid slds-wrap slds-gutters"> 
+
+                  <!-- <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px"> -->
+                    <div  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label-new">
+                          <span class="label-text-drop"><span style="color: red">*</span>{participantPreferredName}</span>
+                          <!-- <lightning-combobox
+                            name="serviceParticipant"
+                            variant="label-hidden"
+                            options={serviceParticipantOptions}
+                            value={serviceParticipant}
+                            onchange={handleAddServiceChange}
+                          ></lightning-combobox> -->
+                           <c-tesseract-apps-single-combobox
+                                name="serviceParticipant"
+                                variant="label-hidden"
+                                value={serviceParticipant}
+                                options={serviceParticipantOptions}
+                                onchange={handleAddServiceChange}
+                                class="qty-value1">
+                            </c-tesseract-apps-single-combobox>
+
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop" ><span style="color: red">*</span>Service Type</span>
+                        <!-- <lightning-combobox
+                          class="ServiceTypeValue"
+                          name="serviceTypeName"
+                          variant="label-hidden"
+                          options={filteredServiceTypeOptions}
+                          value={serviceTypeId}
+                          onchange={handleAddServiceChange}
+                        ></lightning-combobox> -->
+                         <c-tesseract-apps-single-combobox
+                            class="ServiceTypeValue qty-value1"
+                            name="serviceTypeName"
+                            variant="label-hidden"
+                            value={serviceTypeId}
+                            options={filteredServiceTypeOptions}
+                            onchange={handleAddServiceChange}
+                           >
+                        </c-tesseract-apps-single-combobox>
+                      </div>
+                     
+                    </div>
+                   
+                    <div  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label-new">
+                          <span class="label-text-drop"><span style="color: red">*</span>Service Date</span>
+                          <lightning-input
+                            type="date"
+                            class="AddServiceStartDate"
+                            name="AddServiceStartDate"
+                            variant="label-hidden"
+                            value={AddServiceStartDate}
+                            
+                            onchange={handleAddServiceChange}
+                          ></lightning-input><!--  max={todayDate}-->
+                        </div>
+                    </div>
+                    <div  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop"><span style="color: red">*</span>Start Time</span>
+                      
+                         <c-tesseract-apps-time-picker
+                          data-timetype="START"
+                          selected-hour={startTimeSelectedHour}
+                          selected-minute={startTimeSelectedMinute}
+                          is-am={startTimeAMPM}
+                          displayed-time={startTimeDisplay}
+                          disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleTimeChange}>
+                        </c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+                    <div  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                      <div class="floating-label-new">
+                        <span class="label-text-drop"><span style="color: red">*</span>End Time</span>
+                       
+                        <c-tesseract-apps-time-picker
+                          data-timetype="END"
+                          selected-hour={endTimeSelectedHour}
+                          selected-minute={endTimeSelectedMinute}
+                          is-am={endTimeAMPM}
+                          displayed-time={endTimeDisplay}
+                          disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleTimeChange}>
+                        </c-tesseract-apps-time-picker>
+                        
+                      </div>
+                    </div>
+
+                    <div  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                        <div class="floating-label-new">
+                          <span class="label-text-drop">{staffPreferredName}</span>
+                          <!-- <lightning-combobox
+                            name="AddServiceStaffValue"
+                            class="AddServiceStaffValue"
+                            variant="label-hidden"
+                            options={AddServiceStaffOptions}
+                            value={AddServiceStaffValue}
+                            onchange={handleAddServiceChange}
+                           
+                        ></lightning-combobox> -->
+                         <c-tesseract-apps-single-combobox
+                            class="AddServiceStaffValue qty-value1"
+                            name="AddServiceStaffValue"
+                            variant="label-hidden"
+                            value={AddServiceStaffValue}
+                            options={AddServiceStaffOptions}
+                            onchange={handleAddServiceChange}
+                           >
+                        </c-tesseract-apps-single-combobox>
+                        </div>
+                    </div>
+                  </div> 
+                  <template if:true={NdisServiceGroupName}>
+                    <div class={ndisContainerClass}>
+                      <div class="header-wrapper">
+                        <table class="staff-table fixed-table">
+                          <thead>
+                            <tr class="table-row">
+                              <th class="table-th" title="Select">Select</th>
+                              <th class="table-th" title="Support Item Name">Support Item Name</th>
+                              <template if:true={ndisflag}>
+                                <th class="table-th" title="Support Item Number">Support Item Number</th>
+                              </template>
+                              <th class="table-th" title="Entity Name">Entity Name</th>
+                              <th class="table-th" title="Hours / Quantity">Hours / Quantity</th>
+                              <th class="table-th" title="Unit Price">Unit Price</th>
+                              <th class="table-th" title="Total Amount">Total Amount</th>
+                            </tr>
+                          </thead>
+                        </table>
+                      </div>
+
+                      <div class="table-body custom-scroll" style="max-height: 250px;">
+                        <table class="staff-table fixed-table">
+                          <tbody>
+                            <template for:each={serviceGroupName} for:item="row">
+                              <tr key={row.Id} class="table-row">
+                                <td class="table-td tableCheckbox" title="Select">
+                                  <input
+                                    type="checkbox"
+                                    data-id={row.Id}
+                                    data-name={row.Name}
+                                    onchange={handleCheckboxSelection}
+                                    checked={row.isSelected}
+                                  />
+                                </td>
+                                <td class="table-td" title={row.serviceSupportItem}>
+                                    <template if:true={otherThanNdis}>
+                                      <template if:true={row.isEditingName}>
+                                        <div class="qty-edit-container">
+                                            <lightning-input
+                                                type="text"
+                                                value={row.serviceSupportItem}
+                                                onchange={handleFieldChange}
+                                                data-id={row.Id}
+                                                data-field="serviceSupportItem"
+                                                onkeydown={handleQtyKeyDown}
+                                                class="qty-value"
+                                                label="Support Item Name"
+                                                variant="label-hidden"
+                                                style="width: 70%">
+                                              </lightning-input>
+                                              <a
+                                                  href="javascript:void(0)"
+                                                  data-id={row.Id}
+                                                  data-field="Name"
+                                                  title="Save"
+                                                  onclick={handleSave}>
+                                                  <i class="material-icons save-icon">check</i>
+                                                </a>
+                                        </div>
+                                      </template>
+                                      <template if:false={row.isEditingName}>
+                                        <div class="qty-edit-container">
+                                        {row.serviceSupportItem}
+                                          <a
+                                            href="javascript:void(0)"
+                                            data-id={row.Id}
+                                            data-field="Name"
+                                            title="Edit"
+                                            onclick={handleToggleEdit}>
+                                            <i class="material-icons edit-icon">edit</i>
+                                            </a>
+                                        </div>
+                                      </template>
+                                    </template>
+                                    <template if:false={otherThanNdis}>
+                                      <template if:false={Miscellaneous}>
+                                            {row.serviceSupportItem}
+                                      </template>
+                                      <template if:true={Miscellaneous}>
+                                              <template if:true={row.isEditingName}>
+                                                  <div class="qty-edit-container">
+                                                    <lightning-input
+                                                        type="text"
+                                                        value={row.serviceSupportItem}
+                                                        onchange={handleFieldChange}
+                                                        data-id={row.Id}
+                                                        data-field="serviceSupportItem"
+                                                        onkeydown={handleQtyKeyDown}
+                                                        class="qty-value"
+                                                        label="Support Item Name"
+                                                        variant="label-hidden"
+                                                        style="width: 70%">
+                                                      </lightning-input>
+                                                    <a
+                                                        href="javascript:void(0)"
+                                                        data-id={row.Id}
+                                                        data-field="Name"
+                                                        title="Save"
+                                                        onclick={handleSave}>
+                                                        <i class="material-icons save-icon">check</i>
+                                                </a>
+                                                  </div>
+                                              </template>
+                                                <template if:false={row.isEditingName}>
+                                                  <div class="qty-edit-container">
+                                                    {row.serviceSupportItem}
+                                                    <a
+                                                      href="javascript:void(0)"
+                                                      data-id={row.Id}
+                                                      data-field="Name"
+                                                      title="Edit"
+                                                      onclick={handleToggleEdit}>
+                                                      <i class="material-icons edit-icon">edit</i>
+                                                      </a>
+                                                  </div>
+                                                </template>
+                                      </template>
+                                    </template>
+                                </td>
+                                <template if:true={ndisflag}>
+                                  <td class="table-td" title={row.Support_Item_Number__c}>{row.Support_Item_Number__c}</td>
+                                </template>
+                                <td class="table-td" title={row.entityName}>
+                                    <template if:false={row.showEntityDropdown}>
+                                        {row.entityName}
+                                    </template>
+                                    <template if:true={row.showEntityDropdown}>
+                                        <c-tesseract-apps-single-combobox
+                                            variant="label-hidden"
+                                            value={row.entityId}
+                                            options={EntityNameOptions}
+                                            data-id={row.Id}
+                                            onchange={handleAddServiceEntityChange}
+                                            class="qty-value">
+                                        </c-tesseract-apps-single-combobox>
+                                    </template>
+                                </td>
+                                <td class="table-td" title={serviceQuantity}>{serviceQuantity}</td>
+                                <td class="table-td" title={row.amount}>
+                                  <template if:true={otherThanNdis}>
+                                    <template if:true={row.isEditingAmount}>
+                                      <div class="qty-edit-container">
+                                      <lightning-input
+                                          type="number"
+                                          step="0.01"
+                                          min="0"
+                                          value={row.amount}
+                                          onchange={handleFieldChange}
+                                          data-id={row.Id}
+                                          data-field="amount"
+                                          onkeydown={handleQtyKeyDown}
+                                          class="qty-value"
+                                          label="Amount"
+                                          variant="label-hidden"
+                                          style="width: 50%">
+                                        </lightning-input>
+                                        <a
+                                            href="javascript:void(0)"
+                                            data-id={row.Id}
+                                            data-field="Amount"
+                                            title="Save"
+                                            onclick={handleSave}>
+                                            <i class="material-icons save-icon">check</i>
+                                          </a>
+                                      </div>
+                                    </template>
+                                    <template if:false={row.isEditingAmount}>
+                                      <div class="qty-edit-container">
+                                        <lightning-formatted-number
+                                          value={row.amount}
+                                          format-style="currency"
+                                          currency-code="AUD"
+                                          minimum-fraction-digits="2"
+                                          maximum-fraction-digits="2"
+                                          class="qty-value"
+                                        >
+                                        </lightning-formatted-number>
+                                              <a
+                                                href="javascript:void(0)"
+                                                data-id={row.Id}
+                                                data-field="Amount"
+                                                title="Edit"
+                                                onclick={handleToggleEdit}>
+                                                <i class="material-icons edit-icon">edit</i>
+                                              </a>
+                                      </div>
+                                    </template>
+                                  </template>
+                                  <template if:false={otherThanNdis}>
+                                    <template if:false={Miscellaneous}>
+                                      <lightning-formatted-number
+                                        value={row.amount}
+                                        format-style="currency"
+                                        currency-code="AUD"
+                                        minimum-fraction-digits="2"
+                                        maximum-fraction-digits="2"
+                                      ></lightning-formatted-number>
+                                    </template>
+                                    <template if:true={Miscellaneous}>
+                                      <template if:true={row.isEditingAmount}>
+                                        <div class="qty-edit-container">
+                                          <lightning-input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={row.amount}
+                                            onchange={handleFieldChange}
+                                            data-id={row.Id}
+                                            data-field="amount"
+                                            onkeydown={handleQtyKeyDown}
+                                            class="qty-value"
+                                            label="Amount"
+                                            variant="label-hidden"
+                                            style="width: 50%">
+                                          </lightning-input>
+                                        <a
+                                              href="javascript:void(0)"
+                                              data-id={row.Id}
+                                              data-field="Amount"
+                                              title="Save"
+                                              onclick={handleSave}>
+                                              <i class="material-icons save-icon">check</i>
+                                            </a>
+                                        </div>
+                                      </template>
+                                      <template if:false={row.isEditingAmount}>
+                                        <div class="qty-edit-container">
+                                          <lightning-formatted-number
+                                            value={row.amount}
+                                            format-style="currency"
+                                            currency-code="AUD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2"
+                                            class="qty-value"
+                                          ></lightning-formatted-number>
+                                          <a
+                                            href="javascript:void(0)"
+                                            data-id={row.Id}
+                                            data-field="Amount"
+                                            title="Edit"
+                                            onclick={handleToggleEdit}>
+                                            <i class="material-icons edit-icon">edit</i>
+                                          </a>
+                                        </div>
+                                      </template>
+                                    </template>
+                                  </template>
+                                </td>
+                                <td class="table-td" title={row.serviceTotalAmount}>
+                                  <lightning-formatted-number
+                                    value={row.serviceTotalAmount}
+                                    format-style="currency"
+                                    currency-code="AUD"
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2">
+                                  </lightning-formatted-number>
+                                </td>
+                              </tr>
+                            </template>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <template if:true={addServicePaginationVisible}>
+                      <div class="fixed-pagination-addservice">
+                        <div
+                          class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+                        >
+                          <!--RECORDS PER PAGE-->
+                          <div class="slds-col">
+                            <div class="slds-list_inline slds-p-bottom_xx-small">
+                              <label
+                                class="slds-text-color_weak slds-p-horizontal_x-small" style="margin-top: 4%;"
+                                for="recordsPerPage"
+                                >Page Size:</label
+                              >
+                              <div class="slds-select_container">
+                                <select
+                                  class="slds-select"
+                                  id="recordsPerPage1"
+                                  onchange={handleRecordsPerPage3}
+                                >
+                                  <template
+                                    for:each={pageSizeOptions3}
+                                    for:item="option"
+                                  >
+                                    <option key={option.value} value={option.value} selected={option.selected}>
+                                      {option.label}
+                                    </option>
+                                  </template>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!--PAGE NAVIGATION-->
+                          <div class="slds-align_absolute-center" >
+                            <lightning-button
+                              disabled={bDisableFirst3}
+                              icon-name="utility:jump_to_left"
+                              label="First"
+                              class="slds-p-horizontal_x-small"
+                              alternative-text="first page"
+                              onclick={firstPage3}
+                            ></lightning-button>
+                            <lightning-button
+                              disabled={bDisableFirst3}
+                              icon-name="utility:chevronleft"
+                              label="Previous"
+                              alternative-text="Previous"
+                              onclick={previousPage3}
+                            ></lightning-button>
+                            &nbsp;
+                            <span class="slds-badge"
+                              >Showing {pageNumber3} &nbsp;of&nbsp; {totalPages3}
+                              &nbsp;&nbsp;Page(s)</span
+                            >
+                            &nbsp;
+                            <lightning-button
+                              disabled={bDisableLast3}
+                              icon-name="utility:chevronright"
+                              label="Next"
+                              alternative-text="Next"
+                              onclick={nextPage3}
+                              class="slds-p-horizontal_x-small"
+                              icon-position="right"
+                            ></lightning-button>
+                            <lightning-button
+                              disabled={bDisableLast3}
+                              icon-name="utility:jump_to_right"
+                              label="Last"
+                              alternative-text="last page"
+                              onclick={lastPage3}
+                              icon-position="right"
+                            ></lightning-button>
+                          </div>
+                          <!--TOTAL RECORDS-->
+                          <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                              <span class="slds-badge">
+                                Total Records: {totalRecords3}</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </template> </template>
+                  <!-- <br /> -->
+              </div> 
+
+              <footer class="slds-modal__footer"> 
+                  <lightning-button 
+                      variant="neutral" 
+                      label="Cancel" 
+                      onclick={cancelAddService}> 
+                  </lightning-button> 
+
+                  <lightning-button 
+                      class="slds-m-left_small" 
+                      variant="brand" 
+                      label="Save" 
+                      onclick={saveAddService}> 
+                  </lightning-button> 
+              </footer> 
+
+          </div> 
+        </section> 
+        <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template> 
+    <template if:true={showNoFundsModal}> 
+      <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+        <div class="slds-modal__container modal-custom1 "> 
+        
+          <!-- HEADER --> 
+          <header class="slds-modal__header headercustom"> 
+              <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom"> Please Confirm</h2> 
+          </header> 
+        
+          <!-- BODY CONTENT --> 
+          <div class="slds-modal__content slds-p-around_medium">  
+            <!-- <div class="slds-grid slds-wrap slds-gutters">  -->
+               <div class="slds-text-align_center">
+                    <p>
+                      No funds are currently allocated for this participant.<br/>
+                      Would you like to allocate funds now?
+                    </p>
+                </div>
+            
+            <!-- </div>  -->
+          </div> 
+
+          <!-- FOOTER --> 
+          <footer class="slds-modal__footer"> 
+            <lightning-button 
+              variant="neutral" 
+              label="No" 
+              onclick={handleNoFunds}> 
+            </lightning-button> 
+          
+            <lightning-button 
+              class="slds-m-left_small" 
+              variant="brand" 
+              label="Yes" 
+              onclick={handleCreateFunds}> 
+            </lightning-button> 
+          </footer> 
+        </div> 
+      </section> 
+ 
+      <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template> 
+    <template if:true={showCreateFundsFlag}>
+         <!-- create-company-fund-tracker-id={createCompanyFundTrackerId}-->
+      <!-- <c-facility-data-community selected-name={orgid} is-from-manage-invoice={isFromManageInvoice} is-entity-exist={isEntityExist}  create-company-facility-id={createCompanyFacilityId} oncreatecompanyback={handleCreateCompanyBack} oncreateentityback={handleCreateEntityBack}></c-facility-data-community>  -->
+      <!-- <c-client-fund-tranfer client-id={serviceParticipant} onhidefacilityevent={handleHideFacilityEvent} ndisflag={ndisflag} is-from-manage-invoice={isFromManageInvoice}></c-client-fund-tranfer> -->
+        <c-details-lwc record-id={serviceParticipant} is-from-manage-invoice={isFromManageInvoice} onclientevent={childevent}  onbacktomanageinvoice={handleBackToManageInvoice} ndisflag={ndisflag} participant={participant} individualflag={individualFlag} companyflag={companyFlag}></c-details-lwc>  <!--riskindexdetailsfromparent={riskindexdetails} participantdetails={participantdetails} state={state}  ndiscreateflag={ndisCreateFlag} onhidefacilityevent={handleHideFacilityEvent} navigated-from-notifications={navigatedFromNotifications}-->
+    </template>
+    <template if:true={createCompanyFlag}>
+        <!-- <c-create-company-lwc  orgidtrack={orgid} is-from-manage-invoice={isFromManageInvoice} create-company-facility-id={createCompanyFacilityId}  oncreatecompanyback={handleCreateCompanyBack}></c-create-company-lwc> -->
+      <c-facility-data-community selected-name={orgid} is-from-manage-invoice={isFromManageInvoice} is-entity-exist={isEntityExist}  create-company-facility-id={createCompanyFacilityId} oncreatecompanyback={handleCreateCompanyBack} oncreateentityback={handleCreateEntityBack}></c-facility-data-community>  <!-- create-company-fund-tracker-id={createCompanyFundTrackerId}-->
+    </template>
+    <!-- <template if:true={createServiceEntityFlag}>
+        <c-client-fund-tranfer
+            is-from-manage-invoice={isFromManageInvoice}
+            client-id={participantId}
+            fund-tracker-id={createCompanyFundTrackerId}
+            facility-id={createCompanyFacilityId}
+            onback={handleClientFundTransferBack}>
+         </c-client-fund-tranfer>
+    </template> -->
+    <template if:true={createServiceEntityFlag}>
+        <div class="main-container">
+            <c-details-lwc
+                record-id={participantId}
+                selected-name={orgid}
+                fund-tracker-id={createCompanyFundTrackerId}
+                onbacktomanageinvoice={handleBackToManageInvoice}
+                is-from-manage-invoice={isFromManageInvoice}>
+            </c-details-lwc>
+        </div>
+    </template>
+  </div>
+  <template if:true={invoiceEmailFlag}>
+      <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true" 
+          class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" >
+              <div class="slds-modal__container modal-container" style="max-width:25%;">
+                  <header class="slds-modal__header" style="background: #002A52;">
+                      <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align: center;">Please Confirm</h2>
+                  </header>
+                  <div class="slds-modal__content slds-p-around_medium" style="text-align: center;">
+                      <div class="slds-m-around_small center-container-pop">
+                          <div class="floating-label">
+                              <span class="label-text-drop"><span style="color:red">*</span>To Address</span>
+                              <lightning-input 
+                                  type="text" 
+                                  label="To Address"
+                                  name="toAddress" 
+                                  variant="label-hidden" 
+                                  value={toAddress}
+                                  onchange={handleEmailOnChange} 
+                                  required>
+                              </lightning-input>
+                          </div>
+                          <br/>
+                          <div class="floating-label">
+                              <span class="label-text-drop">Cc Address</span>
+                              <lightning-input 
+                                  type="text" 
+                                  label="CC Address" 
+                                  variant="label-hidden"
+                                  name="ccAddress" 
+                                  value={ccAddress}
+                                  onchange={handleEmailOnChange} 
+                                  required>
+                              </lightning-input>
+                          </div>
+                          <br/>
+                          <div class="floating-label">
+                              <span class="label-text-drop">Email Subject</span>
+                              <lightning-input
+                                  name="emailSubject"
+                                  label="Email Subject"
+                                    variant="label-hidden"
+                                  value={emailSubject}
+                                  onchange={handleEmailOnChange}
+                                  class="slds-m-bottom_small">
+                              </lightning-input>
+                          </div>  <br/>
+                          <div class="custom-rich-text-container">
+                              <span class="label-text-drop">Email Body</span>
+                              <lightning-input-rich-text
+                                  name="emailBody"
+                                  value={emailBody}
+                                  onchange={handleEmailOnChange}
+                                  variant="label-hidden"
+                                    class="rich-text-editor"
+                                  >                        <!--class="slds-m-top_small"
+                                  style="min-height: 250px;"-->
+                              </lightning-input-rich-text>
+                          </div>
+                      <div class="button-container slds-p-around_small">
+                          <lightning-button label="Cancel" variant="Brand-Outline" onclick={handleCloseModal}
+                          class="-m-around_x-small"></lightning-button>
+                          <lightning-button label="Send Email" variant="brand" onclick={handleSendEmail}
+                              class="-m-around_x-small"></lightning-button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template> 
+
+
+    <template if:true={showProgressBar}>
+        <!-- <div style="margin-top: 10%;">
+                <b style="font-size: 22px;text-align:center;margin-left:25%">Please wait a moment. Invoices are being generated...</b>
+                <lightning-progress-bar value={progressValue} size="large"></lightning-progress-bar>
+                <div style="text-align:center;">{progressValue}% Complete</div>
+            </div> -->
+
+        <div class="overlay-logo"></div>
+
+        <div class="spinner-wrapper">
+          <div class="loader-container">
+            <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+            <img src={imageUrl} alt="T Logo" class="Tlogo" />
+          </div>
+
+          <!-- Progress text instead of progress bar -->
+          <p class="progress-text">Please Wait...</p>
+        </div>
+      </template>
+  
+      <template if:true={showGenerateInvoicePopup}>
+          <section role="dialog" tabindex="-1" aria-modal="true"  class="slds-modal slds-fade-in-open">
+              <div class="slds-modal__container modal-custom2">
+                  <!-- HEADER -->
+                  <header class="slds-modal__header headercustom">
+                      <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+                          Generate Invoice
+                      </h2>
+                  </header>
+
+                  <!-- BODY -->
+                  <div class="slds-modal__content slds-p-around_medium  custom-scroll">
+                      <template for:each={groupedEntities}  for:item="entity">
+                          <div  key={entity.entityId} class="slds-m-bottom_small">
+                              <div class="entityHeader">
+                                <lightning-input
+                                    type="checkbox"
+                                    checked={entity.checked}
+                                    data-entityid={entity.entityId}
+                                    onchange={handleEntitySelection}>    <!--  label={entity.entityLabel}-->
+                                </lightning-input>
+                                <span class="entityName">
+                                    {entity.entityName}
+                                </span>
+                                <!-- <span class="entityType">
+                                    (Entity Name)
+                                </span> -->
+                              </div>
+
+                              <div class="table-container yourInvoiceTable1 slds-m-top_small">
+                                  <div class="header-wrapper">
+                                      <table class="staff-table fixed-table">
+                                          <thead>
+                                              <tr>
+                                                <th class="table-th tableCheckbox">
+                                                      <lightning-input
+                                                          type="checkbox"
+                                                          checked={entity.allSelected}
+                                                          data-entityid={entity.entityId}
+                                                          onchange={handleEntityServiceSelectAll}>
+                                                      </lightning-input>
+                                                  </th>
+                                                  <th class="table-th"> Participant Name</th>
+                                                  <th class="table-th"> Service Item Name</th>
+                                                  <th class="table-th"> Service Item Number</th>
+                                                  <th class="table-th"> Service Date</th>
+                                                  <th class="table-th"> Amount</th>
+                                              </tr>
+                                          </thead>
+                                      </table>
+                                  </div>
+
+                                  <div class="table-bodytotal">
+                                      <table class="staff-table fixed-table">
+                                          <tbody>
+                                            <template for:each={entity.services} for:item="service">
+                                                <tr key={service.Id}>
+                                                    <td class="table-td tableCheckbox">
+                                                        <lightning-input
+                                                            type="checkbox"
+                                                            checked={service.checked}
+                                                            data-entityid={entity.entityId}
+                                                            data-serviceid={service.Id}
+                                                            onchange={handleServiceSelection}>
+                                                        </lightning-input>
+                                                    </td>
+
+                                                    <td class="table-td" title={service.participantFullName}>{service.participantFullName}</td>
+                                                    <td class="table-td" title={service.Support_Item_Name__c}>{service.Support_Item_Name__c}</td>
+                                                    <td class="table-td" title={service.Lineitem__c}>{service.Lineitem__c}</td>
+                                                    <td class="table-td">{service.ServiceDate}</td>
+                                                    <td class="table-td">
+                                                        <lightning-formatted-number
+                                                            value={service.participantInvoiceAmount}
+                                                            format-style="currency"
+                                                            currency-code="AUD">
+                                                        </lightning-formatted-number>
+                                                    </td>
+                                                 </tr>
+                                             </template>
+                                          </tbody>
+                                      </table>
+                                  </div>
+                              </div>
+        
+                          </div>
+                      </template>
+
+                  </div>
+
+                  <!-- FOOTER -->
+
+                  <footer class="slds-modal__footer">
+                      <!-- Left Side -->
+                     <div class="invoice-note">
+                          <!-- <strong>Note:</strong> Invoices will be generated <strong>Entity-wise</strong> and <strong>Participant-wise</strong> based on the selected records.   <br/>-->
+                            <strong>Note: </strong>Services will be grouped by <strong>Entity</strong> and then by <strong>Participant</strong>. A separate invoice will be generated for each participant
+                            within the selected entity.  <br/>
+                            Click <strong>Confirm</strong> to generate the invoices or <strong>Cancel</strong> to review your selection.
+                      </div>
+
+                      <!-- Right Side -->
+                     <div class="slds-text-align_right">
+                        <lightning-button
+                            variant="neutral"
+                            label="Cancel"
+                            onclick={handleCloseGenerateInvoicePopup}>
+                        </lightning-button>
+                        <lightning-button
+                            class="slds-m-left_small"
+                            variant="brand"
+                            label="Confirm"
+                            onclick={handleGenerateSelectedInvoices}>
+                        </lightning-button>
+                      </div>
+                  </footer>
+
+              </div>
+          </section>
+
+          <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+   
+</template>
