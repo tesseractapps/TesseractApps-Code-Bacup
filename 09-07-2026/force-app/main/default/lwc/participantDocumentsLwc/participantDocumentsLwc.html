@@ -1,0 +1,652 @@
+<template>
+<div class="main-container" >
+<template if:true={isHome}>
+
+    <!-- 🔍 SEARCH & FILTER SECTION -->
+    <!-- <div class="search-section">
+        
+        <div class="floating-label slds-small-size_1-of-6">
+            <span class="label-text-drop">Search</span>
+            <div class="custom-search-wrapper">
+                <lightning-input
+                    type="search"
+                    label="Participant Name"
+                    name="searchName"
+                    value={searchName}
+                    variant="label-hidden"
+                    onchange={handleSearchInput}>
+                </lightning-input>
+            </div>
+        </div>
+
+        <div class="button-group filter-toggle-group">
+            <button type="button"
+                    class={activeButtonClass}
+                    onclick={handleActiveToggle}>
+                Active
+            </button>
+
+            <button type="button"
+                    class={inactiveButtonClass}
+                    onclick={handleInactiveToggle}>
+                Inactive
+            </button>
+        </div>
+
+    </div> -->
+      <div class="title-block">
+        <h1>Participant Documents</h1>
+        <p class="sub">View and manage all participant documentation</p>
+      </div>
+
+    <div class="search-row">
+        
+
+        <div class="floating-label slds-small-size_1-of-6">
+          <span class="label-text-drop">Search</span>
+          <div class="custom-search-wrapper">
+              <lightning-input type="search"
+                  placeholder="Search by document or participant name"
+                  value={searchKey}
+                  variant="label-hidden"
+                  onchange={handleSearchInput}></lightning-input>
+          </div>
+       </div>
+        
+
+        <div class="slds-small-size_1-of-6">
+            <lightning-combobox
+                name="docTypeFilter"
+                value={selectedDocType}
+                variant="label-hidden"
+                placeholder="All Document Types"
+                options={docTypeOptions}
+                onchange={handleDocTypeChange}>
+            </lightning-combobox>
+        </div>
+
+        <!-- <div class="slds-small-size_1-of-6">
+            <lightning-combobox
+                name="statusFilter"
+                value={selectedStatus}
+                placeholder="All Status"
+                options={statusOptions}
+                onchange={handleStatusChange}>
+            </lightning-combobox>
+        </div> -->
+    </div>
+
+    <div class="toolbar">
+        <div class="group-by">
+            <button class={byDocTypeClass} onclick={groupByDocType}>By Document Type</button>
+            <button class={byParticipantClass} onclick={groupByParticipant}>By Participant</button>
+        </div>
+
+        <div class="controls">
+            <lightning-button
+                variant="neutral"
+                label="Archive"
+                icon-name="utility:archive"
+                onclick={openArchiveModal}>
+            </lightning-button>
+            <button onclick={expandAll}>Expand All</button>
+            <button onclick={collapseAll}>Collapse All</button>
+        </div>
+    </div>
+
+<div class="staffTable custom-scroll">
+<!-- ===========================
+     📁 BY DOCUMENT TYPE (GROUPED VIEW)
+     =========================== -->
+<template if:true={isDocTypeView}>
+    <template for:each={filteredList} for:item="group">
+        <div key={group.key} class="staff-card">
+
+            <!-- GROUP HEADER -->
+            <div class="staff-header" data-id={group.key} onclick={toggleDocTypeSection}>
+                <div class="left">
+                      <span class="arrow material-icons">
+                          <template if:true={group.expand}>expand_more</template>
+                          <template if:false={group.expand}>chevron_right</template>
+                      </span>
+
+
+                    <span class="staff-name">{group.documentTypeName}</span>
+
+                    <span class="doc-count">({group.documents.length})</span>
+                </div>
+            </div>
+
+            <!-- DOCUMENTS INSIDE GROUP -->
+            <template if:true={group.expand}>
+                <div class="doc-list">
+                    <template for:each={group.documents} for:item="doc">
+                        <div key={doc.Id} class="doc-row">
+
+                            <div class="doc-left">
+                                <div class="doc-title">
+                                    <span class="doc-name">{doc.Name}</span>
+                                </div>
+                                <div class="doc-meta">
+                                    Participant: {doc.participantName} • Type: {doc.Type__c}
+                                    <template if:true={doc.FormattedDate}>
+                                        • Uploaded: {doc.FormattedDate}
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT ACTIONS -->
+                            <div class="doc-actions">
+                                <span class="material-icons view-icon"
+                                    data-url={doc.Amazon_file_URL__c}
+                                    onclick={handleView} title="View">visibility</span>
+                               <template if:true={adminflag}>
+                                <span class="material-icons edit-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleEdit} title="Edit">edit_document</span>
+
+                                <span class="material-icons view-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleShare} title="Permissions">passkey</span>
+
+                                <span class="material-icons view-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleArchive} title="Archive">Archive</span>
+
+                                <span class="material-icons delete-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleDelete} title="Delete">delete</span>
+                                
+                              </template>
+                            </div>
+
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+        </div>
+    </template>
+</template>
+
+
+<!-- ===========================
+     🧍‍♂️ BY PARTICIPANT VIEW
+     =========================== -->
+<template if:true={isParticipantView}>
+    <template for:each={participantList} for:item="p">
+        <div key={p.Id} class="staff-card">
+
+            <div class="staff-header" data-id={p.Id} onclick={toggleSection}>
+                <div class="left">
+                  <span class="arrow material-icons">
+                      <template if:true={p.expand}>expand_more</template>
+                      <template if:false={p.expand}>chevron_right</template>
+                  </span>
+
+                    <div class="staff-name">
+                       <!--  <span class={p.statusClass}></span> -->
+                        {p.Display_Nickname__c}
+                    </div>
+                    <div class="doc-count">{p.docCount} documents</div>
+                </div>
+            </div>
+
+            <!-- DOCUMENT LIST -->
+            <template if:true={p.expand}>
+                <div class="doc-list">
+                    <template for:each={p.Attachments__r} for:item="doc">
+                        <div key={doc.Id} class="doc-row">
+                            <div class="doc-left">
+                                <div class="doc-title">
+                                    <span class="doc-name">{doc.Name}</span>
+                                </div>
+                                <div class="doc-meta">
+                                    Type: {doc.Type__c}
+                                    <template if:true={doc.FormattedDate}> • Uploaded: {doc.FormattedDate}</template>
+                                </div>
+                            </div>
+
+                            <div class="doc-actions">
+                                <span class="material-icons view-icon"
+                                    data-url={doc.Amazon_file_URL__c}
+                                    onclick={handleView} title="view">visibility</span>
+                              <template if:true={adminflag}>
+                                <span class="material-icons edit-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleEdit} title="Edit">edit_document</span>
+
+                                <span class="material-icons view-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleShare} title="Permissions">passkey</span>
+
+                                <span class="material-icons view-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleArchive} title="Archive">Archive</span>
+
+                                <span class="material-icons delete-icon"
+                                    data-id={doc.Id}
+                                    onclick={handleDelete} title="Delete">delete</span>
+                                
+                              </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+        </div>
+    </template>
+</template>
+
+</div>
+
+    <!-- 📄 PAGINATION FOOTER -->
+<template if:true={isParticipantView}>
+       <template if:false={noRecordsFlag}>
+      <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large fixed-pagination" style="padding-top: 0.5em;">
+      <!--RECORDS PER PAGE-->
+      <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+               <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+               <div class="slds-select_container">
+                  <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                           <option key={option.value} value={option.value}>{option.label}</option>
+                        </template>
+                  </select>
+               </div>
+            </div>
+      </div>
+
+      <!--PAGE NAVIGATION-->
+      <div class="slds-align_absolute-center" style="height:5rem">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+      </div>
+      <!--TOTAL RECORDS-->
+      <div class="slds-clearfix slds-m-right_xx-large">
+            <div class="slds-float_right">
+               <span class="slds-badge"> Total Records: {totalRecords}</span>
+            </div>
+      </div>
+      </div>  
+     </template>
+</template>
+</template>
+
+<template if:true={isModalOpen}>
+    <div class="slds-grid slds-grid_align-end">
+    <lightning-button class="slds-m-left_medium"  label="Back" variant="brand"
+    onclick={handleback} style="margin-bottom: 0.5%;"></lightning-button>
+    </div>
+    <div class="main-container-iframe custom-scroll">
+    <iframe src={currentUrl} width="100%" height="1300px" ></iframe>
+    </div>
+</template>
+</div>
+
+
+<template if:true={isEdit}>
+      <div class="blur-overlay"></div>
+      <div class="right-align" style="width: 40%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <p
+            style="
+              font-weight: bold;
+              font-size: 140%;
+              margin: 0;
+              padding: 3% 0 0 3%;
+            "
+          >
+            Update Attachment
+          </p>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-right: 3%;
+              margin-top: 2%;
+            "
+          >
+            <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>  -->
+          </div>
+        </div>
+        <div class="slds-p-around_medium">
+          <lightning-record-edit-form
+            object-api-name="Attachment__c"
+            onsuccess={handleSuccess}
+            onsubmit={handleSubmit}
+            record-id={recordId}
+          >
+            <lightning-messages></lightning-messages>
+            <div class="container-box">
+              <div class="slds-grid slds-wrap" style="padding-top: 20px">
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Attachment Name</span
+                    >
+                    <lightning-input-field
+                      field-name="Name"
+                      required="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Type</span
+                    >
+                    <lightning-input-field
+                      field-name="Type__c"
+                      required="true"
+                      variant="label-hidden"
+                    
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <template if:true={textboxFlag}>
+                  <div
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        >Other (Please Specify)</span
+                      >
+                      <lightning-input-field
+                        field-name="Other_Comments__c"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+                </template>
+                <template if:false={textboxFlag}> </template>
+
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop">Date</span>
+                    <lightning-input-field
+                      field-name="Date__c"
+                      disabled="true"
+                      readonly="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>User</span
+                    >
+                    <lightning-input-field
+                      field-name="User__c"
+                      required="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label" style="height: 62px">
+                    <span class="label-text-drop">Comments</span>
+                    <lightning-input-field
+                      field-name="Comments__c"
+                      variant="label-hidden"
+                      maxlength="1000"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+              </div>
+              <div class="slds-align_absolute-center" style="padding: 2%">
+                <lightning-button
+                  label="Cancel"
+                  onclick={hideModalBox}
+                  variant="brand-outline"
+                ></lightning-button>
+                <lightning-button
+                  class="slds-m-left_small"
+                  type="submit"
+                  variant="brand"
+                  label="Update"
+                ></lightning-button
+                >&nbsp;
+              </div>
+            </div>
+          </lightning-record-edit-form>
+        </div>
+      </div>
+  </template>
+
+    <template if:true={assignmentFlag}>
+        <div class="blur-overlay"></div>
+
+        <div class="right-align" style="width:40%;">
+            
+            <!-- HEADER -->
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-weight: bold; font-size:150%; margin: 0; padding: 2% 0 0 2%;">
+                    Grant Access
+                </h3>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="right-content custom-scroll">
+                <div class="seperator">
+
+                    <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+
+                        <div class="slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_small">
+                            
+                            <lightning-dual-listbox
+                                name="staff"
+                                label="Select Staff"
+                                source-label="Available Staff"
+                                selected-label="Selected Staff"
+                                field-level-help="Select your staff"
+                                options={staffOptions}
+                                value={selectedStaffIds}
+                                onchange={handleStaffChange}>
+                            </lightning-dual-listbox>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FOOTER BUTTONS -->
+            <div class="slds-align_absolute-center">
+                <lightning-button 
+                    label="Cancel"
+                    variant="brand-outline"
+                    onclick={handleShareClose}
+                    class="slds-m-around_small">
+                </lightning-button>
+
+                <lightning-button 
+                    label="Save"
+                    variant="brand"
+                    onclick={handleassignmentinsert}
+                    class="slds-m-around_small"
+                    disabled={saveButtonDisable}>
+                </lightning-button>
+            </div>
+
+        </div>
+    </template>
+
+    <template if:true={archiveModal}>
+        <section
+            class="slds-modal slds-fade-in-open"
+            role="dialog">
+            <div class="slds-modal__container modal-custom">
+                <!-- HEADER -->
+                <header class="slds-modal__header headercustom modal-header-custom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                        Archived Documents
+                    </h2>
+                    <button
+                        class="slds-button slds-button_icon close-btn"
+                        title="Close"
+                        onclick={closeArchiveModal}>
+
+                        <lightning-icon
+                            icon-name="utility:close"
+                            alternative-text="close"
+                            size="small">
+                        </lightning-icon>
+                    </button>  
+                </header>
+
+                <!-- BODY CONTENT --> 
+                <div class="slds-modal__content slds-p-around_small custom-scroll"> 
+                    
+                    <div class="slds-m-bottom_small slds-size_1-of-2">
+                        <lightning-input
+                            type="search"
+                            label="Search Documents"
+                            placeholder="Search by Name or Type of Document"
+                            value={archiveSearchKey}
+                            onchange={handleArchiveSearch}>
+                        </lightning-input>
+                    </div>
+
+                    <div class="table-container archive-table">
+
+                    <!-- HEADER -->
+                    <div class="header-wrapper">
+
+                        <table class="staff-table">
+
+                            <thead>
+                                <tr>
+                                    <th class="table-th">Name</th>
+                                    <th class="table-th">Participant Name</th>
+                                    <th class="table-th">Type of Document</th>
+                                    <th class="table-th">Archived Date</th>
+                                    <th class="table-th center">Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <!-- BODY -->
+                    <div class="custom-scroll attachmentTableHeight">
+                        <table class="staff-table">
+                            <tbody>
+                                <template if:true={archivedRecords.length}>
+                                    <template
+                                        for:each={archivedRecords}
+                                        for:item="file">
+                                        <tr key={file.Id}>
+                                            <td class="table-td" title={file.Name}>
+                                                {file.Name}
+                                            </td>
+
+                                            <td class="table-td" title={file.ParticipantName}>
+                                                {file.ParticipantName}
+                                            </td>
+
+                                            <td class="table-td" title={file.Type}>
+                                                {file.Type}
+                                            </td>
+
+                                            <td class="table-td" title={file.ArchivedDate}>
+                                                {file.ArchivedDate}
+                                            </td>
+
+                                            <td class="table-td center action-cell">
+
+                                                <!-- VIEW -->
+                                                <a href="javascript:void(0)"
+                                                    data-url={file.FileUrl}
+                                                    data-id={file.Id}
+                                                    data-key={file.Key}
+                                                    onclick={handleView}
+                                                    title="View">
+
+                                                    <i class="material-icons view-icon">
+                                                        visibility
+                                                    </i>
+                                                </a>
+
+                                                <!-- DOWNLOAD -->
+                                                <a href="javascript:void(0)"
+                                                    data-url={file.FileUrl}
+                                                    data-id={file.Id}
+                                                    data-key={file.Key}
+                                                    onclick={handleArchiveDownload}
+                                                    title="Download">
+
+                                                    <i class="material-icons download-icon">
+                                                        download
+                                                    </i>
+                                                </a>
+
+                                                <!-- RESTORE -->
+                                                <a href="javascript:void(0)"
+                                                    data-id={file.Id}
+                                                    onclick={handleRestore}
+                                                    title="Restore">
+
+                                                    <i class="material-icons unarchive-icon">
+                                                        unarchive
+                                                    </i>
+                                                </a>
+
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </template>
+
+                                <template if:false={archivedRecords.length}>
+                                    <tr>
+                                        <td colspan="4" class="no-data">
+                                            No archived documents found
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        label="Close"
+                        onclick={closeArchiveModal}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+        <!-- <div class="blur-overlay-popup"></div> -->
+    </template>
+
+</template>
