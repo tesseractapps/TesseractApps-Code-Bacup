@@ -1,0 +1,3050 @@
+<template>  
+    <template if:true={participantflag}>
+        <div class="page-container">
+            <!-- Menu Container -->
+            <div class="menu-container">
+                <div class="menu-left">
+                    <div class={allParticipantClass} data-type="all" onclick={handleClick}>All Participants</div>
+                    <div class={pinnedParticipantClass} data-type="pinned" onclick={handleClick}>Pinned Participants</div>
+                </div>
+                <div class="search-box">
+                    <lightning-input 
+                        type="search"
+                        placeholder="Search"
+                        variant="label-hidden"
+                        value={searchParticipant}
+                        onchange={handleSearchParticipant}>
+                    </lightning-input>
+                </div>
+                <lightning-button
+                    label="Create Participant"
+                    variant="brand"
+                    class="slds-m-right_small"
+                    onclick={handleAddNewParticipant}
+                ></lightning-button> 
+            </div>
+            <div class="slds-p-around_medium">
+                <div class="table-container awardsTable adminTable">
+                    <div class="header-wrapper">
+                        <table class="staff-table1 participant-table">
+                            <thead>
+                                <tr>
+                                    <th class="table-th" title="Participant Name">Participant Name</th>
+                                    <th class="table-th" title="NDIS Number">NDIS Number</th>
+                                    <th class="table-th" title="Plan Period">Plan Period</th>
+                                    <th class="table-th" title="Date of Birth">Date of Birth</th>
+                                    <th class="table-th" title="Risk">Risk</th>
+                                    <th class="table-th" title="Remaining Budget">Total Budget</th>
+                                    <th class="table-th center" title="Action">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div class="body-scroll custom-scroll adminTableHeight">
+                        <table class="staff-table1 participant-table">
+                            <tbody>
+                                <template if:false={noRecordsFlag}>
+                                    <template for:each={participants} for:item="participant">
+                                        <tr key={participant.id} class="table-row">
+                                            <td class="table-td">
+                                                <div class="avatar-row">
+                                                    <template if:true={participant.hasImage}>
+                                                        <img
+                                                            src={participant.imageUrl}
+                                                            alt={participant.name}
+                                                            class="provider-logo"
+                                                            data-id={participant.id}
+                                                            onerror={handleImageError}>
+                                                    </template>
+
+                                                    <template if:false={participant.hasImage}>
+                                                        <div class="avatar-circle">
+                                                            {participant.initials}
+                                                        </div>
+                                                    </template>
+
+                                                    <div class="provider-name">
+                                                        <span title={participant.name}>{participant.name}</span>
+                                                    </div>
+                                                    
+                                                </div>
+                                            </td>
+                                            <td class="table-td slds-truncate" title={participant.ndisNumber}>
+                                                {participant.ndisNumber}
+                                            </td>
+
+                                            <td class="table-td slds-truncate" title={participant.planPeriod}>
+                                                {participant.planPeriod}
+                                            </td>
+
+                                            <td class="table-td slds-truncate" title={participant.dob}>
+                                                {participant.dob}
+                                            </td>
+
+                                            <td class="table-td" title={participant.risk}>
+                                                <div class={participant.riskClassFull}>
+                                                    {participant.risk}
+                                                </div>
+                                            </td>
+
+                                            <td class="table-td">
+                                                <!-- <span class="remaining-green">{participant.formattedRemainingBudget}</span> -->
+                                                <span class="darkFont"><!-- / -->{participant.formattedTotalBudget}</span>
+                                            </td>
+
+                                            <td class="table-td center">
+                                                <div class="actions-row">
+                                                    <button class="mi-btn" title="Details"
+                                                        data-id={participant.id}
+                                                        onclick={handleViewDetails}>
+                                                        <i class="material-icons">person</i>
+                                                    </button>
+
+                                                    <button class="mi-btn" title="Edit Plan"
+                                                        data-id={participant.id}
+                                                        onclick={handleEditPlan}>
+                                                        <i class="material-icons">edit_note</i>
+                                                    </button>
+
+                                                    <button class="mi-btn" title="Budget"
+                                                        data-id={participant.id}
+                                                        onclick={handleBudgetClick}>
+                                                        <i class="material-icons">account_balance_wallet</i>
+                                                    </button>
+
+                                                    <button class="mi-btn" title="Add Note"
+                                                        data-id={participant.id}
+                                                        onclick={handleAddNotes}>
+                                                        <i class="material-icons">note_add</i>
+                                                    </button>
+
+                                                    <button class="mi-btn" title="Pin"
+                                                        data-id={participant.id}
+                                                        onclick={handleTogglePin}>
+                                                        <i class="material-icons">{participant.pinIconName}</i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </template>
+
+                                <template if:true={noRecordsFlag}>
+                                    <tr>
+                                        <td class="no-data">
+                                            <p>No records found</p>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <template if:true={hasParticipants}>
+                <template if:true={hasParticipants}>
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination">
+                        <div class="slds-list_inline">
+                            <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                            <div class="slds-select_container">
+                                <select class="slds-select" id="recordsPerPage" onchange={handlePageSizeChange}>
+                                    <template for:each={pageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>{option}</option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="slds-align_absolute-center">
+                            <lightning-button
+                                disabled={isFirstPage}
+                                icon-name="utility:jump_to_left"
+                                label="First"
+                                alternative-text="first page"
+                                onclick={handleFirstPage}
+                                style="margin-right: 10px;">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={isFirstPage}
+                                icon-name="utility:chevronleft"
+                                label="Previous"
+                                alternative-text="Previous"
+                                onclick={handlePreviousPage}
+                                style="margin-right: 5px;">
+                            </lightning-button>
+
+                            <span class="slds-badge">
+                                Showing {currentPage} of {totalPages} Page(s)
+                            </span>
+
+                            <lightning-button
+                                disabled={isLastPage}
+                                icon-name="utility:chevronright"
+                                label="Next"
+                                alternative-text="Next"
+                                onclick={handleNextPage}
+                                class="slds-p-horizontal_x-small"
+                                icon-position="right">
+                            </lightning-button>
+
+                            <lightning-button
+                                disabled={isLastPage}
+                                icon-name="utility:jump_to_right"
+                                label="Last"
+                                alternative-text="last page"
+                                onclick={handleLastPage}
+                                icon-position="right">
+                            </lightning-button>
+                        </div>
+
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge">Total Records: {totalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>        
+        </div>
+            
+    </template>
+
+    <template if:true={budgetForecastflag}>
+        <c-support-coordination-budget-forecast
+            oncancel={handleBudgetForecastCancel}>
+        </c-support-coordination-budget-forecast>
+    </template>
+
+    <template if:true={notesflag}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open slds-modal_large">
+
+            <div class="slds-modal__container">
+            <c-support-coordinator-notes
+                participant-id={participantIdforchild}
+                oncancel={handleCloseNotes}>
+            </c-support-coordinator-notes>
+
+            </div>
+        </section>
+        <!-- BACKDROP -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={providerSpendingFlag}>
+    <section class="page-container">
+
+        <!-- HEADER -->
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium">
+            
+            <!-- Title -->
+            <div class="slds-col">
+                <h1 class="slds-text-heading_medium slds-text-title_bold">
+                    Provider Spending
+                </h1>
+            </div>
+
+            <!-- Actions -->
+            <div class="slds-col slds-shrink-none">
+                <div class="slds-button-group" role="group">
+
+                    <lightning-button
+                        label="Back"
+                        variant="neutral"
+                        onclick={handleProviderSpendingBack}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Create Entry"
+                        variant="brand"
+                        class="slds-m-left_small"
+                        onclick={handleCreateEntity}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+        <!-- CONTENT AREA -->
+        <!-- ================= PROVIDER SPENDING TABLE ================= -->
+<div class="table-container providerSpendingTable">
+
+<!-- LOADING -->
+<template if:true={entryLoading}>
+    <div class="slds-align_absolute-center slds-p-around_medium">
+        Loading entries...
+    </div>
+</template>
+
+<template if:false={entryLoading}>
+
+    <!-- HEADER -->
+    <div class="header-wrapper">
+        <table class="staff-table" role="table">
+            <thead>
+                <tr>
+                    <th class="table-th">Ref</th>
+                    <th class="table-th">Date</th>
+                    <th class="table-th">Participant</th>
+                    <th class="table-th">Provider</th>
+                    <th class="table-th">Service Type</th>
+                    <th class="table-th">Hours</th>
+                    <th class="table-th">Amount</th>
+                    <th class="table-th">Total Amount</th>
+                    <th class="table-th">Status</th>
+                    <th class="table-th">Data Source</th>
+                    <th class="table-th">Action</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- BODY -->
+    <div class="body-scroll custom-scroll tableHeight">
+        <table class="staff-table">
+            <tbody>
+
+                <template if:true={supportEntries.length}>
+                    <template for:each={supportEntries} for:item="entry">
+                        <tr key={entry.recordId} class="table-row">
+
+                            <td class="table-td">{entry.referenceNumber}</td>
+
+                            <td class="table-td">{entry.serviceDate}</td>
+
+                            <td class="table-td">{entry.participantName}</td>
+
+                            <td class="table-td">{entry.providerName}</td>
+
+                            <td class="table-td">{entry.serviceType}</td>
+
+                            <td class="table-td">{entry.hours}</td>
+
+                            <td class="table-td">
+                                <lightning-formatted-number
+                                    value={entry.rate}
+                                    format-style="currency"
+                                    currency-code="AUD">
+                                </lightning-formatted-number>
+                            </td>
+
+                            <td class="table-td">
+                                <lightning-formatted-number
+                                    value={entry.totalAmount}
+                                    format-style="currency"
+                                    currency-code="AUD">
+                                </lightning-formatted-number>
+                            </td>
+
+                            <td class="table-td">
+                                <span class="status-pill new-contact">
+                                    {entry.claimStatus}
+                                </span>
+                            </td>
+
+                            <td class="table-td">{entry.dataSource}</td>
+
+                            <td class="table-td actions-col">
+                                <lightning-button-icon
+                                    icon-name="utility:edit"
+                                    alternative-text="Edit"
+                                    title="Edit"
+                                    variant="bare"
+                                    data-id={entry.recordId}
+                                    onclick={handleEditEntry}>
+                                </lightning-button-icon>
+                            </td>
+
+                        </tr>
+                    </template>
+                </template>
+
+                <template if:false={supportEntries.length}>
+                    <tr>
+                        <td colspan="11" class="slds-text-align_center slds-p-around_medium">
+                            No entries found.
+                        </td>
+                    </tr>
+                </template>
+
+            </tbody>
+        </table>
+    </div>
+
+</template>
+
+</div>
+    </section>
+    <template if:true={showEntryModal}>
+    <section role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open">
+
+        <div class="slds-modal__container modal-custom">
+
+            <!-- HEADER -->
+            <header class="slds-modal__header headercustom">
+                <h2 class="slds-modal__title slds-text-heading_medium">
+                    {entryModalTitle}
+                </h2>
+            </header>
+
+            <!-- BODY -->
+            <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                <div class="slds-grid slds-wrap slds-gutters">
+
+                    <!-- Participant -->
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            label="Participant"
+                            value={entryForm.participantId}
+                            options={participantOptions}
+                            onchange={handleEntryChange}
+                            data-field="participantId"
+                            required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Service Type -->
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            label="Service Type"
+                            value={entryForm.serviceType}
+                            options={serviceTypeOptionsForEntry}
+                            onchange={handleEntryChange}
+                            data-field="serviceType"
+                            required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Provider -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-combobox
+                            label="Provider"
+                            value={entryForm.providerId}
+                            options={providerOptionsForEntry}
+                            onchange={handleEntryChange}
+                            data-field="providerId"
+                            required>
+                        </lightning-combobox>
+                    </div>
+                    <!-- Support Item -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-combobox
+                            label="Support Item"
+                            value={entryForm.supportItemName}
+                            options={supportItemOptions}
+                            onchange={handleEntryChange}
+                            data-field="supportItemName"
+                            required>
+                        </lightning-combobox>
+                    </div>
+
+
+                    <!-- Service Date -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-input
+                            type="date"
+                            label="Service Date"
+                            value={entryForm.serviceDate}
+                            onchange={handleEntryChange}
+                            data-field="serviceDate"
+                            required>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Hours -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-input
+                            type="number"
+                            step="0.01"
+                            label="Hours"
+                            value={entryForm.hours}
+                            onchange={handleHoursChange}
+                            required>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Rate (Non Editable) -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-input
+                            type="number"
+                            label="Amount"
+                            value={entryForm.rate}
+                            disabled>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Total Amount (Auto) -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-input
+                            type="number"
+                            label="Total Amount"
+                            value={entryForm.totalAmount}
+                            disabled>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Claim Status -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-combobox
+                            label="Claim Status"
+                            value={entryForm.claimStatus}
+                            options={claimStatusOptions}
+                            onchange={handleEntryChange}
+                            data-field="claimStatus">
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Data Source -->
+                    <div class="slds-col slds-size_1-of-2 slds-m-top_small">
+                        <lightning-combobox
+                            label="Data Source"
+                            value={entryForm.dataSource}
+                            options={dataSourceOptions}
+                            onchange={handleEntryChange}
+                            data-field="dataSource">
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-top_small">
+                        <lightning-textarea
+                            label="Notes"
+                            value={entryForm.notes}
+                            onchange={handleEntryChange}
+                            data-field="notes">
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    variant="neutral"
+                    label="Cancel"
+                    onclick={handleCloseEntryModal}>
+                </lightning-button>
+
+                <lightning-button
+                    variant="brand"
+                    label="Save"
+                    class="slds-m-left_small"
+                    onclick={handleSaveEntry}>
+                </lightning-button>
+            </footer>
+
+        </div>
+    </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    </template>
+
+    <template if:true={showContactTypeModal}>
+        <section role="dialog" class="slds-modal slds-fade-in-open popup-zindex">
+            <div class="slds-modal__container" style="max-width: 25%;">
+
+                <!-- Header -->
+                <header class="slds-modal__header" style="background: #002a52;">
+                    <h2 class="slds-text-heading_medium" style="color: white; text-align: center;">
+                        Add Contact Type
+                    </h2>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input
+                        label="Contact Type Name"
+                        value={newContactTypeName}
+                        onchange={handleNewContactTypeInput}
+                        required>   <!--required-->
+                    </lightning-input>
+
+                    <!-- Existing custom types -->
+                    <template if:true={customContactTypes.length}>
+                        <div class="slds-m-top_medium">
+                            <p class="">Custom Contact Types</p>
+
+                            <template for:each={customContactTypes} for:item="type">
+                                <div key={type.value}
+                                    class="slds-grid slds-grid_align-spread slds-m-top_x-small">
+
+                                    <span class={type.cssClass}>
+                                        {type.label}
+                                    </span>
+
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        alternative-text="Delete"
+                                        data-value={type.value}
+                                        onclick={stageDeleteContactType}>
+                                    </lightning-button-icon>
+
+                                </div>
+                            </template>
+
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                            class="slds-m-right_small"
+                        onclick={closeContactTypeModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Save"
+                        onclick={saveContactType}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="blur-overlay-popup"></div>
+
+        <!-- <div class="slds-backdrop slds-backdrop_open"></div> -->
+    </template>
+    <template if:true={showContactAttachmentModal}>
+        <section role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                class="slds-modal slds-fade-in-open popup-zindex">
+
+            <div class="slds-modal__container modal-custom">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header headercustom">
+                    <h2 class="slds-modal__title slds-text-heading_medium h2custom">
+                        Attach Files
+                    </h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                    <!-- FORM FIELDS -->
+                    <div class="slds-grid slds-wrap slds-gutters_x-small">
+
+                        <!-- Attachment Name -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-col">
+
+                            <!-- <lightning-input
+                                label="Attachment Name"
+                                data-id="attachmentName"
+                                required="true">
+                            </lightning-input> -->
+                            <lightning-input
+                            label="Attachment Name"
+                            data-field="attachmentName"
+                            data-id="attachmentName"
+                            value={attachmentName}
+                            onchange={handleAttachmentFieldChange}
+                            required>
+                        </lightning-input>
+
+                        </div>
+
+                        <!-- Type -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-col">
+
+                            <lightning-combobox
+                                label="Type"
+                                data-id="attachmentType"
+                                options={attachmentTypeOptions}
+                                value={attachmentType}
+                                onchange={handleAttachmentTypeChange}
+                                required="true">
+                            </lightning-combobox>
+
+                        </div>
+
+                        <template if:true={showOtherField}>
+
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-col">
+
+                                <!-- <lightning-input
+                                    data-id="otherComments"
+                                    label="Other(Please Specify)">
+                                </lightning-input> -->
+                                <template if:true={showOtherField}>
+
+                                <lightning-input
+                                    data-field="otherComments"
+                                    label="Other(Please Specify)"
+                                    value={otherComments}
+                                    onchange={handleAttachmentFieldChange}>
+                                </lightning-input>
+
+                            </template>
+
+                            </div>
+
+                        </template>
+
+                        <!-- Expiry Date -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-col">
+
+                            <!-- <lightning-input
+                                type="date"
+                                label="Expiry Date"
+                                data-id="expiryDate">
+                            </lightning-input> -->
+                            
+                            <lightning-input
+                                type="date"
+                                label="Expiry Date"
+                                data-field="expiryDate"
+                                value={expiryDate}
+                                onchange={handleAttachmentFieldChange}>
+                            </lightning-input>
+
+                        </div>
+
+                        <!-- User -->
+                        <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-col">
+
+                            <lightning-input
+                                label="User"
+                                value={UserName}
+                                data-id="userField">
+                            </lightning-input>
+
+                        </div> -->
+
+                        <!-- Comments -->
+                        <div class="slds-size_1-of-1 slds-col">
+
+                            <!-- <lightning-textarea
+                                label="Comments"
+                                data-id="commentsField">
+                            </lightning-textarea> -->
+                            <lightning-textarea
+                                label="Comments"
+                                data-field="comments"
+                                value={comments}
+                                onchange={handleAttachmentFieldChange}>
+                            </lightning-textarea>
+                        </div>
+
+                    </div>
+
+                    <!-- FILE UPLOAD -->
+                    <div class="slds-box drag-drop slds-m-around_small"
+                        ondragover={handleDragOver}
+                        ondrop={handleDrop}>
+
+                        <p class="slds-text-align_center">
+                            Drag and drop files here<br/>
+
+                            <a href="javascript:void(0);"
+                            onclick={triggerAttachInput}>
+                                Click to browse
+                            </a>
+                        </p>
+
+                        <input
+                            type="file"
+                            class="hidden-file-input contact-upload-input"
+                            onchange={handleFileUploadInputChange}
+                            multiple />
+                    </div>
+
+                    <!-- AWS COMPONENT -->
+                    <template if:true={isFileExpand}>
+                        <c-document-office-service
+                            record-id={recordIdForFileUpload}
+                            module-path-from-parent="ticket"
+                            onuploadcomplete={handleAwsUploadComplete}
+                            onfiledeleted={handleFileDeleted}
+                            oncancel={handlefilecancel}>
+                        </c-document-office-service>
+                    </template>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleCloseContactAttachmentModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        label="Save"
+                        variant="brand"
+                        onclick={handleSaveContactAttachment}>
+                    </lightning-button>
+
+                </footer>
+            </div>
+        </section>
+
+        <div class="blur-overlay-popup"></div>
+    </template>
+
+    <template if:true={showAttachmentListModal}>
+
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open popup-zindex">
+
+            <div class="slds-modal__container modal-custom1">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header headercustom">
+
+                    <h2 class="slds-modal__title slds-text-heading_medium h2custom">
+                        Uploaded Files
+                    </h2>
+
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                    <template if:true={contactAttachments.length}>
+
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Type</th>
+                                    <th>Expiry Date</th>
+                                    <th>Comments</th>
+                                    <th style="width:120px; text-align:center;">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <template
+                                    for:each={contactAttachments}
+                                    for:item="file">
+
+                                    <tr key={file.Id}>
+
+                                        <td>
+                                            {file.attachmentName}
+                                        </td>
+
+                                        <td>
+                                            {file.type}
+                                        </td>
+
+                                        <td>
+                                            {file.expiryDate}
+                                        </td>
+
+                                        <td>
+                                            {file.comments}
+                                        </td>
+
+                                        <td style="text-align:center;">
+
+                                            <!-- VIEW -->
+                                            <!-- <lightning-button-icon
+                                                icon-name="utility:preview"
+                                                alternative-text="View"
+                                                title="View"
+                                                class="slds-m-right_small"
+                                                data-url={file.viewUrl}
+                                                onclick={handleViewAttachment}>
+                                            </lightning-button-icon>
+
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                alternative-text="Delete"
+                                                title="Delete"
+                                                variant="destructive"
+                                                data-id={file.Id}
+                                                onclick={handleDeleteAttachment}>
+                                            </lightning-button-icon> -->
+
+                                            <!-- VIEW -->
+                                            <span
+                                                class="material-symbols-outlined action-icon slds-m-right_small visible-icon"
+                                                data-url={file.viewUrl}
+                                                onclick={handleViewAttachment}
+                                                title="View">
+
+                                                visibility
+
+                                            </span>
+
+                                            <!-- DELETE -->
+                                            <span
+                                                class="material-symbols-outlined action-icon delete-icon"
+                                                data-id={file.Id}
+                                                data-key={file.key}
+                                                onclick={handleDeleteAttachment}
+                                                title="Delete">
+
+                                                delete
+
+                                            </span>
+
+                                            <!-- EDIT -->
+                                            <!-- <span
+                                                class="material-symbols-outlined action-icon edit-icon slds-m-right_small"
+                                                data-id={file.Id}
+                                                onclick={handleEditAttachment}
+                                                title="Edit">
+
+                                                edit
+
+                                            </span> -->
+
+                                        </td>
+
+                                    </tr>
+
+                                </template>
+
+                            </tbody>
+
+                        </table>
+
+                    </template>
+
+                    <template if:false={contactAttachments.length}>
+
+                        <div class="slds-align_absolute-center slds-p-around_large">
+                            No files uploaded
+                        </div>
+
+                    </template>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+
+                    <lightning-button
+                        label="Close"
+                        variant="neutral"
+                        onclick={closeAttachmentListModal}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+
+        </section>
+
+        <div class="blur-overlay-popup"></div>
+
+    </template>
+
+    <template if:true={showBudgetModal}>
+
+        <c-support-coordinator-budget
+            participant-id={selectedBudgetParticipantId}
+            onclose={handleBudgetClose}>
+        </c-support-coordinator-budget>
+
+    </template>
+
+    <template if:true={createParticipantshowModal}>     
+        <section role="dialog" class="slds-modal slds-fade-in-open" aria-modal="true">
+        <div class="slds-modal__container createEditModal">
+
+            <!-- HEADER -->
+            <header class="slds-modal__header headercustom modal-header-custom">
+                <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                    <!-- Add New Participant -->{createorEditParticipant}
+                </h2>
+                <button class="slds-button slds-button_icon close-btn" title="Close" onclick={createParticipantcloseModal}>
+                    <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                </button>
+            </header>
+
+            <!-- BODY -->
+            <div class="slds-modal__content slds-p-around_medium custom-scroll modelOverflow">
+
+                <lightning-progress-indicator current-step={createCurrentStep} type="path"
+                    onstepfocus={handleCreateStepClick}>
+                    <lightning-progress-step label="Basic Information"  value="createstep1"></lightning-progress-step>
+                    <!-- <lightning-progress-step label="Support Category & Services"  value="createstep2"></lightning-progress-step> -->
+                    <lightning-progress-step label="Support Coordinator Services"  value="createstep2"></lightning-progress-step>
+                    <lightning-progress-step label="Provider Services"  value="createstep3"></lightning-progress-step>
+                    <lightning-progress-step label="Contacts and Attachments" value="createstep4"></lightning-progress-step>
+                </lightning-progress-indicator>
+            
+
+                <div class="slds-m-top_medium">
+
+                    <div class={step1Class} data-step="createstep1">
+                        <div class="slds-m-left_small slds-text-title_bold">Basic Information</div>
+                            
+                        <div class="slds-grid slds-wrap">
+
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>First Name</span>
+                                    <lightning-input 
+                                        type="text"
+                                        name="firstName"
+                                        variant="label-hidden"
+                                        value={firstName}
+                                        required="true"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Last Name</span>
+                                    <lightning-input 
+                                        type="text"
+                                        name="lastName"
+                                        variant="label-hidden"
+                                        value={lastName}
+                                        required="true"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Date of Birth</span>
+                                    <lightning-input
+                                        type="date"
+                                        name="dob"
+                                        value={dob}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div> 
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Phone Number</span>
+                                        <lightning-input
+                                        type="tel"
+                                        name="phone"
+                                        value={phone}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        required="true"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>  
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Email ID</span>
+                                        <lightning-input
+                                        type="email"
+                                        name="email"
+                                        value={email}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        required="true"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>   
+                            <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Status</span>
+                                    <lightning-combobox
+                                        name="status"
+                                        value={status}
+                                        options={statusOptions}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-combobox>
+                                </div>
+                            </div>     -->
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">NDIS Number</span>
+                                    <lightning-input
+                                        name="ndisNumber"
+                                        value={ndisNumber}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div> 
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Classification</span>
+                                    <!-- <lightning-combobox name="selectedClassification" value={selectedClassification} onchange={handleparticipantCreateChange}
+                                            variant="label-hidden" options={classificationOption}></lightning-combobox> -->
+                                      
+                                 <c-tesseract-apps-multi-combobox                                                          
+                                    options={classificationOption}
+                                    placeholder="Select Classification"
+                                    value={selectedClassification}
+                                     onchange={handleClassificationChange}>
+                                </c-tesseract-apps-multi-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Type of Industry</span>
+                                    <lightning-combobox value={selectedTypeOfIndustry}  name="selectedTypeOfIndustry" onchange={handleparticipantCreateChange}
+                                        variant="label-hidden" options={typeOfIndustry}></lightning-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_2-of-4 slds-p-around_small">
+                                <div class="floating-label-text-area">
+                                    <span class="label-text-drop1">
+                                        About Participant
+                                    </span>
+
+                                    <lightning-input-rich-text
+                                        name="aboutParticipant"
+                                        value={aboutParticipant}
+                                        formats={richTextFormats}
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input-rich-text>
+                                </div>
+                            </div> 
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    
+                                    <span style="display:flex; align-items:center; gap:8px;">
+                                        
+                                        <lightning-input
+                                            type="toggle"
+                                            checked={isStatusActive}
+                                            onchange={handleStatusToggle}
+                                            variant="label-hidden"
+                                            message-toggle-active=""
+                                            message-toggle-inactive=""
+                                            style="transform: scale(0.8); transform-origin: left center;">
+                                        </lightning-input>
+
+                                        <span>Status</span>
+
+                                    </span>
+
+                                </div>
+                            </div>       
+                            
+                        </div> 
+                        <div class="slds-m-left_small slds-text-title_bold">Address</div>
+
+                        <div class="slds-grid slds-wrap -p-vertical_medium">
+
+                            <!-- Full Address Block -->
+                            <div class="slds-size_2-of-4 slds-p-around_small">
+
+                                <!-- <div style="color:red;">{errorMessage}</div> -->
+
+                                <lightning-input-address
+                                    data-id="participantAddress"
+                                    address-label=""
+                                    street-label="Street"
+                                    city-label="Suburb"
+                                    province-label="State"
+                                    postal-code-label="Post Code"
+                                    country-label="Country"
+
+                                    street={street}
+                                    city={city}
+                                    province={province}
+                                    postal-code={postalcode}
+                                    country={country}
+
+                                    onchange={addressInputChange}
+                                    class="label-font-weight_bold"
+                                    show-address-lookup
+                                    required>
+                                </lightning-input-address>
+
+                            </div>
+
+                        </div> 
+
+                        <div class="slds-m-left_small slds-text-title_bold">Plan Information</div>
+                        <div class="slds-grid slds-wrap">
+
+                            
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Plan Start Date</span>
+                                    <lightning-input
+                                        type="date"
+                                        name="planStart"
+                                        value={planStart}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Plan End Date</span>
+                                        <lightning-input
+                                        type="date"
+                                        name="planEnd"
+                                        value={planEnd}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>     
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Total Plan Budget</span>
+                                        <lightning-input
+                                        type="number"
+                                        name="planBudget"
+                                        value={planBudget}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                        formatter="currency"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>  
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Budget Spent to Date</span>
+                                        <lightning-input
+                                        type="number"
+                                        name="budgetSpent"
+                                        value={budgetSpent}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                        formatter="currency"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>      
+                                <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Support Category</span>
+                                    <lightning-combobox
+                                        name="supportCategory"
+                                        value={supportCategory}
+                                        variant="label-hidden"
+                                        options={supportCategoryOptions}
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-combobox>
+                                </div>
+                            </div> -->
+                            
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Risk Level</span>
+                                        <lightning-combobox
+                                        name="riskLevel"
+                                        value={riskLevel}
+                                        options={riskLevelOptions}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-combobox>
+                                </div>
+                            </div>     
+                            <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Emergency Contact</span>
+                                    <lightning-input
+                                        name="emergencyContact"
+                                        value={emergencyContact}
+                                        variant="label-hidden"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>  -->
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Provider Budget</span>
+                                        <lightning-input
+                                        type="number"
+                                        name="providerBudget"
+                                        value={providerBudget}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                        formatter="currency"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>  
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Support Coordination Budget</span>
+                                        <lightning-input
+                                        type="number"
+                                        name="supportCoordinationBudget"
+                                        value={supportCoordinationBudget}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                        formatter="currency"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Service Type</span>
+                                    <!-- <lightning-combobox
+                                        placeholder="Select Service Type"
+                                        options={serviceTypeOptions}
+                                        value={selectedServiceTypes}
+                                        onchange={handleServiceTypeChange}
+                                        disabled={isServiceTypeDisabled}
+                                        variant="label-hidden"
+                                        required>
+                                    </lightning-combobox> -->
+                                        <c-tesseract-apps-multi-combobox placeholder="Select Service Type" name="multiServiceType"
+                                        options={serviceTypeOptions} value={selectedServiceTypes}
+                                        onchange={handleServiceTypeChange} 
+                                        variant="label-hidden"></c-tesseract-apps-multi-combobox>  <!--disabled={isServiceTypeDisabled}-->
+                                </div>
+                            </div>  
+                        </div> 
+                    
+                </div>
+
+                <!-- ═══════════════════════════════════
+                    STEP 2 — Support Category & Services
+                ════════════════════════════════════════ -->
+                    <div class={step2Class} data-step="createstep2">
+
+                        <template if:false={showAddSupportCoordinatorCategoryModal}>
+                        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium">
+                            <!-- Title -->
+                            <div class="slds-col">
+                                
+                            </div>
+                            <!-- Actions -->
+                            <div class="slds-col slds-shrink-none">
+                                <div class="slds-button-group" role="group">
+                                    <!-- <lightning-button
+                                        label="Back"
+                                        variant="neutral"
+                                        onclick={handleBackFromSupportCategories}>
+                                    </lightning-button> -->
+                                    <lightning-button
+                                        label="Add New Category"
+                                        variant="brand"
+                                        class="slds-m-left_small"
+                                        onclick={handleAddCoordinatorCategoryModal}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <template if:true={displayedCoordinatorServiceGroups.length}>
+
+                            <div class="table-container awardsTable adminTable">
+
+                                <!-- HEADER -->
+                                <div class="header-wrapper">
+                                    <table class="staff-table1 coordinator-service-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="table-th">Service Type</th>
+                                                <th class="table-th">State</th>
+                                                <th class="table-th">Budget Allocation</th>
+                                                <!-- <th class="table-th">Current Spent</th>
+                                                <th class="table-th">Available Funds</th>
+                                                <th class="table-th">Status</th> -->
+                                                <th class="table-th">Budget Spent to Date</th>
+                                                <th class="table-th center">Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+
+                                <!-- BODY -->
+                                <div class="body-scroll custom-scroll adminTableHeight">
+                                    <table class="staff-table1 coordinator-service-table">
+                                        <tbody>
+
+                                            <template for:each={displayedCoordinatorServiceGroups} for:item="group">
+
+                                                <!-- MAIN ROW -->
+                                                <tr key={group.serviceType} class="table-row">
+
+                                                    <!-- SERVICE TYPE -->
+                                                    <td class="table-td">
+                                                        <!-- EXPAND -->
+                                                        <button
+                                                                class="slds-button slds-button_icon slds-m-right_x-small"
+                                                            data-type={group.serviceType}
+                                                            onclick={handleToggleCoordinatorExpand}>
+
+                                                            <lightning-icon
+                                                                icon-name={group.chevronIcon}
+                                                                size="x-small">
+                                                            </lightning-icon>
+
+                                                        </button>
+                                                        <div class="slds-text-heading_small slds-truncate"
+                                                            title={group.serviceType}>
+                                                            {group.serviceType}
+                                                        </div>
+                                                    </td>
+                                                    <td class="table-td">
+                                                        {group.state}
+                                                    </td>
+                                                    <!-- BUDGET -->
+                                                    <td class="table-td">
+
+                                                        <lightning-formatted-number
+                                                            value={group.budgetAllocation}
+                                                            format-style="currency"
+                                                            currency-code="AUD"
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+
+                                                    </td>
+
+                                                    
+                                                    <td class="table-td">
+
+                                                        <lightning-formatted-number
+                                                            value={group.budgetSpentToDate}
+                                                            format-style="currency"
+                                                            currency-code="AUD"
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+
+                                                    </td>
+
+                                                    <!-- ACTION -->
+                                                    <td class="table-td center">
+
+                                                        <div class="actions-row">
+                                                            
+                                                            <button
+                                                                class="mi-btn"
+                                                                data-type={group.serviceType}
+                                                                data-providerid={group.providerId}
+                                                                onclick={handleEditCoordinatorService}>
+
+                                                                <i class="material-icons">
+                                                                    edit_document
+                                                                </i>
+
+                                                            </button>
+                                                            
+                                                        </div>
+
+                                                    </td>
+
+                                                </tr>
+
+                                                <!-- EXPANDED CHILD -->
+                                            <template if:true={group.isExpanded}>
+
+                                                    <tr key={group.serviceType} class="child-row">
+
+                                                        <td colspan="4" class="child-wrapper">
+
+                                                            <div class="child-coordinator-table-container">
+
+                                                                <div class="child-title">
+                                                                    Support Items Breakdown
+                                                                </div>
+
+                                                                <table class="staff-table1 child-service-table1">
+
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th class="table-th">Support Item Name</th>
+                                                                            <th class="table-th">Support Item Number</th>
+                                                                            <!-- <th class="table-th">Provider</th> -->
+                                                                            <th class="table-th">State</th>
+                                                                            <th class="table-th amount-col">Amount</th>
+                                                                        </tr>
+                                                                    </thead>
+
+                                                                    <tbody>
+
+                                                                        <template if:true={group.supportItems}>
+
+                                                                            <template for:each={group.supportItems} for:item="item">
+
+                                                                                <tr key={item.recordId} class="table-row">
+
+                                                                                    <td class="table-td">
+                                                                                        {item.supportItemName}
+                                                                                    </td>
+
+                                                                                    <td class="table-td">
+                                                                                        {item.supportItemNumber}
+                                                                                    </td>
+
+                                                                                    <!-- <td class="table-td">
+                                                                                        {item.providerName}
+                                                                                    </td> -->
+
+                                                                                    <td class="table-td">
+                                                                                        {item.state}
+                                                                                    </td>
+
+                                                                                    <td class="table-td amount-col">
+
+                                                                                        <lightning-formatted-number
+                                                                                            value={item.amount}
+                                                                                            format-style="currency"
+                                                                                            currency-code="AUD"
+                                                                                            minimum-fraction-digits="2"
+                                                                                            maximum-fraction-digits="2">
+                                                                                        </lightning-formatted-number>
+
+                                                                                    </td>
+
+                                                                                </tr>
+
+                                                                            </template>
+
+                                                                            <!-- TOTAL -->
+
+                                                                            <tr class="total-row">
+
+                                                                                <td class="table-td" colspan="3">
+                                                                                    Total Spent Across All Items
+                                                                                </td>
+
+                                                                                <td class="table-td total-amount">
+
+                                                                                    <lightning-formatted-number
+                                                                                        value={group.totalSpentAcrossItems}
+                                                                                        format-style="currency"
+                                                                                        currency-code="AUD"
+                                                                                        minimum-fraction-digits="2"
+                                                                                        maximum-fraction-digits="2">
+                                                                                    </lightning-formatted-number>
+
+                                                                                </td>
+
+                                                                            </tr>
+
+                                                                        </template>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                            </div>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                </template>
+
+                                            </template>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                        </template>
+                        <template if:false={displayedCoordinatorServiceGroups.length}>
+                            <!-- <div class="slds-text-align_center slds-p-around_medium">
+                                No services added yet.
+                            </div> -->
+
+                            <div class="no-data">
+                                <p>  No services added yet.</p>
+                            </div>
+                        </template>
+                        
+                        <div class="slds-grid slds-grid_align-end slds-m-top_medium">
+
+                            <lightning-button
+                                label="Skip"
+                                variant="neutral"
+                                onclick={handleSkip}>
+                            </lightning-button>
+
+                        </div>
+                    </template>
+                    
+
+                    <template if:true={showAddSupportCoordinatorCategoryModal}>
+
+                        <!--  <div class="slds-m-left_small slds-text-title_bold">Support Coordinator Services</div> -->
+                            
+                        <div class="slds-grid slds-wrap">
+
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 " style="padding:1% 1% 0% 0%">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Service Type</span>
+                                    <lightning-combobox
+                                        name="coordinatorServiceType"
+                                        placeholder="Select Service Type"
+                                        options={coordinatorServiceTypeOptions}
+                                        value={selectedCoordinatorServiceType}
+                                        onchange={handleServiceTypeChange}
+                                        
+                                        variant="label-hidden">  <!-- disabled={isCoordinatorServiceTypeDisabled}-->
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 1% 0% 0%">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">State</span>
+                                        <lightning-combobox
+                                        placeholder="Select State"
+                                        options={stateOptions}
+                                        value={selectedCoordinatorState}
+                                        onchange={handleCoordinatorStateChange}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 1% 0% 0%">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Budget Allocation</span>
+                                        <lightning-input
+                                        type="number"
+                                        step="0.01"
+                                        name="budgetCoordinatorAllocation"
+                                        formatter="currency"
+                                        currency-code="USD"
+                                        value={budgetCoordinatorAllocation}
+                                        variant="label-hidden"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div> 
+                            <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Current Amount Spent"</span>
+                                        <lightning-input
+                                        type="number"
+                                        step="0.01"
+                                        value={currentAmountSpent}
+                                        onchange={handleAmountSpentChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                            </div> -->
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 0% 0% 0%">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Budget Spent to Date</span>
+                                        <lightning-input
+                                        type="number"
+                                        name="coordinatorCurrentAmountSpent"
+                                        value={coordinatorCurrentAmountSpent}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                            formatter="currency"
+                                        currency-code="USD"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>      
+                        </div> 
+
+                            <!-- ================= NDIS TABLE ================= -->
+                        <template if:true={coordinatorCatalogue.length}>
+                            <div class="slds-m-top_small">
+                                <div class="slds-grid slds-grid_align-end slds-m-bottom_small">
+                                    <div class="slds-size_1-of-4">
+                                        <lightning-input 
+                                            type="search"
+                                            placeholder="Search Support Item Name"
+                                            variant="label-hidden"
+                                            value={searchCoordinatorSupportItem}
+                                            onchange={handleSearchCoordinatorSupportItem}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+
+                                <div class="table-container awardsTable adminTable">
+
+                                    <!-- HEADER -->
+                                    <div class="header-wrapper">
+                                        <table class="staff-table1 coordinator-catalogue-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="table-th" title="Select">Select</th>
+                                                    <th class="table-th" title="Support Item Name">Support Item Name</th>
+                                                    <th class="table-th" title="Support Item Number">Support Item Number</th>
+                                                    <!-- <th class="table-th" title="Preferred Staff">Preferred Staff</th> -->
+                                                    <th class="table-th center" title="Amount">Amount</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                    <!-- BODY -->
+                                    <div class="body-scroll custom-scroll adminTableHeight">
+                                        <table class="staff-table1 coordinator-catalogue-table">
+                                            <tbody>
+
+                                                    <template if:true={pagedCoordinatorCatalogue.length}> 
+                                                    <template for:each={pagedCoordinatorCatalogue} for:item="row">
+                                                        <tr key={row.id} class="table-row">
+
+                                                            <td class="table-td">
+                                                                <lightning-input
+                                                                    type="checkbox"
+                                                                    data-id={row.id}
+                                                                    checked={row.selected}
+                                                                    onchange={handleCoordinatorCatalogueSelect}>
+                                                                </lightning-input>
+                                                            </td>
+
+                                                            <td class="table-td" title={row.name}>
+                                                            {row.name}
+                                                            </td>
+
+                                                            <td class="table-td" title={row.number}>
+                                                                {row.number}
+                                                            </td>
+
+                                                            <!-- <td class="table-td">
+                                                            
+                                                            </td> -->
+
+                                                            <td class="table-td center" title={row.amount}>
+                                                                
+                                                                <template if:true={row.isEditingAmount}>
+                                                                    <div class="qty-edit-container">
+                                                                        <lightning-input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            min="0"
+                                                                            value={row.amount}
+                                                                            variant="label-hidden"
+                                                                            onchange={handleRowAmountChange}
+                                                                            data-id={row.id}
+                                                                            data-amount={row.amount}
+                                                                            onkeydown={handleAmountKeyDown}
+                                                                            class="qty-value"
+                                                                        >
+                                                                        </lightning-input>
+                                                                        <a
+                                                                            href="javascript:void(0)"
+                                                                            class="save-link"
+                                                                            data-id={row.id}
+                                                                            title="Save"
+                                                                            onclick={saveCoordinatorAmount}
+                                                                        >
+                                                                            <i class="material-icons save-icon"
+                                                                            >check</i
+                                                                            >
+                                                                        </a>
+                                                                    </div>
+                                                                </template>
+
+                                                                <template if:false={row.isEditingAmount}>
+                                                                    <div class="qty-edit-container">
+                                                                    <lightning-formatted-number
+                                                                            value={row.amount}
+                                                                            format-style="currency"
+                                                                            currency-code="AUD"
+                                                                            minimum-fraction-digits="2"
+                                                                            maximum-fraction-digits="2">
+                                                                        </lightning-formatted-number>
+
+                                                                        <a
+                                                                            href="javascript:void(0)"
+                                                                            data-id={row.id}
+                                                                            data-amount={row.amount}
+                                                                            onclick={enableAmountEdit}
+                                                                            title="Edit Amount">
+
+                                                                        <i class="material-icons edit-icon"
+                                                                        >edit</i
+                                                                        >
+                                                                    </a>
+                                                                    </div>
+                                                                </template>
+
+                                                            </td>
+
+                                                        </tr>
+                                                    </template>
+                                                </template>
+
+                                                    <!-- NO DATA -->
+                                                    <template if:false={pagedCoordinatorCatalogue.length}>
+                                                    <tr>
+                                                        <td class="no-data">
+                                                            <p>No records found</p>
+                                                        </td>
+                                                    </tr>
+                                                </template> 
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div> 
+
+
+
+                                <div class="slds-grid slds-grid_vertical-align-center
+                                        slds-grid_align-spread
+                                        slds-m-top_medium
+                                        slds-p-around_small">
+
+                                <!-- LEFT: Page Size -->
+                                <!--  <div class="slds-col slds-size_3-of-12 slds-grid slds-grid_vertical-align-center">
+                                    <span class="slds-m-right_x-small">Page Size :</span>
+                                    <lightning-combobox
+                                        value={coordinatorCatPageSize}
+                                        options={catPageSizeOptions}
+                                        onchange={handleCoordinatorCatPageSizeChange}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div> -->
+
+                                    <div class="slds-list_inline"> 
+            <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span> 
+            <div class="slds-select_container"> 
+                <select class="slds-select" id="recordsPerPage1" onchange={handleCoordinatorCatPageSizeChange}> 
+                    <template for:each={catPageSizeOptions} for:item="option"> 
+                    <option key={option} value={option}>{option}</option> 
+                    </template> 
+                </select> 
+            </div> 
+        </div> 
+
+                                <!-- CENTER: Navigation -->
+                                <div class="slds-col slds-size_6-of-12 slds-align_absolute-center">
+
+                                    <lightning-button
+                                        label="« First"
+                                        onclick={handleCoordinatorFirstCatPage}
+                                        disabled={isCoordinatorCatFirstPage}>
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        class="slds-m-left_x-small"
+                                        label="‹ Previous"
+                                        onclick={handleCoordinatorPrevCatPage}
+                                        disabled={isCoordinatorCatFirstPage}>
+                                    </lightning-button>
+
+                                    <span class="slds-m-horizontal_medium slds-text-body_small slds-text-bold">
+                                        Showing {coordinatorCatCurrentPage} of {coordinatorCatTotalPages} Page(s)
+                                    </span>
+
+                                    <lightning-button
+                                        class="slds-m-right_x-small"
+                                        label="Next ›"
+                                        onclick={handleCoordinatorNextCatPage}
+                                        disabled={isCoordinatorCatLastPage}>
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        label="Last »"
+                                        onclick={handleCoordinatorLastCatPage}
+                                        disabled={isCoordinatorCatLastPage}>
+                                    </lightning-button>
+
+                                </div>
+
+                                <!-- RIGHT: Total Records -->
+                                <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                                    <span>
+                                        <!-- Total Records: {ndisCatalogue.length} -->
+                                            Total Records: {totalCoordinatorCatalogueRecords}
+                                    </span>
+                                </div>
+
+                                
+                                </div>
+                                <footer class="slds-modal__footer">
+                                    <lightning-button
+                                        variant="neutral"
+                                        label="Cancel"
+                                        onclick={handleCloseAddCategoryModal}>
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Save"
+                                        class="slds-m-left_small"
+                                        onclick={handleAddCoordinatorService}>
+                                    </lightning-button>
+                                </footer>
+                            </div>
+                        </template>
+                            <template if:false={coordinatorCatalogue.length}>
+            
+                            <div class="no-data">
+                                <p>No records found</p>
+                            </div>
+                        
+                        </template>
+
+                    </template>  
+
+                    </div>
+
+                <div class={step3Class} data-step="createstep3">
+                    <template if:false={showAddSupportCategoryModal}>
+                        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium">
+                            <!-- Title -->
+                            <div class="slds-col">
+                                <!-- <h1 class="slds-text-heading_medium slds-text-title_bold">
+                                    Support Categories & Services – {selectedParticipant.name}
+                                </h1> -->
+                            </div>
+                            <!-- Actions -->
+                            <div class="slds-col slds-shrink-none">
+                                <div class="slds-button-group" role="group">
+                                    <!-- <lightning-button
+                                        label="Back"
+                                        variant="neutral"
+                                        onclick={handleBackFromSupportCategories}>
+                                    </lightning-button> -->
+                                    <lightning-button
+                                        label="Add New Category"
+                                        variant="brand"
+                                        class="slds-m-left_small"
+                                        onclick={handleOpenAddCategoryModal}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <template if:true={displayedServiceGroups.length}>
+
+                            <div class="table-container awardsTable adminTable">
+
+                                <!-- HEADER -->
+                                <div class="header-wrapper">
+                                    <table class="staff-table1 service-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="table-th">Service Type</th>
+                                                <th class="table-th">State</th>
+                                                <th class="table-th">Budget Allocation</th>
+                                                <!-- <th class="table-th">Current Spent</th>
+                                                <th class="table-th">Available Funds</th>
+                                                <th class="table-th">Status</th> -->
+                                                <th class="table-th">Budget Spent to Date</th>
+                                                <th class="table-th center">Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+
+                                <!-- BODY -->
+                                <div class="body-scroll custom-scroll adminTableHeight">
+                                    <table class="staff-table1 service-table">
+                                        <tbody>
+
+                                            <template for:each={displayedServiceGroups} for:item="group">
+
+                                                <!-- MAIN ROW -->
+                                                <tr key={group.tempKey} class="table-row">
+
+                                                    <!-- SERVICE TYPE -->
+                                                    <td class="table-td">
+                                                        <!-- EXPAND -->
+                                                        <button
+                                                                class="slds-button slds-button_icon slds-m-right_x-small"
+                                                            data-key={group.tempKey}
+                                                            onclick={handleToggleExpand}>
+
+                                                            <lightning-icon
+                                                                icon-name={group.chevronIcon}
+                                                                size="x-small">
+                                                            </lightning-icon>
+
+                                                        </button>
+                                                        <div class="slds-text-heading_small slds-truncate"
+                                                            title={group.serviceType}>
+                                                            {group.serviceType}
+                                                        </div>
+                                                    </td>
+                                                    <td class="table-td">
+                                                        {group.state}
+                                                    </td>
+                                                    <!-- BUDGET -->
+                                                    <td class="table-td">
+
+                                                        <lightning-formatted-number
+                                                            value={group.budgetAllocation}
+                                                            format-style="currency"
+                                                            currency-code="AUD"
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+
+                                                    </td>
+
+                                                    <!-- SPENT -->
+                                                    <!-- <td class="table-td">
+
+                                                        <lightning-formatted-number
+                                                            value={group.amountSpent}
+                                                            format-style="currency"
+                                                            currency-code="AUD"
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+
+                                                    </td>
+
+                                                    <td class="table-td">
+
+                                                        <span class="remaining-green">
+
+                                                            <lightning-formatted-number
+                                                                value={group.availableFunds}
+                                                                format-style="currency"
+                                                                currency-code="AUD"
+                                                                minimum-fraction-digits="2"
+                                                                maximum-fraction-digits="2">
+                                                            </lightning-formatted-number>
+
+                                                        </span>
+
+                                                    </td> -->
+
+                                                    <!-- STATUS -->
+                                                    <!-- <td class="table-td">
+
+                                                        <div class="slds-progress-bar slds-progress-bar_small">
+                                                            <span
+                                                                class="slds-progress-bar__value custom-progress-bar"
+                                                                style={group.statusStyle}>
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="slds-text-body_small slds-m-top_xx-small">
+                                                            {group.statusPercent}%
+                                                        </div>
+
+                                                    </td> -->
+                                                    <td class="table-td">
+
+                                                        <lightning-formatted-number
+                                                            value={group.budgetSpentToDate}
+                                                            format-style="currency"
+                                                            currency-code="AUD"
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="2">
+                                                        </lightning-formatted-number>
+
+                                                    </td>
+
+                                                    <!-- ACTION -->
+                                                    <td class="table-td center">
+
+                                                        <div class="actions-row">
+                                                            
+                                                            <button
+                                                                class="mi-btn"
+                                                                data-key={group.tempKey}
+                                                                data-providerid={group.providerId}
+                                                                onclick={handleEditService}>
+
+                                                                <i class="material-icons">
+                                                                    edit_document
+                                                                </i>
+
+                                                            </button>
+                                                            
+                                                        </div>
+
+                                                    </td>
+
+                                                </tr>
+
+                                                <!-- EXPANDED CHILD -->
+                                            <template if:true={group.isExpanded}>
+
+                                                    <tr key={group.tempKey} class="child-row">
+
+                                                        <td colspan="5" class="child-wrapper">
+
+                                                            <div class="child-table-container">
+
+                                                                <div class="child-title">
+                                                                    Support Items Breakdown
+                                                                </div>
+
+                                                                <table class="staff-table1 child-service-table">
+
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th class="table-th">Support Item Name</th>
+                                                                            <th class="table-th">Support Item Number</th>
+                                                                            <th class="table-th">Provider</th>
+                                                                            <!-- <th class="table-th">State</th> -->
+                                                                                <th class="table-th">Preferred Staff</th>
+                                                                            <th class="table-th amount-col">Amount</th>
+                                                                        </tr>
+                                                                    </thead>
+
+                                                                    <tbody>
+
+                                                                        <template if:true={group.supportItems}>
+
+                                                                            <template for:each={group.supportItems} for:item="item">
+
+                                                                                <tr key={item.recordId} class="table-row">
+
+                                                                                    <td class="table-td">
+                                                                                        {item.supportItemName}
+                                                                                    </td>
+
+                                                                                    <td class="table-td">
+                                                                                        {item.supportItemNumber}
+                                                                                    </td>
+
+                                                                                    <td class="table-td">
+                                                                                        {item.providerNames}
+                                                                                    </td>
+
+                                                                                    <!-- <td class="table-td">
+                                                                                        {item.state}
+                                                                                    </td> -->
+                                                                                    <td class="table-td">
+                                                                                        {item.preferredStaff}
+                                                                                    </td>
+                                                                                    <td class="table-td amount-col">
+
+                                                                                        <lightning-formatted-number
+                                                                                            value={item.amount}
+                                                                                            format-style="currency"
+                                                                                            currency-code="AUD"
+                                                                                            minimum-fraction-digits="2"
+                                                                                            maximum-fraction-digits="2">
+                                                                                        </lightning-formatted-number>
+
+                                                                                    </td>
+
+                                                                                </tr>
+
+                                                                            </template>
+
+                                                                            <!-- TOTAL -->
+
+                                                                            <tr class="total-row">
+
+                                                                                <td class="table-td" colspan="4">
+                                                                                    Total Spent Across All Items
+                                                                                </td>
+
+                                                                                <td class="table-td total-amount">
+
+                                                                                    <lightning-formatted-number
+                                                                                        value={group.totalSpentAcrossItems}
+                                                                                        format-style="currency"
+                                                                                        currency-code="AUD"
+                                                                                        minimum-fraction-digits="2"
+                                                                                        maximum-fraction-digits="2">
+                                                                                    </lightning-formatted-number>
+
+                                                                                </td>
+
+                                                                            </tr>
+
+                                                                        </template>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                            </div>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                </template>
+
+                                            </template>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                        </template>
+                        <template if:false={displayedServiceGroups.length}>
+                            <!-- <div class="slds-text-align_center slds-p-around_medium">
+                                No services added yet.
+                            </div> -->
+                                <div class="no-data">
+                                <p>  No services added yet.</p>
+                            </div>
+                        </template>
+                        
+                        <div class="slds-grid slds-grid_align-end slds-m-top_medium">
+
+                            <lightning-button
+                                label="Skip"
+                                variant="neutral"
+                                onclick={handleSkip}>
+                            </lightning-button>
+
+                        </div>
+                    </template>
+                    
+
+                    <template if:true={showAddSupportCategoryModal}>
+
+                        <!--  <div class="slds-m-left_small slds-text-title_bold">Provider Services</div> -->
+                            
+                        <div class="slds-grid slds-wrap">
+
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small" style="padding:1% 1% 0 0">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Service Type</span>
+                                    <lightning-combobox
+                                        name="singleServiceType"
+                                        placeholder="Select Service Type"
+                                        options={selectedServiceTypeOptions}
+                                        value={selectedServiceType}
+                                        onchange={handleServiceTypeChange}
+                                        disabled={isServiceTypeDisabled}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 1% 0 0">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">State</span>
+                                        <lightning-combobox
+                                        placeholder="Select State"
+                                        options={stateOptions}
+                                        value={selectedState}
+                                        onchange={handleStateChange}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 1% 0 0">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Budget Allocation</span>
+                                        <lightning-input
+                                        type="number"
+                                        step="0.01"
+                                        name="budgetAllocation"
+                                        value={budgetAllocation}
+                                        formatter="currency"
+                                        currency-code="USD"
+                                        variant="label-hidden"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div> 
+                            <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Current Amount Spent"</span>
+                                        <lightning-input
+                                        type="number"
+                                        step="0.01"
+                                        value={currentAmountSpent}
+                                        onchange={handleAmountSpentChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                            </div> -->
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4" style="padding:1% 0% 0 0">
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Budget Spent to Date</span>
+                                        <lightning-input
+                                        type="number"
+                                        name="currentAmountSpent"
+                                        value={currentAmountSpent}
+                                        variant="label-hidden"
+                                        step="0.01"
+                                        formatter="currency"
+                                        currency-code="USD"
+                                        class="label-font-weight_bold"
+                                        onchange={handleparticipantCreateChange}>
+                                    </lightning-input>
+                                </div>
+                            </div>      
+                        </div> 
+
+                            <!-- ================= NDIS TABLE ================= -->
+                        <template if:true={ndisCatalogue.length}>
+                            <div class="slds-m-top_medium">
+                                <div class="slds-grid slds-grid_align-end slds-m-bottom_small">
+                                    <div class="slds-size_1-of-4">
+                                        <lightning-input 
+                                            type="search"
+                                            placeholder="Search Support Item Name"
+                                            variant="label-hidden"
+                                            value={searchSupportItem}
+                                            onchange={handleSearchSupportItem}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+
+                                <div class="table-container awardsTable adminTable">
+
+                                    <!-- HEADER -->
+                                    <div class="header-wrapper">
+                                        <table class="staff-table1 catalogue-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="table-th" title="Select">Select</th>
+                                                    <th class="table-th" title="Support Item Name">Support Item Name</th>
+                                                    <th class="table-th" title="Support Item Number">Support Item Number</th>
+                                                    <th class="table-th" title="Provider">Provider</th>
+                                                    <th class="table-th" title="Preferred Staff">Preferred Staff</th>
+                                                    <th class="table-th center" title="Amount">Amount</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                    <!-- BODY -->
+                                    <div class="body-scroll custom-scroll adminTableHeight">
+                                        <table class="staff-table1 catalogue-table">
+                                            <tbody>
+
+                                                <template if:true={pagedCatalogue.length}>
+                                                    <template for:each={pagedCatalogue} for:item="row">
+                                                        <tr key={row.id} class="table-row">
+
+                                                            <td class="table-td">
+                                                                <lightning-input
+                                                                    type="checkbox"
+                                                                    data-id={row.id}
+                                                                    checked={row.selected}
+                                                                    onchange={handleCatalogueSelect}>
+                                                                </lightning-input>
+                                                            </td>
+
+                                                            <td class="table-td" title={row.name}>
+                                                            {row.name}
+                                                            </td>
+
+                                                            <td class="table-td" title={row.number}>
+                                                                {row.number}
+                                                            </td>
+
+                                                            <td class="table-td" title={row.providerId}>
+                                                                <!-- <lightning-combobox
+                                                                    data-id={row.id}
+                                                                    value={row.providerId}
+                                                                    options={providerOptions}
+                                                                    onchange={handleRowProviderChange}
+                                                                    disabled={row.disableProvider}
+                                                                    required>
+                                                                </lightning-combobox> -->
+                                                                    <!-- <c-tesseract-apps-multi-combobox placeholder="Select Service Type" name="multiServiceType"
+                                                                        options={providerOptions} value={row.providerIds} data-id={row.id}
+                                                                        onchange={handleRowProviderChange} disabled={row.disableProvider}
+                                                                        variant="label-hidden"></c-tesseract-apps-multi-combobox> -->
+                                                                <template if:true={row.disableProvider}>
+
+                                                                    <c-tesseract-apps-multi-combobox
+                                                                        placeholder="Select Service Type"
+                                                                        name="multiServiceType"
+                                                                        options={providerOptions}
+                                                                        value={row.providerIds}
+                                                                        data-id={row.id}
+                                                                        onchange={handleRowProviderChange}
+                                                                        disabled
+                                                                        variant="label-hidden">
+                                                                    </c-tesseract-apps-multi-combobox>
+
+                                                                </template>
+
+                                                                <template if:false={row.disableProvider}>
+
+                                                                    <c-tesseract-apps-multi-combobox
+                                                                        placeholder="Select Service Type"
+                                                                        name="multiServiceType"
+                                                                        options={providerOptions}
+                                                                        value={row.providerIds}
+                                                                        data-id={row.id}
+                                                                        onchange={handleRowProviderChange}
+                                                                        variant="label-hidden">
+                                                                    </c-tesseract-apps-multi-combobox>
+
+                                                                </template>
+                                                            </td>
+
+                                                            <td class="table-td">
+<!-- 
+                                                                <template if:true={row.isEditingPreferredStaff}>
+
+                                                                    <div class="qty-edit-container">
+
+                                                                        <lightning-input
+                                                                            type="text"
+                                                                            value={row.preferredStaff}
+                                                                            variant="label-hidden"
+                                                                            data-id={row.id}
+                                                                            onchange={handlePreferredStaffChange}>
+                                                                        </lightning-input>
+
+                                                                        <template if:true={row.preferredStaff}>
+
+                                                                            <a
+                                                                                href="javascript:void(0)"
+                                                                                class="save-link"
+                                                                                data-id={row.id}
+                                                                                title="Save"
+                                                                                onclick={savePreferredStaff}>
+
+                                                                                <i class="material-icons save-icon">
+                                                                                    check
+                                                                                </i>
+
+                                                                            </a>
+
+                                                                        </template>
+
+                                                                    </div>
+
+                                                                </template>
+
+                                                                <template if:false={row.isEditingPreferredStaff}>
+
+                                                                    <div class="qty-edit-container">
+
+                                                                        <span>
+                                                                            {row.preferredStaff}
+                                                                        </span>
+
+                                                                        <a
+                                                                            href="javascript:void(0)"
+                                                                            data-id={row.id}
+                                                                            title="Edit Preferred Staff"
+                                                                            onclick={enablePreferredStaffEdit}>
+
+                                                                            <i class="material-icons edit-icon">
+                                                                                edit
+                                                                            </i>
+
+                                                                        </a>
+
+                                                                    </div>
+
+                                                                </template> -->
+
+                                                                <lightning-input
+                                                                    type="text"
+                                                                    value={row.preferredStaff}
+                                                                    variant="label-hidden"
+                                                                    data-id={row.id}
+                                                                    onchange={handlePreferredStaffChange}>
+                                                                </lightning-input>
+
+
+                                                            </td>
+                                                            <td class="table-td center" title={row.amount}>
+                                                                <!-- {row.amount} -->
+                                                                <!-- <lightning-formatted-number
+                                                                    value={row.amount}
+                                                                    format-style="currency"
+                                                                    currency-code="AUD"
+                                                                    minimum-fraction-digits="2"
+                                                                    maximum-fraction-digits="2">
+                                                                </lightning-formatted-number>
+
+                                                                <a href="javascript:void(0)"
+                                                                    data-id={row.Id}
+                                                                    onclick={handleEditAount}
+                                                                    title="Edit"
+                                                                    class="icon-link">
+                                                                    <i class="material-icons edit-icon">edit</i>
+                                                                </a> -->
+
+
+                                                                <template if:true={row.isEditingAmount}>
+                                                                    <div class="qty-edit-container">
+                                                                        <lightning-input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            min="0"
+                                                                            value={row.amount}
+                                                                            variant="label-hidden"
+                                                                            onchange={handleServiceRowAmountChange}
+                                                                            data-id={row.id}
+                                                                            data-amount={row.amount}
+                                                                            onkeydown={handleServiceRowAmountKeyDown}
+                                                                            class="qty-value"
+                                                                        >
+                                                                        </lightning-input>
+                                                                        <a
+                                                                            href="javascript:void(0)"
+                                                                            class="save-link"
+                                                                            data-id={row.id}
+                                                                            title="Save"
+                                                                            onclick={saveServiceRowAmount}
+                                                                        >
+                                                                            <i class="material-icons save-icon"
+                                                                            >check</i
+                                                                            >
+                                                                        </a> 
+                                                                    </div>
+                                                                </template>
+
+                                                                <template if:false={row.isEditingAmount}>
+                                                                    <div class="qty-edit-container">
+                                                                    <lightning-formatted-number
+                                                                            value={row.amount}
+                                                                            format-style="currency"
+                                                                            currency-code="AUD"
+                                                                            minimum-fraction-digits="2"
+                                                                            maximum-fraction-digits="2">
+                                                                        </lightning-formatted-number>
+
+                                                                        <a
+                                                                            href="javascript:void(0)"
+                                                                            data-id={row.id}
+                                                                            data-amount={row.amount}
+                                                                            onclick={enableServiceRowAmountEdit}
+                                                                            title="Edit Amount">
+
+                                                                        <i class="material-icons edit-icon"
+                                                                        >edit</i
+                                                                        >
+                                                                    </a>
+                                                                    </div>
+                                                                </template>
+                                                            </td>
+
+                                                        </tr>
+                                                    </template>
+                                                </template>
+
+                                                <!-- NO DATA -->
+                                                <template if:false={pagedCatalogue.length}>
+                                                    <tr>
+                                                        <td class="no-data">
+                                                            <p>No records found</p>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div> 
+
+
+                            <template if:true={pagedCatalogue.length}>
+                                <div class="slds-grid slds-grid_vertical-align-center
+                                        slds-grid_align-spread
+                                        slds-m-top_medium
+                                        slds-p-around_small">
+
+                                <!-- LEFT: Page Size -->
+                                <!--  <div class="slds-col slds-size_3-of-12 slds-grid slds-grid_vertical-align-center">
+                                    <span class="slds-m-right_x-small">Page Size :</span>
+                                    <lightning-combobox
+                                        value={catPageSize}
+                                        options={catPageSizeOptions}
+                                        onchange={handleCatPageSizeChange}
+                                        variant="label-hidden">
+                                    </lightning-combobox>
+                                </div> -->
+
+                                
+                                    <div class="slds-list_inline"> 
+                                    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span> 
+                                    <div class="slds-select_container"> 
+                                        <select class="slds-select" id="recordsPerPage2" onchange={handleCatPageSizeChange}> 
+                                            <template for:each={catPageSizeOptions} for:item="option"> 
+                                            <option key={option} value={option}>{option}</option> 
+                                            </template> 
+                                        </select> 
+                                    </div> 
+                                </div> 
+
+                                <!-- CENTER: Navigation -->
+                                <div class="slds-col slds-size_6-of-12 slds-align_absolute-center">
+
+                                    <lightning-button
+                                        label="« First"
+                                        onclick={handleFirstCatPage}
+                                        disabled={isCatFirstPage}>
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        class="slds-m-left_x-small"
+                                        label="‹ Previous"
+                                        onclick={handlePrevCatPage}
+                                        disabled={isCatFirstPage}>
+                                    </lightning-button>
+
+                                    <span class="slds-m-horizontal_medium slds-text-body_small slds-text-bold">
+                                        Showing {catCurrentPage} of {catTotalPages} Page(s)
+                                    </span>
+
+                                    <lightning-button
+                                        class="slds-m-right_x-small"
+                                        label="Next ›"
+                                        onclick={handleNextCatPage}
+                                        disabled={isCatLastPage}>
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        label="Last »"
+                                        onclick={handleLastCatPage}
+                                        disabled={isCatLastPage}>
+                                    </lightning-button>
+
+                                </div>
+
+                                <!-- RIGHT: Total Records -->
+                                <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                                    <span>
+                                        <!-- Total Records: {ndisCatalogue.length} -->
+                                            Total Records: {totalCatalogueRecords}
+                                    </span>
+                                </div>
+
+                                
+                                </div>
+                            </template>
+                                <footer class="slds-modal__footer">
+                                    <lightning-button
+                                        variant="neutral"
+                                        label="Cancel"
+                                        onclick={handleCloseAddCategoryModal}>
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Save"
+                                        class="slds-m-left_small"
+                                        onclick={handleAddService}>
+                                    </lightning-button>
+                                </footer>
+                            </div>
+                        </template>
+                            <template if:false={ndisCatalogue.length}>
+            
+                            <div class="no-data">
+                                <p>No records found</p>
+                            </div>
+                        
+                        </template>
+                        
+                    </template>  
+
+                        
+                </div>
+
+
+                <!-- ═══════════════════════════════════
+                    STEP 3 — IDENTIFICATION DETAILS
+                ════════════════════════════════════════ -->
+                <div class={step4Class} data-step="createstep4">
+
+                    <h3 class="slds-text-title_bold">Contacts</h3>
+                    <div style="padding:1%">
+                        <table class="slds-table  slds-table_bordered ">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th style="width: 12%;">Contact Type</th>
+                                    <th style="width: 20%;">First Name</th>
+                                    <th style="width: 20%;">Last Name</th>
+                                    <th style="width: 20%;">Contact Number</th>
+                                    <th style="width: 30%;">Email</th>
+                                        <template if:true={editingParticipantId}>
+                                    <th style="width: 22%;">Attach</th>
+                                        </template>
+                                    <th style="width: 4%;">Notify</th>
+
+                                    <th style="width:5%; text-align:center;">
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template for:each={contactList} for:item="con" for:index="index">
+                                    <tr key={con.id}>
+
+                                        <td class="slds-size_small" style="max-width:10rem">
+                                            <template if:false={con.showNewTypeInput}>
+                                                <lightning-combobox
+                                                    name="contactType"
+                                                    variant="label-hidden"
+                                                    title={con.contactType}
+                                                    value={con.contactType}
+                                                    data-index={index}
+                                                    options={contactTypeOptions}
+                                                    onchange={handleContactsChange}>
+                                                </lightning-combobox>
+                                            </template>
+                                            <template if:true={con.showNewTypeInput}>
+                                                <div class="slds-grid slds-grid_vertical-align-center">
+
+                                                    <lightning-input 
+                                                        name="newContactTypeValue"
+                                                        data-index={index}
+                                                        value={con.newContactTypeValue}
+                                                        placeholder="Enter new type"
+                                                        class="slds-m-right_small"
+                                                        variant="label-hidden"
+                                                        onchange={handleContactsChange}>
+                                                    </lightning-input>
+
+                                                    <lightning-button-icon 
+                                                        icon-name="utility:check"
+                                                        alternative-text="Save"
+                                                        class="slds-icon-text-success slds-m-right_x-small"
+                                                        size="small"
+                                                        data-index={index}
+                                                        onclick={saveNewContactType}>
+                                                    </lightning-button-icon>
+
+                                                    <lightning-button-icon 
+                                                        icon-name="utility:close"
+                                                        alternative-text="Cancel"
+                                                        class="slds-icon-text-error"
+                                                        size="small"
+                                                        data-index={index}
+                                                        onclick={cancelNewContactType}>
+                                                    </lightning-button-icon>
+
+                                                </div>
+                                            </template>
+                                        </td>
+
+
+                                        <td>
+                                            <lightning-input 
+                                                name="firstName"
+                                                variant="label-hidden"
+                                                data-index={index}
+                                                value={con.firstName}
+                                                placeholder={con.firstNamePlaceholder}
+                                                onchange={handleContactsChange}>
+                                            </lightning-input>
+                                        </td>
+
+                                        <td>
+                                            <lightning-input 
+                                                name="lastName"
+                                                variant="label-hidden"
+                                                data-index={index}
+                                                value={con.lastName}
+                                                placeholder={con.lastNamePlaceholder}
+                                                onchange={handleContactsChange}>
+                                            </lightning-input>
+                                        </td>
+
+                                        <td>
+                                            <lightning-input 
+                                                name="contactNumber"
+                                                type="tel"
+                                                variant="label-hidden"
+                                                data-index={index}
+                                                value={con.contactNumber}
+                                                placeholder={con.phonePlaceholder}
+                                                onchange={handleContactsChange}
+                                                maxlength="10"
+                                                pattern="[0-9]{10}"
+                                                message-when-pattern-mismatch="Enter a valid 10-digit number">
+                                            </lightning-input>
+                                        </td>
+
+                                        <td>
+                                            <lightning-input 
+                                                name="email"
+                                                type="email"
+                                                class="contact-email" 
+                                                variant="label-hidden"
+                                                data-index={index}
+                                                value={con.email}
+                                                placeholder={con.emailPlaceholder}
+                                                onchange={handleContactsChange}>
+                                            </lightning-input>
+                                        </td>
+                                        <!-- <td class="attach-link-cell">
+
+                                            <span class="attachment-inline-container">
+
+                                                <a 
+                                                    href="javascript:void(0);" 
+                                                    data-index={index}
+                                                    onclick={handleAttachmentClick}>
+                                                    Attach
+                                                </a>
+
+                                                <template if:true={con.attachmentCount}>
+
+                                                    <span class="attachment-count">
+
+                                                        |
+
+                                                        <a
+                                                            href="javascript:void(0);"
+                                                            data-index={index}
+                                                            onclick={handleOpenAttachmentList}>
+
+                                                            {con.attachmentCount}
+                                                            File<template if:true={con.isPlural}>s</template>
+
+                                                        </a>
+
+                                                    </span>
+
+                                                </template>
+
+                                            </span>
+
+                                        </td> -->
+                                        <template if:true={editingParticipantId}>
+
+                                            <td class="attach-link-cell">
+
+                                                <span class="attachment-inline-container">
+
+                                                    <a 
+                                                        href="javascript:void(0);" 
+                                                        data-index={index}
+                                                        onclick={handleAttachmentClick}>
+
+                                                        Attach
+
+                                                    </a>
+
+                                                    <template if:true={con.attachmentCount}>
+
+                                                        <span class="attachment-count">
+
+                                                            |
+
+                                                            <a
+                                                                href="javascript:void(0);"
+                                                                data-index={index}
+                                                                onclick={handleOpenAttachmentList}>
+
+                                                                {con.attachmentCount}
+                                                                File<template if:true={con.isPlural}>s</template>
+
+                                                            </a>
+
+                                                        </span>
+
+                                                    </template>
+
+                                                </span>
+
+                                            </td>
+
+                                        </template>
+
+                                        <td style="text-align:center;">
+                                            <lightning-input 
+                                                type="checkbox"
+                                                name="notify"
+                                                data-index={index}
+                                                checked={con.notify}
+                                                onchange={handleContactsChange}>
+                                            </lightning-input>
+                                        </td>
+
+                                        <td style="text-align:center;">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center action-cell">
+                                            <lightning-button-icon 
+                                                icon-name="utility:delete"
+                                                alternative-text="Delete Row"
+                                                data-index={index}
+                                                class="slds-m-right_x-small"
+                                                onclick={removeContactRow}>
+                                            </lightning-button-icon>
+                                                <lightning-button-icon
+                                                    icon-name="utility:add"
+                                                    alternative-text="Add Row"
+                                                    data-index={index}
+                                                    variant="brand"
+                                                    class={con.addButtonClass}
+                                                    onclick={addContactRow}>
+                                                </lightning-button-icon>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- contacts table here -->
+                </div>
+
+
+            </div>
+            </div><!-- end modal content -->
+
+            <!-- FOOTER -->
+            <footer class="slds-modal__footer slds-grid slds-grid_align-spread">
+            <div>
+                
+            </div>
+            <div class="slds-grid slds-gutters_xx-small">
+                <lightning-button label="Cancel" class="slds-col" onclick={createParticipantcloseModal}></lightning-button>
+                <template if:true={showPrevious}>
+                <lightning-button label="Previous" class="slds-col" onclick={handleCreatePrevious}></lightning-button>
+                </template>
+                <template if:true={showNext}>
+                <lightning-button label="Next" variant="brand" class="slds-col" onclick={handleCreateNext}></lightning-button>
+                </template>
+                <template if:true={showSave}>
+                <lightning-button label="Save" variant="brand" class="slds-col" onclick={createParticipantsaveParticipant}></lightning-button>
+                </template>
+            </div>
+            </footer>
+
+        </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showDetailsPage}>
+        <template if:false={showSupportCategoriesPage}>
+            <section role="dialog" class="slds-modal slds-fade-in-open" aria-modal="true">
+                <div class="slds-modal__container createEditModal">
+
+                    <!-- HEADER -->
+                    <header class="slds-modal__header headercustom modal-header-custom">
+                        <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                            Participants
+                        </h2>
+                        <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleBack}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                        </button>
+                    </header>
+
+
+                    <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                        <!-- Avatar + Name + Badges Row -->
+                        <div class="pvd-header">
+                            <div class="pvd-avatar">{detailInitials}</div>
+                            <div class="pvd-title-block">
+                                <h3 class="pvd-name">{details.name}</h3>
+                                <!-- <p class="pvd-subtitle"> ABN {details.abn}</p> -->
+                                <div class="pvd-badge-row">
+                                    <span class="pvd-badge pvd-badge--active">
+                                        <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                                        {details.status}
+                                    </span>
+                                    <span class="pvd-badge pvd-badge--capacity">{details.risklevel}</span>
+                                    <!-- <span class="pvd-badge pvd-badge--type">{selectedProvider.serviceType}</span> -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stat Cards Row -->
+                        <div class="slds-grid slds-gutters slds-m-top_medium">
+                            <div class="slds-col slds-size_1-of-3">
+                                <div class="pvd-stat-card">
+                                    <p class="pvd-stat-label">NDIS Number</p>
+                                    <p class="pvd-stat-value" title={details.ndis} >{details.ndis}</p>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <div class="pvd-stat-card">
+                                    <p class="pvd-stat-label">Industry</p>
+                                    <p class="pvd-stat-value" title={details.industryType}>{details.industryType}</p>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <div class="pvd-stat-card">
+                                    <p class="pvd-stat-label">Classification</p>
+                                    <p class="pvd-stat-value" title={details.classification} >{details.classification}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Info Card -->
+                        <div class="pvd-detail-card slds-m-top_medium">
+                            <p class="pvd-section-label">
+                                <lightning-icon icon-name="utility:call" size="x-small"></lightning-icon>
+                                Contact information
+                            </p>
+                            <div class="slds-grid slds-wrap slds-gutters">
+                                <div class="slds-col slds-size_1-of-2 pvd-detail-field">
+                                    <span class="pvd-field-label">Phone</span>
+                                    <span class="pvd-field-value">{details.mobile}</span>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 pvd-detail-field">
+                                    <span class="pvd-field-label">Email</span>
+                                    <span class="pvd-field-value">{details.email}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- FOOTER -->
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                            variant="neutral"
+                            label="Close"
+                            onclick={handleBack}>
+                        </lightning-button>
+
+                        <template if:false={isOpenedFromDashboard}>
+                            <lightning-button
+                                class="slds-m-left_small"
+                                variant="brand"
+                                label="Edit"
+                                data-id={details.id}
+                                onclick={handleEditPlan}>
+                            </lightning-button>
+                        </template>
+                    </footer>
+
+
+
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </template>
+    
+    <template if:true={isViewDoc}>
+        <div class="slds-grid slds-grid_align-end">
+            <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+            onclick={handlereturn} style="margin-right:1%;margin-top: 1%;"></lightning-button>
+        </div>
+        <div class="main-container-iframe custom-scroll">
+        <iframe src={currentUrl} width="100%" height="1300px" ></iframe>
+        </div>
+    </template>
+</template>

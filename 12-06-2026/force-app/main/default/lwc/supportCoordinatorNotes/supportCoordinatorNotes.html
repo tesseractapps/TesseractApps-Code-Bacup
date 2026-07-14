@@ -1,0 +1,790 @@
+<template>
+    <template if:true={showParticipantScreen}>
+        <div class="mainContainer custom-scroll">
+
+            <template if:true={caseNotesFlag}>
+
+                <div class="menu-container ">
+                    <div class="menu-left">
+                        <div class={allParticipantClass} data-type="all" onclick={handleClick}>All Participants</div>
+                        <div class={pinnedParticipantClass} data-type="pinned" onclick={handleClick}>Pinned Participants</div>
+                    </div>
+
+                    <lightning-button
+                        label="Create Note"
+                        variant="brand"
+                        class="slds-m-right_small"
+                        onclick={handleAddCaseNote}
+                    ></lightning-button> 
+                </div>
+            <div class="slds-p-around_medium notes-page-layout">
+                <div class="slds-grid slds-gutters notes-content-row">
+
+                    <!-- LEFT SIDE -->
+                    <div class="slds-col slds-size_3-of-4 notes-table-panel">
+                            <div class="table-container participantTable">
+
+                                <!-- HEADER -->
+                                <div class="header-wrapper">
+                                    <table class="staff-table" role="table">
+                                        <thead>
+                                            <tr>
+                                                <th class="table-th">Name</th>
+                                                <th class="table-th">Email</th>
+                                                <th class="table-th">Spent</th>
+                                                <th class="table-th center">Case Notes</th>
+                                                <th class="table-th center">Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+
+                                <!-- BODY -->
+                                <div class="body-scroll custom-scroll participantTableHeight">
+                                    <table class="staff-table">
+                                        <tbody>
+
+                                            <template if:true={totalRecords}>
+                                                <template for:each={participants} for:item="participant">
+                                                    <tr key={participant.id} class="table-row" data-id={participant.id} onclick={handleRowClick}>
+
+                                                        <!-- NAME -->
+                                                        <td class="table-td">
+                                                            <div class="avatar-row">
+                                                                <div class="avatar-circle">
+                                                                    {participant.initials}
+                                                                </div>
+
+                                                                <div>
+                                                                    <div>{participant.name}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        <!-- EMAIL -->
+                                                        <td class="table-td">
+                                                            {participant.email}
+                                                        </td>
+
+                                                        <!-- PHONE -->
+                                                        <td class="table-td">
+                                                            <span class="budget-green">
+                                                                ${participant.formattedSpendBudget}
+                                                            </span>
+                                                            / ${participant.formattedTotalPlanBudget}
+                                                        </td>
+
+                                                        <!-- NDIS -->
+                                                        <td class="table-td center">
+                                                            {participant.caseNoteCount}
+                                                        </td>
+
+                                                        <!-- STATUS -->
+                                                        <!-- <td class="table-td">
+                                                            <span class={participant.statusClass}>
+                                                                {participant.status}
+                                                            </span>
+                                                        </td> -->
+
+                                                        <!-- ACTION -->
+                                                        <td class="table-td center">
+                                                            <!-- <lightning-button
+                                                                label="Details"
+                                                                variant="brand"
+                                                                data-id={participant.id}
+                                                                onclick={handleCaseNotesDetails}>
+                                                            </lightning-button> -->
+
+                                                            <a
+                                                                href="javascript:void(0)"
+                                                                data-id={participant.id}
+                                                                onclick={handleCaseNotesDetails}
+                                                                title="Details">
+                                                                <i class="material-icons table-icon">visibility</i>
+                                                            </a>
+
+                                                            <!-- <lightning-button
+                                                                label="Add Case Note"
+                                                                variant="brand"
+                                                                class="slds-m-left_small"
+                                                                data-id={participant.id}
+                                                                onclick={handleAddCaseNote}>
+                                                            </lightning-button> -->
+                                                            <a
+                                                                href="javascript:void(0)"
+                                                                data-id={participant.id}
+                                                                data-status={participant.status}
+                                                                class="slds-m-left_small"
+                                                                onclick={handleAddCaseNote}
+                                                                title="Create Note">
+                                                                <i class="material-icons table-icon">add_notes</i>
+                                                            </a>
+                                                        </td>
+
+                                                    </tr>
+                                                </template>
+                                            </template>
+
+                                            <!-- NO DATA -->
+                                            <template if:false={participants.length}>
+                                                <tr>
+                                                    <td class="no-data">
+                                                        No Participants Found
+                                                    </td>
+                                                </tr>
+                                            </template>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                    </div> 
+
+                    <!-- RIGHT PANEL -->
+                    <div class="slds-col slds-size_1-of-4 notes-summary-panel">
+
+                        <div class="funding-box">
+
+                            <div class="after-entry">After This Entry</div>
+                            <div class="percentage">{funding.percentUsed}%</div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style={progressStyle}></div>
+                            </div>
+
+                            <div class="budget-info">
+
+                                <!-- <div>
+                                    <span>Total Budget :</span>
+                                    <strong>${funding.totalBudget}</strong>
+                                </div>
+
+                                <div>
+                                    <span>Currently Spent :</span>
+                                    <strong class="red">${funding.currentSpending}</strong>
+                                </div>
+
+                                <div class="divider"></div>
+                                <div>
+                                    <span>Remaining :</span>
+                                    <strong class="green">${funding.remaining}</strong>
+                                </div> -->
+                                 <div>
+                                    <span>Total Budget :&nbsp;</span>
+                                    <strong>${formattedFunding.totalBudget}</strong>
+                                </div>
+
+                                <div>
+                                    <span>Currently Spent :&nbsp;</span>
+                                    <strong class="red">${formattedFunding.currentSpending}</strong>
+                                </div>
+
+                                <div class="divider"></div>
+                                <div>
+                                    <span>Remaining :&nbsp;</span>
+                                    <strong class="green">${formattedFunding.remaining}</strong>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- WARNING BOX -->
+                        <!-- <div class="status-warning">
+                            <div class="icon-box">i</div>
+                            <div>
+                                <strong>Budget Status :</strong>
+                                <p>Warning – Monitor Spending Closely</p>
+                            </div>
+                        </div> -->
+
+                    </div>
+
+
+                </div>
+
+                        <!-- PAGINATION -->
+                        <template if:true={totalRecords}>
+                            <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-top_medium">
+
+                                <!-- PAGE SIZE -->
+                                <div class="slds-list_inline">
+                                    <span style="margin-right: 5px; margin-top: 5px;">
+                                        Page Size:
+                                    </span>
+
+                                    <div class="slds-select_container">
+                                        <select
+                                            class="slds-select"
+                                            onchange={handlePageSizeChange}>
+
+                                            <template for:each={pageSizeOptions} for:item="option">
+                                                <option
+                                                    key={option}
+                                                    value={option}>
+                                                    {option}
+                                                </option>
+                                            </template>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- PAGINATION BUTTONS -->
+                                <div class="slds-align_absolute-center">
+
+                                    <lightning-button
+                                        disabled={bDisableFirst}
+                                        icon-name="utility:jump_to_left"
+                                        label="First"
+                                        onclick={firstPage}
+                                        style="margin-right: 10px;">
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        disabled={bDisableFirst}
+                                        icon-name="utility:chevronleft"
+                                        label="Previous"
+                                        onclick={handlePrevious}
+                                        style="margin-right: 5px;">
+                                    </lightning-button>
+
+                                    <span class="slds-badge">
+                                        Showing {pageNumber} of {totalPages} Page(s)
+                                    </span>
+
+                                    <lightning-button
+                                        disabled={bDisableLast}
+                                        icon-name="utility:chevronright"
+                                        label="Next"
+                                        onclick={handleNext}
+                                        class="slds-p-horizontal_x-small"
+                                        icon-position="right">
+                                    </lightning-button>
+
+                                    <lightning-button
+                                        disabled={bDisableLast}
+                                        icon-name="utility:jump_to_right"
+                                        label="Last"
+                                        onclick={lastPage}
+                                        icon-position="right">
+                                    </lightning-button>
+
+                                </div>
+
+                                <!-- TOTAL -->
+                                <div class="slds-clearfix">
+                                    <div class="slds-float_right">
+                                        <span class="slds-badge">
+                                            Total Records: {totalRecords}
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </template>   
+            </div>             
+            </template>
+
+            <template if:true={showCaseNotesDetails}>
+                <div class="case-notes-wrapper">
+
+                    <!-- HEADER -->
+                    <div class="case-notes-header">
+                        <div>
+                            <h2 class="case-notes-title">
+                                Case Notes - {selectedParticipantName}
+                            </h2>
+                        </div>
+
+                        <lightning-button
+                            label="Back"
+                            variant="neutral"
+                            onclick={handleBackToParticipants}>
+                        </lightning-button>
+                    </div>
+
+                    <!-- TABLE -->
+                    <div class="case-notes-table-container">
+                        <div class="case-notes-scroll custom-scroll">
+
+                            <table class="case-notes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Note Type</th>
+                                        <th>Contact Method</th>
+                                        <th>Billable</th>
+                                        <th>Duration</th>
+                                        <th>Rate</th>
+                                        <th>Total Cost</th>
+                                        <th>Service Type</th>
+                                        <th>Service Item</th>
+                                        <th>Activity Details</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <template if:true={selectedParticipantNotes.length}>
+                                        <template
+                                            for:each={selectedParticipantNotes}
+                                            for:item="note"
+                                        >
+                                            <tr key={note.id}>
+
+                                                <!-- DATE -->
+                                                <td>
+                                                    {note.date}
+                                                </td>
+
+                                                <!-- NOTE TYPE -->
+                                                <td>
+                                                    {note.noteType}
+                                                </td>
+
+                                                <!-- CONTACT -->
+                                                <td>
+                                                    {note.contactMethod}
+                                                </td>
+
+                                                <!-- BILLABLE -->
+                                                <td>
+                                                    <template if:true={note.isBillable}>
+                                                        <span class="billable-yes">
+                                                            Yes
+                                                        </span>
+                                                    </template>
+
+                                                    <template if:false={note.isBillable}>
+                                                        <span class="billable-no">
+                                                            No
+                                                        </span>
+                                                    </template>
+                                                </td>
+
+                                                <!-- DURATION -->
+                                                <td>
+                                                    {note.duration}
+                                                </td>
+
+                                                <!-- RATE -->
+                                                <td>
+                                                    ${note.rate}
+                                                </td>
+
+                                                <!-- TOTAL COST -->
+                                                <td>
+                                                    <span class="cost-text">
+                                                        ${note.totalCost}
+                                                    </span>
+                                                </td>
+
+                                                <!-- SERVICE TYPE -->
+                                                <td>
+                                                    {note.serviceType}
+                                                </td>
+
+                                                <!-- SERVICE ITEM -->
+                                                <td>
+                                                    {note.serviceItem}
+                                                </td>
+
+                                                <!-- ACTIVITY -->
+                                                <td class="activity-cell">
+                                                    {note.activity}
+                                                </td>
+
+                                            </tr>
+                                        </template>
+                                    </template>
+
+                                    <!-- NO DATA -->
+                                    <template if:false={selectedParticipantNotes.length}>
+                                        <tr>
+                                            <td colspan="10" class="no-case-notes">
+                                                No Case Notes Found
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+
+                </div>
+            </template>
+        </div>
+    </template> 
+
+    <template if:true={showParticipantScreen}>
+        <template if:true={isLoading}>
+            <div class="spinner-backdrop">
+                <lightning-spinner
+                    alternative-text="Loading Participants"
+                    size="medium"
+                    variant="brand">
+                </lightning-spinner>
+            </div>
+        </template>
+    </template>
+
+    <template if:true={showAddCaseNoteModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open"
+        >
+            <div class="slds-modal__container case-note-modal">
+
+                <!-- HEADER -->
+                <!-- <header class="slds-modal__header modal-header">
+                    <div class="slds-text-align_left">
+                        <h2 class="modal-title">Create Note</h2>
+                    </div>
+
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        onclick={closeAddCaseNoteModal}>
+                    </lightning-button-icon>
+                </header> -->
+
+                <header class="slds-modal__header headercustom  modal-header-custom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">Create Note</h2>
+                    <button class="slds-button slds-button_icon close-btn" title="Close" onclick={closeAddCaseNoteModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                    </button>
+                </header>                  
+
+                <!-- BODY -->
+                <div class="slds-modal__content modal-body custom-scroll">
+
+                    <div class="modal-layout">
+
+                        <!-- LEFT -->
+                        <div class="left-panel">
+
+                            <div class="input-grid">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Date</span>
+                                    <lightning-input
+                                        type="date"
+                                        label="Date"
+                                        name="date"
+                                        value={form.date}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        required>
+                                    </lightning-input>
+                                </div>
+
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Participant</span>
+                                    <lightning-combobox
+                                        label="Participant"
+                                        name="participant"
+                                        value={form.participant}
+                                        options={participantOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        required>
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Note Type</span>
+                                    <lightning-combobox
+                                        label="Note Type"
+                                        name="noteType"
+                                        value={form.noteType}
+                                        options={noteTypeOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        required>
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Contact Method</span>
+                                    <lightning-combobox
+                                        label="Contact Method"
+                                        name="contactMethod"
+                                        value={form.contactMethod}
+                                        options={contactMethodOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        required>
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span style="color:red">*</span>Duration (Hours)</span>
+                                    <lightning-input
+                                        type="number"
+                                        label="Duration (Hours)"
+                                        name="durationHours"
+                                        value={form.durationHours}
+                                        onchange={handleDurationChange}
+                                        variant="label-hidden"
+                                        required>
+                                    </lightning-input>
+                                </div>
+
+                                <div class="floating-label">
+                                    <span class="label-text-drop">Duration (Minutes)</span>
+                                    <lightning-input
+                                        type="number"
+                                        label="Duration (Minutes)"
+                                        name="durationMinutes"
+                                        value={form.durationMinutes}
+                                        onchange={handleDurationChange}
+                                        variant="label-hidden"
+                                        min="1"
+                                        max="60">
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <!-- BILLABLE -->
+                            <div class="card-section">
+                                <div class="section-header">
+                                    <h3>Billable Time Entry</h3>
+
+                                    <lightning-input
+                                        type="toggle"
+                                        label="Billable"
+                                        checked={form.isBillable}
+                                        onchange={handleToggle}>
+                                    </lightning-input>
+                                </div>
+
+                                <div class="slds-grid slds-wrap slds-gutters_x-small slds-grid_vertical-align-end billable-row">
+
+                                    <!-- Total Duration -->
+                                    <div class="slds-col slds-large-size_3-of-12 slds-medium-size_6-of-12 slds-size_12-of-12">
+                                        <div class="floating-label full-width">
+                                            <span class="label-text-drop">Total Duration</span>
+                                            <lightning-input
+                                                label="Total Duration"
+                                                name="duration"
+                                                value={form.duration}
+                                                onchange={handleChange}
+                                                variant="label-hidden"
+                                                disabled>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Service Type -->
+                                    <div class="slds-col slds-large-size_4-of-12 slds-medium-size_6-of-12 slds-size_12-of-12">
+                                        <div class="floating-label full-width">
+                                            <span class="label-text-drop">Service Type</span>
+                                            <lightning-combobox
+                                                label="Service Type"
+                                                name="serviceType"
+                                                value={form.serviceType}
+                                                options={serviceTypeOptions}
+                                                onchange={handleChange}
+                                                variant="label-hidden"
+                                                disabled={isNonBillable}
+                                                required={form.isBillable}>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+
+                                    <!-- Service Item -->
+                                    <div class="slds-col slds-large-size_3-of-12 slds-medium-size_6-of-12 slds-size_12-of-12">
+                                        <div class="floating-label full-width">
+                                            <span class="label-text-drop">Service Item</span>
+                                            <lightning-combobox
+                                                label="Service Item"
+                                                name="serviceItem"
+                                                value={form.serviceItem}
+                                                options={serviceItemOptions}
+                                                onchange={handleChange}
+                                                variant="label-hidden"
+                                                disabled={isNonBillable}
+                                                required={form.isBillable}>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+
+                                    <!-- Rate -->
+                                    <div class="slds-col slds-large-size_2-of-12 slds-medium-size_6-of-12 slds-size_12-of-12">
+
+                                        <template if:true={isEditingQty}>
+                                            <div class="qty-edit-container full-width">
+                                                <lightning-input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    variant="label-hidden"
+                                                    value={editableRate}
+                                                    onchange={handleRateChange}>
+                                                </lightning-input>
+
+                                                <a
+                                                    href="javascript:void(0)"
+                                                    class="save-link"
+                                                    title="Save"
+                                                    onclick={saveRate}>
+                                                    <i class="material-icons save-icon">check</i>
+                                                </a>
+                                            </div>
+                                        </template>
+
+                                        <template if:false={isEditingQty}>
+                                            <div class="qty-edit-container rate-display">
+                                                <span class="qty-value">${formattedEditableRate}</span>
+
+                                                <a
+                                                    href="javascript:void(0)"
+                                                    onclick={enableQtyEdit}
+                                                    title="Edit Rate">
+                                                    <i class="material-icons edit-icon">edit</i>
+                                                </a>
+                                            </div>
+                                        </template>
+
+                                    </div>
+
+                                </div>
+                                <div class="cost-box">
+                                    <div>
+                                        <div class="cost-label">Estimated Entry Cost</div>
+                                        <div class="cost-desc">
+                                            {form.duration} hrs ×  ${formattedSelectedServiceAmount}
+                                        </div>
+                                    </div>
+
+                                    <div class="cost-value">
+                                        ${entryCost}
+                                    </div>
+                                </div>
+
+                                <div class="ndis-bar">
+                                    <span>{selectedChargeLevel}</span>
+                                    <span class="rate">{selectedChargeRate}</span>
+                                </div>
+                            </div>
+
+                            <!-- NOTES -->
+                            <div class="card-section">
+                                <!-- <h3>Activity Details</h3> -->
+
+                                <lightning-textarea
+                                    label="Activity Details"
+                                    name="activity1"
+                                    value={form.activity1}
+                                    onchange={handleTextChange}
+                                    placeholder="Enter case note details..."
+                                    required>
+                                </lightning-textarea>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="right-panel">
+
+                            <div class="funding-card">
+                                <div class="funding-header">
+                                    Budget Overview
+                                </div>
+
+                                <div class="percentage">
+                                    {modalFunding.percentUsed}%
+                                </div>
+
+                                <div class="progress-bar">
+                                    <div
+                                        class="progress-fill"
+                                        style={modalProgressStyle}>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="budget-grid">
+                                    <div>Total Budget</div>
+                                    <strong>${funding.totalBudget}</strong>
+
+                                    <div>Current Spending</div>
+                                    <strong class="danger">
+                                        ${funding.currentSpending}
+                                    </strong>
+
+                                    <div>This Entry</div>
+                                    <strong class="success">
+                                        + ${funding.thisEntry}
+                                    </strong>
+
+                                    <div>Remaining</div>
+                                    <strong class="success">
+                                        ${funding.remaining}
+                                    </strong>
+                                </div> -->
+                                 <div class="budget-grid">
+                                    <div>Total Budget</div>
+                                    <strong>${formattedModalFunding.totalBudget}</strong>
+
+                                    <div>Current Spending</div>
+                                    <strong class="danger">
+                                        ${formattedModalFunding.currentSpending}
+                                    </strong>
+
+                                    <div>This Entry</div>
+                                    <strong class="success">
+                                        + ${formattedModalFunding.thisEntry}
+                                    </strong>
+
+                                    <div>Remaining</div>
+                                    <strong class="success">
+                                        ${formattedModalFunding.remaining}
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <div class="warning-card">
+                                <lightning-icon
+                                    icon-name="utility:warning"
+                                    size="small">
+                                </lightning-icon>
+
+                                <div>
+                                    <strong>Budget Status</strong>
+                                    <p>Monitor participant spending closely.</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer modal-footer">
+                    <lightning-button
+                        variant="neutral"
+                        label="Cancel"
+                        onclick={closeAddCaseNoteModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        variant="brand"
+                        label="Save Case Note"
+                        onclick={handleSave}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <template if:true={showParticipantScreen}>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </template>
+
+</template>
