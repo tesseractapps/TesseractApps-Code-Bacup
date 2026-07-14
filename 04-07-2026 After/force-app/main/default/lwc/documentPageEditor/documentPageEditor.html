@@ -1,0 +1,1251 @@
+<template>
+
+
+
+  <template if:true={isTemplateModalOpen}>
+    <div class="main-container">
+      <div class="menu-container">
+        
+        <div class={createtemplatesClass} onclick={handleCreatedTemplates}>Templates</div>
+        <div class={templatesClass} onclick={handleTemplates}>All Documents</div>
+      </div>
+      <div class="major-cont custom-scroll">
+        <template if:true={templatesFlag}>
+          <div class="slds-grid slds-grid_align-spread slds-m-top_small">
+            <div style="padding: 1% 0% 0% 1%">
+              <div class="floating-label">
+                <span class="label-text-drop">Search</span>
+                <lightning-input
+                  type="search"
+                  value={searchKeyword}
+                  onchange={handleSearchChange}
+                  placeholder="Search by Name"
+                  class="slds-m-bottom_small"
+                  variant="label-hidden"
+                ></lightning-input>
+              </div>
+            </div>
+
+          </div>
+
+        
+
+<div class="table-container adminTable templateTable">
+
+    <!-- HEADER -->
+    <div class="header-wrapper">
+        <table class="staff-table">
+            <thead>
+                <tr>
+                    <th class="table-th" title="File Name">
+                        File Name
+                    </th>
+
+                    <th class="table-th">
+                        Template Name
+                    </th>
+
+                    <th class="table-th">
+                        Created By
+                    </th>
+
+                    <th class="table-th">
+                        Primary Recipient
+                    </th>
+
+                    <th class="table-th">
+                        Additional Recipients
+                    </th>
+
+                    <th class="table-th" title="Status">
+                        Status
+                    </th>
+
+                    <th class="table-th center" title="Actions">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- BODY -->
+    <div class="body-scroll custom-scroll createdTemplateTableTableHeight">
+
+        <table class="staff-table">
+
+            <tbody>
+
+                <template
+                    for:each={templateListPaginated}
+                    for:item="template">
+
+                    <tr
+                        key={template.id}
+                        class="table-row">
+
+                        <!-- FILE NAME -->
+                        <td
+                            class="table-td"
+                            title={template.name}>
+
+                            {template.name}
+
+                        </td>
+
+                          <td
+                            class="table-td"
+                            title={template.templateName}>
+
+                            {template.templateName}
+
+                        </td>
+
+                        <td class="table-td">
+                            <div class="created-user">
+                                <div class="user-avatar">
+                                    {template.createdByInitials}
+                                </div>
+                                <div class="user-info">
+                                    <div class="user-name">
+                                        {template.createdByName}
+                                    </div>
+                                    <div class="user-date">
+                                        {template.createdDate}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+
+                         <td
+                            class="table-td"
+                            title={template.recipientName}>
+
+                            {template.recipientName}
+
+                        </td>
+
+                        <td
+                            class="table-td"
+                            title={template.additionalRecipients}>
+
+                            {template.additionalRecipients}
+
+                        </td>
+
+                        <!-- STATUS -->
+                        <td
+                            class="table-td"
+                            title={template.status}>
+
+                            <span
+                                class="status-pill">
+
+                                {template.status}
+
+                            </span>
+
+                        </td>
+
+                        <!-- ACTIONS -->
+                        <td
+                            class="table-td center">
+
+                            <div
+                                class="action-icons">
+
+                                <!-- VIEW -->
+                                <a
+                                    href="javascript:void(0)"
+                                    title="View"
+                                    onclick={handleViewTemplate}
+                                    data-id={template.id}
+                                     data-source="documents"
+                                    data-url={template.AWS_Document__c}>
+
+                                    <i class="material-icons view-icon">
+                                        visibility
+                                    </i>
+
+                                </a>
+
+                                <template if:false={template.hideActions}>
+
+                                <!-- DELETE -->
+                                <a
+                                    href="javascript:void(0)"
+                                    title="Delete"
+                                    data-key={template.awsKey}
+                                    data-name={template.name}
+                                    onclick={handleDeleteTemplate}
+                                    data-id={template.id}>
+
+                                    <i class="material-icons delete-icon">
+                                        delete
+                                    </i>
+
+                                </a>
+
+                                <a
+                                    href="javascript:void(0)"
+                                    title="Send To TSign"
+                                    onclick={handleSendToTsign}
+                                    data-id={template.id}
+                                    data-url={template.AWS_Document__c}
+                                    data-type={template.Type__c}
+                                    data-email={template.clientEmail}>
+
+                                    <i class="material-icons tsign-icon">
+                                        send
+                                    </i>
+
+                                </a>
+                                </template>
+                                <template if:true={template.completedIcons}>
+                                <!-- EMAIL -->
+                                  <a
+                                      href="javascript:void(0)"
+                                      title="Send Email"
+                                      onclick={openEmailModal}
+                                      data-id={template.id}
+                                      data-name={template.name}
+                                      data-email={template.clientEmail}
+                                      data-url={template.AWS_Document__c}>
+
+                                      <i class="material-icons">
+                                          email
+                                      </i>
+
+                                  </a>
+                                  </template>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </template>
+
+                <!-- NO DATA -->
+                <template if:false={templateListPaginated.length}>
+
+                    <tr>
+
+                        <td
+                            colspan="3"
+                            class="no-data">
+
+                            <p>
+                                No records found
+                            </p>
+
+                        </td>
+
+                    </tr>
+
+                </template>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>    
+          <template if:true={templateListTotalRecords}>
+            <div
+              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_small fixed-pagination"
+            >
+              <!-- <div class="slds-list_inline">
+                  <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                  <div class="slds-select_container">
+                      <select class="slds-select" onchange={handleTemplatePageSizeChange}>
+                          <template for:each={pageSizeOptions} for:item="option">
+                              <option key={option} value={option}>{option}</option>
+                          </template>
+                      </select>
+                  </div>
+              </div>   -->
+
+<!-- Page Size -->
+<div class="slds-list_inline">
+    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+    <div class="slds-select_container">
+        <select class="slds-select" onchange={handleTemplatePageSizeChange}>
+            <template for:each={templatePageSizeOptions} for:item="option">
+                <option key={option.value} value={option.value} selected={option.selected}>{option.label}</option>
+            </template>
+        </select>
+    </div>
+</div>
+
+              <!-- PAGE NAVIGATION -->
+              <div class="slds-align_absolute-center">
+                <lightning-button
+                  disabled={disableTemplateFirst}
+                  icon-name="utility:jump_to_left"
+                  label="First"
+                  class="slds-p-horizontal_x-small"
+                  alternative-text="First page"
+                  onclick={handleTemplateFirst}
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableTemplateFirst}
+                  icon-name="utility:chevronleft"
+                  label="Previous"
+                  alternative-text="Previous"
+                  onclick={handleTemplatePrevious}
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge"
+                  >Showing {templatePageNumber} of {templateTotalPages}
+                  Page(s)</span
+                >
+                &nbsp;
+
+                <lightning-button
+                  disabled={disableTemplateLast}
+                  icon-name="utility:chevronright"
+                  label="Next"
+                  alternative-text="Next"
+                  onclick={handleTemplateNext}
+                  class="slds-p-horizontal_x-small"
+                  icon-position="right"
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableTemplateLast}
+                  icon-name="utility:jump_to_right"
+                  label="Last"
+                  alternative-text="Last page"
+                  onclick={handleTemplateLast}
+                  icon-position="right"
+                ></lightning-button>
+              </div>
+
+              <!-- TOTAL RECORDS -->
+              <div class="slds-clearfix">
+                <div class="slds-float_right">
+                  <span class="slds-badge"
+                    >Total Records: {templateListTotalRecords}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+        <template if:true={createtemplatesFlag}>
+ <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-top_large filter-toolbar">
+
+    <!-- Left Side : Filters -->
+    <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+
+        <!-- Search -->
+        <div class="slds-col filter-item">
+            <div class="floating-label">
+                <span class="label-text-drop">Search</span>
+                <lightning-input
+                    type="search"
+                    value={searchCreatedKeyword}
+                    onchange={handleCreatedSearchChange}
+                    placeholder="Search by Name"
+                    variant="label-hidden">
+                </lightning-input>
+            </div>
+        </div>
+
+        <!-- Type -->
+        <div class="slds-col filter-item">
+            <div class="floating-label">
+                <span class="label-text-drop">Type</span>
+                <lightning-combobox
+                    value={selectedType}
+                    options={typeOptions}
+                    onchange={handleTypeChange}
+                    placeholder="All"
+                    variant="label-hidden">
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="slds-col filter-item">
+            <div class="floating-label">
+                <span class="label-text-drop">Status</span>
+                <lightning-combobox
+                    value={selectedStatus}
+                    options={statusOptions}
+                    onchange={handleStatusChange}
+                    placeholder="All"
+                    variant="label-hidden">
+                </lightning-combobox>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Side : Buttons -->
+    <div class="slds-grid slds-grid_vertical-align-center">
+
+        <button
+            class="slds-button slds-button_icon slds-button_icon-border slds-m-right_small"
+            title="Refresh"
+            onclick={refreshTemplates}>
+            <svg class="slds-button__icon" aria-hidden="true">
+                <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+            </svg>
+        </button>
+
+        <lightning-button
+            label="Archives"
+            variant="neutral"
+            onclick={openArchivedTemplates}
+            class="slds-m-right_small">
+        </lightning-button>
+
+        <lightning-button
+            variant="brand"
+            label="Create"
+            title="Create (Ctrl + Shift + C)"
+            onclick={createTemplate}>
+        </lightning-button>
+
+    </div>
+
+</div>
+
+
+<div class="table-container createdTemplateTable">
+
+    <!-- HEADER -->
+    <div class="header-wrapper">
+        <table class="staff-table">
+            <thead>
+                <tr>
+                    <th class="table-th" title="Template Name">Template Name</th>
+                      <th class="table-th" title="Type">Type</th>
+                      <th class="table-th" title="Created By">Created By</th>
+                       <th class="table-th" title="Type">Status</th>
+                    <th class="table-th center" title="Actions">Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- BODY -->
+    <div class="body-scroll custom-scroll createdTemplateTableTableHeight">
+        <table class="staff-table">
+            <tbody>
+
+                <template for:each={createdTemplateListPaginated} for:item="template">
+                    <tr key={template.Id} class="table-row">
+
+                        <!-- Template Name -->
+                        <td class="table-td" title={template.Template_Name__c}>
+                            {template.Template_Name__c}
+                        </td>
+
+                        <td class="table-td" title={template.Template_Type__c}>
+                            {template.Template_Type__c}
+                        </td>
+
+                        <td class="table-td">
+                            <div class="created-user">
+                                <div class="user-avatar">
+                                    {template.createdByInitials}
+                                </div>
+                                <div class="user-info">
+                                    <div class="user-name">
+                                        {template.createdByName}
+                                    </div>
+                                    <div class="user-date">
+                                        {template.createdDate}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="table-td" title={template.Status__c}>
+                            {template.Status__c}
+                        </td>
+
+                        <!-- ACTIONS -->
+                       <td class="table-td center">
+                          <div class="template-actions">
+
+                             <a href="javascript:void(0)"
+                                  title="View"
+                                  data-source="templates"
+                                  onclick={handleViewTemplate1}
+                                  data-template={template.viewPayload}>
+
+                                  <i class="material-icons view-icon">
+                                      visibility
+                                  </i>
+
+                              </a>
+
+                              <a href="javascript:void(0)"
+                                  title="Edit"
+                                  onclick={handleEditTemplate}
+                                  data-template={template.editPayload}>
+
+                                  <i class="material-icons action-icon">
+                                      edit
+                                  </i>
+
+                              </a>
+
+                              <a href="javascript:void(0)"
+                                  title="Delete"
+                                  onclick={handleDeleteTemplate2}
+                                  data-id={template.Id}
+                                  data-key={template.Key__c}>
+
+                                  <i class="material-icons delete-icon">
+                                      delete
+                                  </i>
+
+                              </a>
+
+
+
+                              <template if:true={template.showArchive}>
+
+                                  <a href="javascript:void(0)"
+                                      title="Archive"
+                                      onclick={handleArchiveTemplate}
+                                      data-id={template.Id}>
+
+                                      <i class="material-icons action-icon">
+                                          archive
+                                      </i>
+
+                                  </a>
+
+                              </template>
+
+                              <template if:true={template.showUnarchive}>
+
+                                  <a href="javascript:void(0)"
+                                      title="Unarchive"
+                                      onclick={handleUnarchiveTemplate}
+                                      data-id={template.Id}>
+
+                                      <i class="material-icons action-icon">
+                                          unarchive
+                                      </i>
+
+                                  </a>
+
+                              </template>
+
+                              <template if:true={showPermissionIcon}>
+
+                                  <a href="javascript:void(0)"
+                                    data-id={template.Id}
+                                    onclick={handleShare}
+                                    title="Permissions"
+                                    class="icon-link">
+
+                                      <i class="material-icons permissions-icon">passkey</i>
+
+                                  </a>
+
+                              </template>
+
+                              <template if:true={template.showSendDocument}>
+
+                                  <a href="javascript:void(0)"
+                                      title="Create Document"
+                                      onclick={handleSendDocument}
+                                      data-id={template.Id}>
+
+                                      <i class="material-icons action-icon">
+                                          assignment_add
+                                      </i>
+
+                                  </a>
+
+                              </template>
+                          </div>
+                      </td>
+
+                    </tr>
+                </template>
+
+                <!-- NO DATA -->
+                <template if:false={createdTemplateListPaginated.length}>
+                    <tr>
+                        <td class="no-data">
+                            <p>No records found</p>
+                        </td>
+                    </tr>
+                </template>
+
+            </tbody>
+        </table>
+    </div>
+</div>          
+          
+          <template if:true={createdTemplateTotalRecords}>
+            <div
+              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-top_small fixed-pagination"
+            >
+
+
+<!-- Page Size -->
+<div class="slds-list_inline">
+    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+    <div class="slds-select_container">
+        <select class="slds-select" onchange={handleCreatedTemplatePageSizeChange}>
+            <template for:each={createdTemplatePageSizeOptions} for:item="option">
+                <option key={option.value} value={option.value} selected={option.selected}>{option.label}</option>
+            </template>
+        </select>
+    </div>
+</div>              
+              <!-- PAGE NAVIGATION -->
+              <div class="slds-align_absolute-center">
+                <lightning-button
+                  disabled={disableCreatedTemplateFirst}
+                  icon-name="utility:jump_to_left"
+                  label="First"
+                  class="slds-p-horizontal_x-small"
+                  alternative-text="First page"
+                  onclick={handleCreatedTemplateFirst}
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableCreatedTemplateFirst}
+                  icon-name="utility:chevronleft"
+                  label="Previous"
+                  alternative-text="Previous"
+                  onclick={handleCreatedTemplatePrevious}
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                  Showing {createdTemplatePageNumber} of
+                  {createdTemplateTotalPages} Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                  disabled={disableCreatedTemplateLast}
+                  icon-name="utility:chevronright"
+                  label="Next"
+                  alternative-text="Next"
+                  onclick={handleCreatedTemplateNext}
+                  class="slds-p-horizontal_x-small"
+                  icon-position="right"
+                ></lightning-button>
+
+                <lightning-button
+                  disabled={disableCreatedTemplateLast}
+                  icon-name="utility:jump_to_right"
+                  label="Last"
+                  alternative-text="Last page"
+                  onclick={handleCreatedTemplateLast}
+                  icon-position="right"
+                ></lightning-button>
+              </div>
+
+              <!-- TOTAL RECORDS -->
+              <div class="slds-clearfix">
+                <div class="slds-float_right">
+                  <span class="slds-badge">
+                    Total Records: {createdTemplateTotalRecords}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+
+        <!-- <template if:true={isModalOpen}>
+            <section
+                class="pdf-modal">
+            
+                <div class="pdf-header">
+                    <span class="pdf-title">
+                        {selectedTemplateName}
+                    </span>
+                    <button class="close-btn" onclick={closePdfPreview}>
+                        ✕
+                    </button>
+                </div>
+            
+                <iframe src={currentUrl} width="100%" height="1200px" frameborder="0"></iframe>
+            </section>
+        </template> -->
+
+         <template if:true={isModalOpen}>
+            <div class="modal-overlay">
+              <section class="pdf-preview-modal">
+              <div class="document-preview-modal-header">
+                    <div class="document-preview-title-container">
+                        <span class="document-preview-title-label">
+                            Template Name:
+                        </span>
+                        <span class="document-preview-title-value" title={popSelectedTemplateName}>
+                            {selectedTemplateName}
+                        </span>
+                    </div>
+                    <lightning-button label="Close" variant="neutral" class="document-preview-close-button" onclick={closePdfPreview}></lightning-button>
+                </div>
+
+
+                <div class="pop-pdf-image-wrapper custom-scroll">
+                  <iframe src={currentUrl} width="100%" height="1200px" frameborder="0"></iframe>
+                </div>
+              </section>
+            </div>
+          </template>
+
+
+
+
+      </div>
+    </div>
+  </template>
+  
+<template if:true={showEmailModal}>
+
+    <section
+        class="send-doc-modal-wrap"
+        role="dialog"
+        tabindex="-1">
+
+        <div class="send-doc-modal">
+
+            <!-- HEADER -->
+            <div class="send-doc-header">
+
+                <div class="send-doc-header-left">
+
+                    <h2 class="send-doc-title">
+                        Send Document
+                    </h2>
+
+                    <span class="send-doc-subtitle">
+                        Enter recipient email details
+                    </span>
+
+                </div>
+
+                <button
+                    class="send-doc-close"
+                    onclick={closeEmailModal}
+                    title="Close">
+
+                    <i class="material-icons">
+                        close
+                    </i>
+
+                </button>
+
+            </div>
+
+            <!-- BODY -->
+            <div class="send-doc-body">
+
+                <div class="send-doc-section-title">
+                    Selected Document
+                </div>
+
+                <div class="send-doc-grid">
+
+                    <div class="send-doc-template-card">
+
+                        <i class="material-icons send-doc-file-icon">
+                            email
+                        </i>
+
+                        <span class="send-doc-template-name">
+                            {selectedTemplateName}
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="send-doc-section-title recipient-space">
+
+                    Recipient Details
+
+                </div>
+
+                <div class="send-doc-grid">
+
+                    <!-- TO -->
+
+                    <div class="send-doc-field">
+
+                        <label class="send-doc-label">
+
+                            To Email(s)
+
+                        </label>
+
+                        <lightning-textarea
+                            value={toEmails}
+                            placeholder="john@gmail.com, mary@gmail.com"
+                            onchange={handleToEmailChange}>
+                        </lightning-textarea>
+
+                    </div>
+
+                    <!-- CC -->
+
+                    <div class="send-doc-field">
+
+                        <label class="send-doc-label">
+
+                            CC Email(s)
+                            (Optional)
+
+                        </label>
+
+                        <lightning-textarea
+                            value={ccEmails}
+                            placeholder="manager@gmail.com"
+                            onchange={handleCcEmailChange}>
+                        </lightning-textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+
+            <div class="send-doc-footer">
+
+                <lightning-button
+                    label="Cancel"
+                    variant="neutral"
+                    onclick={closeEmailModal}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Send"
+                    variant="brand"
+                    onclick={handleSendEmail}>
+                </lightning-button>
+
+            </div>
+
+        </div>
+
+        <div
+            class="send-doc-backdrop"
+            onclick={closeEmailModal}>
+        </div>
+
+    </section>
+
+</template>
+
+
+  <template if:true={isLoading1}>
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+      <div class="loader-container">
+        <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+      </div>
+
+      <!-- Progress text instead of progress bar -->
+      <p class="progress-text">Setting Up Things,<br />Please Wait...</p>
+    </div>
+  </template>
+
+
+  <template if:true={isPopPdfPreviewOpen}>
+    <div class="modal-overlay">
+      <section class="pdf-preview-modal">
+       <div class="document-preview-modal-header">
+            <div class="document-preview-title-container">
+                <span class="document-preview-title-label">
+                    Document Name:
+                </span>
+                <span class="document-preview-title-value" title={popSelectedTemplateName}>
+                    {popSelectedTemplateName}
+                </span>
+            </div>
+            <lightning-button label="Close" variant="neutral" class="document-preview-close-button" onclick={closePopPdfViewer}></lightning-button>
+        </div>
+
+
+        <div class="pop-pdf-image-wrapper custom-scroll">
+          <template for:each={popPreviewPages} for:item="img">
+            <div key={img.pageNumber} class="pop-pdf-page">
+              <img
+                src={img.dataUrl}
+                alt={img.altText}
+                style="width: 100%"
+                onload={handlePopImageLoad}
+                onerror={handlePopImageError}
+              />
+              <div
+                class="slds-text-align_center slds-text-title_caps slds-m-vertical_x-small"
+              >
+                {img.altText}
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+    </div>
+  </template>
+
+  <template if:true={isCreateOptionsModalOpen}>
+   <c-tesseractappstemplates-lwc
+        orgid={orgid}
+        selected-template={selectedTemplate}
+        onviewtemplate={handleViewTemplateFromChild}
+        ondocumentsuccess={handleDocumentSuccess}
+        onback={handleBackFromTemplateEditor}
+        oncontinuetotsign={handleContinueToTsign}>
+    </c-tesseractappstemplates-lwc>
+  </template>
+
+  <template if:true={showSendDocumentModal}>
+    <section class="send-doc-modal-wrap" role="dialog" tabindex="-1">
+        <div class="send-doc-modal">
+            <div class="send-doc-header">
+                <div class="send-doc-header-left">
+                    <h2 class="send-doc-title">Create Document</h2>
+                    <!-- <span class="send-doc-subtitle">Select a Recipient to continue</span> -->
+                </div>
+
+                <button class="send-doc-close" onclick={closeSendDocumentModal} title="Close">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+
+            <div class="send-doc-body">
+                <div class="send-doc-section-title">Selected Template</div>
+
+                <div class="send-doc-grid">
+                    <div class="send-doc-template-card">
+                        <i class="material-icons send-doc-file-icon">description</i>
+                        <span class="send-doc-template-name">{sendDocumentForm.templateName}</span>
+                    </div>
+                    <template if:true={showFacilityField}>
+                    <div class="send-doc-field">
+                        <label class="send-doc-label">Facility<span class="required">*</span></label>
+                        <c-tesseract-apps-multi-combobox
+                            required
+                            data-id="mandatory"
+                            data-label="Facility"
+                            options={finalListFacilities}
+                            placeholder="Select Facility"
+                            value={selectedSendDocumentFacilities}
+                            onchange={handleSendDocumentFacilityChange}>
+                        </c-tesseract-apps-multi-combobox>
+                    </div>
+                    </template>
+                </div>
+
+                <div class="send-doc-section-title recipient-space">Selected Recipient</div>
+
+                <div class="send-doc-grid">
+                    <div class="send-doc-field">
+                        <label class="send-doc-label">Send to</label>
+                        <lightning-combobox
+                            variant="label-hidden"
+                            placeholder="Select Recipient Type"
+                            value={sendDocumentForm.recipientType}
+                            options={recipientTypeOptions}
+                            data-field="recipientType"
+                            onchange={handleSendDocumentFieldChange}
+                            disabled>
+                        </lightning-combobox>
+                    </div>
+                      <template if:true={showContactField}>
+                          <div class="send-doc-field">
+                          <label class="send-doc-label">Select Contact<span class="required">*</span></label>
+                          <c-tesseract-apps-single-combobox
+                            key={selectedSendDocumentFacilities}
+                              variant="label-hidden"
+                              placeholder="Select Contact"
+                              value={sendDocumentForm.contactId}
+                              options={contactOptions}
+                              data-field="contactId"
+                              onchange={handleSendDocumentFieldChange}>
+                          </c-tesseract-apps-single-combobox>
+                      </div>
+                      </template>
+                </div>
+            </div>
+
+            <div class="send-doc-footer">
+
+                <lightning-button
+                    label="Cancel"
+                    variant="neutral"
+                    onclick={closeSendDocumentModal}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Continue to Preview & Edit"
+                    variant="brand"
+                    onclick={handleContinueToPreview}>
+                </lightning-button>
+
+            </div>
+        </div>
+
+        <div class="send-doc-backdrop" onclick={closeSendDocumentModal}></div>
+    </section>
+</template>
+
+
+    <template if:true={showConfirmationModal}>
+    <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+       
+        <div class="slds-modal__container" style="max-width: 25%;">
+            <!-- Centered Header -->
+            <header class="slds-modal__header" style="background:#002A52;">           
+              <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align: center;">
+                 {confirmationTitle}
+              </h2>
+            </header>
+
+            <!-- Modal Content -->
+            <div class="slds-modal__content slds-p-around_medium">                                
+                <div class="slds-m-around_small" style="text-align:center">
+                    <h1>
+                        <p>{confirmationMessage}</p>
+                    </h1>
+
+                    <!-- Centered Buttons -->
+                    <div class="slds-m-top_medium">
+                        <lightning-button 
+                            label={confirmButtonLabel} 
+                            variant="brand" 
+                            onclick={handleConfirmAction} 
+                            class="slds-m-around_small">
+                        </lightning-button>
+
+                        <lightning-button 
+                            label="Cancel" 
+                            variant="brand-outline" 
+                            onclick={handleCancelAction} 
+                            class="slds-m-around_small">
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<template if:true={showArchiveTemplatesModal}>
+  <section class="slds-modal slds-fade-in-open" role="dialog">
+    <div class="slds-modal__container" style="max-width:75%;">
+      <header class="slds-modal__header" style="
+         background:#002A52;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        position:relative;
+        ">
+    <h2 class="slds-text-heading_medium slds-hyphenate" style="
+             color:white;
+            font-weight:bold;
+            text-align:center;
+            ">
+        Archived Templates
+    </h2>
+    <button class="send-doc-close" title="Close" onclick={closeArchivedTemplates} style="
+             position:absolute;
+            right:1rem;
+            top:50%;
+            transform:translateY(-50%);
+            background:none;
+            border:none;
+            cursor:pointer;
+            ">
+        <i class="material-icons" style="color:white;">close
+        </i>
+    </button>
+</header>
+
+      <div class="slds-modal__content slds-p-around_medium">
+        <div class="table-container archiveTemplateTable">
+          <div class="header-wrapper">
+            <table class="staff-table">
+              <thead>
+                <tr>
+                  <th>
+                    Template Name
+                  </th>
+                  <th>
+                    Type
+                  </th>
+                  <th>
+                    Created By
+                  </th>
+                  <th class="center">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+          <div class="body-scroll custom-scroll yourTableHeight">
+            <table class="staff-table">
+              <tbody>
+                <template for:each={archivedTemplateListPaginated} for:item="template">
+                  <tr key={template.Id}>
+                    <td>
+                      {template.Template_Name__c}
+                    </td>
+                    <td>
+                      {template.Template_Type__c}
+                    </td>
+                    <td>
+                      <div class="created-user">
+                        <div class="user-avatar">
+                          {template.createdByInitials}
+                        </div>
+                        <div class="user-info">
+                          <div class="user-name">
+                            {template.createdByName}
+                          </div>
+                          <div class="user-date">
+                            {template.createdDate}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="center">
+                      <div class="template-actions">
+                        <a title="View" data-source="archive" data-template={template.viewPayload} onclick={handleViewTemplate1}>
+                          <i class="material-icons view-icon">
+                            visibility
+                          </i>
+                        </a>
+                        <a title="Unarchive" data-id={template.Id} onclick={handleUnarchiveTemplate}>
+                          <i class="material-icons action-icon">
+                            unarchive
+                          </i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <template if:false={archivedTemplateListPaginated.length}>
+                  <tr>
+                    <td colspan="4" class="no-data">
+                      No archives found
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="slds-align_absolute-center
+                        slds-m-top_medium">
+          <lightning-button label="Previous" disabled={disableArchivedFirst} onclick={handleArchivedPrevious}></lightning-button>
+          &nbsp;
+          <span class="slds-badge"
+                  >Showing {archivedTemplatePageNumber} of {archivedTemplateTotalPages}
+                  Page(s)</span
+                >
+          &nbsp;
+          <lightning-button label="Next" disabled={disableArchivedLast} onclick={handleArchivedNext}></lightning-button>
+        
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+  <!-- 🔥 GLOBAL UPGRADE MODAL -->
+<template if:true={showUpgradeModal}>
+    <c-upgrade-modal 
+        is-open={showUpgradeModal} 
+        onclose={closeUpgradeModal}>
+    </c-upgrade-modal>
+</template>
+
+<template if:true={assignmentFlag}>
+
+    <div class="blur-overlay"></div>
+
+    <div class="right-align" style="width:40%;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+
+            <h3 style="font-weight:bold;font-size:150%;margin:0;padding:2% 0 0 2%;">
+                Grant Access
+            </h3>
+
+        </div>
+
+        <div class="right-content custom-scroll">
+
+            <div class="seperator">
+
+                <div class="slds-grid slds-wrap"
+                     style="padding:20px 0px 20px 0px;">
+
+                    <div class="slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_small">
+
+                        <lightning-dual-listbox
+                            name="staff"
+                            label="Select Staff"
+                            source-label="Available Staff"
+                            selected-label="Selected Staff"
+                            field-level-help="Select your staff"
+                            options={filteredStaffOptions}
+                            value={selectedStaffIds}
+                            onchange={handleStaffChange}>
+                        </lightning-dual-listbox>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="slds-align_absolute-center">
+
+            <lightning-button
+                label="Cancel"
+                variant="brand-outline"
+                onclick={handleShareClose}
+                class="slds-m-around_small">
+            </lightning-button>
+
+            <lightning-button
+                label="Save"
+                variant="brand"
+                onclick={handleassignmentinsert}
+                class="slds-m-around_small">
+            </lightning-button>
+
+        </div>
+
+    </div>
+
+</template>
+
+</template>
