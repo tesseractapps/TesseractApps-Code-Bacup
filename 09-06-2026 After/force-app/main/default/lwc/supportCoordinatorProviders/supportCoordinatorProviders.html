@@ -1,0 +1,639 @@
+<template>
+
+    <template if:true={providerflag}>
+        <div class="page-container">
+
+            <template if:false={showProviderDetails}>
+                <!-- Header -->
+                <!-- <div class="header-row slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                    <h2 class="slds-text-heading_medium">Providers</h2>
+
+                    <div class="slds-button-group custom-button-group" role="group">
+                        <lightning-button
+                            label="Create Provider"
+                            variant="brand"
+                            onclick={openProviderModal}>
+                        </lightning-button>
+                    </div>
+                </div> -->
+
+                <div class="menu-container ">
+                    <div class="menu-left">
+                        <div class="menu-item1">Providers</div>
+                    </div>
+
+                    <div class="search-box">
+                        <lightning-input 
+                            type="search"
+                            placeholder="Search Provider or Email"
+                            variant="label-hidden"
+                            value={searchProvider}
+                            onchange={handleSearchProvider}>
+                        </lightning-input>
+                    </div>
+
+                    <lightning-button
+                        label="Create Provider"
+                        variant="brand"
+                        class="slds-m-right_small"
+                        onclick={openProviderModal}
+                    ></lightning-button> 
+                </div>            
+
+            <div class="slds-p-around_medium providers-content">
+                <div class="table-section">
+                    <!-- Provider Row -->
+                    <div class="table-container providerTable"> 
+                        <!-- HEADER --> 
+                        <div class="header-wrapper"> 
+                            <table class="staff-table" role="table"> 
+                                <thead> 
+                                    <tr> 
+
+                                        <th class="table-th">Provider</th> 
+                                        <th class="table-th">Email</th> 
+                                        <th class="table-th">Phone</th> 
+                                        <!-- <th class="table-th">Participant</th>  -->
+                                        <th class="table-th">Service Type</th> 
+                                        <th class="table-th">Type</th>
+                                        <th class="table-th">Status</th> 
+                                        <th class="table-th center">Actions</th>
+
+                                    </tr> 
+                                </thead> 
+                            </table> 
+                        </div> 
+
+                        <!-- BODY --> 
+                        <div class="body-scroll custom-scroll yourTableHeight"> 
+                            <table class="staff-table"> 
+                                <tbody>
+                                    <!-- Records -->
+                                    <template if:true={providers.length}>
+                                        <template for:each={providers} for:item="p">
+                                            <tr key={p.id} class="table-row">
+
+                                                <!-- PROVIDER -->
+                                                <td class="table-td"> 
+                                                    <div class="avatar-row">
+
+                                                        <template if:true={p.hasLogo}>
+                                                            <img src={p.logo}
+                                                                alt={p.name}
+                                                                class="provider-logo"
+                                                                data-id={p.id}
+                                                                onerror={handleLogoError}/>
+                                                        </template>
+
+                                                        <template if:false={p.hasLogo}>
+                                                            <div class="avatar-circle">
+                                                                {p.initials}
+                                                            </div>
+                                                        </template>
+
+                                                        <div>
+                                                            <div class="provider-name">
+                                                                <span title={p.name}>
+                                                                    {p.name}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </td> 
+
+                                                <!-- EMAIL -->
+                                                <td class="table-td"><span title={p.email}>{p.email}</span></td>
+
+                                                <!-- PHONE -->
+                                                <td class="table-td"><span title={p.phone}>{p.phone}</span></td>
+
+                                                <!-- Participant -->
+                                                <!-- <td class="table-td">0</td> -->
+
+                                                <!-- Service Type -->
+                                                <td class="table-td">
+                                                    <span title={p.serviceType}>
+                                                        {p.serviceType}
+                                                    </span>
+                                                </td>
+
+                                                <!-- Industry Type -->
+                                                <td class="table-td"><span title={p.industryType}>{p.industryType}</span></td>
+
+                                                <!-- STATUS -->
+                                                <td class="table-td">
+                                                    <span class={p.statusClass}>
+                                                        {p.status}
+                                                    </span> 
+                                                </td> 
+
+                                                <!-- ACTIONS -->
+                                                <!-- <td class="table-td"> 
+                                                    <div class="actions-row">
+                                                        <lightning-button 
+                                                            label="Edit"
+                                                            variant="brand"
+                                                            data-id={p.id}
+                                                            onclick={openEditModal}>
+                                                        </lightning-button>
+
+                                                        <lightning-button
+                                                            label="View"
+                                                            variant="brand" 
+                                                            data-id={p.id}
+                                                            onclick={openDetails}>
+                                                        </lightning-button> 
+                                                    </div>
+                                                </td> -->
+
+                                                <td class="table-td center">
+
+                                                        <!-- Edit Icon -->
+                                                        <span 
+                                                            class="material-icons action-icon"
+                                                            data-id={p.id}
+                                                            onclick={openEditModal}
+                                                            title="Edit">
+                                                            edit
+                                                        </span>
+
+                                                        <!-- View Icon -->
+                                                        <span 
+                                                            class="material-icons action-icon"
+                                                            data-id={p.id}
+                                                            onclick={openDetails}
+                                                            title="View">
+                                                            visibility
+                                                        </span>
+
+                                                </td>
+
+                                            </tr> 
+                                        </template>
+                                    </template>
+
+                                    <!-- No Records -->
+                                    <template if:false={providers.length}>
+                                        <tr>
+                                            <td class="no-data">
+                                                No records found
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                </tbody>
+                            </table> 
+
+                        </div> 
+
+                    </div> 
+                </div>
+                <!-- PAGINATION BAR -->
+                <!-- <template if:true={providers.length}>
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-top_medium"> 
+                        <div class="slds-list_inline"> 
+                            <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span> 
+                            <div class="slds-select_container"> 
+                                <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}> 
+                                    <template for:each={pageSizeOptions} for:item="option"> 
+                                    <option key={option} value={option}>{option}</option> 
+                                    </template> 
+                                </select> 
+                            </div> 
+                        </div> 
+                        <div class="slds-align_absolute-center"> 
+                            <lightning-button disabled={isFirstPage} icon-name="utility:jump_to_left" label="First" 
+                                alternative-text="first page" onclick={handleFirstPage} style="margin-right: 10px;">
+                            </lightning-button>
+
+                            <lightning-button disabled={isFirstPage} icon-name="utility:chevronleft" label="Previous" 
+                                alternative-text="Previous" onclick={handlePreviousPage} style="margin-right: 5px;">
+                            </lightning-button> 
+                                <span class="slds-badge">Showing {currentPage} &nbsp;of&nbsp; {totalPages} Page(s)</span> 
+                            <lightning-button disabled={isLastPage} icon-name="utility:chevronright" label="Next" 
+                                alternative-text="Next" onclick={handleNextPage} class="slds-p-horizontal_x-small" icon-position="right">
+                            </lightning-button> 
+                            <lightning-button disabled={isLastPage} icon-name="utility:jump_to_right" label="Last" 
+                                alternative-text="last page" onclick={handleLastPage} icon-position="right">
+                            </lightning-button> 
+                        </div> 
+
+                        <div class="slds-clearfix"> 
+                            <div class="slds-float_right"> 
+                                <span class="slds-badge">Total Records: {totalRecords}</span> 
+                            </div> 
+                        </div> 
+
+                    </div> 
+                </template> -->
+
+
+
+
+                
+            </div>
+
+    <template if:true={providers.length}>
+        <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+            <div class="slds-list_inline">
+                <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                <div class="slds-select_container">
+                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="slds-align_absolute-center">
+                <lightning-button
+                    disabled={isFirstPage}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    alternative-text="first page"
+                    onclick={handleFirstPage}
+                    style="margin-right: 10px;">
+                </lightning-button>
+
+                <lightning-button
+                    disabled={isFirstPage}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    alternative-text="Previous"
+                    onclick={handlePreviousPage}
+                    style="margin-right: 5px;">
+                </lightning-button>
+
+                <span class="slds-badge">Showing {currentPage} &nbsp;of&nbsp; {totalPages} Page(s)</span>
+
+                <lightning-button
+                    disabled={isLastPage}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    alternative-text="Next"
+                    onclick={handleNextPage}
+                    class="slds-p-horizontal_x-small"
+                    icon-position="right">
+                </lightning-button>
+
+                <lightning-button
+                    disabled={isLastPage}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    alternative-text="last page"
+                    onclick={handleLastPage}
+                    icon-position="right">
+                </lightning-button>
+            </div>
+
+            <div class="slds-clearfix">
+                <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {totalRecords}</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+            </template>
+
+            <template if:true={showProviderDetails1}>
+                <section role="dialog" tabindex="-1" aria-modal="true"
+                    class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container modal-custom">
+
+                        <!-- HEADER -->
+                        <header class="slds-modal__header headercustom">
+                            <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+                                Provider Details
+                            </h2>
+                        <!--   <p class="sub">View provider information</p> -->
+                        </header>
+
+                        <!-- BODY CONTENT -->
+                        <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                            <!-- Avatar + Name + Badges Row -->
+                            <div class="pvd-header">
+                                <div class="pvd-avatar">{selectedProvider.initials}</div>
+                                <div class="pvd-title-block">
+                                    <h3 class="pvd-name">{selectedProvider.name}</h3>
+                                    <p class="pvd-subtitle">NDIS Provider · ABN {selectedProvider.abn}</p>
+                                    <div class="pvd-badge-row">
+                                        <span class="pvd-badge pvd-badge--active">
+                                            <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                                            {selectedProvider.Status}
+                                        </span>
+                                        <span class="pvd-badge pvd-badge--capacity">{selectedProvider.capacity}</span>
+                                        <span class="pvd-badge pvd-badge--type service-type-badge" title={selectedProvider.serviceType}> {selectedProvider.serviceType}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stat Cards Row -->
+                            <div class="slds-grid slds-gutters slds-m-top_medium">
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="pvd-stat-card">
+                                        <p class="pvd-stat-label">NDIS Provider ID</p>
+                                        <p class="pvd-stat-value">{selectedProvider.registrationNumber}</p>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="pvd-stat-card">
+                                        <p class="pvd-stat-label">Industry</p>
+                                        <p class="pvd-stat-value">{selectedProvider.industryType}</p>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="pvd-stat-card">
+                                        <p class="pvd-stat-label">Service Type</p>
+                                        <p  class="pvd-stat-value service-type-clamp" title={selectedProvider.serviceType}> {selectedProvider.serviceType}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Info Card -->
+                            <div class="pvd-detail-card slds-m-top_medium">
+                                <p class="pvd-section-label">
+                                    <lightning-icon icon-name="utility:call" size="x-small"></lightning-icon>
+                                    Contact information
+                                </p>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-2 pvd-detail-field">
+                                        <span class="pvd-field-label">Phone</span>
+                                        <span class="pvd-field-value">{selectedProvider.phone}</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 pvd-detail-field">
+                                        <span class="pvd-field-label">Email</span>
+                                        <span class="pvd-field-value">{selectedProvider.email}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Provider Details Card -->
+                            <div class="pvd-detail-card slds-m-top_medium">
+                                <p class="pvd-section-label">
+                                    <lightning-icon icon-name="utility:company" size="x-small"></lightning-icon>
+                                    Provider details
+                                </p>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-4 pvd-detail-field">
+                                        <span class="pvd-field-label">Status</span>
+                                        <span class="pvd-field-value">{selectedProvider.Status}</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 pvd-detail-field">
+                                        <span class="pvd-field-label">Current Capacity</span>
+                                        <span class="pvd-field-value">{selectedProvider.capacity}</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 pvd-detail-field">
+                                        <span class="pvd-field-label">ABN</span>
+                                        <span class="pvd-field-value">{selectedProvider.abn}</span>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 pvd-detail-field">
+                                        <span class="pvd-field-label">Industry Type</span>
+                                        <span class="pvd-field-value">{selectedProvider.industryType}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- FOOTER -->
+                        <footer class="slds-modal__footer">
+                            <lightning-button
+                                variant="neutral"
+                                label="Close"
+                                onclick={closeProviderDetails}>
+                            </lightning-button>
+                            <lightning-button
+                                class="slds-m-left_small"
+                                variant="brand"
+                                label="Edit"
+                                data-id={selectedProvider.id}
+                                onclick={openEditModal}>
+                            </lightning-button>
+                        </footer>
+
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+            
+        </div>
+    </template>
+
+    <template if:true={showProviderModal}> 
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+            <div class="slds-modal__container modal-custom">            
+                <!-- HEADER --> 
+                <header class="slds-modal__header headercustom  modal-header-custom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                        {modalTitle}
+                    </h2>
+                    <button class="slds-button slds-button_icon close-btn" title="Close" onclick={closeProviderModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                    </button>
+                </header>  
+                
+
+
+
+                <!-- BODY CONTENT --> 
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">  
+                    <div class="slds-grid slds-wrap slds-gutters">
+
+                        <!-- Row 1 -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Provider Name</span>
+                                <lightning-input 
+                                    label="Provider Name"
+                                    value={provider.Name}
+                                    onchange={handleChange}
+                                    data-field="Name"
+                                    variant="label-hidden"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        
+
+                        <!-- Row 2 -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Capacity</span>
+                                <lightning-combobox
+                                    name="Capacity"
+                                    label="Capacity"
+                                    value={provider.Current_Capacity__c}
+                                    placeholder="Select Capacity"
+                                    options={capacityOptions}
+                                    onchange={handleChange}
+                                    data-field="Current_Capacity__c"
+                                    variant="label-hidden"
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <!-- <lightning-combobox
+                                name="ServiceType"
+                                label="Service Type"
+                                value={provider.Service_Type__c}
+                                placeholder="Select Service Type"
+                                options={serviceTypeOptions}
+                                onchange={handleChange}
+                                data-field="Service_Type__c"
+                                required>
+                            </lightning-combobox> -->
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Service Type</span>
+
+                                <c-tesseract-apps-multi-combobox placeholder="Select Service Type" name="multiServiceType"
+                                        options={serviceTypeOptions} value={selectedServiceTypes}
+                                        onchange={handleChange} disabled={isServiceTypeDisabled} data-field="Service_Type__c"
+                                variant="label-hidden"></c-tesseract-apps-multi-combobox>
+                            </div>
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>NDIS Provider ID</span>
+                                <lightning-input 
+                                    label="NDIS Provider ID"
+                                    value={provider.Registration_Number__c}
+                                    onchange={handleChange}
+                                    variant="label-hidden"
+                                    data-field="Registration_Number__c"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Phone</span>
+                                <lightning-input 
+                                    type="tel"
+                                    label="Phone"
+                                    value={provider.Phone__c}
+                                    onchange={handleChange}
+                                    data-field="Phone__c"
+                                    variant="label-hidden"
+                                    max-length="10"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <!-- Row 4 -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop">ABN</span>
+                                <lightning-input 
+                                    label="ABN"
+                                    value={provider.ABN__c}
+                                    onchange={handleChange}
+                                    variant="label-hidden"
+                                    data-field="ABN__c"
+                                    maxlength="11">
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Email</span>
+                                <lightning-input 
+                                    type="email"
+                                    label="Email"
+                                    value={provider.Contact_Email__c}
+                                    onchange={handleChange}
+                                    data-field="Contact_Email__c"
+                                    variant="label-hidden"
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Industry Type</span>
+                                <lightning-combobox
+                                    name="IndustryType"
+                                    label="Industry Type"
+                                    value={provider.Industry_Type__c}
+                                    placeholder="Select Industry Type"
+                                    options={industryTypeOptions}
+                                    onchange={handleChange}
+                                    data-field="Industry_Type__c"
+                                    variant="label-hidden"
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <!-- <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop">Status</span>
+                                <lightning-combobox
+                                    name="Status"
+                                    label="Status"
+                                    value={provider.Status__c}
+                                    placeholder="Select Status"
+                                    options={statusOptions}
+                                    onchange={handleChange}
+                                    variant="label-hidden"
+                                    data-field="Status__c">
+                                </lightning-combobox>
+                            </div>
+                        </div> -->
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                
+                                <span style="display:flex; align-items:center; gap:8px;">
+                                    
+                                    <lightning-input
+                                        type="toggle"
+                                        checked={isStatusActive}
+                                        onchange={handleStatusToggle}
+                                        variant="label-hidden"
+                                        message-toggle-active=""
+                                        message-toggle-inactive=""
+                                        style="transform: scale(0.8); transform-origin: left center;">
+                                    </lightning-input>
+
+                                    <span>Status</span>
+
+                                </span>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- FOOTER --> 
+                <footer class="slds-modal__footer"> 
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeProviderModal}></lightning-button> 
+                    <lightning-button 
+                        class="slds-m-left_small" 
+                        variant="brand" 
+                        label={saveButtonLabel} 
+                        onclick={saveProvider}>
+                    </lightning-button>
+
+                </footer> 
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template>
+
+</template>
