@@ -1,0 +1,2817 @@
+<template>
+    <template if:true={isHome}>
+        <div class="main-container">
+            <div class="menu-container">
+                <div class="menu-item1">
+                    <!-- HR Management -->
+                    <strong style="font-size: 20px;">
+                        HR Management
+                    </strong> &nbsp;
+                    <span style="font-size: 14px; font-weight: normal;">
+                        Manage all aspects of performance management
+                    </span>
+                </div>    
+            </div>
+            <!-- <div style="display: flex; align-items: center; justify-content: space-between;">
+            
+                <p style="font-weight: bold; padding: 1% 0% 1% 1%;font-size:140% "></p> 
+                <lightning-button label="Manage Templates" variant="brand" onclick={handleManageTemplates} style=" margin-top:1%;margin-bottom:1%; margin-right:1%; "></lightning-button> 
+            </div> -->
+            <template if:true={isCardGrid}>
+                <div class="dashboard-container custom-scroll">
+                    <div class="card-grid">
+
+                        <template for:each={cards} for:item="card">
+                            <div key={card.id} class="card">
+
+                                <!-- Header -->
+                                <div class="card-header">
+
+                                    <div class="left-section">
+                                        <!-- Material Icon -->
+                                        <div class={card.iconWrapperClass}>
+                                            <span class="material-icons icon-symbol">
+                                                {card.materialIcon}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h2 class="card-title">{card.title}</h2>
+                                            <p class="card-description">{card.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <lightning-button
+                                        variant="brand"
+                                        label={card.buttonLabel}
+                                        data-id={card.id}
+                                        onclick={handleClick}>
+                                    </lightning-button>
+
+                                </div>
+
+                                <div class="divider"></div>
+
+                                <div class="card-body">
+                                    <p class="sub-text">{card.subText}</p>
+
+                                    <template if:true={card.badgeText}>
+                                        <span class={card.badgeClass}>
+                                            {card.badgeText}
+                                        </span>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+            </template>        
+        </div>
+    </template>
+    <template if:true={isManageTemplates}>
+        <div class="main-container">
+            <div class="menu-container">
+                <!-- <div class="menu-item2" style="font-size: 20px;">Role Templates</div>     -->
+                 <!-- Left Title -->
+                <div class="menu-item2" style="font-size: 20px;">
+                    Role Templates
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-box">
+                    <lightning-input 
+                        type="search"
+                        placeholder="Search"
+                        variant="label-hidden"
+                        value={searchTemplate}
+                        onchange={handleSearchTemplates}>
+                    </lightning-input>
+                </div>
+
+                <!-- Roles Dropdown -->
+                <div class="roles-section">
+                    <span class="roles-label">Roles:</span>
+                    
+                    <div class="multi-select custom-scroll" >
+
+                        <!-- Dropdown Button -->
+                        <div  class={selectedOptionClass} title={selectedRolesLabel} onclick={toggleDropdown}>
+                             {selectedRolesLabel}
+                            <lightning-icon 
+                                icon-name="utility:chevrondown"
+                                size="x-small">
+                            </lightning-icon>
+                        </div>
+
+                        <!-- Dropdown List -->
+                        <template if:true={isDropdownOpen}>
+                            <div class="dropdown custom-scroll" data-id="roleDropdown">
+
+                                <template for:each={roleOptions} for:item="role">
+                                    <div key={role.value} class="dropdown-item" >
+                                        <lightning-input
+                                            type="checkbox"
+                                            label={role.label}
+                                            value={role.value}
+                                            checked={role.checked}
+                                            onchange={handleRoleSelection}>
+                                        </lightning-input>
+                                    </div>
+                                </template>
+
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+
+                <!-- Button -->
+                <div class="create-btn">
+                    <lightning-button 
+                        label="Create Template"
+                        icon-name="utility:add"
+                        variant="brand"
+                        onclick={handleCreateTemplate}>
+                    </lightning-button>
+                </div>
+
+                    
+            </div>
+            <div class="slds-grid slds-wrap slds-align_absolute-center slds-p-around_medium">
+
+                <!-- LEFT SIDE : Summary Boxes -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_10-of-12">
+
+                    <div class="summary-container slds-grid">
+
+                        <div class="summary-box total-box">
+                            <div class="summary-title">Total Templates</div>
+                            <div class="summary-value">{totalTemplates}</div>
+                        </div>
+
+                        <div class="summary-box role-box">
+                            <div class="summary-title">Roles</div>
+                            <div class="summary-value">{totalRoles}</div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- RIGHT SIDE : Back Button -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-12 slds-text-align_right">
+
+                    <lightning-button
+                        label="Back"
+                        variant="brand"
+                        onclick={handleBackManageTemplates}>
+                    </lightning-button>
+
+                </div>
+
+            </div>
+            <template if:true={templateList}>
+                <template if:true={templateList.length}>
+                     
+                    <div class="custom-scroll template-container">
+                         <template for:each={templateList} for:item="template">
+
+                        <div key={template.Id} class="slds-card slds-p-around_small custom-card slds-m-around_small">
+
+                            <div class="slds-grid slds-wrap slds-align_absolute-center">
+
+                                <!-- Left Content -->
+                                <div class="slds-col slds-size_1-of-1 slds-large-size_12-of-12">
+
+                                    <!-- Title + Badge -->
+                                    <div class="slds-grid slds-align-center slds-m-bottom_small">
+
+                                        <h2 class="slds-text-heading_medium slds-m-right_small">
+                                            {template.roleTitle}
+                                        </h2>
+
+                                        <!-- <span class="slds-badge slds-theme_warning slds-badge_light slds-truncate" title={template.appliedRoles}  style="max-width: 120px; display: inline-block;">{template.appliedRoles}
+                                          
+                                        </span>      -->
+                                        <!-- {template.appliedRoles} -->
+
+                                    </div>
+
+                                    <!-- Description -->
+                                    <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                        {template.description}
+                                    </p>
+
+                                    <!-- KPI / OKR / Competency Row -->
+                                    <!-- <div class="slds-grid slds-gutters_large slds-text-body_medium slds-m-left_small" style="margin-left: 0%;">
+
+                                        <div>
+                                            <span class="slds-text-color_weak">KPIs :</span>
+                                            <span class="metric-value slds-m-right_small">{template.kpiCount}</span>
+                                        </div>
+
+                                        <div>
+                                            <span class="slds-text-color_weak">OKRs :</span>
+                                            <span class="metric-value slds-m-right_small">{template.okrCount}</span>
+                                        </div>
+
+                                        <div>
+                                            <span class="slds-text-color_weak">Competencies :</span>
+                                            <span class="metric-value slds-m-right_small">{template.competencyCount}</span>
+                                        </div>
+
+                                        <div>
+                                            <span class="slds-text-color_weak">Permissions :</span>
+                                            <span class="metric-value slds-m-right_small">{template.permissionCount}</span>
+                                        </div>
+
+                                    </div> -->
+                                    <div class="slds-grid slds-grid_align-spread slds-text-body_medium slds-m-top_small">
+
+                                        <!-- Left Metrics -->
+                                        <div class="slds-grid metrics-row">
+
+                                            <div>
+                                                <span class="metric-label-new">KPIs:</span>
+                                                <span class="metric-value-new">{template.kpiCount}</span>
+                                            </div>
+
+                                            <div>
+                                                <span class="metric-label-new">OKRs:</span>
+                                                <span class="metric-value-new">{template.okrCount}</span>
+                                            </div>
+
+                                            <div>
+                                                <span class="metric-label-new">Competencies:</span>
+                                                <span class="metric-value-new">{template.competencyCount}</span>
+                                            </div>
+
+                                            <div>
+                                                <span class="metric-label-new">Permissions:</span>
+                                                <span class="metric-value-new">{template.permissionCount}</span>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Right Button -->
+                                        <div>
+                                            <lightning-button
+                                                label="View Details"
+                                                variant="brand"
+                                                data-id={template.Id}
+                                                onclick={handleViewDetails}>
+                                            </lightning-button>
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+
+                                <!-- Right Button -->
+                                <!-- <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-12 slds-text-align_right">
+
+                                    <lightning-button
+                                        label="View Details"
+                                        variant="brand"
+                                        data-id={template.Id}
+                                        onclick={handleViewDetails}>
+                                    </lightning-button>
+
+                                </div> -->
+
+                            </div>
+
+                        </div>
+
+                    </template>
+                    </div>
+                   
+                </template>
+                <template if:false={templateList.length}>
+                    <div class="no-data">
+                        <p>No records found</p>
+                    </div>
+                </template>
+            </template>
+            
+        </div>
+    </template>
+      
+    <template if:true={isCreateTemplate}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+          <div class="slds-modal__container modal-custom "> 
+                <header class="slds-modal__header headercustom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">Create Role Template</h2> 
+                    <p class="slds-text-body_small slds-p-top_x-small h2custom">Configure a custom role template with KPIs, OKRs and Competencies</p>
+                </header> 
+               
+
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">  
+                    <template if:true={showWeightSection}>
+                        <div class="total-weight-text">
+                           <span class="weight-label">
+                                Total Weight
+                            </span> : {totalOverallWeight}%
+                        </div>
+                    </template>
+                    <div class="form-section" style="margin-top: 2%; margin-left: 1.5%; margin-right: 1.5%" >
+                        <!-- Lightning Progress Indicator -->
+                        <lightning-progress-indicator current-step={currentStep} type="path">
+                        <lightning-progress-step
+                            label="Basic Info"
+                            value="step1"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <lightning-progress-step
+                            label="KPIs"
+                            value="step2"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <lightning-progress-step
+                            label="OKRs"
+                            value="step3"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <lightning-progress-step
+                            label="Competencies"
+                            value="step4"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <lightning-progress-step
+                            label="Permissions"
+                            value="step5"
+                        ></lightning-progress-step>
+                        </lightning-progress-indicator>
+                    </div>
+                    <div> 
+
+                        <div class="right-content custom-scroll">
+                            <template if:true={isStep1}>
+                                <!-- <div class="slds-box" style="margin: 2%;">
+                                    <div  class=" slds-grid slds-wrap slds-p-around_small" style="margin-top: 1%;">
+                                         <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Role Title</span>
+                                                <lightning-input type="text" name="roleTitle" variant="label-hidden" value={roleTitle} 
+                                                    onchange={handleChange} required="true"></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-theme_default slds-m-bottom_small" style="margin-left: 5%;">
+                                            <div class="floating-label-long-text-area">
+                                                <span class="label-text-drop1"><span style="color:red">*</span>templateDescription</span>
+                                                <lightning-textarea 
+                                                    name="templateDescription" 
+                                                    variant="label-hidden"   
+                                                    value={templateDescription} 
+                                                    onchange={handleChange}  
+                                                    placeholder="Description..." 
+                                                    style="width: 100%;">
+                                                </lightning-textarea>
+                                            </div>
+                                        </div> 
+                                       
+                                    </div>
+                                </div> -->
+                            
+                                    <div class="slds-box slds-m-around_medium">
+
+                                        <div class="slds-grid slds-wrap slds-gutters_x-small">
+
+                                            <!-- LEFT SIDE : ALL INPUT FIELDS -->
+                                            <div class="slds-col 
+                                                        slds-large-size_7-of-12 
+                                                        slds-medium-size_1-of-1 
+                                                        slds-size_1-of-1">
+
+                                                <div class="slds-grid slds-wrap slds-gutters_small">
+
+                                                    <!-- Role Title -->
+                                                    <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1">
+                                                        <div class="floating-label-new">
+                                                            <span class="label-text-drop">
+                                                                <span style="color:red">*</span>Role Title
+                                                            </span>
+
+                                                            <lightning-input
+                                                                type="text"
+                                                                name="roleTitle"
+                                                                variant="label-hidden"
+                                                                value={roleTitle}
+                                                                required
+                                                                onchange={handleChange}>
+                                                            </lightning-input>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Example Second Input -->
+                                                    <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1">
+                                                        <!-- <div class="floating-label-new">
+                                                            <span class="label-text-drop">Another Field</span>
+
+                                                            <lightning-input
+                                                                type="text"
+                                                                name="sampleField"
+                                                                variant="label-hidden">
+                                                            </lightning-input>
+                                                        </div> -->
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                            <!-- RIGHT SIDE : DESCRIPTION -->
+                                            <div class="slds-col 
+                                                        slds-large-size_5-of-12 
+                                                        slds-medium-size_1-of-1 
+                                                        slds-size_1-of-1">
+
+                                                <div class="floating-label-long-text-area full-height">
+                                                    <span class="label-text-drop1">
+                                                        <span style="color:red">*</span>Template Description
+                                                    </span>
+
+                                                    <lightning-textarea
+                                                        name="templateDescription"
+                                                        variant="label-hidden"
+                                                        value={templateDescription}
+                                                        onchange={handleChange}
+                                                        required
+                                                        placeholder="Description...">
+                                                    </lightning-textarea>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>                        
+                            </template>
+                                
+                            <template if:true={isStep2}>
+                                 <div class="slds-box" style="margin: 2%;">
+                                    <!-- <div  class=" slds-grid slds-wrap slds-p-around_small" style="margin-top: 1%;">
+
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop"><span style="color:red">*</span>KPI Name </span>
+                                                <lightning-input type="text" name="kpiName" variant="label-hidden" value={kpiName} onchange={handleChange} required="true"></lightning-input>
+                                            </div>
+                                        </div>
+
+
+                                          <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Category </span>
+                                                <lightning-combobox  name="selectedKpiCategory"  variant="label-hidden" options={kpiCategoryOptions} required="true" value={selectedKpiCategory}  onchange={handleChange}
+                                                ></lightning-combobox>
+                                            </div>
+                                        </div>
+                                    
+                                         <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Target </span>
+                                                <lightning-input type="number" name="kpiTarget" variant="label-hidden" value={kpiTarget} onchange={handleChange} required="true"></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">Unit </span>
+                                                <lightning-combobox  name="kpiUnit"  variant="label-hidden" options={kpiUnitOptions} value={kpiUnit}  onchange={handleChange}
+                                                ></lightning-combobox>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop"><span style="color:red">*</span>Weight %</span>
+                                                <lightning-input type="number"  name="kpiWeight" variant="label-hidden" value={kpiWeight} onchange={handleChange} required="true"></lightning-input>
+                                            </div>
+                                        </div>
+                                       
+                                    
+                                        <div class="slds-size_1-of-2 slds-theme_default slds-m-bottom_small" style="margin-left: 5%;">
+                                            <div class="floating-label-long-text-area">
+                                                <span class="label-text-drop1"><span style="color:red">*</span>Description</span>
+                                                <lightning-textarea 
+                                                    name="kpiDescription" 
+                                                    variant="label-hidden"   
+                                                    value={kpiDescription} 
+                                                    onchange={handleChange}  
+                                                    placeholder="Description..." 
+                                                    style="width: 100%;">
+                                                </lightning-textarea>
+                                            </div>
+                                        </div> 
+                                        <div class="slds-size_1-of-1 slds-text-align_right slds-m-top_medium">
+                                            <lightning-button 
+                                                label="Add KPI"
+                                                variant="brand-outline"
+                                                onclick={handleAddKpi}>
+                                            </lightning-button>
+                                        </div>
+                                    </div> -->
+                                   
+                                   
+                                    <div class="slds-grid slds-wrap slds-gutters_medium slds-p-around_small">
+
+                                        <!-- ================= LEFT SIDE : INPUT FIELDS ================= -->
+                                        <div class="slds-col 
+                                                    slds-large-size_7-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1">
+
+                                            <div class="slds-grid slds-wrap slds-gutters_medium">
+
+                                                <!-- KPI Name -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>KPI Name
+                                                        </span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="kpiName"
+                                                            variant="label-hidden"
+                                                            value={kpiName}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Category -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Category
+                                                        </span>
+                                                        <lightning-combobox
+                                                            name="selectedKpiCategory"
+                                                            variant="label-hidden"
+                                                            options={kpiCategoryOptions}
+                                                            value={selectedKpiCategory}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-combobox>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Target -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Target
+                                                        </span>
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="kpiTarget"
+                                                            variant="label-hidden"
+                                                            value={kpiTarget}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Unit -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">Unit</span>
+                                                        <lightning-combobox
+                                                            name="kpiUnit"
+                                                            variant="label-hidden"
+                                                            options={kpiUnitOptions}
+                                                            value={kpiUnit}
+                                                            onchange={handleChange}>
+                                                        </lightning-combobox>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Weight -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Weight %
+                                                        </span>
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="kpiWeight"
+                                                            variant="label-hidden"
+                                                            value={kpiWeight}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <!-- ================= RIGHT SIDE : DESCRIPTION ================= -->
+                                        <div class="slds-col 
+                                                    slds-large-size_5-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1
+                                                    slds-p-around_xx-small">
+
+                                            <div class="floating-label-long-text-area kpi-description">
+                                                <span class="label-text-drop1">
+                                                    <span style="color:red">*</span>Description
+                                                </span>
+
+                                                <lightning-textarea
+                                                    name="kpiDescription"
+                                                    variant="label-hidden"
+                                                    value={kpiDescription}
+                                                    onchange={handleChange}
+                                                    required
+                                                    placeholder="Description...">
+                                                </lightning-textarea>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- BUTTON -->
+                                        <div class="slds-col slds-size_1-of-1 slds-text-align_right slds-m-top_medium">
+                                            <lightning-button
+                                                label="Add KPI"
+                                                variant="brand-outline"
+                                                onclick={handleAddKpi}>
+                                            </lightning-button>
+                                        </div>
+
+                                    </div>                                 
+                                   
+                                    <template if:true={kpiList.length}>
+                                        <div class="ndis-table-container custom-scroll">
+                                            <table class="ndis-table">
+                                                <thead>
+                                                    <tr>
+                                                    
+                                                        <th class="table-td-service">KPI Name</th>
+                                                        <th class="table-td-service">Category</th>
+                                                        <th class="table-td-service">Target</th>
+                                                        <th class="table-td-service">Unit</th>
+                                                        <th class="table-td-service">Weight %</th>
+                                                        <th class="table-td-service" style="width:8%">Action</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    <template for:each={kpiList} for:item="kpi" for:index="index">
+                                                        <tr key={kpi.key} class="ndis-tr">
+
+                                                            <td class="table-td-service">
+                                                                {kpi.kpiName}
+                                                            </td>
+
+                                                            <td class="table-td-service">
+                                                                {kpi.category}
+                                                            </td>
+
+                                                            <td class="table-td-service">
+                                                                {kpi.target}
+                                                            </td>
+
+                                                            <td class="table-td-service">
+                                                                {kpi.unit}
+                                                            </td>
+
+                                                            <td class="table-td-service">
+                                                                {kpi.weight}
+                                                            </td>
+
+                                                            <!-- <td class="table-td-service ndis-center">
+                                                                <lightning-icon
+                                                                    icon-name="action:delete"
+                                                                    size="xx-small"
+                                                                    data-key={kpi.key}
+                                                                    onclick={handleDeleteKpi}>
+                                                                </lightning-icon>
+                                                            </td> -->
+                                                            <td class="table-td-service ndis-center">
+                                                                <a href="javascript:void(0)"
+                                                                    data-key={kpi.key}
+                                                                    onclick={handleDeleteKpi}
+                                                                    title="Delete"
+                                                                    style="text-decoration: none;">
+                                                                    <i class="material-icons delete-icon">delete</i>
+                                                                </a>
+                                                            </td>
+
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+
+
+                                 </div>
+                            </template>
+                            <template if:true={isStep3}>
+                                <div class="slds-box" style="margin: 2%;">
+                                    <!-- <div class="slds-grid slds-wrap slds-p-around_small" style="margin-top: 1%;">
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">
+                                                    <span style="color:red">*</span>Objective
+                                                </span>
+                                                <lightning-input
+                                                    type="text"
+                                                    name="okrObjective"
+                                                    variant="label-hidden"
+                                                    value={okrObjective}
+                                                    onchange={handleChange}
+                                                    required>
+                                                </lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">
+                                                    <span style="color:red">*</span>Weight %
+                                                </span>
+                                                <lightning-input
+                                                    type="number"
+                                                    name="okrWeight"
+                                                    variant="label-hidden"
+                                                    value={okrWeight}
+                                                    onchange={handleChange}
+                                                    required>
+                                                </lightning-input>
+                                            </div>
+                                        </div>
+
+                                        <div class="slds-size_1-of-2 slds-theme_default slds-m-bottom_small" style="margin-left: 5%;">
+                                            <div class="floating-label-long-text-area">
+                                                <span class="label-text-drop1">
+                                                    <span style="color:red">*</span>Description
+                                                </span>
+                                                <lightning-textarea
+                                                    name="okrDescription"
+                                                    variant="label-hidden"
+                                                    value={okrDescription}
+                                                    onchange={handleChange}>
+                                                </lightning-textarea>
+                                            </div>
+                                        </div>
+
+                                       
+                            
+                                         <p class="slds-text-body_small slds-p-top_x-small">Key Result</p>
+                                          <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">Title</span>
+                                                <lightning-input type="text" name="okrKeyTitle" variant="label-hidden" value={okrKeyTitle} onchange={handleChange}></lightning-input>
+                                            </div>
+                                        </div> 
+                                          <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">Target </span>
+                                                <lightning-input type="number" name="okrKeyTarget" variant="label-hidden" value={okrKeyTarget} onchange={handleChange}></lightning-input>
+                                            </div>
+                                        </div>
+                                      
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">Unit </span>
+                                                <lightning-combobox  name="okrKeyUnit"  variant="label-hidden" options={kpiUnitOptions} value={okrKeyUnit}  onchange={handleChange}
+                                                ></lightning-combobox>
+                                            </div>
+                                        </div>
+                                         <div class="slds-size_1-of-1 slds-text-align_right slds-m-top_medium">
+                                            <lightning-button
+                                                label="Add OKR"
+                                                variant="brand-outline"
+                                                onclick={handleAddOkr}>
+                                            </lightning-button>
+                                        </div>
+                                     </div> -->
+
+                                    <div class="slds-grid slds-wrap slds-gutters_medium slds-p-around_small">
+
+                                        <!-- ================= LEFT SIDE : INPUTS ================= -->
+                                        <div class="slds-col 
+                                                    slds-large-size_7-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1">
+
+                                            <div class="slds-grid slds-wrap slds-gutters_medium">
+
+                                                <!-- Objective -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Objective
+                                                        </span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="okrObjective"
+                                                            variant="label-hidden"
+                                                            value={okrObjective}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Weight -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Weight %
+                                                        </span>
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="okrWeight"
+                                                            variant="label-hidden"
+                                                            value={okrWeight}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- ===== KEY RESULT HEADER ===== -->
+                                                <div class="slds-col slds-size_1-of-1 slds-m-vertical_small">
+                                                    <p class="slds-text-title_bold">Key Result</p>
+                                                </div>
+
+                                                <!-- Key Result Title -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">Title</span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="okrKeyTitle"
+                                                            variant="label-hidden"
+                                                            value={okrKeyTitle}
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Key Target -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">Target</span>
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="okrKeyTarget"
+                                                            variant="label-hidden"
+                                                            value={okrKeyTarget}
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Key Unit -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">Unit</span>
+                                                        <lightning-combobox
+                                                            name="okrKeyUnit"
+                                                            variant="label-hidden"
+                                                            options={kpiUnitOptions}
+                                                            value={okrKeyUnit}
+                                                            onchange={handleChange}>
+                                                        </lightning-combobox>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+
+                                        <!-- ================= RIGHT SIDE : DESCRIPTION ================= -->
+                                        <div class="slds-col 
+                                                    slds-large-size_5-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1
+                                                    slds-p-around_xx-small">
+
+                                            <div class="floating-label-long-text-area kpi-description">
+                                                <span class="label-text-drop1">
+                                                    <span style="color:red">*</span>Description
+                                                </span>
+
+                                                <lightning-textarea
+                                                    name="okrDescription"
+                                                    variant="label-hidden"
+                                                    value={okrDescription}
+                                                    required
+                                                    onchange={handleChange}>
+                                                </lightning-textarea>
+                                            </div>
+
+                                        </div>
+
+
+                                        <!-- BUTTON -->
+                                        <div class="slds-col slds-size_1-of-1 slds-text-align_right slds-m-top_medium">
+                                            <lightning-button
+                                                label="Add OKR"
+                                                variant="brand-outline"
+                                                onclick={handleAddOkr}>
+                                            </lightning-button>
+                                        </div>
+
+                                    </div>
+
+                                     <template if:true={okrList.length}>
+                                        <div class="ndis-table-container custom-scroll">
+                                            <table class="ndis-table">
+                                                <thead>
+                                                    <tr>
+                                                        <!-- <th class="table-td-service">OKR Name</th>
+                                                        -->
+                                                        <th class="table-td-service">Objective</th>
+                                                        <th class="table-td-service">Weight %</th>
+                                                        <th class="table-td-service">Key Result Title</th>
+                                                        <th class="table-td-service">Target</th>
+                                                        <th class="table-td-service">Unit</th>
+                                                        <th class="table-td-service" style="width:8%">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={okrList} for:item="okr">
+                                                        <tr key={okr.key} class="ndis-tr">
+                                                            <!-- <td class="table-td-service">{okr.okrName}</td>
+                                                             -->
+                                                            <td class="table-td-service">{okr.okrObjective}</td>
+                                                            <td class="table-td-service">{okr.weight}</td>
+                                                            <td class="table-td-service">{okr.keyTitle}</td>
+                                                            <td class="table-td-service">{okr.keyTarget}</td>
+                                                            <td class="table-td-service">{okr.keyUnit}</td>
+                                                            <td class="table-td-service ndis-center">
+                                                                <a href="javascript:void(0)"
+                                                                    data-key={okr.key}
+                                                                    onclick={handleDeleteOkr}
+                                                                    title="Delete"
+                                                                    style="text-decoration: none;">
+                                                                    <i class="material-icons delete-icon">delete</i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+        
+                            <template if:true={isStep4}>
+                                <div class="slds-box" style="margin: 2%;">
+                                    <!-- <div class="slds-grid slds-wrap slds-p-around_small" style="margin-top: 1%;">
+
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">
+                                                    <span style="color:red">*</span>Competency Name
+                                                </span>
+                                                <lightning-input
+                                                    type="text"
+                                                    name="competencyName"
+                                                    variant="label-hidden"
+                                                    value={competencyName}
+                                                    onchange={handleChange}
+                                                    required>
+                                                </lightning-input>
+                                            </div>
+                                        </div>
+
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">
+                                                    <span style="color:red">*</span>Category
+                                                </span>
+                                                <lightning-combobox
+                                                    name="selectedCompetencyCategory"
+                                                    variant="label-hidden"
+                                                    options={competencyCategoryOptions}
+                                                    value={selectedCompetencyCategory}
+                                                    onchange={handleChange}
+                                                    required>
+                                                </lightning-combobox>
+                                            </div>
+                                        </div>
+
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">
+                                                    <span style="color:red">*</span>Weight %
+                                                </span>
+                                                <lightning-input
+                                                    type="number"
+                                                    name="competencyWeight"
+                                                    variant="label-hidden"
+                                                    value={competencyWeight}
+                                                    onchange={handleChange}
+                                                    required>
+                                                </lightning-input>
+                                            </div>
+                                        </div>
+
+                                        <div class="slds-size_1-of-2 slds-theme_default slds-m-bottom_small" style="margin-left: 5%;">
+                                            <div class="floating-label-long-text-area">
+                                                <span class="label-text-drop1">
+                                                    <span style="color:red">*</span>Description
+                                                </span>
+                                                <lightning-textarea
+                                                    name="competencyDescription"
+                                                    variant="label-hidden"
+                                                    value={competencyDescription}
+                                                    onchange={handleChange}>
+                                                </lightning-textarea>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label-new">
+                                                <span class="label-text-drop">
+                                                    <span style="color:red">*</span> Expected Behaviour
+                                                </span>
+                                                <lightning-input
+                                                    type="text"
+                                                    name="expectedBehaviour"
+                                                    variant="label-hidden"
+                                                    value={expectedBehaviour}
+                                                    onchange={handleChange}
+                                                    required>
+                                                </lightning-input>
+                                            </div>
+                                        </div>
+
+                                        <div class="slds-size_1-of-1 slds-text-align_right slds-m-top_medium">
+                                            <lightning-button
+                                                label="Add Competency"
+                                                variant="brand-outline"
+                                                onclick={handleAddCompetency}>
+                                            </lightning-button>
+                                        </div>
+                                    </div> -->
+
+
+                                    <div class="slds-grid slds-wrap slds-gutters_medium slds-p-around_small">
+
+                                        <!-- ================= LEFT SIDE : INPUTS ================= -->
+                                        <div class="slds-col 
+                                                    slds-large-size_7-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1">
+
+                                            <div class="slds-grid slds-wrap slds-gutters_medium">
+
+                                                <!-- Competency Name -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Competency Name
+                                                        </span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="competencyName"
+                                                            variant="label-hidden"
+                                                            value={competencyName}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Category -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Category
+                                                        </span>
+                                                        <lightning-combobox
+                                                            name="selectedCompetencyCategory"
+                                                            variant="label-hidden"
+                                                            options={competencyCategoryOptions}
+                                                            value={selectedCompetencyCategory}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-combobox>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Weight -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Weight %
+                                                        </span>
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="competencyWeight"
+                                                            variant="label-hidden"
+                                                            value={competencyWeight}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Expected Behaviour -->
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_xx-small">
+                                                    <div class="floating-label-new">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Expected Behaviour
+                                                        </span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="expectedBehaviour"
+                                                            variant="label-hidden"
+                                                            value={expectedBehaviour}
+                                                            required
+                                                            onchange={handleChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+
+                                        <!-- ================= RIGHT SIDE : DESCRIPTION ================= -->
+                                        <div class="slds-col 
+                                                    slds-large-size_5-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1
+                                                    slds-p-around_xx-small">
+
+                                            <div class="floating-label-long-text-area kpi-description">
+                                                <span class="label-text-drop1">
+                                                    <span style="color:red">*</span>Description
+                                                </span>
+
+                                                <lightning-textarea
+                                                    name="competencyDescription"
+                                                    variant="label-hidden"
+                                                    value={competencyDescription}
+                                                    required
+                                                    onchange={handleChange}>
+                                                </lightning-textarea>
+                                            </div>
+
+                                        </div>
+
+
+                                        <!-- BUTTON -->
+                                        <div class="slds-col slds-size_1-of-1 slds-text-align_right slds-m-top_medium">
+                                            <lightning-button
+                                                label="Add Competency"
+                                                variant="brand-outline"
+                                                onclick={handleAddCompetency}>
+                                            </lightning-button>
+                                        </div>
+
+                                    </div>
+                                    <template if:true={competencyList.length}>
+                                        <div class="ndis-table-container custom-scroll">
+                                            <table class="ndis-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="table-td-service">Competency Name</th>
+                                                        <th class="table-td-service">Category</th>
+                                                        <!-- <th class="table-td-service">Target</th>
+                                                        <th class="table-td-service">Unit</th> -->
+                                                        <th class="table-td-service">Weight %</th>
+                                                        <th class="table-td-service">Behaviour</th>
+                                                        <th class="table-td-service" style="width:8%">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={competencyList} for:item="comp">
+                                                        <tr key={comp.key} class="ndis-tr">
+                                                            <td class="table-td-service">{comp.competencyName}</td>
+                                                            <td class="table-td-service">{comp.category}</td>
+                                                            <!-- <td class="table-td-service">{comp.target}</td>
+                                                             -->
+                                                            <td class="table-td-service">{comp.weight}</td>
+                                                            <td class="table-td-service">{comp.behaviour}</td>
+                                                            <td class="table-td-service ndis-center">
+                                                                <a href="javascript:void(0)"
+                                                                    data-key={comp.key}
+                                                                    onclick={handleDeleteCompetency}
+                                                                    title="Delete"
+                                                                    style="text-decoration: none;">
+                                                                    <i class="material-icons delete-icon">delete</i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+                                </div>
+
+                            </template>
+
+                             <template if:true={isStep5}>
+                                <div class="slds-box" style="margin: 2%;">
+                                   
+                                    <h3 class="section-title">Module Access Control</h3>
+
+                                    <div class="permission-row">
+                                        <div>
+                                            <div class="permission-title">Employee Review</div>
+                                            <div class="permission-desc">
+                                                Allow employees to complete self-assessments
+                                            </div>
+                                        </div>
+
+                                        <lightning-input 
+                                            type="toggle"
+                                            variant="label-hidden"
+                                            name="selfReview"
+                                            checked={selfReview}
+                                            onchange={handlePermissionChange}>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="permission-row">
+                                        <div>
+                                            <div class="permission-title">Manager Review</div>
+                                            <div class="permission-desc">
+                                                Enable manager review capabilities
+                                            </div>
+                                        </div>
+
+                                        <lightning-input 
+                                            type="toggle"
+                                            variant="label-hidden"
+                                            name="managerReview"
+                                            checked={managerReview}
+                                            onchange={handlePermissionChange}>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="permission-row">
+                                        <div>
+                                            <div class="permission-title">Goals</div>
+                                            <div class="permission-desc">
+                                                Access to goal setting and tracking
+                                            </div>
+                                        </div>
+
+                                        <lightning-input 
+                                            type="toggle"
+                                            variant="label-hidden"
+                                            name="goalsPermission"
+                                            checked={goalsPermission}
+                                            onchange={handlePermissionChange}>
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+                             </template>
+                        </div>
+                    </div> 
+                    
+                </div> 
+
+                <footer class="slds-modal__footer slds-grid slds-grid_align-spread slds-grid_vertical-align-center" style="padding-left: 3.5%; padding-right:4.5%;"> 
+                    <div>
+                        <template if:true={showSkip}>
+                            <lightning-button 
+                                label="Skip"
+                                variant="neutral"
+                                onclick={handleSkip}>
+                            </lightning-button>
+                        </template>
+                    </div>
+                    <div class="slds-grid slds-gutters_small">
+                        <template if:true={showCancel}>
+                        
+                             <lightning-button
+                                variant="neutral"
+                                label="Cancel"
+                                onclick={cancelCreateTemplate}>
+                            </lightning-button>
+                        
+                        </template>
+
+                        <template if:true={showPrevious}>
+                            <div class="slds-m-left_small">
+                                <lightning-button
+                                    variant="neutral"
+                                    label="Previous"
+                                    onclick={handlePrevious}>
+                                </lightning-button>
+                            </div>
+                        </template>
+
+                        <template if:true={showNext}>
+                            <div class="slds-m-left_small">
+                                <lightning-button
+                                    variant="brand"
+                                    label="Next"
+                                    onclick={handleNext}>
+                                </lightning-button>
+                            </div>
+                        </template>
+
+                        <template if:true={showSave}>
+                            <div class="slds-m-left_small">
+                                <lightning-button
+                                    variant="brand"
+                                    label="Save"
+                                    onclick={handleSave}>
+                                </lightning-button>
+                            </div>
+                        </template>
+                    </div>
+                    
+                </footer> 
+            </div> 
+        </section> 
+        <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template>
+     
+    <template if:true={isTemplateViewDetail}>
+
+          <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+          <div class="slds-modal__container modal-custom "> 
+                <header class="slds-modal__header headercustom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">{selectedTemplateDetail.Role_Title__c}</h2> 
+                    <!-- <p class="slds-text-body_small slds-p-top_x-small h2custom">{selectedTemplateDetail.Template_Description__c}</p> -->
+                </header> 
+                
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">  
+                    <div class="form-section" style="margin-top: 2%; margin-left: 1.5%; margin-right: 1.5%" >
+                       
+                        <div class="slds-p-around_small">
+                            <!-- <p class="slds-text-title slds-m-bottom_small">Role</p>
+                            <p class="slds-text-title_bold slds-m-bottom_small slds-truncate" title={selectedTemplateDetail.Role__c} >{selectedTemplateDetail.Role__c}</p> -->
+                            
+                            <!-- TAB HEADER -->
+                            <div class="tab-header">
+                                <button
+                                    class={overviewTabClass}
+                                    onclick={handleOverviewClick}>
+                                    Overview
+                                </button>
+                                <button
+                                    class={kpiViewTabClass}
+                                    onclick={handleKpiViewClick}>
+                                   <!-- KPIs({selectedTemplateDetail.kpiCount}) -->
+                                    KPIs({kpiCount})
+                                </button>
+                                <button
+                                    class={okrViewTabClass}
+                                    onclick={handleOkrViewClick}>
+                                   OKRs({okrCount})
+                                </button>
+                                <button
+                                    class={comptencyViewTabClass}
+                                    onclick={handleComptencyViewClick}>
+                                   Competencies({competencyCount})
+                                </button>
+                                <button
+                                    class={permissionViewTabClass}
+                                    onclick={handlePermissionViewClick}>
+                                   Permission
+                                </button>
+                            </div>
+
+                            <template if:true={isOverview}>
+                                <p class="slds-text-title_bold slds-m-bottom_small slds-m-top_small">Role Summary</p>
+                                <p class="slds-text-title_bold slds-m-bottom_small">Description</p>
+                                <p class="slds-text-title slds-m-bottom_small">{selectedTemplateDetail.Template_Description__c}</p>
+                                <div class="slds-box" style="margin: 0%;">
+                                    
+                                    <div class="slds-grid slds-wrap slds-gutters">
+
+                                        <!-- LEFT COLUMN -->
+                                        <div class="slds-col slds-size_1-of-2">
+                                            <div class="slds-text-title_bold slds-m-bottom_small">
+                                                Review Components
+                                            </div>
+                                            <ul class="slds-list_dotted slds-m-left_medium">
+                                                <li>{kpiCount} KPIs (Total Weight: {totalKpiWeight}%)</li>
+                                                <li>{okrCount} OKRs (Total Weight: {totalOkrWeight}%)</li>
+                                                <li>{competencyCount} Competencies (Total Weight: {totalCompetencyWeight}%)</li>
+                                            </ul>
+                                        </div>
+
+                                        <!-- RIGHT COLUMN -->
+                                        <div class="slds-col slds-size_1-of-2">
+                                            <div class="slds-text-title_bold slds-m-bottom_small">
+                                                Access Permissions
+                                            </div>
+                                            <ul class="slds-list_dotted slds-m-left_medium">
+                                                <li>Module Permissions: {permissionCount}</li>
+                                                
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </template>
+                            <template if:true={isKpiView}>
+                                <template if:true={kpiDetailList}>
+                                    <template if:true={kpiDetailList.length}>
+                                        <template for:each={kpiDetailList} for:item="kpi">
+
+                                            <div key={kpi.Id} class="slds-card slds-p-around_large custom-card slds-m-bottom_medium" style="margin: 2%;">
+
+                                                <div class="slds-grid slds-wrap slds-align_absolute-center">
+
+                                                    <div class="slds-col slds-size_1-of-1 slds-large-size_12-of-12">
+
+                                                        
+                                                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+
+                                                            <h2 class="slds-text-heading_medium">
+                                                                {kpi.Name}
+                                                            </h2>
+
+                                                            <span class="slds-badge slds-badge_lightest">
+                                                                {kpi.KPI_Weight__c}% Weight
+                                                            </span>
+
+                                                        </div>
+
+                                                        <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                                            {kpi.KPI_Description__c}
+                                                        </p>
+                                                    
+                                                        <div class="slds-grid slds-grid_align-spread slds-text-body_medium">
+
+                                                            <div>
+                                                                <span class="metric-label1">Category:</span>
+                                                                <span class="metric-value1">{kpi.Category__c}</span>
+                                                            </div>
+
+                                                            <div class="slds-text-align_center">
+                                                                <span class="metric-label1">Target:</span>
+                                                                <span class="metric-value1">{kpi.KPI_Target__c}</span>
+                                                            </div>
+
+                                                            <div class="slds-text-align_right">
+                                                                <span class="metric-label1">Unit:</span>
+                                                                <span class="metric-value1">{kpi.Unit__c}</span>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                </div>
+
+                                            </div>
+
+                                        </template>
+                                    </template>
+                                    <template if:false={kpiDetailList.length}>
+                                        <div class="no-data">
+                                            <p>No records found</p>
+                                        </div>
+                                    </template>     
+                                </template>
+                                    
+                            </template>
+                            <template if:true={isOkrView}>
+                                 <template if:true={okrDetailList}>
+                                    <template if:true={okrDetailList.length}>
+                                        <template for:each={okrDetailList} for:item="okr">
+
+                                            <div key={okr.Id} class="slds-card slds-p-around_large custom-card slds-m-bottom_medium" style="margin: 2%;">
+
+                                                <div class="slds-grid slds-wrap slds-align_absolute-center">
+
+                                                    <div class="slds-col slds-size_1-of-1 slds-large-size_12-of-12">
+
+                                                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+
+                                                            <h2 class="slds-text-heading_medium">
+                                                                {okr.OKR_Objective__c}
+                                                            </h2>
+
+                                                            <span class="slds-badge slds-badge_lightest">
+                                                                {okr.OKR_Weight__c}% Weight
+                                                            </span>
+
+                                                        </div>
+
+                                                        <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                                            {okr.OKR_Description__c}
+                                                        </p>
+                                                        <div class="slds-grid slds-grid_align-spread slds-text-body_medium">
+
+                                                            <div>
+                                                                <span class="metric-label1">Key Result:</span>
+                                                                <span class="metric-value1">{okr.Key_Title__c}</span>
+                                                            </div>
+
+                                                            <div class="slds-text-align_center">
+                                                                <span class="metric-label1">Target:</span>
+                                                                <span class="metric-value1">{okr.Key_Target__c}</span>
+                                                            </div>
+
+                                                            <div class="slds-text-align_right">
+                                                                <span class="metric-label1">Unit:</span>
+                                                                <span class="metric-value1">{okr.key_unit__c}</span>
+                                                            </div>
+
+                                                        </div>
+                                                    
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </template>
+                                    <template if:false={okrDetailList.length}>
+                                        <div class="no-data">
+                                            <p>No records found</p>
+                                        </div>
+                                    </template>  
+                                </template>
+                                    
+                            </template>
+                            <template if:true={isCompetencyView}>
+                                 <template if:true={competencyDetailList}>
+                                    <template if:true={competencyDetailList.length}>
+                                        <template for:each={competencyDetailList} for:item="comp">
+
+                                            <div key={comp.Id} class="slds-card slds-p-around_large custom-card slds-m-bottom_medium" style="margin: 2%;">
+
+                                                <div class="slds-grid slds-wrap slds-align_absolute-center">
+
+                                                    <div class="slds-col slds-size_1-of-1 slds-large-size_12-of-12">
+
+                                                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+
+                                                            <h2 class="slds-text-heading_medium">
+                                                                {comp.Name}
+                                                            </h2>
+
+                                                            <span class="slds-badge slds-badge_lightest">
+                                                                {comp.Competency_Weight__c}% Weight
+                                                            </span>
+
+                                                        </div>
+
+                                                        <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                                            {comp.Competency_Description__c}
+                                                        </p>
+                                                        <div class="slds-grid slds-gutters_large slds-text-body_medium">
+
+                                                            <div class="slds-col ">
+                                                                <span class="metric-label1">Category:</span>
+                                                                <span class="metric-value1 slds-m-right_small">{comp.Competency_Category__c}</span>
+                                                            </div>
+                                                            <div class="slds-col ">
+                                                                <span class="metric-label1">Behaviour:</span>
+                                                                <span class="metric-value1 slds-m-top_x-small">
+                                                                    {comp.Expected_Behaviour__c}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </template>
+                                    <template if:false={competencyDetailList.length}>
+                                        <div class="no-data">
+                                            <p>No records found</p>
+                                        </div>
+                                    </template> 
+                                </template>
+                            </template>
+                            <template if:true={isPermissionView}>
+                                <div class="slds-box" style="margin: 2%;">
+
+                                    <h3 class="section-title">Module Access Control</h3>
+
+                                    <!-- Self Review -->
+                                    <div class="permission-row">
+                                        <div>
+                                            <div class="permission-title">Employee Review</div>
+                                            <div class="permission-desc">
+                                                Allow employees to complete self-assessments
+                                            </div>
+                                        </div>
+
+                                        <lightning-input 
+                                            type="toggle"
+                                            variant="label-hidden"
+                                            checked={selfReviewInView}
+                                            disabled>
+                                        </lightning-input>
+                                    </div>
+
+                                    <!-- Manager Review -->
+                                    <div class="permission-row">
+                                        <div>
+                                            <div class="permission-title">Manager Review</div>
+                                            <div class="permission-desc">
+                                                Enable manager review capabilities
+                                            </div>
+                                        </div>
+
+                                        <lightning-input 
+                                            type="toggle"
+                                            variant="label-hidden"
+                                            checked={managerReviewInView}
+                                            disabled>
+                                        </lightning-input>
+                                    </div>
+
+                                    <!-- Goals -->
+                                    <div class="permission-row">
+                                        <div>
+                                            <div class="permission-title">Goals</div>
+                                            <div class="permission-desc">
+                                                Access to goal setting and tracking
+                                            </div>
+                                        </div>
+
+                                        <lightning-input 
+                                            type="toggle"
+                                            variant="label-hidden"
+                                            checked={goalsPermissionInView}
+                                            disabled>
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+                            </template>
+                        </div>        
+                    </div>
+                   
+                </div> 
+
+               <footer class="slds-modal__footer"> 
+                    <lightning-button 
+                        variant="neutral" 
+                        label="Cancel" 
+                        onclick={handleTemplateViewClose}> 
+                    </lightning-button> 
+                    
+                    <template if:true={isPermissionView}>
+                        <lightning-button 
+                            class="slds-m-left_small" 
+                            variant="brand" 
+                            label="Apply Template" 
+                            data-id={selectedTemplateDetail.Id}
+                            onclick={handleApplyTemplate}> 
+                        </lightning-button> 
+                    </template>
+                </footer> 
+            </div> 
+        </section> 
+        <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template>
+    <template if:true={isApplyTemplate}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+          <div class="slds-modal__container modal-custom1 "> 
+                <header class="slds-modal__header headercustom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">Apply Role Template: {selectedTemplateDetail.Role_Title__c}</h2> 
+                    <p class="slds-text-body_small slds-p-top_x-small h2custom">Select employees to apply this role template. This will configure their performance review settings based on the template.</p>
+                </header> 
+                
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">  
+                    <div class="form-section" style="margin-top: 2%; margin-left: 1.5%; margin-right: 1.5%" >
+                        <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+
+                            <div class="slds-grid slds-grid_vertical-align-center slds-wrap">
+
+                                <div class="slds-col slds-m-right_small">
+                                    <span class="slds-text-title_bold slds-text-color_brand">
+                                        What will be applied:
+                                    </span>
+                                </div>
+
+                                <div class="slds-col slds-m-right_large">
+                                    <span>{kpiCount} KPIs ({totalKpiWeight}%)</span>
+                                </div>
+
+                                <div class="slds-col slds-m-right_large">
+                                    <span>{okrCount} OKRs ({totalOkrWeight}%)</span>
+                                </div>
+
+                                <div class="slds-col">
+                                    <span>{competencyCount} Competencies ({totalCompetencyWeight}%)</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                         <div  class=" slds-grid slds-wrap slds-p-around_small" style="margin-top: 1%;">
+                            <div class="slds-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label-new">
+                                    <span class="label-text-drop">Effective Date</span>
+                                    <lightning-input type="date" name="effectiveDate" variant="label-hidden" value={effectiveDate} 
+                                        onchange={handleChange} required="true"></lightning-input>
+                                        
+                                </div>
+                            </div>
+                            <!-- <div  class=" slds-grid slds-wrap slds-p-around_small "> -->
+                            <div class="slds-size_1-of-2 slds-p-around_small">
+                               <div class="floating-label-new1">
+                                  
+                                    <span class="label-text-drop"><span style="color:red">*</span>Role</span>
+                                    
+                                    <!-- Custom Multi Select -->
+                                    <div class="multi-select custom-scroll" >
+
+                                        <!-- Dropdown Button -->
+                                        <div class={selectedOptionClassInApply}
+                                            title={selectedRolesLabelInApply}
+                                            onclick={toggleDropdown1}>
+
+                                            {selectedRolesLabelInApply}
+
+                                            <lightning-icon
+                                                icon-name="utility:chevrondown"
+                                                size="x-small">
+                                            </lightning-icon>
+
+                                        </div>
+
+                                        <!-- Dropdown List -->
+                                        <template if:true={isDropdownOpen1}>
+                                            <div class="dropdown" data-id="roleDropdown1">
+
+                                                <template for:each={roleOptions} for:item="role">
+                                                    <div key={role.value} class="dropdown-item">
+                                                        <lightning-input
+                                                            type="checkbox"
+                                                            label={role.label}
+                                                            value={role.value}
+                                                            checked={role.checked}
+                                                            onchange={handleRoleSelection1}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </template>
+
+                                            </div>
+                                        </template>
+
+                                    </div>
+
+
+                                </div>
+                            </div> 
+
+                            <div class="slds-size_1-of-2 slds-p-around_small">
+                                <div class="floating-label-new">
+                                    <span class="label-text-drop">Search</span>
+                                    <lightning-input
+                                        type="Search"
+                                        variant="label-hidden"
+                                        placeholder='Search by name or Email'
+                                        value={searchStaff}
+                                        onchange={handleSearchStaff}
+                                    ></lightning-input>
+                                </div>
+                            </div>
+                             
+                            
+                        </div>
+                        <template if:true={staffList.length}>
+                            <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                                <div class="slds-p-bottom_small slds-border_bottom">
+
+                                    <lightning-input
+                                        type="checkbox"
+                                        label="Select All"
+                                        checked={isAllSelected}
+                                        onchange={handleSelectAll}>
+                                    </lightning-input>
+
+                                </div>
+                                <div class="staff-list custom-scroll">
+                                    <template for:each={staffList} for:item="staff">
+
+                                        <article key={staff.id} class="slds-card slds-m-top_small staffCard">
+
+                                            <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-gutters">
+
+                                                <!-- CHECKBOX -->
+                                                <div class="slds-col slds-size_1-of-12 ">
+                                                    <lightning-input
+                                                        key={staff.id}
+                                                        type="checkbox"
+                                                        data-id={staff.id}
+                                                        checked={staff.selected}
+                                                        disabled={staff.alreadyAssigned}
+                                                        onchange={handleStaffSelection}>
+                                                    </lightning-input>
+                                                </div>
+
+                                                <!-- AVATAR -->
+                                                <div class="slds-col slds-size_2-of-12 ">
+
+                                                    <!-- <template if:true={staff.hasImage}>
+                                                        <span class="slds-avatar slds-avatar_circle slds-avatar_medium">
+                                                            <img src={staff.imageUrl}
+                                                                alt={staff.name}
+                                                                onerror={handleImageError}/>
+                                                        </span>
+                                                    </template>
+
+                                                    <template if:false={staff.hasImage}>
+                                                    
+                                                    </template> -->
+                                                    <template if:true={staff.profileUrl}>
+                                                        <div
+                                                            class="avatar"
+                                                            draggable="false">
+
+                                                            <lightning-avatar
+                                                                variant="circle"
+                                                                src={staff.profileUrl}
+                                                                class="avatar-small"
+                                                                fallback-icon-name="standard:person_account"
+                                                                style="margin-left: -25%;">
+                                                            </lightning-avatar>
+
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Fallback Icon -->
+                                                    <template if:false={staff.profileUrl}>
+                                                        <div
+                                                            class="avatar"
+                                                            draggable="false">
+
+                                                            <lightning-icon
+                                                                icon-name="action:user"
+                                                                size="small"
+                                                                style="background:#02275b; margin-left:-25%;"
+                                                                class="avatar-small fallback-icon">
+                                                            </lightning-icon>
+
+                                                        </div>
+                                                    </template>
+
+
+                                                </div>
+
+                                                <!-- NAME -->
+                                                <div class="slds-col slds-size_2-of-12">
+                                                    <div class="lightFont slds-text-body_small">Name</div>
+                                                    <div class="slds-text-heading_small slds-truncate" title={staff.name}>
+                                                        {staff.name}
+                                                    </div>
+                                                </div>
+
+                                                <!-- EMAIL -->
+                                                <div class="slds-col slds-size_3-of-12">
+                                                    <div class="lightFont slds-text-body_small">Email ID</div>
+                                                    <div class="slds-text-body_small slds-truncate" title={staff.email}>
+                                                        {staff.email}
+                                                    </div>
+                                                </div>
+
+                                                <!-- ROLE -->
+                                                <div class="slds-col slds-size_2-of-12">
+                                                    <div class="lightFont slds-text-body_small">Role</div>
+                                                    <div class="slds-text-heading_small slds-truncate" title={staff.role} >
+                                                        {staff.role}
+                                                    </div>
+                                                </div>
+
+                                                <!-- MANAGER -->
+                                                <div class="slds-col slds-size_2-of-12">
+                                                    <div class="lightFont slds-text-body_small">Manager</div>
+                                                    <div class="slds-text-heading_small slds-truncate" title={staff.managerName} >
+                                                        {staff.managerName}
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            
+                                            <template if:true={staff.showAssignedTemplate}>
+                                                <div class="separator-line slds-m-vertical_small"></div>
+                                                <!-- TEMPLATE NAME CENTERED -->
+                                                <div class="slds-align_absolute-center template-name-row">
+                                                    <template if:true={staff.alreadyAssigned}>
+                                                        <span class="assigned-template">
+                                                            Template : {staff.assignedTemplateName}
+                                                        </span>
+                                                    </template>
+                                                
+                                                </div>
+                                            </template>
+                                            
+                                        </article>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </template>
+                        <template if:false={staffList.length}>
+                            <div class="no-data">
+                                <p>No records found</p>
+                            </div>
+                        </template> 
+
+                        
+                    </div>
+                   
+                </div> 
+
+               <footer class="slds-modal__footer"> 
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <div>
+                            <template if:true={errorMessage}>
+                                <div class="note-box slds-m-bottom_medium">
+                                    <strong>Note:</strong> {errorMessage}
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <div>
+                            <lightning-button 
+                                variant="neutral" 
+                                label="Cancel" 
+                                onclick={handleApplyTemplateClose}> 
+                            </lightning-button> 
+                            
+                            <lightning-button 
+                                class="slds-m-left_small" 
+                                data-id={selectedTemplateDetail.Id}
+                                variant="brand" 
+                                label="Apply to Employees" 
+                                onclick={handleApplyTemplateToStaff}> 
+                            </lightning-button> 
+                        </div>
+                        
+                    </div>
+                    
+                </footer> 
+            </div> 
+        </section> 
+        <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template>
+    <template if:true={isReviewCycle}>
+        <div class="main-container">
+            <div class="menu-container">
+                <!-- <div class="menu-item2" style="font-size: 20px;">Role Templates</div>     -->
+                 <!-- Left Title -->
+                <div class="menu-item2" style="font-size: 20px;">
+                    Review Cycle  Management
+                </div>
+
+                <!-- Button -->
+                <div class="create-btn">
+                    <lightning-button 
+                        label="Create Review Cycle"
+                        icon-name="utility:add"
+                        variant="brand"
+                        onclick={handleCreateReviewCycle}>
+                    </lightning-button>
+                </div>
+
+                    
+            </div>
+             <div class="slds-grid slds-wrap slds-align_absolute-center slds-m-around_medium">
+
+                <div class="slds-col slds-size_1-of-1 slds-large-size_10-of-12">
+
+                    <div class="summary-container slds-grid slds-gutters_mediu slds-m-left_mediu">
+
+                        <div class="summary-box total-box">
+                            <div class="summary-title">Active Cycles</div>
+                            <div class="summary-value">{activeCyclesCount}</div>
+                        </div>
+                    
+                        <div class="summary-box role-box">
+                            <div class="summary-title">Role Templates</div>
+                            <div class="summary-value">{roleTemplatesCount}</div>    
+                        </div>
+
+                        <div class="summary-box role-box">
+                            <div class="summary-title">Employees</div>
+                            <div class="summary-value">{reviewCycleStaffCount}</div>   
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-12 slds-text-align_right">
+                    <lightning-button
+                        label="Back"
+                        variant="brand"
+                        onclick={handleBackReviewCycle}>
+                    </lightning-button>
+                </div>
+
+            </div>
+
+                <div class="slds-m-around_medium slds-p-top_small slds-size_1-of-8">
+                    <div class="floating-label-new">
+                        <span class="label-text-drop">
+                            <span style="color:red">*</span>Financial Year
+                        </span>
+
+                        <lightning-combobox
+                            name="selectedYear"
+                            variant="label-hidden"
+                            value={selectedYear}
+                            options={yearOptions}
+                            placeholder="Select Year"
+                            onchange={handleYearChange}>
+                        </lightning-combobox>
+
+                    </div>
+                </div>
+
+            <div class="custom-scroll  template-container">
+
+                <template if:true={reviewCycleList}>
+                    <template if:true={reviewCycleList.length}>
+                     
+                        <template for:each={reviewCycleList} for:item="rc">
+
+                            <div key={rc.Id} class="slds-card slds-p-around_small custom-card slds-m-around_small">
+
+                                <div class="slds-grid slds-wrap">
+
+                                    <!-- Left Content -->
+                                    <div class="slds-col slds-size_1-of-1">
+
+                                        <!-- Title + Badge -->
+                                        <div class="slds-grid slds-align-center slds-m-bottom_small">
+
+                                            <h2 class="slds-text-heading_medium slds-m-right_small slds-text-body_bold">
+                                                {rc.reviewCycleName}
+                                            </h2>
+
+                                            <!-- <span class="slds-badge slds-theme_warning slds-badge_light slds-truncate" title={rc.appliedRoles}  style="max-width: 120px; display: inline-block;">{template.appliedRoles}
+                                            
+                                            </span> -->
+
+                                        </div>
+
+                                        <!-- Description -->
+                                        <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                            {rc.reviewCycleDescription}
+                                        </p>
+
+                                        <!-- KPI / OKR / Competency Row -->
+                                        <!-- <div class="slds-grid slds-gutters_large slds-text-body_medium slds-m-left_small" style="margin-left: 0%;">
+
+                                            <div>
+                                                <span class="slds-text-color_weak metric-value1">Start Date  :</span>
+                                                <span class="slds-m-left_small">{rc.startDate}</span>
+                                            </div>
+
+                                            <div>
+                                                <span class="slds-text-color_weak metric-value1">End Date  :</span>
+                                                <span class="slds-m-left_small">{rc.endDate}</span>
+                                            </div>
+
+                                            <div>
+                                                <span class="slds-text-color_weak metric-value1">Lock Date  :</span>
+                                                <span class="slds-m-left_small">{rc.lockDate}</span>
+                                            </div>
+
+                                        </div> -->
+                                        <div class="slds-grid slds-grid_align-spread slds-text-body_medium slds-m-top_small">
+                                            <div class="slds-grid metrics-row">
+
+                                                <div>
+                                                    <span class="metric-label1">Start Date:</span>
+                                                    <span class="metric-value1">{rc.startDate}</span>
+                                                </div>
+
+                                                <div>
+                                                    <span class="metric-label1">End Date:</span>
+                                                    <span class="metric-value1">{rc.endDate}</span>
+                                                </div>
+
+                                                <div>
+                                                    <span class="metric-label1">Lock Date:</span>
+                                                    <span class="metric-value1">{rc.lockDate}</span>
+                                                </div>
+                                            </div>   
+                                            <div>
+                                                <lightning-button
+                                                    label="View Details"
+                                                    variant="brand"
+                                                    data-id={rc.Id}
+                                                    onclick={handleViewRcDetails}>
+                                                </lightning-button>
+                                            </div>      
+                                        </div>
+                                                                      
+
+
+                                       
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </template>                                
+                   
+                    </template>
+                    <template if:false={reviewCycleList.length}>
+                        <div class="no-data">
+                            <p>No records found</p>
+                        </div>
+                    </template>   
+                </template>
+            </div>
+            
+        </div>
+
+    </template>
+    <template if:true={isCreateReviewCycle}>
+          <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+          <div class="slds-modal__container modal-custom "> 
+                <header class="slds-modal__header headercustom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">{createEditCycle}</h2>
+                    <template if:false ={isEditRc}>
+                        <p class="slds-text-body_small slds-p-top_x-small h2custom">Set up a new performance review cycle with multi-template role-based assignment</p>
+                    </template>
+                    
+                </header> 
+                
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">  
+                    <div class="form-section slds-m-bottom_x-small" style="" >
+                        <!-- Lightning Progress Indicator -->
+                        <lightning-progress-indicator current-step={rcCurrentStep} type="path">
+                        <lightning-progress-step
+                            label="Cycle Details"
+                            value="rcStep1"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <lightning-progress-step
+                            label="Select Templates"
+                            value="rcStep2"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <lightning-progress-step
+                            label="Review & Assignments"
+                            value="rcStep3"
+                        ></lightning-progress-step>
+                        <!-- onclick={handleStepClick}-->
+                        <!-- <lightning-progress-step
+                            label="Review & Launch"
+                            value="rcStep4"
+                        ></lightning-progress-step> -->
+                       
+                        </lightning-progress-indicator>
+                    </div>
+                    <div> 
+
+                        <div class="right-content custom-scroll">
+                            <template if:true={isRcStep1}>
+                              <div class="">
+
+                                    <div class="slds-grid slds-wrap slds-gutters_medium slds-p-around_small">
+
+                                        <div class="slds-col 
+                                                    slds-large-size_7-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1">
+
+                                            <div class="slds-grid slds-wrap slds-gutters_medium">
+
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Cycle Name
+                                                        </span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="cycleName"
+                                                            variant="label-hidden"
+                                                            value={cycleName}
+                                                            required
+                                                            disabled={isRcStep1Disabled}
+                                                            onchange={handleRcChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                          Facility Name
+                                                        </span>
+                                                        <lightning-input
+                                                            type="text"
+                                                            name="selectedFacilityName"
+                                                            variant="label-hidden"
+                                                            value={selectedFacilityName}
+                                                            disabled>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Cycle Type
+                                                        </span>
+                                                        <lightning-combobox
+                                                            name="selectedCycleType"
+                                                            variant="label-hidden"
+                                                            options={cycleTypeOptions}
+                                                            value={selectedCycleType}
+                                                            required
+                                                            disabled={isRcStep1Disabled}
+                                                            onchange={handleRcChange}>
+                                                        </lightning-combobox>
+                                                    </div>
+                                                </div>
+
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Start Date
+                                                        </span>
+                                                        <lightning-input
+                                                            type="date"
+                                                            name="cycleStartDate"
+                                                            variant="label-hidden"
+                                                            value={cycleStartDate}
+                                                            min={cycleStartMin}
+                                                            max={cycleStartMax}
+                                                            required
+                                                            disabled={isRcStep1Disabled}
+                                                            onchange={handleRcChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>End Date
+                                                        </span>
+                                                        <lightning-input
+                                                            type="date"
+                                                            name="cycleEndDate"
+                                                            variant="label-hidden"
+                                                            value={cycleEndDate}
+                                                            min={cycleStartDate}
+                                                            max={maxCycleEndDate}
+                                                            required
+                                                            disabled={isRcStep1Disabled}
+                                                            onchange={handleRcChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                                 <div class="slds-col slds-large-size_1-of-2 slds-size_1-of-1 slds-p-around_small">
+                                                    <div class="floating-label-new ">
+                                                        <span class="label-text-drop">
+                                                            <span style="color:red">*</span>Lock Date
+                                                        </span>
+                                                        <lightning-input
+                                                            type="date"
+                                                            name="cycleLockDate"
+                                                            variant="label-hidden"
+                                                            value={cycleLockDate}
+                                                            min={minCycleLockDate}
+                                                            max={maxCycleLockDate}
+                                                            required
+                                                            disabled={isRcStep1Disabled}
+                                                            onchange={handleRcChange}>
+                                                        </lightning-input>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="slds-col 
+                                                    slds-large-size_5-of-12 
+                                                    slds-medium-size_1-of-1 
+                                                    slds-size_1-of-1
+                                                    slds-p-around_xx-small">
+
+                                            <div class="floating-label-long-text-area kpi-description">
+                                                <span class="label-text-drop1">
+                                                   Description
+                                                </span>
+
+                                                <lightning-textarea
+                                                    name="cycleDescription"
+                                                    variant="label-hidden"
+                                                    value={cycleDescription}
+                                                    onchange={handleRcChange}
+                                                    disabled={isRcStep1Disabled}
+                                                    placeholder="Description...">
+                                                </lightning-textarea>
+                                            </div>
+
+                                        </div>
+
+                                    </div>    
+                                   
+                                    <!-- <div class="slds-box slds-m-around_medium"> -->
+                                        <h2 class="slds-text-heading_small slds-m-bottom_small slds-m-left_small">
+                                            Employee Review
+                                        </h2>
+
+                                        <div class="slds-grid slds-gutters_small slds-m-left_small">
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>Start Date
+                                                    </span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        name="selfStartDate"
+                                                        value={selfStartDate}
+                                                        min={selfStartMin}
+                                                        max={selfStartMax}
+                                                        required
+                                                        disabled={isRcStep1Disabled}
+                                                        variant="label-hidden"
+                                                        onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+                                           
+                                            <div class="slds-col slds-size_1-of-3">
+                                                 <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>End Date
+                                                    </span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        name="selfEndDate"
+                                                        value={selfEndDate}
+                                                        min={selfEndMin}
+                                                        max={selfEndMax}
+                                                        required
+                                                        disabled={isRcStep1Disabled}
+                                                        variant="label-hidden"
+                                                        onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>Lock Date
+                                                    </span>
+                                                    <lightning-input
+                                                       type="date"
+                                                       name="selfLockDate"
+                                                       value={selfLockDate}
+                                                       min={minSelfLockDate}
+                                                       max={maxSelfLockDate}
+                                                       required
+                                                       disabled={isRcStep1Disabled}
+                                                       variant="label-hidden"
+                                                       onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    <!-- </div>
+                                    <div class="slds-box slds-m-around_medium"> -->
+                                        <h2 class="slds-text-heading_small slds-m-bottom_small slds-m-around_small">
+                                            Manager Review
+                                        </h2>
+
+                                        <div class="slds-grid slds-gutters_small slds-m-left_small">
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>Start Date
+                                                    </span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        name="managerStartDate"
+                                                        value={managerStartDate}
+                                                        min={managerStartMin}
+                                                        max={managerStartMax}
+                                                        required
+                                                        disabled={isRcStep1Disabled}
+                                                        variant="label-hidden"
+                                                        onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>End Date
+                                                    </span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        name="managerEndDate"
+                                                        value={managerEndDate}
+                                                        min={managerEndMin}
+                                                        max={managerEndMax}
+                                                        required
+                                                        disabled={isRcStep1Disabled}
+                                                        variant="label-hidden"
+                                                        onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                 <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>Lock Date
+                                                    </span>
+                                                    <lightning-input
+                                                       type="date"
+                                                       name="managerLockDate"
+                                                       value={managerLockDate}
+                                                       min={minManagerLockDate}
+                                                       max={maxManagerLockDate}
+                                                       required
+                                                       disabled={isRcStep1Disabled}
+                                                       variant="label-hidden"
+                                                       onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    <!-- </div>
+                                    <div class="slds-box slds-m-around_medium"> -->
+                                        <h2 class="slds-text-heading_small slds-m-bottom_small slds-m-around_small">
+                                            HR Review
+                                        </h2>
+
+                                        <div class="slds-grid slds-gutters_small slds-m-left_small">
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                 <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>Start Date
+                                                    </span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        name="hrStartDate"
+                                                        value={hrStartDate}
+                                                        min={hrStartMin}
+                                                        max={hrStartMax}
+                                                        required
+                                                        disabled={isRcStep1Disabled}
+                                                        variant="label-hidden"
+                                                        onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                 <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>End Date
+                                                    </span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        name="hrEndDate"
+                                                        value={hrEndDate}
+                                                        min={hrEndMin}
+                                                        max={hrEndMax}
+                                                        required
+                                                        disabled={isRcStep1Disabled}
+                                                        variant="label-hidden"
+                                                        onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="floating-label-new ">
+                                                    <span class="label-text-drop">
+                                                        <span style="color:red">*</span>Lock Date
+                                                    </span>
+                                                    <lightning-input
+                                                       type="date"
+                                                       name="hrLockDate"
+                                                       value={hrLockDate}
+                                                       min={minHrLockDate}
+                                                       max={maxHrLockDate}
+                                                       required
+                                                       disabled={isRcStep1Disabled}
+                                                       variant="label-hidden"
+                                                       onchange={handleRcChange}>
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    <!-- </div> -->
+                                    
+                                </div>                        
+                            </template>
+                                
+                            <template if:true={isRcStep2}>
+                                 <div class="">
+                                    <div class="slds-m-bottom_x-small">
+                                        <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate">Select Role Criteria Assignment</h2> 
+                                        <p class="slds-text-body_small">Configure role based template assignment. One cycle can use multiple templates </p>
+                                    </div>
+                                     <div class="slds-text-heading_small slds-m-bottom_x-small">
+                                        Total Employees:
+                                        <span class="slds-text-color_weak slds-m-left_x-small">
+                                            {totalStaffCount}
+                                        </span>
+                                    </div>
+
+                                    <!-- Row 2 -->
+                                    <div class="slds-text-heading_small">
+
+                                        <span class="slds-text-color_success slds-m-right_x-small">{selectedStaffCount}</span>
+                                        out of
+                                        <span class="slds-text-color_weak slds-m-left_x-small slds-m-right_x-small">{totalStaffCount}</span>
+                                        Applied
+
+                                    </div>
+                                    <template if:true={roleTemplateList}>
+                                        <template if:true={roleTemplateList.length}>
+                                            <div class="slds-grid slds-grid_align-start slds-gutters_small slds-m-around_medium">
+  
+                                            </div>
+                                            <div class="custom-scroll">
+                                                <template for:each={roleTemplateList} for:item="template">
+
+                                                <div key={template.Id} class="slds-card slds-p-around_small custom-card slds-m-bottom_medium">
+
+                                                    <div class="slds-grid slds-wrap slds-align_absolute-center">
+                                                        
+                                                        <div class="">
+                                                            <lightning-input
+                                                                type="checkbox"
+                                                                data-id={template.Id}
+                                                                checked={template.selected}
+                                                                disabled={isTemplateSectionDisabled}
+                                                                onchange={handleRcTemplateCheckSelection}>
+                                                            </lightning-input>
+                                                        </div>
+
+                                                        <div class="slds-col slds-size_1-of-1 slds-large-size_11-of-12">
+
+                                                            <div class="slds-grid slds-align-center slds-m-bottom_x-small">
+
+                                                                <h2 class="slds-text-heading_medium slds-m-right_small">
+                                                                    {template.roleTitle}
+                                                                </h2>
+
+                                                                <span class="slds-badge roleBadge slds-truncate" title={template.appliedRoles}  style="max-width: 300px; display: inline-block;">{template.appliedRoles}
+                                                                    <!-- {template.appliedRoles} -->
+                                                                </span>
+
+                                                            </div>
+
+                                                            <p class="slds-text-body_regular slds-text-color_weak slds-m-bottom_x-small">
+                                                                {template.description}
+                                                            </p>
+
+                                                            <div class="slds-grid slds-gutters_large slds-text-body_medium slds-m-left_small" style="margin-left: 0%;">
+
+                                                                <div>
+                                                                    <span class="slds-text-color_weak">KPIs:</span>
+                                                                    <span class="metric-value slds-m-right_small">{template.kpiCount}</span>
+                                                                </div>
+
+                                                                <div>
+                                                                    <span class="slds-text-color_weak">OKRs:</span>
+                                                                    <span class="metric-value slds-m-right_small">{template.okrCount}</span>
+                                                                </div>
+
+                                                                <div>
+                                                                    <span class="slds-text-color_weak">Competencies:</span>
+                                                                    <span class="metric-value slds-m-right_small">{template.competencyCount}</span>
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                        <!-- <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-12 slds-text-align_right">
+
+                                                            <lightning-button
+                                                                label="View Details"
+                                                                variant="brand"
+                                                                data-id={template.Id}
+                                                                onclick={handleViewDetails}>
+                                                            </lightning-button>
+
+                                                        </div> -->
+
+                                                    </div>
+
+                                                </div>
+
+                                            </template>
+                                            </div>
+                                        
+                                        </template>
+                                        <template if:false={roleTemplateList.length}>
+                                            <div class="no-data">
+                                                <p>No records found</p>
+                                            </div>
+                                        </template> 
+                                    </template>
+                                    
+                                 </div>
+                            </template>
+                            <template if:true={isRcStep3}>
+                                <div>
+                                   <div class="slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop"><span style="color:red">*</span>Templates </span>
+                                            <lightning-combobox  name="selectedCycleTemplate"  variant="label-hidden" options={cycleTemplatesOptions} required="true"  disabled={isTemplateSectionDisabled} value={selectedCycleTemplate}  onchange={handleRcChange}
+                                            ></lightning-combobox>
+                                        </div>
+                                    </div>
+
+                                    <template if:true={templateStaffList}>
+                                        <template if:true={templateStaffList.length}>
+                                            <div class="role-heading slds-m-bottom_medium">
+                                                <!-- RoleNames: {templateRcRoleNames} -->
+                                                <span class="slds-text-title_bold">RoleNames:</span>
+                                                <!-- <span class="slds-m-left_x-small slds-truncate"  title={templateRcRoleNames}>{templateRcRoleNames}</span> -->
+                                                <!-- <span class="slds-m-left_x-small  slds-m-top_x-smallslds-truncate"  style="max-width: 175px; display: inline-block;" title={templateRcRoleNames}>{templateRcRoleNames}</span> -->
+                                                <div class="slds-truncate slds-m-left_x-small"
+                                                    title={templateRcRoleNames}
+                                                    style="max-width: 175px; display: inline-block;">
+                                                    {templateRcRoleNames}
+                                                </div>
+                                            </div>
+
+                                            <template for:each={templateStaffList} for:item="staff">
+                                                <div key={staff.id} class="staff-card slds-m-bottom_medium">
+
+                                                    <div class="slds-grid slds-m-bottom_x-small">
+
+                                                        <div class="slds-col slds-size_1-of-2">
+                                                            <span class="label-text">Staff:</span>
+                                                            <span class="value-text">{staff.name}</span>
+                                                        </div>
+
+                                                        <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                                            <span class="label-text">Manager:</span>
+                                                            <span class="value-text">{staff.managerName}</span>
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="slds-grid">
+
+                                                        <div class="slds-col slds-size_1-of-2">
+                                                            <span class="label-text"> Role:</span>
+                                                            <span class="value-text">{staff.role}</span>
+                                                        </div>
+
+                                                        <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                                                            <span class="label-text"> Role:</span>
+                                                            <span class="value-text">{staff.managerRole}</span>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            </template>
+                                        </template>
+                                         <template if:false={templateStaffList.length}>
+                                            <div class="no-data">
+                                                <p>No records found</p>
+                                            </div>
+                                        </template> 
+                                    </template>
+                                </div>
+                            </template>
+        
+                            <template if:true={isRcStep4}>
+                                <div class="slds-box" style="margin: 2%;">
+                                  
+                                </div>
+
+                            </template>
+
+                          
+                        </div>
+                    </div> 
+                    
+                </div> 
+
+                <!-- <footer class="slds-modal__footer slds-grid slds-grid_align-spread slds-grid_vertical-align-center" style="padding-left: 3.5%; padding-right:4.5%;"> 
+                    
+                  <lightning-button 
+                    variant="neutral" 
+                    label="Cancel" 
+                    onclick={createRcCloseModal}> 
+                    </lightning-button> 
+                    
+                    
+                    <lightning-button 
+                    class="slds-m-left_small" 
+                    variant="brand" 
+                    label="Save" 
+                    onclick={createParticipantsaveParticipant}> 
+                    </lightning-button> 
+                    
+                </footer>  -->
+                 <footer class="slds-modal__footer "> 
+                   
+                    <!-- <div class="slds-grid slds-gutters_small"> -->
+                        <template if:true={showRcCancel}>
+                        
+                             <lightning-button
+                                variant="neutral"
+                                label="Cancel"
+                                onclick={cancelCreateReviewCycle}>
+                            </lightning-button>
+                        
+                        </template>
+
+                        <template if:true={showRcPrevious}>
+                                <lightning-button
+                                    variant="neutral"
+                                    label="Previous"
+                                    class="slds-m-left_small"
+                                    onclick={handleRcPrevious}>
+                                </lightning-button>
+                        </template>
+
+                        <template if:true={showRcNext}>
+                                <lightning-button
+                                    variant="brand"
+                                    label="Next"
+                                    class="slds-m-left_small"
+                                    onclick={handleRcNext}>
+                                </lightning-button>
+                        </template>
+
+                        <template if:true={showRcSave}>
+                                <lightning-button
+                                    variant="brand"
+                                   
+                                    label={buttonLabel}
+                                    class="slds-m-left_small"
+                                    onclick={handleRcSave}> <!-- label="Save"-->
+                                </lightning-button>
+                        </template>
+                    <!-- </div> -->
+                    
+                </footer> 
+            </div> 
+        </section> 
+        <div class="slds-backdrop slds-backdrop_open"></div> 
+    </template>
+    <template if:true={isPerformanceReview}>
+        <template if:true={hrFlag}>
+              <c-tesseract-apps-pms-hr-view-lwc onback={handleBackFromHrView}></c-tesseract-apps-pms-hr-view-lwc>
+        </template>
+        <template if:false={hrFlag}>
+            <c-tesseractapps-pms-manager-view-lwc manager-id={staffId} onback={handleBackFromChild}></c-tesseractapps-pms-manager-view-lwc>
+        </template>
+            
+    </template>
+    <template if:true={isPerformanceImprovement}>
+           <!-- <c-tesseract-apps-pms-hr-view-lwc onback={handleBackFromHrView}></c-tesseract-apps-pms-hr-view-lwc> -->
+    </template>
+    <template if:true={isCoachingManagement}>
+        <template if:true={hrFlag}>
+             <c-tesseract-apps-pms-hr-coaching-lwc is-hr={isHr} hr-id={loginStaffId} hr-name={loginStaffName} is-manager={isManager} onback={handleBackFromHrCoaching}></c-tesseract-apps-pms-hr-coaching-lwc>  <!---->
+        </template>
+        <template if:false={hrFlag}>
+            <c-tesseract-apps-pms-manager-coaching-lwc manager-id={staffId}  is-manager={isManager} is-hr={isHr} onback={handleBackFromManagerCoaching}></c-tesseract-apps-pms-manager-coaching-lwc>
+        </template>
+    </template>
+    <template if:true={isComingSoon}>
+        <div class="main-container1">
+            <div  class="slds-text-align_right slds-p-around_small">
+         
+                <lightning-button label="Back" variant="brand" onclick={handleBack}></lightning-button> 
+            </div>
+            <div>
+                <c-hr-community></c-hr-community>
+            </div>
+        </div>
+        
+    </template>
+    <!-- 🔥 GLOBAL UPGRADE MODAL -->
+    <template if:true={showUpgradeModal}>
+        <c-upgrade-modal 
+            is-open={showUpgradeModal} 
+            onclose={closeUpgradeModal}>
+        </c-upgrade-modal>
+    </template>
+</template>
