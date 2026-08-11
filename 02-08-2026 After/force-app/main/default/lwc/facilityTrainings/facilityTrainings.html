@@ -1,0 +1,647 @@
+<template>
+  <div class="main-container slds-p-top_small">
+    <div class="slds-grow slds-scrollable_y custom-scroll" style="min-height:0;">
+
+    <!-- HEADER / TITLE -->
+    <div class="page-header">
+      <div class="title-block">
+        <h1>Master Training List</h1>
+        <p class="sub">Configure training requirements for your facility - apply globally or by specific roles</p>
+      </div>
+
+      <div class="actions">
+        <lightning-button variant="brand" label="+ Add Custom Training"
+          onclick={openAddModal}></lightning-button>
+      </div>
+    </div>
+
+    <!-- METRIC TILES -->
+    <div class="metrics-grid tiles">
+      <div class="metric-card highlight-mandatory">
+        <div class="metric-title">Mandatory</div>
+        <div class="metric-value">{mandatoryCount}</div>
+      </div>
+      <div class="metric-card highlight-visible">
+        <div class="metric-title">Visible to Staff</div>
+        <div class="metric-value">{visibleCount}</div>
+      </div>
+      <div class="metric-card highlight-renewal">
+        <div class="metric-title">Renewal Required</div>
+        <div class="metric-value">{renewalCount}</div>
+      </div>
+    </div>
+
+    <!-- MASTER LIST TABLE -->
+    <!-- <div class="list-wrapper">
+      <table class="staff-table" role="table">
+        <thead>
+          <tr>
+            <th>Training Name</th>
+            <th>Category</th>
+            <th>Roles Applicable</th>
+            <th>Mandatory</th>
+            <th>Visible to Staff</th>
+            <th>Renewal Required</th>
+            <th>Valid For</th>
+            <th>1st Reminder</th>
+            <th>2nd Reminder</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <template for:each={pagedList} for:item="t">
+            <tr key={t.id} class="tr1">
+              <td title={t.name}>{t.name}</td>
+              <td>{t.category}</td>
+
+              <td class="roles-cell">
+                <template for:each={t.roles} for:item="r">
+                  <span key={r} class="role-pill">{r}</span>
+                </template>
+              </td>
+
+
+              <td>
+                <lightning-input 
+                  type="toggle" 
+                  message-toggle-active=""                               
+                  message-toggle-inactive=""
+                  checked={t.mandatory}
+                  data-id={t.id} data-field="mandatory"
+                  onchange={toggleField}>
+                </lightning-input>
+              </td>
+
+
+              <td>
+                <lightning-input 
+                  type="toggle" 
+                  message-toggle-active=""                               
+                  message-toggle-inactive=""
+                  checked={t.visibleToStaff}
+                  data-id={t.id} 
+                  data-field="visibleToStaff"
+                  onchange={toggleField}>
+                </lightning-input>
+              </td>
+
+
+              <td>
+                <lightning-input 
+                  type="toggle" 
+                  message-toggle-active=""                               
+                  message-toggle-inactive=""
+                  checked={t.renewalRequired}
+                  data-id={t.id} data-field="renewalRequired"
+                  onchange={toggleField}>
+                </lightning-input>
+              </td>
+
+
+              <td title={t.validFor}>{t.validFor}</td>
+
+
+              <td title={t.reminder1}>{t.reminder1}</td>
+              <td title={t.reminder2}>{t.reminder2}</td>
+
+              <td class="actions-col">
+                <lightning-button-icon icon-name="utility:edit" data-id={t.id}
+                  alternative-text="Edit" title="Edit"
+                  onclick={handleEdit}></lightning-button-icon>
+
+                <lightning-button-icon icon-name="utility:delete" data-id={t.id}
+                  alternative-text="Delete" title="Delete"
+                  onclick={handleDeleteConfirm}></lightning-button-icon>
+              </td>
+            </tr>
+          </template>
+
+          <template if:true={isEmpty}>
+            <tr><td colspan="10" class="no-data">No records found</td></tr>
+          </template>
+        </tbody>
+      </table>
+    </div> -->
+      <div class="table-container" style="min-height:0; display:flex; flex-direction:column; flex:1 1 auto;">
+
+        <!-- HEADER -->
+        <div class="header-wrapper">
+          <table class="staff-table" role="table">
+            <thead>
+              <tr>
+<!--                 <th class="table-th" title="Training Name">Training Name</th>
+                <th class="table-th" title="Category">Category</th> -->
+                <th class="table-th sortable-header"
+                    title="Training Name"
+                    data-field="name"
+                    onclick={handleSort}>
+                    <div class="sort-header-inner">
+                        <span class="sort-label">Training Name</span>
+                        <span class="sort-arrow" data-arrow={sortIcons.name}></span>
+                    </div>
+                </th>
+
+                <th class="table-th sortable-header"
+                    title="Category"
+                    data-field="category"
+                    onclick={handleSort}>
+                    <div class="sort-header-inner">
+                        <span class="sort-label">Category</span>
+                        <span class="sort-arrow" data-arrow={sortIcons.category}></span>
+                    </div>
+                </th>                
+                <th class="table-th" title="Roles Applicable">Roles Applicable</th>
+                <th class="table-th" title="Mandatory">Mandatory</th>
+                <th class="table-th" title="Visible to Staff">Visible to Staff</th>
+                <th class="table-th" title="Renewal Required">Renewal Required</th>
+                <!-- <th class="table-th" title="Valid For">Valid For</th> -->
+                <th class="table-th sortable-header"
+                    title="Valid For"
+                    data-field="validFor"
+                    onclick={handleSort}>
+                    <div class="sort-header-inner">
+                        <span class="sort-label">Valid For</span>
+                        <span class="sort-arrow" data-arrow={sortIcons.validFor}></span>
+                    </div>
+                </th>                 
+                <th class="table-th" title="1st Reminder">1st Reminder</th>
+                <th class="table-th" title="2nd Reminder">2nd Reminder</th>
+                <th class="table-th" title="Actions">Actions</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+
+        <!-- BODY (scrollable) -->
+        <div class="body-scroll custom-scroll custom-scroll1">
+          <table class="staff-table">
+            <tbody>
+              <template for:each={pagedList} for:item="t">
+                <tr key={t.id} class="table-row">
+
+                  <!-- Training Name -->
+                   <td class="table-td" title={t.name}>
+                      <span class="ellipsis-text" title={t.name}>
+                          {t.name}
+                      </span>
+                  </td>
+
+                  <!-- Category -->
+                  <td class="table-td" title={t.category}>
+                    <span class={t.categoryClass} title={t.category}>{t.category}</span>
+                  </td>
+
+                  <!-- Roles -->
+                  <td class="table-td" title={t.roles}>
+                    <div class="roles-cell" title={t.roles}>
+                        <template for:each={t.roles} for:item="r">
+                            <span key={r} class="role-pill">{r}</span>
+                        </template>
+                    </div>
+                  </td>
+
+                  <!-- Mandatory -->
+                  <td class="table-td" title="Mandatory">
+                    <lightning-input
+                      type="toggle"
+                      class="small-toggle"
+                      message-toggle-active=""
+                      message-toggle-inactive=""
+                      checked={t.mandatory}
+                      data-id={t.id}
+                      data-field="mandatory"
+                      onchange={toggleField}>
+                    </lightning-input>
+                  </td>
+
+                  <!-- Visible to Staff -->
+                  <td class="table-td" title="Visible to Staff">
+                    <lightning-input
+                      type="toggle"
+                      class="small-toggle"
+                      message-toggle-active=""
+                      message-toggle-inactive=""
+                      checked={t.visibleToStaff}
+                      data-id={t.id}
+                      data-field="visibleToStaff"
+                      onchange={toggleField}>
+                    </lightning-input>
+                  </td>
+
+                  <!-- Renewal Required -->
+                  <td class="table-td" title="Renewal Required">
+                    <lightning-input
+                      type="toggle"
+                      class="small-toggle"
+                      message-toggle-active=""
+                      message-toggle-inactive=""
+                      checked={t.renewalRequired}
+                      data-id={t.id}
+                      data-field="renewalRequired"
+                      onchange={toggleField}>
+                    </lightning-input>
+                  </td>
+
+                  <!-- Valid For -->
+                  <td class="table-td" title={t.validFor}>{t.validFor}</td>
+
+                  <!-- Reminders -->
+                  <td class="table-td" title={t.reminder1}>{t.reminder1}</td>
+                  <td class="table-td" title={t.reminder2}>{t.reminder2}</td>
+
+                  <!-- Actions (Material Icons) -->
+                  <td class="table-td actions-col action-column" title="Actions">
+                    <a href="javascript:void(0)" class="action-icon" title="Edit" data-id={t.id} onclick={handleEdit}>
+                      <i class="material-icons edit-icon" aria-hidden="true">edit</i>
+                    </a>
+
+                    <a href="javascript:void(0)" class="action-icon" title="Delete" data-id={t.id} onclick={handleDeleteConfirm}>
+                      <i class="material-icons delete-icon" aria-hidden="true">delete</i>
+                    </a>
+                  </td>
+
+                </tr>
+              </template>
+
+              <template if:true={isEmpty}>
+                <tr><td colspan="10" class="table-td no-data">No records found</td></tr>
+              </template>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGINATION & PAGE SIZE -->
+    <div class="pagination-row fixed-pagination">
+      <!-- <div class="left">
+        <label>Page Size:</label>
+        <select onchange={handlePageSizeChange} value={pageSize}>
+          <template for:each={pageSizeOptions} for:item="opt">
+            <option key={opt} value={opt}>{opt}</option>
+          </template>
+        </select>
+      </div>
+
+      <div class="center">
+        <lightning-button variant="neutral" label="First"
+          onclick={firstPage} disabled={bDisableFirst}></lightning-button>
+
+        <lightning-button variant="neutral" label="Prev"
+          onclick={previousPage} disabled={bDisableFirst}></lightning-button>
+
+        <span class="pager-info">Showing {pageNumber} of {totalPages} page(s)</span>
+
+        <lightning-button variant="neutral" label="Next"
+          onclick={nextPage} disabled={bDisableLast}></lightning-button>
+
+        <lightning-button variant="neutral" label="Last"
+          onclick={lastPage} disabled={bDisableLast}></lightning-button>
+      </div>
+
+      <div class="right">
+        <span>Total Records: {totalTrainings}</span>
+      </div> -->
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+            <label
+              class="slds-text-color_weak slds-p-horizontal_x-small"
+              for="recordsPerPage"
+              style="padding-top: 4%"
+              >Page Size:</label
+            >
+            <div
+              class="slds-select_container slds-align_absolute-center"
+            >
+              <select
+                class="slds-select"
+                id="recordsPerPage"
+                onchange={handlePageSizeChange}
+              >
+                <template for:each={pageSizeOptions} for:item="option">
+                  <option key={option} value={option}>{option}</option>
+                </template>
+              </select>
+            </div>
+          </div>
+          <!--PAGE NAVIGATION-->
+          <div class="slds-align_absolute-center">
+            <lightning-button
+              disabled={bDisableFirst}
+              icon-name="utility:jump_to_left"
+              label="First"
+              class="slds-p-horizontal_x-small"
+              alternative-text="first page"
+              onclick={firstPage}
+            ></lightning-button>
+            <lightning-button
+              disabled={bDisableFirst}
+              icon-name="utility:chevronleft"
+              label="Previous"
+              alternative-text="Previous"
+              onclick={previousPage}
+            ></lightning-button>
+            &nbsp;
+            <span class="slds-badge"
+              >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+              &nbsp;&nbsp;Page(s)</span
+            >
+            &nbsp;
+            <lightning-button
+              disabled={bDisableLast}
+              icon-name="utility:chevronright"
+              label="Next"
+              alternative-text="Next"
+              onclick={nextPage}
+              class="slds-p-horizontal_x-small"
+              icon-position="right"
+            ></lightning-button>
+            <lightning-button
+              disabled={bDisableLast}
+              icon-name="utility:jump_to_right"
+              label="Last"
+              alternative-text="last page"
+              onclick={lastPage}
+              icon-position="right"
+            ></lightning-button>
+          </div>
+          <!--TOTAL RECORDS-->
+          <div class="slds-clearfix">
+            <div class="slds-float_right">
+              <span class="slds-badge">
+                Total Records: {totalTrainings}</span
+              >
+            </div>
+          </div>
+      </div>
+
+    <!-- ADD / EDIT MODAL -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" style = "max-width: 25%; min-width: 400px;">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header headercustom">
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">{modalTitle}</h2>
+
+                    <!-- <button class="slds-button slds-button_icon slds-modal__close" onclick={closeModal} title="Close">
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button> -->
+                </header>
+
+                <!-- BODY CONTENT -->
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                    <!-- ---------------- ROW 1 ---------------- -->
+                    <div>
+                        <lightning-input 
+                            label="Document Name"
+                            value={editingDoc.name}
+                            data-field="name"
+                            required
+                            onchange={handleModalChange}>
+                        </lightning-input>
+
+                        <lightning-combobox
+                            label="Category"
+                            value={editingDoc.category}
+                            data-field="category"
+                            required
+                            options={categoryOptions}
+                            onchange={handleModalChange}>
+                        </lightning-combobox>
+
+                        <lightning-combobox
+                            label="Valid For"
+                            value={editingDoc.validFor}
+                            data-field="validFor"
+                            required
+                            options={validForOptions}
+                            onchange={handleModalChange}>
+                        </lightning-combobox>
+                        
+                    </div>
+
+                    <!-- ---------------- ROW 2: ROLES ---------------- -->
+                    <div class="form-row">
+                        <span class="label-text-drop">
+                            <span style="color:red">*</span>Roles
+                        </span>
+
+                        <div class="dropdown-container" lwc:ref="dropdownContainer">
+                            
+                            <!-- Dropdown Button -->
+                            <button 
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleRolesDropdown}
+                                aria-expanded={isRolesOpen}
+                                aria-haspopup="listbox">
+                                
+                                <span class="slds-truncate" title={displayText}>{displayText}</span>
+
+                                <lightning-icon 
+                                    icon-name={chevronIcon}
+                                    size="x-small" 
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                            <!-- Dropdown Menu - Add onclick handler to stop propagation -->
+                            <div 
+                                if:true={isRolesOpen} 
+                                class="dropdown-menu custom-scroll"
+                                onclick={handleDropdownClick}>
+                                
+                                <!-- LIST OF ROLES -->
+                                <div class="options-list ">
+
+                                    <template for:each={options} for:item="option">
+                                        <div key={option.id} class="option-item">
+
+                                            <!-- Add onclick to stop propagation -->
+                                            <!-- <button 
+                                                type="button"
+                                                class={option.buttonClass}
+                                                data-option-id={option.id}
+                                                onclick={handleSelectRole}>
+                                                {option.label}
+                                            </button> -->
+                                            <div class="option-label" title={option.label}>{option.label}</div>
+                                            <div class="option-controls">
+
+                                                <!-- <span class={option.badgeClass}>
+                                                    {option.statusText}
+                                                </span> -->
+
+                                                <!-- Wrap toggle in a div with onclick handler -->
+                                                <div 
+                                                    class="toggle-switch-container"
+                                                    onclick={handleToggleContainerClick}>
+                                                    <lightning-input
+                                                        type="toggle"
+                                                        message-toggle-active=""
+                                                        message-toggle-inactive=""
+                                                        checked={option.checked}
+                                                        data-option-id={option.id}
+                                                        onchange={handleToggleRole}
+                                                        onclick={handleToggleClick}
+                                                        variant="label-hidden"
+                                                        size="xx-small"
+                                                        class="toggle-input toggle_bar_right"
+                                                        >
+                                                    </lightning-input>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ---------------- ROW 3: TOGGLES ---------------- -->
+                    <div class="toggles">
+                      <div class="toggle-row">
+                      <label class="slds-form-element__label">Mandatory</label>
+                        <lightning-input
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            variant="label-hidden"
+                            class="toggle_bar_right"
+                            checked={editingDoc.mandatory}
+                            data-field="mandatory"                            
+                            onchange={handleModalChange}>
+                        </lightning-input>
+                        </div>
+
+
+                      <div class="toggle-row">
+                      <label class="slds-form-element__label">Visible to Staff</label>
+                      <lightning-input
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            variant="label-hidden"
+                            class="toggle_bar_right"
+                            checked={editingDoc.visibleToStaff}
+                            data-field="visibleToStaff"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+                        </div>
+
+
+                        <div class="toggle-row">
+                        <label class="slds-form-element__label">Expiry Required</label>
+                        <lightning-input
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            variant="label-hidden"
+                            class="toggle_bar_right"
+                            checked={editingDoc.renewalRequired}
+                            data-field="renewalRequired"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+                        </div>
+
+                    </div>
+
+                    <!-- ---------------- ROW 4: REMINDERS ---------------- -->
+                    <div>
+
+                        <lightning-input
+                            type="number"
+                            label="1st Reminder Day"
+                            value={editingDoc.reminder1}
+                            data-field="reminder1"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+
+                        <lightning-input
+                            type="number"
+                            label="2nd Reminder Day"
+                            value={editingDoc.reminder2}
+                            data-field="reminder2"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+
+                    </div>
+
+                    <!-- ---------------- ROW 5: NOTES ---------------- -->
+                    <div>
+                        <lightning-textarea
+                            label="Notes"
+                            value={editingDoc.notes}
+                            data-field="notes"
+                            maxlength="1000"
+                            onchange={handleModalChange}>
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        variant="neutral"
+                        label="Cancel"
+                        onclick={closeModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        variant="brand"
+                        label="Save"
+                        onclick={saveDocument}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- CONFIRM DELETE -->
+    <template if:true={showDeleteConfirm}>
+      <section role="dialog" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container modal-custom">
+          <header class="slds-modal__header slds-hyphenate headercustom">
+            <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">Confirm Delete</h2>
+          </header>
+
+          <div class="slds-modal__content slds-p-around_medium modal-content">
+            <p style="text-align: center">Are you sure you want to delete <b>{trainingToDeleteName}</b>?</p>
+            <div class="button-container slds-m-top_medium">
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={cancelDelete}
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={confirmDelete}
+              ></lightning-button>
+            </div>
+          </div>
+
+          <!-- <footer class="slds-modal__footer">
+            <lightning-button variant="neutral" label="Cancel"
+              onclick={cancelDelete}></lightning-button>
+
+            <lightning-button variant="destructive" label="Delete"
+              onclick={confirmDelete}></lightning-button>
+          </footer> -->
+        </div>
+      </section>
+
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    </div>
+</template>
