@@ -1,0 +1,820 @@
+<template>
+    <div class="tessa-chat-wrapper">
+        <!-- Connecting Overlay Loader (Replaces standard Salesforce spinner) -->
+        <template if:true={isLoading}>
+            <div class="loading-overlay">
+                <div class="logo-loading-pulse">
+                    <svg class="tessa-logo-svg pulse-anim" viewBox="0 0 24 24" width="60" height="60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4 7L12 12L20 7L12 2Z" fill="url(#cubeGradTopL)" />
+                        <path d="M4 7V17L12 22V12L4 7Z" fill="url(#cubeGradLeftL)" />
+                        <path d="M12 12V22L20 17V7L12 12Z" fill="url(#cubeGradRightL)" />
+                        <defs>
+                            <linearGradient id="cubeGradTopL" x1="4" y1="2" x2="20" y2="12" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#a855f7" />
+                                <stop offset="1" stop-color="#6366f1" />
+                            </linearGradient>
+                            <linearGradient id="cubeGradLeftL" x1="4" y1="7" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#6366f1" />
+                                <stop offset="1" stop-color="#4f46e5" />
+                            </linearGradient>
+                            <linearGradient id="cubeGradRightL" x1="12" y1="12" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#8b5cf6" />
+                                <stop offset="1" stop-color="#6d28d9" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="loading-dots-container">
+                    <span class="loading-dot"></span>
+                    <span class="loading-dot"></span>
+                    <span class="loading-dot"></span>
+                </div>
+                <p class="loading-text">Connecting to Tessa AI...</p>
+            </div>
+        </template>
+
+        <!-- Custom Header -->
+        <header class="tessa-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+            <div class="header-left slds-grid slds-grid_vertical-align-center">
+                <!-- Tessa Logo -->
+                  <div class="logo-container">
+                    <img
+                        src={logoUrl}
+                        alt="Tessa AI"
+                        class="tessa-logo"
+                    />
+                </div>
+                <!-- Title & Online Indicator -->
+                <div class="title-container">
+                    <span class="tessa-title-text">Ask Tessa</span>
+                    <template if:true={connected}>
+                        <span class="header-status-badge">
+                            <span class="status-dot"></span>
+                            Online
+                        </span>
+                    </template>
+                </div>
+            </div>
+            
+            <div class="header-right slds-grid slds-grid_vertical-align-center">
+
+                <!-- <lightning-button
+    label="🧪 Test Admin Click"
+    variant="brand"
+    icon-name="utility:play"
+    onclick={testAdminMenuClick}>
+</lightning-button> -->
+                <!-- Controls -->
+
+                                <template if:true={showAskButton}>
+                    <button class={askBtnClass} title="Frequently asked questions - click to run one" onclick={toggleQuestions}>
+                        <span class="faq-badge">FAQ</span>
+                    </button>
+                </template>
+
+                <button class="header-btn" title="Start new chat" onclick={handleNewChat}>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+                <button class="header-btn" title="Settings" onclick={toggleSettings}>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                </button>
+                <button class="header-btn close-btn" title="Close" onclick={handleClose}>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+                <!-- Ask a Question panel -->
+        <template if:true={showQuestions}>
+            <div class="ask-overlay" onclick={closeQuestions}></div>
+            <section class="ask-panel" role="dialog" aria-label="Ask a question">
+                <div class="ask-panel-header">
+                    <span class="ask-panel-title">Ask a Question</span>
+                    <button class="ask-close" title="Close" onclick={closeQuestions}>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="ask-search-wrap">
+                    <svg class="ask-search-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <input type="text" class="ask-search" placeholder="Search all questions..."
+                           value={questionFilter} oninput={handleQuestionFilter} />
+                    <template if:true={faqSearching}>
+                        <button class="ask-search-clear" type="button" title="Clear"
+                                onclick={clearFaqSearch}>
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                        </button>
+                    </template>
+                </div>
+
+                <div class="ask-body">
+
+                    <!-- ── SEARCH RESULTS (flat, highlighted) ── -->
+                    <template if:true={faqSearching}>
+                        <template if:true={faqNoResults}>
+                            <div class="ask-empty">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                </svg>
+                                <span>No questions match that search.</span>
+                            </div>
+                        </template>
+                        <template if:false={faqNoResults}>
+                            <div class="faq-sec-head">
+                                <span class="faq-sec-title">Results</span>
+                                <span class="faq-sec-count">{faqSearchCount}</span>
+                            </div>
+                            <div class="faq-grid">
+                                <template for:each={faqSearchResults} for:item="q">
+                                    <button key={q.id} class="faq-card" type="button"
+                                            data-question={q.question}
+                                            data-prefill={q.prefillStr}
+                                            onclick={handleQuestionClick}>
+                                        <svg class="faq-card-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d={q.icon}></path>
+                                        </svg>
+                                        <span class="faq-card-body">
+                                            <span class="faq-card-q">
+                                                <template for:each={q.parts} for:item="p">
+                                                    <template if:true={p.hl}>
+                                                        <mark key={p.key} class="faq-hl">{p.text}</mark>
+                                                    </template>
+                                                    <template if:false={p.hl}>
+                                                        <span key={p.key}>{p.text}</span>
+                                                    </template>
+                                                </template>
+                                            </span>
+                                            <span class="faq-card-cat">{q.category}</span>
+                                        </span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- ── BROWSE MODE ── -->
+                    <template if:false={faqSearching}>
+
+                        <template if:true={hasRecommended}>
+                            <div class="faq-sec-head">
+                                <span class="faq-sec-badge reco">★</span>
+                                <span class="faq-sec-title">Recommended for you</span>
+                            </div>
+                            <div class="faq-grid">
+                                <template for:each={faqRecommended} for:item="q">
+                                    <button key={q.id} class="faq-card accent" type="button"
+                                            data-question={q.question} data-prefill={q.prefillStr}
+                                            onclick={handleQuestionClick}>
+                                        <svg class="faq-card-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d={q.icon}></path>
+                                        </svg>
+                                        <span class="faq-card-body">
+                                            <span class="faq-card-q">{q.question}</span>
+                                            <span class="faq-card-cat">{q.category}</span>
+                                        </span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:true={hasRecent}>
+                            <div class="faq-sec-head">
+                                <span class="faq-sec-badge recent">◷</span>
+                                <span class="faq-sec-title">Recent</span>
+                            </div>
+                            <div class="faq-chiprow">
+                                <template for:each={faqRecent} for:item="q">
+                                    <button key={q.id} class="faq-mini" type="button"
+                                            data-question={q.question} data-prefill={q.prefillStr}
+                                            onclick={handleQuestionClick}>{q.question}</button>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:true={hasPopular}>
+                            <div class="faq-sec-head">
+                                <span class="faq-sec-badge popular">✦</span>
+                                <span class="faq-sec-title">Frequently used</span>
+                            </div>
+                            <div class="faq-grid">
+                                <template for:each={faqPopular} for:item="q">
+                                    <button key={q.id} class="faq-card" type="button"
+                                            data-question={q.question} data-prefill={q.prefillStr}
+                                            onclick={handleQuestionClick}>
+                                        <svg class="faq-card-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d={q.icon}></path>
+                                        </svg>
+                                        <span class="faq-card-body">
+                                            <span class="faq-card-q">{q.question}</span>
+                                            <span class="faq-card-cat">{q.category}</span>
+                                        </span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Collapsible categories -->
+                        <template if:true={hasFaqCategories}>
+                            <div class="faq-sec-head browse">
+                                <span class="faq-sec-title">Browse by category</span>
+                            </div>
+                            <template for:each={faqCategories} for:item="cat">
+                                <div key={cat.id} class="faq-cat">
+                                    <button class={cat.headerClass} type="button"
+                                            data-cat={cat.id} onclick={toggleFaqCategory}>
+                                        <svg class="faq-cat-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d={cat.icon}></path>
+                                        </svg>
+                                        <span class="faq-cat-name">{cat.category}</span>
+                                        <span class="faq-cat-count">{cat.count}</span>
+                                        <svg class="faq-cat-chev" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+                                        </svg>
+                                    </button>
+                                    <template if:true={cat.expanded}>
+                                        <div class="faq-cat-body">
+                                            <div class="faq-grid">
+                                                <template for:each={cat.questions} for:item="q">
+                                                    <button key={q.id} class="faq-card" type="button"
+                                                            data-question={q.question}
+                                                            data-prefill={q.prefillStr}
+                                                            onclick={handleQuestionClick}>
+                                                        <svg class="faq-card-icon" viewBox="0 0 24 24" fill="currentColor">
+                                                            <path d={q.icon}></path>
+                                                        </svg>
+                                                        <span class="faq-card-body">
+                                                            <span class="faq-card-q">{q.question}</span>
+                                                        </span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                            <template if:true={cat.hasMore}>
+                                                <button class="faq-more" type="button"
+                                                        data-cat={cat.id} onclick={showMoreInCategory}>
+                                                    {cat.moreLabel}
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+
+                    </template>
+                </div>
+            </section>
+        </template>
+
+
+
+        <!-- Main Content Area -->
+        <div class="chat-container">
+            <!-- Settings Panel (Modern Slide Drawer Overlay) -->
+            <template if:true={showSettings}>
+                <div class="settings-drawer-backdrop" onclick={toggleSettings}></div>
+                <div class="settings-drawer">
+                    <div class="drawer-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <h3 class="drawer-title">Settings</h3>
+                        <button class="drawer-close-btn" onclick={toggleSettings}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="drawer-body">
+                        <div class="settings-option slds-m-bottom_medium">
+                            <lightning-input
+                                type="toggle"
+                                label="Save chat history"
+                                checked={settingsSaveHistory}
+                                onchange={handleToggleHistory}>
+                            </lightning-input>
+                        </div>
+                        <div class="settings-option slds-m-bottom_medium">
+                            <lightning-input
+                                type="toggle"
+                                label="Show suggested prompts"
+                                checked={settingsShowSuggestions}
+                                onchange={handleToggleSuggestions}>
+                            </lightning-input>
+                        </div>
+                        <button class="clear-history-action-btn slds-m-top_medium" onclick={handleClearHistory}>
+                            <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                            Clear Chat History
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Main Layout: Switches CSS flex layout between empty state and populated state -->
+            <div class={chatMainClass}>
+                <!-- Chat Messages Viewport (Used in Normal Mode) -->
+                <template if:false={showWelcomeScreen}>
+                    <div class="chat-messages" lwc:ref="messagesContainer">
+                        <template for:each={messages} for:item="msg">
+                            <div key={msg.id} class={msg.cssClass}>
+                                <!-- Avatar -->
+                                <div class="msg-avatar-container">
+                                    <template if:true={msg.isUser}>
+                                    <div class="user-avatar">
+
+                                        <template if:true={hasUserAvatar}>
+                                            <img
+                                                src={userAvatar}
+                                                alt="User"
+                                                class="user-avatar-image"
+                                            />
+                                        </template>
+
+                                        <template if:false={hasUserAvatar}>
+                                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                            </svg>
+                                        </template>
+
+                                    </div>
+                                </template>
+                                  <template if:false={msg.isUser}>
+                                        <div class="bot-avatar">
+                                            <img
+                                                src={logoUrl}
+                                                alt="Tessa AI"
+                                                class="bot-avatar-logo"
+                                            />
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Bubble content -->
+                                <div class="msg-bubble-wrap">
+                                    <div class="msg-meta-row">
+                                        <span class="msg-sender-name">{msg.time}</span>
+                                    </div>
+                                    <div class="msg-body">
+                                        <!-- USER messages: keep plain, auto-escaped text.
+                                             User input must NEVER be rendered as HTML. -->
+                                        <template if:true={msg.isUser}>
+                                            <template for:each={msg.textLines} for:item="line" for:index="i">
+                                                <p key={line.key}>{line.text}</p>
+                                            </template>
+                                        </template>
+
+                                        <!-- BOT messages: rich text. The AI reply (Markdown / HTML)
+                                             is converted to HTML and sanitised before rendering. -->
+                                        <template if:false={msg.isUser}>
+                                            <template if:true={msg.hasText}>
+                                                <c-tessa-rich-text content={msg.text}
+                                                                   typing={msg.typing}
+                                                                   ontypingdone={handleTypingDone}
+                                                                   ontypingtick={handleTypingTick}></c-tessa-rich-text>
+                                            </template>
+                                        </template>
+
+                                        <!-- Custom Table Rendering -->
+                                        <template if:true={msg.table}>
+                                            <div class="ai-table-outer">
+                                                <template if:true={msg.table.title}>
+                                                    <div class="ai-table-header-title">
+                                                        <span class="table-icon">📊</span>
+                                                        <span class="table-title-txt">{msg.table.title}</span>
+                                                        <span class="table-badge">{msg.table.total}</span>
+                                                    </div>
+                                                </template>
+                                                <div class="ai-table-scroll-area">
+                                                    <table class="ai-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <template for:each={msg.table.columns} for:item="col">
+                                                                    <th key={col.key}>{col.label}</th>
+                                                                </template>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <template for:each={msg.table.displayRows} for:item="row">
+                                                                <tr key={row.rowKey}>
+                                                                    <template for:each={row.cells} for:item="cell">
+                                                                        <td key={cell.key}>
+                                                                            <template if:true={cell.isBadge}>
+                                                                                <span class={cell.badgeClass}>{cell.value}</span>
+                                                                            </template>
+                                                                            <template if:false={cell.isBadge}>
+                                                                                {cell.value}
+                                                                            </template>
+                                                                        </td>
+                                                                    </template>
+                                                                </tr>
+                                                            </template>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Thinking dots state -->
+                        <template if:true={isThinking}>
+                            <div class="msg msg-bot msg-thinking">
+                                <div class="msg-avatar-container">
+                                    <div class="bot-avatar">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M19 11.5L19.5 13L21 13.5L19.5 14L19 15.5L18.5 14L17 13.5L18.5 13L19 11.5ZM11.5 2L12.5 5L15.5 6L12.5 7L11.5 10L10.5 7L7.5 6L10.5 5L11.5 2ZM6 13L6.38 14.13L7.5 14.5L6.38 14.88L6 16L5.63 14.88L4.5 14.5L5.63 14.13L6 13Z" fill="url(#botGradAvatarThinking)" />
+                                            <defs>
+                                                <linearGradient id="botGradAvatarThinking" x1="4.5" y1="2" x2="21" y2="16" gradientUnits="userSpaceOnUse">
+                                                    <stop stop-color="#a855f7" />
+                                                    <stop offset="1" stop-color="#4f46e5" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="msg-bubble-wrap">
+                                    <div class="msg-body">
+                                        <div class="typing-loader">
+                                            <span class="thinking-label">{thinkingLabel}</span>
+                                            <span class="dot"></span>
+                                            <span class="dot"></span>
+                                            <span class="dot"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Welcome Screen Greeting Block (Used in Welcome/Empty state mode) -->
+                <template if:true={showWelcomeScreen}>
+                    <div class="welcome-screen-container">
+                        <h2 class="welcome-greeting-text">
+                            Hi, <span class="highlight-user">{userDisplayName}</span>
+                        </h2>
+                        <h1 class="welcome-subtext">How Can I Help You?</h1>
+                    </div>
+                </template>
+
+                <!-- File upload progress toolbar -->
+                <template if:true={uploadProgress}>
+                    <div class="upload-progress-alert slds-grid slds-grid_vertical-align-center">
+                        <div class="alert-dots-loader">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="upload-progress-text">{uploadProgress}</span>
+                    </div>
+                </template>
+
+                <!-- Batch Upload drawer/toolbar -->
+                <template if:true={showBatchTools}>
+                    <div class="batch-upload-toolbar">
+                        <div class="batch-toolbar-inner slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                            <div class="slds-grid slds-grid_vertical-align-center slds-wrap flex-gap-sm">
+                                <label class="upload-action-btn" title="Upload CSV/Excel for bulk create">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="slds-m-right_xx-small">
+                                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-3.31 2.69-6 6-6s6 2.69 6 6v10.5c0 1.38-1.12 2.5-2.5 2.5s-2.5-1.12-2.5-2.5V6H13v9.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V5c0-2.21-1.79-4-4-4s-4 1.79-4 4v12.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V6h-1.5z"/>
+                                    </svg>
+                                    Upload File
+                                    <input type="file"
+                                        accept=".csv,.xlsx,.xls,.pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.tiff"
+                                        onchange={handleFileUpload}
+                                        class="hidden-file-input"/>
+                                </label>
+                                <div class="select-wrapper">
+                                    <select class="batch-select-dropdown" onchange={handleBatchTypeChange}>
+                                        <option value="participant">Participants</option>
+                                        <option value="staff">Staff</option>
+                                    </select>
+                                </div>
+                                <button class="download-template-btn" onclick={handleDownloadTemplate}>
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="slds-m-right_xx-small">
+                                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                                    </svg>
+                                    Template
+                                </button>
+                            </div>
+                            <button class="close-toolbar-btn" onclick={toggleBatchTools} title="Close toolbar">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+<!-- Input area & suggested prompt chips wrapper -->
+                <div class="bottom-controls-section">
+                    <!-- Dynamic input label (shown when backend requests specific input) -->
+                    <template if:true={currentInput}>
+                        <div class="dynamic-input-label-bar slds-m-bottom_x-small">
+                            <span class="dynamic-label-text">{currentInput.label}</span>
+                            <template if:true={currentInput.required}>
+                                <span class="required-star">*</span>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Prompt capsules capsule -->
+                    <div class="input-capsule-outer">
+
+                        <!-- Left action buttons (only when no dynamic input) -->
+                        <template if:false={currentInput}>
+                            <button class={micButtonClass} title={micTitle} type="button"
+                                    onclick={toggleVoiceInput}>
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                                </svg>
+                            </button>
+                            <!-- Attach an NDIS referral PDF -->
+                        <template if:false={currentInput}>
+                            <label class="attach-action-btn" title="Attach document (PDF, Word, or image)">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                    <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-3.31 2.69-6 6-6s6 2.69 6 6v10.5c0 1.38-1.12 2.5-2.5 2.5s-2.5-1.12-2.5-2.5V6H13v9.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V5c0-2.21-1.79-4-4-4s-4 1.79-4 4v12.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V6h-1.5z"/>
+                                </svg>
+                                <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.tiff" onchange={handleFileUpload} class="hidden-file-input"/>
+                            </label>
+                        </template>
+                        </template>
+
+                        <!-- DEFAULT: Normal text input (when no dynamic input) -->
+                        <template if:false={currentInput}>
+                            <!-- Typeahead suggestions (keyword match while typing) -->
+                            <template if:true={showSuggestions}>
+                                <ul class="suggest-dropdown" role="listbox">
+                                    <template for:each={suggestions} for:item="sg">
+                                        <li key={sg.id} class={sg.cssClass} role="option"
+                                            data-q={sg.q}
+                                            onmousedown={selectSuggestion}>
+                                            <svg class="suggest-icon" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.5 6.5 0 119.5 3zm0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/>
+                                            </svg>
+                                            <span class="suggest-text">{sg.q}</span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <textarea
+                                class="chat-input"
+                                placeholder="Type message..."
+                                value={currentMessage}
+                                onchange={handleInputChange}
+                                oninput={handleInputChange}
+                                onkeydown={handleKeyDown}
+                                onblur={handleInputBlur}
+                                rows="1"
+                                lwc:ref="chatInput">
+                            </textarea>
+                        </template>
+
+                        <!-- DYNAMIC: Text input -->
+                        <template if:true={isInputText}>
+                            <input type="text" class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                placeholder={currentInput.placeholder}
+                                maxlength={currentInput.maxlength}
+                                oninput={handleDynamicInputEvent}
+                                onkeydown={handleDynamicKeyDown} />
+                        </template>
+
+                        <!-- DYNAMIC: Email input -->
+                        <template if:true={isInputEmail}>
+                            <input type="email" class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                placeholder={currentInput.placeholder}
+                                oninput={handleDynamicInputEvent}
+                                onkeydown={handleDynamicKeyDown} />
+                        </template>
+
+                        <!-- DYNAMIC: Number input -->
+                        <template if:true={isInputNumber}>
+                            <input type="number" class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                oninput={handleDynamicInputEvent}
+                                onkeydown={handleDynamicKeyDown} />
+                        </template>
+
+                        <!-- DYNAMIC: Date picker -->
+                        <template if:true={isInputDate}>
+                            <input type="date" class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                onchange={handleDynamicAutoSubmit} />
+                        </template>
+
+                        <!-- DYNAMIC: Time picker -->
+                        <template if:true={isInputTime}>
+                            <input type="time" class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                onchange={handleDynamicAutoSubmit} />
+                        </template>
+
+                        <!-- DYNAMIC: DateTime picker -->
+                        <template if:true={isInputDatetime}>
+                            <input type="datetime-local" class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                onchange={handleDynamicAutoSubmit} />
+                        </template>
+
+                        <!-- DYNAMIC: Dropdown / Select -->
+                        <template if:true={isInputSelect}>
+                            <select class="chat-input dynamic-chat-input dynamic-select"
+                                onchange={handleDynamicAutoSubmit}>
+                                <option value="">Select...</option>
+                                <template for:each={currentInput.options} for:item="opt">
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                </template>
+                            </select>
+                        </template>
+
+                        <!-- DYNAMIC: Multi-select -->
+                        <template if:true={isInputMultiselect}>
+                            <div class="multi-wrap">
+                                <div class="multi-head">
+                                    <input type="text" class="multi-search"
+                                           placeholder="Search..."
+                                           value={multiFilter}
+                                           oninput={handleMultiFilter} />
+                                    <span class="multi-count">{multiCountLabel}</span>
+                                </div>
+                                <div class="multi-list">
+                                    <template for:each={multiselectOptions} for:item="opt">
+                                        <button key={opt.value} type="button" class={opt.cls}
+                                                data-value={opt.value}
+                                                onclick={handleMultiToggle}>
+                                            <template if:true={opt.checked}>
+                                                <span class="multi-tick">&#10003;</span>
+                                            </template>
+                                            <template if:false={opt.checked}>
+                                                <span class="multi-tick multi-tick-empty"></span>
+                                            </template>
+                                            <span class="multi-label">{opt.label}</span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <div class="multi-actions">
+                                    <button type="button" class="multi-clear" onclick={handleMultiClear}>Clear</button>
+                                    <button type="button" class="multi-done" disabled={multiDoneDisabled}
+                                            onclick={handleMultiDone}>Done</button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- DYNAMIC: Textarea -->
+                        <template if:true={isInputTextarea}>
+                            <textarea class="chat-input dynamic-chat-input"
+                                value={dynamicInputValue}
+                                placeholder={currentInput.placeholder}
+                                oninput={handleDynamicInputEvent}
+                                onkeydown={handleDynamicKeyDown}
+                                rows="2">
+                            </textarea>
+                        </template>
+
+                        <!-- DYNAMIC: Boolean (Yes/No buttons replace entire composer) -->
+                        <template if:true={isInputBoolean}>
+                            <div class="boolean-composer-btns">
+                                <template for:each={currentInput.options} for:item="opt">
+                                    <button key={opt.value} class="bool-action-btn"
+                                        data-value={opt.value}
+                                        onclick={handleBooleanClick}>
+                                        {opt.label}
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- DYNAMIC: File upload -->
+                        <template if:true={isInputFile}>
+                            <input type="file" class="dynamic-chat-input"
+                                accept={currentInput.accept}
+                                onchange={handleFileInput} />
+                        </template>
+
+                        <!-- DYNAMIC: Address (compound lightning-input-address) -->
+                        <template if:true={isInputAddress}>
+                            <div class="address-input-container">
+                                <lightning-input-address
+                                    street-label="Street"
+                                    city-label="Suburb / City"
+                                    country-label="Country"
+                                    province-label="State"
+                                    postal-code-label="Post Code"
+                                    street={addressStreet}
+                                    city={addressCity}
+                                    country={addressCountry}
+                                    province={addressProvince}
+                                    postal-code={addressPostalCode}
+                                    onchange={handleAddressChange}
+                                    show-address-lookup
+                                    required>
+                                </lightning-input-address>
+                                <button class="address-submit-btn" onclick={handleAddressSubmit}>
+                                    Confirm Address
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- Cancel button (when dynamic input active, not boolean) -->
+                        <template if:true={showCancelButton}>
+                            <button class="cancel-action-btn" title="Cancel" type="button" onclick={handleCancelWorkflow}>
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </button>
+                        </template>
+
+                        <!-- Send button (for text/email/number/textarea dynamic inputs) -->
+                        <template if:true={showDynamicSend}>
+                            <button class="send-action-btn" title="Send" type="button"
+                                onclick={handleDynamicSubmit} disabled={dynamicSubmitDisabled}>
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                            </button>
+                        </template>
+
+                        
+
+                        <!-- Normal send button (when no dynamic input) -->
+                        <template if:false={currentInput}>
+                            <!-- While generating, Send is replaced by Stop -->
+                            <template if:true={showStopButton}>
+                                <button class="stop-action-btn" title="Stop generating" type="button"
+                                        onclick={handleStopGenerating}>
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="7" y="7" width="10" height="10" rx="2"/>
+                                    </svg>
+                                </button>
+                            </template>
+                            <template if:false={showStopButton}>
+                                <button class="send-action-btn" title="Send message" type="button" onclick={handleSend} disabled={sendDisabled}>
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                    </svg>
+                                </button>
+                            </template>
+                        </template>
+                    </div>
+
+                    <!-- Suggested Prompts Chips (Shown in Welcome screen mode, below input capsule) -->
+                    <template if:true={showSuggestedPrompts}>
+                        <div class="suggested-prompts-container">
+                            <template for:each={suggestedPrompts} for:item="prompt">
+                                <button key={prompt.id}
+                                    class="prompt-chip-btn"
+                                    data-prompt={prompt.text}
+                                    onclick={handleSuggestedPrompt}
+                                    title={prompt.text}>
+                                    
+                                    <template if:true={prompt.isAdd}>
+                                        <svg viewBox="0 0 24 24" class="chip-svg-icon" fill="currentColor">
+                                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                        </svg>
+                                    </template>
+                                    <template if:true={prompt.isUser}>
+                                        <svg viewBox="0 0 24 24" class="chip-svg-icon" fill="currentColor">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </template>
+                                    <template if:true={prompt.isLocation}>
+                                        <svg viewBox="0 0 24 24" class="chip-svg-icon" fill="currentColor">
+                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                        </svg>
+                                    </template>
+                                    <template if:true={prompt.isList}>
+                                        <svg viewBox="0 0 24 24" class="chip-svg-icon" fill="currentColor">
+                                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                                        </svg>
+                                    </template>
+                                    <template if:true={prompt.isDate}>
+                                        <svg viewBox="0 0 24 24" class="chip-svg-icon" fill="currentColor">
+                                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                                        </svg>
+                                    </template>
+                                    <template if:true={prompt.isUpload}>
+                                        <svg viewBox="0 0 24 24" class="chip-svg-icon" fill="currentColor">
+                                            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                                        </svg>
+                                    </template>
+                                    
+                                    <span class="chip-label">{prompt.label}</span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

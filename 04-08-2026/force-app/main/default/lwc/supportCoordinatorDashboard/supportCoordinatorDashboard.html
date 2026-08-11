@@ -1,0 +1,419 @@
+<template>
+    <template if:false={dashboardflag}>
+        <div class="main-container custom-scroll"> 
+            <div class="slds-grid slds-wrap slds-gutters">
+                
+                <div class="slds-col slds-size_1-of-1 slds-large-size_9-of-12">
+                    
+                    <div class="metrics-pill-row slds-m-bottom_medium">
+                        <template for:each={metrics} for:item="item">
+                            <div key={item.id} class={item.bgClass}>
+                                <div class="metric-pill-content">
+                                    <span class={item.textClass}>{item.label}</span>
+                                    <span class={item.textClass}>{item.value}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <div class="slds-col slds-size_1-of-1 -large-size_8-of-12 slds-m-bottom_medium">
+                            <div class="card-box-2" style="height: 100%;">
+
+                                <!-- Tabs -->
+                                <div class="participant-tabs">
+                                    <div class="participant-tab-buttons">
+                                        <button
+                                            class={allTabClass}
+                                            onclick={showAllParticipants}>
+                                            All Participants
+                                        </button>
+
+                                        <button
+                                            class={pinnedTabClass}
+                                            onclick={showPinnedParticipants}>
+                                            Pinned Participants
+                                        </button>
+                                    </div>
+                                    <div class="participant-search">
+                                        <lightning-input
+                                            type="search"
+                                            placeholder="Search"
+                                            value={searchKey}
+                                            onchange={handleParticipantSearch}
+                                            variant="label-hidden">
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                                <div class="table-container participantTable">
+                                    <!-- HEADER -->
+                                    <div class="header-wrapper">
+                                        <table class="staff-table" role="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Plan Period</th>
+                                                    <th>Given Budget</th>
+                                                    <th>NDIS ID</th>
+                                                    <th>Spent</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                    <!-- BODY -->
+                                    <div class="body-scroll participantTableHeight custom-scroll">
+                                        <table class="staff-table">
+                                            <tbody>
+
+                                                <!-- PARTICIPANTS -->
+                                                <template if:true={pagedParticipants.length}>
+                                                    <template for:each={pagedParticipants} for:item="part">
+                                                        <tr key={part.id}>
+
+                                                            <!-- Initials -->
+                                                            <td class="text-bold slds-truncate">
+                                                                <div class="slds-grid slds-grid_vertical-align-center slds-truncate">
+                                                                    <div class="avatar-circle">
+                                                                        {part.initials}
+                                                                    </div>
+
+                                                                    <a
+                                                                        href="javascript:void(0);"
+                                                                        data-id={part.id}
+                                                                        onclick={handleParticipantClick}
+                                                                        class="participant-link slds-m-left_small slds-truncate"
+                                                                    >
+                                                                        {part.name}
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+
+                                                            <!-- Plan Period -->
+                                                            <td>
+                                                                <div class="slds-truncate">
+                                                                    {part.date}
+                                                                </div>
+                                                            </td>
+
+                                                            <!-- Budget -->
+                                                            <td>
+                                                                <div>
+                                                                    {part.budget}
+                                                                </div>
+                                                            </td>
+
+                                                            <!-- Ndis Number -->
+                                                            <td>
+                                                                <div class="slds-truncate">
+                                                                     {part.ndisNumber}
+                                                                </div>
+                                                            </td>
+
+                                                            <!-- Spent -->
+                                                            <td>
+                                                                <div class="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
+                                                                    <span class="text-weak">Spent</span>
+                                                                    <span class="text-bold">{part.percent}%</span>
+                                                                </div>
+
+                                                                <div class="progress-track">
+                                                                    <div
+                                                                        class={part.barClass}
+                                                                        style={part.styleWidth}>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+
+                                                        </tr>
+                                                    </template>
+                                                </template>
+
+                                                <!-- NO DATA -->
+                                                <template if:false={pagedParticipants.length}>
+                                                    <tr>
+                                                        <td class="no-data" colspan="6">
+                                                            No Participants
+                                                        </td>
+                                                    </tr>
+                                                </template>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- PAGINATION -->
+                                <template if:true={filteredParticipants.length}>
+                                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                                        <!-- PAGE SIZE -->
+                                        <div class="slds-list_inline">
+                                            <span style="margin-right: 5px; margin-top: 5px;">
+                                                Page Size:
+                                            </span>
+
+                                            <div class="slds-select_container">
+                                                <select
+                                                    class="slds-select"
+                                                    id="ParticipantRecordsPerPage"
+                                                    onchange={handleParticipantRecordsPerPageChange}>
+
+                                                    <template for:each={participantPageSizeOptions} for:item="option">
+                                                        <option key={option} value={option}>
+                                                            {option}
+                                                        </option>
+                                                    </template>
+
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- PAGINATION BUTTONS -->
+                                        <div class="slds-align_absolute-center">
+
+                                            <lightning-button
+                                                disabled={participantDisableFirst}
+                                                icon-name="utility:jump_to_left"
+                                                label="First"
+                                                onclick={handleParticipantFirstPage}
+                                                style="margin-right: 10px;">
+                                            </lightning-button>
+
+                                            <lightning-button
+                                                disabled={participantDisableFirst}
+                                                icon-name="utility:chevronleft"
+                                                label="Previous"
+                                                onclick={handleParticipantPreviousPage}
+                                                style="margin-right: 5px;">
+                                            </lightning-button>
+
+                                            <span class="slds-badge">
+                                                Showing {participantPageNumber} of {participantTotalPages} Page(s)
+                                            </span>
+
+                                            <lightning-button
+                                                disabled={participantDisableLast}
+                                                icon-name="utility:chevronright"
+                                                label="Next"
+                                                onclick={handleParticipantNextPage}
+                                                class="slds-p-horizontal_x-small"
+                                                icon-position="right">
+                                            </lightning-button>
+
+                                            <lightning-button
+                                                disabled={participantDisableLast}
+                                                icon-name="utility:jump_to_right"
+                                                label="Last"
+                                                onclick={handleParticipantLastPage}
+                                                icon-position="right">
+                                            </lightning-button>
+
+                                        </div>
+
+                                        <!-- TOTAL RECORDS -->
+                                        <div class="slds-clearfix">
+                                            <div class="slds-float_right">
+                                                <span class="slds-badge">
+                                                    Total Records: {participantTotalRecords}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </template>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-large-size_3-of-12">
+                    <div class="card-box-2 slds-p-around_medium" style="min-height: 800px;">
+                        
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                            <div class="heading-bold">{currentMonthYear}</div>
+                            <div class="cal-nav">
+                                <button class="nav-btn" onclick={prevMonth}>&lt;</button>
+                                <button class="nav-btn" onclick={nextMonth}>&gt;</button>
+                            </div>
+                        </div>
+                        
+                        <div class="cal-grid slds-m-bottom_large">
+                            <div class="cal-head">Mo</div><div class="cal-head">Tu</div><div class="cal-head">We</div><div class="cal-head">Th</div><div class="cal-head">Fr</div><div class="cal-head">Sa</div><div class="cal-head">Su</div>
+                            <template for:each={calendarDays} for:item="day">
+                            <div
+                                key={day.id}
+                                class={day.class}
+                                data-date={day.date}
+                                onclick={handleDateSelect}>
+                                {day.val}
+                            </div>
+                        </template>
+                        </div>
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                        <h2 class="heading-bold">Upcoming Events</h2>
+                    </div>
+                        <div class= "timeline custom-scroll" style="max-height: 240px; overflow-y: auto;">
+                    <!-- NO EVENTS -->
+                    <template if:false={upcomingEvents.length}>
+                        <div class="text-weak text-sm slds-p-around_small">
+                            No events for this day
+                        </div>
+                    </template>
+                    <!-- FIRST 3 EVENTS -->
+                        <template for:each={upcomingEvents} for:item="evt">
+                            <div key={evt.id} class="event-item">
+                                <div class="border-blue"></div>
+                                <div class="event-content">
+                                    <div class="text-bold" style="font-size:0.9rem;">
+                                        {evt.title}
+                                    </div>
+                                    <div class="text-weak text-sm slds-m-top_xx-small">
+                                        {evt.participantName}
+                                    </div>
+                                    <div class="text-weak text-sm slds-m-top_xx-small">
+                                        <!-- {evt.time} <span class="slds-m-horizontal_x-small">|</span> -->
+                                        {evt.duration} hr
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                        <div class="slds-m-top_large">
+                            <h2 class="heading-bold slds-m-bottom_medium">Quick Actions</h2>
+                            <div class="slds-grid slds-grid_vertical">
+                                <button class="btn-action btn-blue" onclick={handleAddParticipant}>Create Participant</button>
+                                <button class="btn-action btn-blue" onclick={handleAddProvider}>Create Provider</button>
+                                <button class="btn-action btn-blue" onclick={handleAddTask}>Create Task</button>
+                                <button class="btn-action btn-blue" onclick={handleCreateCaseNote}>Create Case Note</button>
+                                <button class="btn-action btn-blue" onclick={handleSetNewGoal}>Set New Goal</button>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            
+
+        </div>
+    </template>
+
+    <template if:true={createParticipantshowModal}>
+        <c-support-coordinator-participant-management onparticipantcreated={handleParticipantCreated}></c-support-coordinator-participant-management>    
+    </template>
+
+    <template if:true={showProviderModal}>
+        <c-support-coordinator-providers
+            view-provider-id={selectedProviderId}
+            onclose={handleCloseProvider}>
+        </c-support-coordinator-providers>
+    </template>
+
+    <template if:true={showCaseNoteModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open slds-modal_large">
+
+            <div class="slds-modal__container">
+
+                <c-support-coordinator-notes
+                    oncancel={handleCloseCaseNote}>
+                </c-support-coordinator-notes>
+
+            </div>
+        </section>
+        <!-- BACKDROP -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showGoalsModal}>
+        <!-- <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container"> -->
+                <c-support-coordinator-goals
+                    launched-from-dashboard
+                    onclose={handleCloseGoals}>
+                </c-support-coordinator-goals>
+            <!-- </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div> -->
+    </template>
+
+    <template if:true={showTaskModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open slds-modal_large">
+
+            <div class="slds-modal__container modal-custom-task">
+                <c-support-coordinator-task
+                    onclose={handleTaskModalClose}
+                    onsavetask={handleTaskSaved}>
+                </c-support-coordinator-task>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showAllEventsModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open slds-modal_small">
+
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_small">
+                        Events for selected day
+                    </h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <template for:each={allDayEvents} for:item="evt">
+                        <div key={evt.id} class="slds-m-bottom_small">
+                            <div class="text-bold">{evt.title}</div>
+                            <div class="text-weak text-sm">
+                                {evt.time} | {evt.duration} hr
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        label="Close"
+                        onclick={closeAllEventsModal}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={createParticipantDetailsModal}>
+        <c-support-coordinator-participant-management
+            lwc:ref="participantManagement">
+        </c-support-coordinator-participant-management>
+    </template>
+
+</template>

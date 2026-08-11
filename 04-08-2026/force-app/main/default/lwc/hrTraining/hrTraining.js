@@ -1,0 +1,1676 @@
+import { LightningElement, track, wire, api } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import getModules from '@salesforce/apex/HRTraining.getModules';
+import getAssignments from '@salesforce/apex/HRTraining.getAssignments';
+import getStaffAssignments from '@salesforce/apex/HRTraining.getStaffAssignments';
+import fetchStaff from '@salesforce/apex/StaffController.fetchStaffs';
+import insertAssignRecords from '@salesforce/apex/HRTraining.insertAssignRecords';
+import Id from '@salesforce/user/Id';
+import { getRecord } from 'lightning/uiRecordApi';
+import UserNameFld from '@salesforce/schema/User.Name';
+import UserEmail from '@salesforce/schema/User.Email';
+import UserFirstName from '@salesforce/schema/User.FirstName';
+import UserLastName from '@salesforce/schema/User.LastName';
+import UsrRoleName from '@salesforce/schema/User.User_Role__c';
+import userOrgName from '@salesforce/schema/User.Organization_Name__c';
+import { deleteRecord } from 'lightning/uiRecordApi';
+import { refreshApex } from '@salesforce/apex';
+import LightningConfirm from 'lightning/confirm';
+import { NavigationMixin } from 'lightning/navigation';
+import uploadFile from '@salesforce/apex/AWSS3FileUploadController.uploadFile';
+import redirectToWyzedSSO from '@salesforce/apex/WyzedIntegrationHandler.redirectToWyzedSSO';
+import getCurrentLoggedUserInfo from '@salesforce/apex/UserAccessController.getCurrentLoggedUserInfo';
+import Loading_Logo from "@salesforce/resourceUrl/Loading_Logo";
+import getStaffFacilityMap from '@salesforce/apex/staffFacilityHandler.getStaffFacilityMap';
+import getCoursesRaw from '@salesforce/apex/WyzedAuthService.getCoursesRaw';
+//import getAllUsers from '@salesforce/apex/WyzedAuthService.getAllUsers';
+import getUserCoursesWithProgressJSON from '@salesforce/apex/WyzedCourseProgressBatch.getUserCoursesWithProgressJSON';
+import isStartPlan from '@salesforce/apex/LimitCheckService.isStartPlan';
+
+
+const fields = [UsrRoleName,userOrgName];
+
+const ICON_DOWN = {
+  icon: 'navigation',
+  class: 'material-symbols material-symbols-filled rotate-icon rotate-down'
+};
+
+const ICON_LEFT = {
+  icon: 'navigation',
+  class: 'material-symbols material-symbols-filled rotate-icon rotate-left'
+};
+
+export default class HrTraining extends NavigationMixin(LightningElement) {
+
+    _selectedRecordId = null;
+    _selectedRecordUid = null;
+    _suppressEmit = false;
+    _lastSubRoute = '';
+    _hasRestored = false;
+    _childPopup = '';
+    
+    @api hrFlag;
+    @track moduleName;
+    @track startDate;
+    @track endDate;
+    @track description;
+    @track imageURL;
+    @track facEditFlag=false;
+    @track assignmentFlag=false;
+    @track recordId;
+    @api selectedName;
+    @track firstname='';
+    @track lastname ='';
+    @track Staffoptions=[{}];
+    @track staffIdList=[];
+    @track currentUser;
+    @track currentUserEmail;
+    @track currentUserRole
+    @track usererror;
+    @track userOrgName;
+    @track saveButtonDisable=false;
+    @track updateButtonDisable=false;
+    @track Training;
+    @track savelabel;
+    @track assignid;
+    @track staffEditFlag=false;
+    @track error;
+    @track isStaffVisible=false;
+    @track selectedFilesToUpload;
+    @track fileName = '';
+   // @track UploadFile = 'Upload CSV File';
+    @track showLoadingSpinner = false;
+    @track filesUploaded = [];
+    @track fileContents;
+    @track fileReader;
+    @track content;
+    MAX_FILE_SIZE = 1500000;
+    @track fileType;
+    @track fileSize;
+    @track showSpinner;
+    @track fileReaderObj;
+    @track myFile;
+    @track dateErrorMessage;
+    @track isHome=true;
+    @track individualstaffassigments=[];
+    @track modules=[];
+    @track staffassigments=[];
+    @track moduleid;
+    @track filteredStaffOptions=[];
+    @track statusOptions = [
+        { label: 'Pending', value: 'Pending' },
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Completed', value: 'Completed' }
+      ];
+      @track statusValue = 'In Progress';    
+    /* @track activeSections = []; */
+    @track individualstaffflag=false;
+    @track totalstaffflag=false;
+    activeSections = ['CreateTraining', 'StaffTrainingStatus'];
+    @track TodayDate=null;
+    @track AdminUserEmail;
+    @track AdminUserFirstName;
+    @track AdminUserlastName;
+    @track noRecordsFlag=false;
+    @track noRecordsFlag1=false;
+    @track noRecordsFlag2=false;
+    @track fieldErrorMap = {};
+    @track successmessage;
+    @track DeleteFlag;
+    @track facilityPreferredName;
+    @track participantPreferredName;
+    @track staffPreferredName;
+    @track learnerPageSizeOptions = [10, 25, 50, 75, 100];
+    @track learnerAllRecords = [];   // 🔥 full dataset (from Apex)
+    @track learners = [];            // 🔥 paginated data (UI)
+
+    @track learnerTotalRecords = 0;
+    @track learnerPageSize = 10;
+    @track learnerTotalPages;
+    @track learnerPageNumber = 1;
+    //manendra added for sorting table
+    @track sortField = '';
+    @track sortDirection = 'asc';
+    @track sortIcons = {
+        courseName: '',
+        enrolledDate: '',
+        completedDate: '',
+        status: '',
+        isPass: '',
+        score: '',
+        completionPercentage: '',
+        totalActivities: '',
+        completedCount: ''
+    };
+
+
+    @track myAllCourseRecords = [];
+
+    // 🔥 PAGINATED DATA (UI)
+    @track myCompletedCourses = [];
+
+    // 🔥 PAGINATION CONFIG
+    @track myPageSizeOptions = [10, 25, 50, 100];
+    @track myPageSize = 10;
+    @track myPageNumber = 1;
+    @track myTotalRecords = 0;
+    @track myTotalPages = 0;
+   // @track noRecordsFlag = false;
+    @track showUpgradeModal;
+
+
+
+    tLogoUrl = `${Loading_Logo}/TLogo.png`;
+    tImageUrl = `${Loading_Logo}/T.png`;
+
+    get logoUrl() {
+        return this.tLogoUrl;
+    }
+
+    get imageUrl() {
+        return this.tImageUrl;
+    }
+
+    @wire(getRecord, { recordId: Id, fields: [UsrRoleName,userOrgName,UserEmail,UserFirstName,UserLastName]}) 
+    currentUserInfo({error, data}) {
+        if (data) {
+          //  console.log('WIRE DATA '+JSON.stringify(data));
+            this.currentUserRole =data.fields.User_Role__c.value;
+            console.log(' hr  falgs '+ this.hrFlag);
+           this.AdminUserEmail=data.fields.Email.value;
+            this.AdminUserFirstName=data.fields.FirstName.value;
+            this.AdminUserlastName=data.fields.LastName.value;
+          //  console.log('user email '+userEmail);
+         //   console.log('user email '+userFirstName);
+        //    console.log('user email '+userLastName);
+           
+        if(this.hrFlag){
+            if( this.currentUserRole == 'Portal Account Partner Executive'  ||this.currentUserRole == 'Portal Account Partner Manager'|| this.currentUserRole == 'CEO' || this.currentUserRole == 'Admin' ){
+               this.isStaffVisible=true;
+               /* this.activeSections = ['CreateTraining']; */ 
+               this.individualstaffflag=false;
+               this.totalstaffflag=true;
+               // this.loadCourses();
+             //  this.loadLearnerData();
+                this.loadMyCourses();
+               console.log(' admin  falgs '+ this.currentUserRole);
+               console.log(' admin  falgs '+ this.isStaffVisible);
+               console.log(' visible   falgs '+ this.individualstaffflag);
+               console.log(' staff  falgs '+ this.totalstaffflag);
+            } 
+        }else{
+                this.isStaffVisible=false;
+                /* this.activeSections = ['StaffTrainingStatus']; */ 
+                this.individualstaffflag=true;
+                this.totalstaffflag=false;
+                this.loadMyCourses();
+               
+
+            }
+           
+        }
+       
+     else if (error) {
+        this.error = error ;
+    }
+    
+    } 
+
+
+  async  connectedCallback() {
+       // this.loadModules();
+       // this.loadAssignment();
+       // this.loadStaffAssignment();
+        this._boundChildStateChange = this.handleChildStateChange.bind(this);
+        this._boundSubPopup = this.handleSubPopup.bind(this);
+        this.template.addEventListener('childstatechange', this._boundChildStateChange);
+        this.template.addEventListener('subpopup', this._boundSubPopup);       
+
+        try {
+            const isStart = await isStartPlan();
+ 
+            // 🔴 BLOCK ENTIRE MODULE
+            if (isStart ) {
+                console.log('🚫 Start plan → block training  module');
+                this.showUpgradeModal = true;
+ 
+                // ❗ STOP EVERYTHING
+                this.isHome = false;         
+                return;
+            }       
+ 
+            } catch (error) {
+                console.error('Error checking plan:', error);
+                return;
+            }
+        this.participantPreferredName = localStorage.getItem("defaultParticipantPreferredName") || "Participant";
+        this.facilityPreferredName = localStorage.getItem("defaultFacilityPreferredName") || "Facility";
+        this.staffPreferredName = localStorage.getItem("defaultStaffPreferredName") || "Staff";
+        console.log('participantPreferredName '+ this.participantPreferredName);
+        console.log('facilityPreferredName '+ this.facilityPreferredName);
+        console.log('staffPreferredName '+ this.staffPreferredName);
+        window.addEventListener('keydown', this.handleKeyShortcut.bind(this));
+       
+    }
+
+    loadCourses() {
+         this.showSpinner = true;
+        getCoursesRaw()
+            .then(result => {
+                const data = JSON.parse(result);
+                 this.showSpinner = false;
+                console.log('FULL wyzed RESPONSE', data);
+
+                const courses = data.courses || [];
+
+                // ✅ Map courses → module structure
+                this.modules = courses.map(course => {
+                    return {
+                        Id: course.id,
+                        Name: course.name,
+                        module_name: this.capitalizeFirstLetter(course.name ?? ''),
+                        description: this.capitalizeFirstLetter(course?.details?.description ?? ''),
+                        
+                        // No start/end → keep blank or map if available
+                        startFormatted: course.created_at 
+                            ? new Date(course.created_at).toLocaleDateString('en-GB') 
+                            : '',
+                        endFormatted: '',
+
+                        Courses__c: course.active_lessons_count
+                    };
+                });
+
+                // ✅ Assign same data sources (important for pagination)
+                this.records = this.modules;
+                this.recentEmpData = this.modules;
+
+                this.totalRecords = this.modules.length;
+                this.pageSize = this.pageSizeOptions[0];
+                this.pageNumber = 1;
+
+                this.paginationHelper();
+
+                console.log('Mapped Modules (from courses):', this.modules);
+            })
+            .catch(error => {
+                 this.showSpinner = false;
+                console.error('ERROR:', error);
+            });
+    }
+
+   loadLearnerData() {
+        this.showSpinner = true;
+
+        getAllUsers()
+        .then(result => {
+
+            this.showSpinner = false;
+
+            let users = (result || []).filter(u => u && u.id);
+
+            this.learnerAllRecords = users.map(u => {
+                return {
+                    ...u,
+                    formattedCreated: this.formatDate(u.created_at)
+                };
+            });
+            console.log('all learner records ==>'+JSON.stringify(this.learnerAllRecords));
+
+            this.learnerTotalRecords = this.learnerAllRecords.length;
+
+            // 🔥 initialize pagination
+            this.learnerPageNumber = 1;
+            this.learnerPaginationHelper();
+
+        })
+        .catch(error => {
+            this.showSpinner = false;
+            console.error(error);
+        });
+    }
+
+ 
+    get learnerDisableFirst() {
+        return this.learnerPageNumber == 1;
+    }
+
+    get learnerDisableLast() {
+        return this.learnerPageNumber == this.learnerTotalPages;
+    }
+    handleLearnerRecordsPerPage(event) {
+        this.learnerPageSize = parseInt(event.target.value, 10);
+        this.learnerPageNumber = 1;
+        this.learnerPaginationHelper();
+    }
+
+     learnerPreviousPage() {
+        this.learnerPageNumber = this.learnerPageNumber - 1;
+        this.learnerPaginationHelper();
+    }
+
+    learnerNextPage() {
+        this.learnerPageNumber = this.learnerPageNumber + 1;
+        this.learnerPaginationHelper();
+    }
+
+    learnerFirstPage() {
+        this.learnerPageNumber = 1;
+        this.learnerPaginationHelper();
+    }
+
+    learnerLastPage() {
+        this.learnerPageNumber = this.learnerTotalPages;
+        this.learnerPaginationHelper();
+    }
+
+    learnerPaginationHelper() {
+
+    this.learners = [];
+
+    if (this.learnerTotalRecords > 0) {
+        this.noLearnerRecords = false;
+    } else {
+        this.noLearnerRecords = true;
+    }
+
+    this.learnerTotalPages = Math.ceil(this.learnerTotalRecords / this.learnerPageSize);
+
+    if (this.learnerPageNumber <= 1) {
+        this.learnerPageNumber = 1;
+    } else if (this.learnerPageNumber >= this.learnerTotalPages) {
+        this.learnerPageNumber = this.learnerTotalPages;
+    }
+
+    let tempList = [];
+
+    for (
+        let i = (this.learnerPageNumber - 1) * this.learnerPageSize;
+        i < this.learnerPageNumber * this.learnerPageSize;
+        i++
+    ) {
+        if (i === this.learnerTotalRecords) {
+            break;
+        }
+
+        let tempRec = Object.assign({}, this.learnerAllRecords[i]);
+        tempList.push(tempRec);
+    }
+
+    this.learners = tempList;
+}
+
+    // -------------------------
+    // DATE FORMAT (AM/PM)
+    // -------------------------
+   
+
+    disconnectedCallback() {
+        this.template.removeEventListener('childstatechange', this._boundChildStateChange);
+        this.template.removeEventListener('subpopup', this._boundSubPopup);        
+    window.removeEventListener('keydown', this.handleKeyShortcut.bind(this));
+  }
+
+    renderedCallback() {
+        this._syncRecordRoute();
+    }
+
+    handleChildStateChange() { this._syncRecordRoute(); }
+    handleSubPopup(e) { this._childPopup = e.detail.slug || ''; this._syncRecordRoute(); }
+
+    get _recordUid() { return this._selectedRecordUid || ''; }
+
+    _composeSubRoute() {
+        return '';
+    }
+
+    _syncRouteTimeout;
+    _syncRecordRoute() {
+        if (this._suppressEmit) return;
+        if (this._syncRouteTimeout) clearTimeout(this._syncRouteTimeout);
+        this._syncRouteTimeout = setTimeout(() => { this._syncRecordRouteActual(); }, 0);
+    }
+
+    _syncRecordRouteActual() {
+        if (this._suppressEmit) return;
+        this.notifyModuleRoot();
+    }
+
+    notifySubRoute(subView, replace) {
+        if (this._suppressEmit) return;
+        this.dispatchEvent(new CustomEvent('subrouteupdate', {
+            detail: { subView, recordId: this._selectedRecordId || null, replace: !!replace },
+            bubbles: true, composed: true
+        }));
+    }
+
+    notifyModuleRoot() {
+        this._lastSubRoute = '';
+        if (this._suppressEmit) return;
+        this.dispatchEvent(new CustomEvent('subrouteupdate', {
+            detail: { subView: '', recordId: null, replace: true },
+            bubbles: true, composed: true
+        }));
+    }
+
+    @api async openByUID(uid, tab, isEdit) {
+        // no-op for my profile training
+    }
+
+    @api openCreate(step) {
+        // no-op for my profile training
+    }
+
+    _restoreFromUrlHash() {
+        if (this._hasRestored) return true;
+        this._hasRestored = true;
+        return true;
+    }
+
+    @api get isEdit() { return false; }
+    @api get currentStep() { return ''; }
+    @api currentTabSlug() { return ''; }
+    @api selectTab(slug) {}
+    @api startEdit() {}
+    @api setStep(step) {}
+    @api openPopup(slug) {}  
+
+   loadMyCourses() {
+    this.showSpinner = true;
+
+    getUserCoursesWithProgressJSON()
+        .then(result => {
+            this.showSpinner = false;
+
+            let data = JSON.parse(result);
+            console.log('my course data ' + JSON.stringify(data));
+
+          /*   if (!data || data.length === 0) {
+                this.noRecordsFlag = true;
+                return;
+            }
+
+            this.noRecordsFlag = false; */
+
+            // 🔥 Map API → UI (based on your actual data structure)
+            this.myAllCourseRecords = data.map(item => {
+                 return {
+                        id: item.course_id,
+                        courseName: item.course_name,
+                        enrolledDate: this.formatDate(item.enrolled_at),
+                        completedDate: item.is_completed ? this.formatDate(item.completed_at) : null,
+                        status: item.status =='In-Progress' ?'In Progress' :item.status,
+                        isPass: item.grading_result?.is_pass === true,
+                        score: item.grading_result?.score_percent || 0,
+                        completionPercentage: item.completion_percentage,
+                        totalActivities: item.total_activities,
+                        completedCount: item.completed_count,
+                        isStarted: item.is_started,
+                        isCompleted: item.is_completed,
+                    };
+            });
+
+            this.myTotalRecords = this.myAllCourseRecords.length;
+
+            // 🔥 INIT PAGINATION
+            this.myPageNumber = 1;
+            this.myPaginationHelper();
+            this._restoreFromUrlHash();
+
+        })
+        .catch(error => {
+            this.showSpinner = false;
+            console.error('Error loading courses:', error);
+        });
+}
+
+// Helper method to format dates
+formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+}
+
+    // ============================
+    // PAGINATION HELPERS
+    // ============================
+    myPaginationHelper() {
+
+        this.myCompletedCourses = [];
+
+        if (this.myTotalRecords > 0) {
+            this.noRecordsFlag = false;
+        } else {
+            this.noRecordsFlag = true;
+        }
+        // Manendra added for sorting
+        let displayRecords = [...this.myAllCourseRecords];
+        if (this.sortField) {
+            displayRecords = this.sortData(
+                displayRecords,
+                this.sortField,
+                this.sortDirection
+            );
+        }
+
+        this.myTotalPages = Math.ceil(this.myTotalRecords / this.myPageSize);
+
+        if (this.myPageNumber <= 1) {
+            this.myPageNumber = 1;
+        } else if (this.myPageNumber >= this.myTotalPages) {
+            this.myPageNumber = this.myTotalPages;
+        }
+
+        let tempList = [];
+
+        for (
+            let i = (this.myPageNumber - 1) * this.myPageSize;
+            i < this.myPageNumber * this.myPageSize;
+            i++
+        ) {
+            if (i === this.myTotalRecords) break;
+
+           // let tempRec = Object.assign({}, this.myAllCourseRecords[i]);
+            // Use sorted displayRecords instead of myAllCourseRecords
+            let tempRec = Object.assign({}, displayRecords[i]);// manendra added for table sort
+            tempList.push(tempRec);
+        }
+
+        this.myCompletedCourses = tempList;
+    }
+
+    // ============================
+    // PAGINATION ACTIONS
+    // ============================
+    handleMyPageSizeChange(event) {
+        this.myPageSize = parseInt(event.target.value, 10);
+        this.myPageNumber = 1;
+        this.myPaginationHelper();
+    }
+
+    myNextPage() {
+        this.myPageNumber++;
+        this.myPaginationHelper();
+    }
+
+    myPreviousPage() {
+        this.myPageNumber--;
+        this.myPaginationHelper();
+    }
+
+    myFirstPage() {
+        this.myPageNumber = 1;
+        this.myPaginationHelper();
+    }
+
+    myLastPage() {
+        this.myPageNumber = this.myTotalPages;
+        this.myPaginationHelper();
+    }
+
+    get myDisableFirst() {
+        return this.myPageNumber == 1;
+    }
+
+    get myDisableLast() {
+        return this.myPageNumber == this.myTotalPages;
+    }
+
+
+/* loadAssignment() {
+         this.showSpinner = true;
+    getAssignments({ CurrentOrgId: this.selectedName })
+                    .then(result => {
+                        console.log(
+                            'Assignments records',
+                            JSON.stringify(result))
+                            let finalData=[];
+                        this.staffassigments = result.map(assign => ({
+                            ...assign,
+                            modulename: this.capitalizeFirstLetter(assign.Module_Name__r?.Name ?? ''),
+                            fullName: `${assign.Staff__r?.Display_Nickname__c ?? 'N/A'}`,
+                            facility: `${assign.Staff__r?.Facility__c ?? 'N/A'}`,
+                           // fullName: `${assign.Staff__r?.Name ?? 'N/A'} ${assign.Staff__r?.Last_Name__c ?? ''}`,
+                            description: this.capitalizeFirstLetter(assign.Module_Name__r?.description__c ?? ''),
+                            Dueby: assign.Due_Date__c ? new Date(assign.Due_Date__c).toLocaleDateString('en-GB') : '',
+                            completeddate:assign.Completed_Date__c ? new Date(assign.Completed_Date__c).toLocaleDateString('en-GB') : '',
+                            uiStatus: assign.Status__c=="Inprogress" ?"In Progress":assign.Status__c
+                            
+                        }));
+
+                          const storedFacilityId = localStorage.getItem('defaultFacilityId');
+                       const storedFacilityLabel = localStorage.getItem('defaultFacilityLabel');
+                        console.log('storedFacilityId'+storedFacilityId);
+                      console.log('storedFacilityLabel'+storedFacilityLabel);
+            
+               getCurrentLoggedUserInfo().then(userData=>{;
+                            let userTpe=userData.User_Type__c;   
+                        console.log('user data ==>'+JSON.stringify(userData));
+                                 let facilityIds = [];
+                        
+                                console.log('Fetch Participant filteredData>>>'+ JSON.stringify(this.staffassigments));
+                                facilityIds.push(storedFacilityId); 
+                                console.log('facilityIds  '+JSON.stringify(facilityIds))
+                                const filteredData = this.staffassigments.filter(rec =>
+                                    facilityIds.includes(rec.facility)
+                                );
+                               this.records1 =filteredData ;
+                                console.log('Fetch Participant filteredData>>>'+ JSON.stringify(filteredData));
+                                 console.log('Fetch Participant filteredData length >>>'+filteredData.length);
+                                this.totalRecords1 = filteredData.length;            
+                                this.pageSize1 = this.pageSizeOptions[0]; //set pageSize with default value as first option
+                                this.pageNumber1 = 1;
+                               this.paginationHelper1();           
+                                this.showSpinner = false;
+                       
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching modules:', error);
+                    });
+            } */
+    async loadAssignment() {
+            this.showSpinner = true;
+
+            try {
+                const result = await getAssignments({
+                    CurrentOrgId: this.selectedName
+                });
+
+                console.log(
+                    'Assignments records',
+                    JSON.stringify(result)
+                );
+
+                let finalData = [];
+
+                this.staffassigments = result.map(assign => ({
+                    ...assign,
+                    statusClass: this.getStatusClass(assign.Status__c),
+                    staffId: assign.Staff__c,
+                    modulename: this.capitalizeFirstLetter(assign.Module_Name__r?.Name ?? ''),
+                    fullName: `${assign.Staff__r?.Display_Nickname__c ?? 'N/A'}`,
+                    facility: `${assign.Staff__r?.Facility__c ?? 'N/A'}`,
+                    description: this.capitalizeFirstLetter(assign.Module_Name__r?.description__c ?? ''),
+                    Dueby: assign.Due_Date__c
+                        ? new Date(assign.Due_Date__c).toLocaleDateString('en-GB')
+                        : '',
+                    completeddate: assign.Completed_Date__c
+                        ? new Date(assign.Completed_Date__c).toLocaleDateString('en-GB')
+                        : '',
+                    uiStatus: assign.Status__c == 'Inprogress'
+                        ? 'In Progress'
+                        : assign.Status__c
+                }));
+
+                const storedFacilityId = localStorage.getItem('defaultFacilityId');
+                const storedFacilityLabel = localStorage.getItem('defaultFacilityLabel');
+
+                console.log('storedFacilityId' + storedFacilityId);
+                console.log('storedFacilityLabel' + storedFacilityLabel);
+
+                const userData = await getCurrentLoggedUserInfo();
+
+                let userTpe = userData.User_Type__c;
+                console.log('user data ==>' + JSON.stringify(userData));
+
+                let facilityIds = [];
+                facilityIds.push(storedFacilityId);
+
+                console.log(
+                    'Fetch Participant filteredData>>>' +
+                    JSON.stringify(this.staffassigments)
+                );
+
+                console.log('facilityIds  ' + JSON.stringify(facilityIds));
+
+                const staffIds = [
+                    ...new Set(this.staffassigments.map(r => r.staffId))
+                ];
+
+                const staffFacilityMap = await getStaffFacilityMap({
+                    staffIds: staffIds
+                });
+
+                console.log(
+                    'staffFacilityMap ==> ',
+                    JSON.stringify(staffFacilityMap)
+                );
+
+                let filteredData = this.staffassigments.filter(rec => {
+                    const facilities = staffFacilityMap[rec.staffId] || [];
+                    return facilities.some(facId =>
+                        facilityIds.includes(facId)
+                    );
+                });
+
+                this.records1 = filteredData;
+
+                console.log(
+                    'Fetch Participant filteredData>>>' +
+                    JSON.stringify(filteredData)
+                );
+
+                console.log(
+                    'Fetch Participant filteredData length >>>' +
+                    filteredData.length
+                );
+
+                this.totalRecords1 = filteredData.length;
+                this.pageSize1 = this.pageSizeOptions[0];
+                this.pageNumber1 = 1;
+
+                this.paginationHelper1();
+
+            } catch (error) {
+                console.error('Error fetching modules:', error);
+            } finally {
+                this.showSpinner = false;
+            }
+}
+
+
+    loadStaffAssignment() {             
+                getStaffAssignments({ CurrentOrgId: this.selectedName })
+                    .then(result => {
+                        this.noRecordsFlag2 = !(result && result.length > 0);
+                        this.individualstaffassigments = result.map(assign => ({
+                            ...assign,
+                        /* 🔥 ADD THIS LINE */
+                            statusClass: this.getStatusClass(assign.Status__c),
+                            modulename: this.capitalizeFirstLetter(assign.Module_Name__r?.Name ?? ''),
+                            fullName: `${assign.Staff__r?.Display_Nickname__c ?? 'N/A'}`,
+                           // fullName: `${assign.Staff__r?.Name ?? 'N/A'} ${assign.Staff__r?.Last_Name__c ?? ''}`,
+                            description: this.capitalizeFirstLetter(assign.Module_Name__r?.description__c ?? ''),
+                            Dueby: assign.Due_Date__c ? new Date(assign.Due_Date__c).toLocaleDateString('en-GB') : '',
+                            completeddate:assign.Completed_Date__c ? new Date(assign.Completed_Date__c).toLocaleDateString('en-GB') : '',
+                            uiStatus: assign.Status__c=="Inprogress" ?"In Progress":assign.Status__c,
+                             showCompleted: assign.Status__c === 'Completed'
+                        }));
+                        console.log('Assign records', JSON.stringify(this.staffassigments));
+                        console.log('individual records', JSON.stringify(this.individualstaffassigments));
+                    })
+                    .catch(error => {
+                        console.error('Error fetching modules:', error);
+                    });
+            }
+
+    @track recentEmpData = [];
+    @track recentEmpData1 = [];    
+    loadModules() {
+        
+        getModules({ CurrentOrgId: this.selectedName })
+            .then(result => {
+                this.modules = result.map(module => ({
+                    ...module,
+                    module_name: this.capitalizeFirstLetter(module.Name ?? ''),
+                    description: this.capitalizeFirstLetter(module.description__c ?? ''),
+                    startFormatted: module.start_date__c ? new Date(module.start_date__c).toLocaleDateString('en-GB') : '',
+                    endFormatted: module.end_date__c ? new Date(module.end_date__c).toLocaleDateString('en-GB') : ''
+                }));
+                this.recentEmpData = this.modules;
+                this.records = this.modules;
+                this.totalRecords = result.length; // update total records count
+                this.pageSize = this.pageSizeOptions[0]; // set pageSize with default value as first option
+                this.pageNumber = 1;
+                this.paginationHelper();
+            })
+            .catch(error => {
+                console.error('Error fetching modules:', error);
+            });
+    }
+    
+
+    @track allStaffOptions = [];
+   /*  @wire(fetchStaff, { recordId: '$selectedName', firstname: '$firstname', lastname: '$lastname' }) recordsToDisplay(result) {
+        if (result.data) {
+            this.Staffoptions = result.data.map(record => ({ value: record.Id, label:record.Display_Nickname__c })); //  Last_Name__c
+            console.log('Staff', JSON.stringify(this.Staffoptions));
+        }
+    } */
+   @wire(fetchStaff, { recordId: '$selectedName', firstname: '$firstname', lastname: '$lastname' })
+recordsToDisplay(result) {
+    if (result.data) {
+        this.allStaffOptions = result.data.map(record => ({
+            value: record.Id,
+            label: record.Display_Nickname__c,
+            facility: record.Facility__c // Required for filtering
+        }));
+
+      //  console.log('All Staff:', JSON.stringify(this.allStaffOptions));
+
+        // Proceed to filter based on user role
+        const storedFacilityId = localStorage.getItem('defaultFacilityId');
+        const storedFacilityLabel = localStorage.getItem('defaultFacilityLabel');
+        console.log('storedFacilityId: ' + storedFacilityId);
+        console.log('storedFacilityLabel: ' + storedFacilityLabel);
+
+        getCurrentLoggedUserInfo().then(userData => {
+            let userType = userData.User_Type__c;
+            console.log('User Data:', JSON.stringify(userData));
+
+            if (userType === 'Facility Admin' || userType === 'HR Admin' || userType === 'Roster Manager' || userType === 'NDIS Org Admin' || userType === 'ICT Admin') {
+                // Filter staff options based on facility
+                this.Staffoptions = this.allStaffOptions.filter(staff =>
+                    staff.facility === storedFacilityId
+                );
+            }
+
+          //  console.log('Filtered Staffoptions:', JSON.stringify(this.Staffoptions));
+        }).catch(error => {
+            console.error('Error fetching user info:', error);
+        });
+    }
+}
+    capitalizeFirstLetter(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+  
+    handleStartDateChange(event) {
+        const field = event.target.fieldName;
+        const isValid = event.target.reportValidity();
+        console.log('isValid',isValid);
+
+        this.fieldErrorMap[field] = !isValid;
+        this.startDate = event.detail.value;
+        console.log('end date' +this.startDate);
+        this.validateDates();
+    }
+
+    handleEndDateChange(event) {
+        const field = event.target.fieldName;
+        const isValid = event.target.reportValidity();
+        console.log('isValid',isValid);
+        this.fieldErrorMap[field] = !isValid;
+        this.endDate = event.detail.value;
+        console.log('end date' +this.endDate);
+        this.validateDates();
+    }
+
+    validateDates() {
+    
+        if (this.startDate && this.endDate) {
+            if (new Date(this.endDate) < new Date(this.startDate)) { 
+                 this.dateErrorMessage = 'You cannot set an end date that precedes the start date.';
+                 this.saveButtonDisable=true;
+            } else {
+                this.dateErrorMessage = '';
+                this.saveButtonDisable=false;
+            }
+        }
+    }
+
+    @track sectionFlags = {
+        StaffTrainingStatus: true,
+        CreateTraining: true,
+        
+    };
+
+    // @track sectionIcons = {
+    //     StaffTrainingStatus: '\u2B9F', 
+    //     CreateTraining: '\u2B9F', 
+    // };
+
+    @track sectionIcons = {
+    StaffTrainingStatus: { ...ICON_DOWN },
+    CreateTraining: { ...ICON_DOWN },
+    };
+        
+    // handleSectionToggle(event) {
+    //     const sectionId = event.currentTarget.dataset.id;
+
+    //     this.sectionFlags[sectionId] = !this.sectionFlags[sectionId];
+    //     this.sectionIcons[sectionId] = this.sectionFlags[sectionId] ? '\u2B9F' : '\u2B9C';
+    // }
+
+        handleSectionToggle(event) {
+        const sectionId = event.currentTarget.dataset.id;
+        this.sectionFlags[sectionId] = !this.sectionFlags[sectionId];
+
+        this.sectionIcons[sectionId] =
+            this.sectionFlags[sectionId]
+            ? { ...ICON_DOWN }
+            : { ...ICON_LEFT };
+        }
+
+
+    handleSuccess(event){
+        
+        
+        const toastEvent = new ShowToastEvent({
+            title: "Success",
+            message: this.successmessage,
+            variant: "success"
+        });
+        this.dispatchEvent(toastEvent); 
+       // console.log('base64>> ',this.base64FileData);       
+        this.showSpinner = true;
+        //Uploading files to AWS S3 bucket
+        if(this.fileName.length > 0){
+            uploadFile({base64: JSON.stringify(this.base64FileData), filename:this.fileName, recordId:event.detail.id,obj:'hrtraining'})
+            .then(result => {
+               // console.log('Upload result = ' +result);
+                this.fileName = this.fileName + ' - Uploaded Successfully';            
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Success!!',
+                        message: this.file.name + ' - Uploaded Successfully!!!',
+                        variant: 'success',
+                    }),
+                );
+            }).catch(error => {
+               // window.console.log(error);
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error in uploading File',
+                        message: error.message,
+                        variant: 'error',
+                    }),
+                );
+                this.showSpinner = false;
+            });
+        }        
+        this.facEditFlag=false;         
+        this.showSpinner = false;
+      
+        if(event.detail.id){
+            setTimeout(() => {
+                this.loadModules(); 
+            }, 1000);
+        }
+       
+        
+    }
+    handleSubmit(event){
+       // console.log('in submit');
+        event.preventDefault();// stop the form from submitting
+        const coursesInput = this.template.querySelector('[data-id="courses"]');
+        const isValid = coursesInput.reportValidity(); // shows “Complete this field”
+        if (!isValid) {
+            return;
+        }
+      
+          const fields = event.detail.fields;
+          // alert(JSON.stringify(fields));
+            fields.Organization__c=this.selectedName;
+          this.template.querySelector('lightning-record-edit-form[data-recid="Training"]').submit(fields);
+      }
+    handleassignment(event){
+        this.assignmentFlag=true;
+        this.moduleName=event.currentTarget.dataset.module;
+        this.moduleid=event.currentTarget.dataset.moduleid;
+         const assignedStaffIds = new Set(
+        this.staffassigments
+            .filter(assign => assign.Module_Name__c === this.moduleid)
+            .map(assign => assign.Staff__c)
+    );
+
+    // Filter Staffoptions to remove assigned staff
+    this.filteredStaffOptions = this.Staffoptions.filter(
+        staff => !assignedStaffIds.has(staff.value)
+    );
+
+    console.log('Filtered StaffOptions:', JSON.stringify(this.filteredStaffOptions));
+       // console.log('module name'+JSON.stringify(this.moduleName));
+       // console.log('module id'+JSON.stringify(this.moduleid));
+    }
+    handleCreateNewtraining(event){
+        this.fieldErrorMap = {};
+        this.successmessage ='Training created successfully.';
+        this.facEditFlag=true;
+        this.savelabel='Save';
+        this.Training='Create New Training';
+        this.recordId='';
+        this.fileName='';
+        this.dateErrorMessage='';
+        this.saveButtonDisable=false;
+    }
+    triggerFileInput() {
+        this.template.querySelector('input[type="file"]').click();
+    }
+    handleeditClose(event){
+        this.facEditFlag=false;
+        this.assignmentFlag=false;
+        this.staffEditFlag=false;
+        this.statusValue='Pending';
+        this.TodayDate=null;
+    
+    }
+
+    handleErrorCss(event) {
+    const field = event.target.fieldName;
+    const isValid = event.target.reportValidity();
+    console.log('isValid',isValid);
+
+    this.fieldErrorMap[field] = !isValid;
+}
+
+    getFieldClass(fieldName) {
+        return this.fieldErrorMap[fieldName] ? 'floating-label1' : 'floating-label';
+    }
+    get startdateClass() {
+        return this.getFieldClass('start_date__c');
+    }
+     get enddateClass() {
+        return this.getFieldClass('end_date__c');
+    }
+
+    handleModuleNameChange(event) {
+        this.moduleName = event.target.value;
+    }
+    /* handleStartDateChange(event) {
+        this.startDate = event.target.value;
+    }
+
+    handleEndDateChange(event) {
+        this.endDate = event.target.value;
+    } */
+
+    handleDescriptionChange(event) {
+        this.description = event.target.value;
+    }
+    handleImageChange(event) {
+        // Handle file upload and store the image URL
+        // For simplicity, let's assume imageURL is set to some value here
+        this.imageURL =event.target.value;
+    }
+
+    
+  handleError(event) {
+    event.preventDefault(); // Prevent default UI (red errors under fields)
+    this.removeRadius = true;
+    this.fieldErrorMap = {};
+    let message = 'An unknown error occurred.';
+    const detail = event.detail;
+    const errorMessages = [];
+    
+    // 1. Record-level errors (e.g. from Apex)
+    const recordErrors = detail?.output?.errors;
+    if (recordErrors && recordErrors.length > 0) {
+        recordErrors.forEach(err => {
+            if (err.message) {
+                errorMessages.push(err.message);
+            }
+        });
+    }
+
+    // 2. Field-level errors (e.g. validation errors on fields)
+    const fieldErrors = detail?.output?.fieldErrors;
+    if (fieldErrors) {
+        Object.keys(fieldErrors).forEach(fieldName => {
+            fieldErrors[fieldName].forEach(error => {
+                errorMessages.push(`${fieldName}: ${error.message}`);
+            });
+            this.fieldErrorMap[fieldName] = true;
+        });
+    }
+
+    // 3. Top-level message fallback
+    if (errorMessages.length === 0 && detail?.message) {
+        errorMessages.push(detail.message);
+    }
+
+    // Final combined message
+    message = errorMessages.join('\n');
+       
+     
+    // 4. Show all errors as a toast
+    /* this.dispatchEvent(
+        new ShowToastEvent({
+            title: 'Update Failed',
+            message: message,
+            variant: 'error',
+           
+        })
+    ); */
+}
+
+    handleassignmentinsert() {
+       // console.log('organisation name insert :'+this.userOrgName);
+    
+        insertAssignRecords({ moduleID: this.moduleid,selectedStaff: this.staffIdList,OrganizationName: this.userOrgName     
+        })
+        .then(() => {
+            this.assignmentFlag=false;
+        
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Training assigned successfully.',
+                    variant: 'success'
+                })
+            );
+            setTimeout(() => {
+                this.loadAssignment();
+            }, 1000);
+            
+        })
+        .catch(error => {
+            // Handle error
+            console.error('Error inserting record:', error);
+        });
+            
+    }
+    handleduallist(event){
+        this.staffIdList=event.target.value;
+       // console.log('staffids:'+(this.staffIdList));
+        
+
+    }
+    closeviewfile(event){
+        this.currentUrl='';
+        this.isModalOpen=false;
+        this.isHome=true;
+
+    }
+    handleModuleUpdate(event){
+        this.facEditFlag=true;
+         this.successmessage ='Training updated successfully.';
+        this.moduleid=event.currentTarget.dataset.moduleid;
+        this.recordId=this.moduleid;
+        this.savelabel='Update';
+        this.Training='Update Training Module';
+        this.fileName='';
+        this.dateErrorMessage='';
+        this.saveButtonDisable=false;
+       // console.log('module name'+JSON.stringify(this.moduleName));
+       // console.log('module id'+JSON.stringify(this.moduleid));
+    }
+     handleDelete(event){
+          
+            this.moduleid=event.currentTarget.dataset.moduleid;
+            this.recordId=this.moduleid;
+           // console.log('record id'+this.recordId);
+           this.DeleteFlag = true; 
+    }
+    
+    handleConfirmDelete(){
+        deleteRecord(this.recordId).then(() => {
+                this.dispatchEvent(
+                  new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Training deleted successfully.',
+                    variant: 'success'
+                  })
+                );
+                setTimeout(() => {
+                    this.loadModules(); 
+                }, 1000);
+                setTimeout(() => {
+                    this.loadAssignment();
+                }, 1000);
+            }
+            
+        )    
+         this.DeleteFlag = false;   
+
+    }
+    
+    handleclose(){
+        this.DeleteFlag = false; 
+    }
+          @track showCompletedDate=false;
+
+    handleStaffassignment(event){
+        this.staffEditFlag=true;
+        this.assignid=event.currentTarget.dataset.assignid;
+        const assignment = this.individualstaffassigments.find(item => item.Id === this.assignid);
+            this.showCompletedDate = false;
+
+         if(assignment.Status__c=='Completed'){
+            this.showCompletedDate=true;
+        }
+
+
+        if(assignment.Status__c=='Inprogress'){
+           // this.TodayDate=assignment.Date_Completed__c;
+            this.statusValue ='In Progress';
+        }
+        else{
+            this.statusValue =assignment.Status__c;
+        }
+
+       
+
+        console.log('status value'+this.statusValue);
+        this.recordId=this.assignid;
+        this.TodayDate=null;
+        this.savelabel='Update';
+        this.Training='Update Training Status';
+    
+       // console.log('module id'+JSON.stringify(this.moduleid));
+
+    }
+    handleStatusChange(event){
+        console.log('event '+event.target.value);
+        this.statusValue = event.target.value;
+        console.log('status value'+this.statusValue);
+        if(this.statusValue=='Completed'){
+            this.TodayDate = new Date();
+            console.log('Raw TodayDate: ' + this.TodayDate);
+    
+            // Format the date as yyyy-mm-dd
+            const year = this.TodayDate.getFullYear();
+            const month = String(this.TodayDate.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed, so we add 1
+            const day = String(this.TodayDate.getDate()).padStart(2, '0'); // Add leading zero if necessary
+    
+            const formattedDate = `${year}-${month}-${day}`;
+            console.log('Formatted TodayDate: ' + formattedDate);
+            this.TodayDate=formattedDate;
+        }
+
+    }
+    handleAssignmentsSubmit(event){
+           
+        event.preventDefault();// stop the form from submitting
+        const fields = event.detail.fields;
+        if(this.statusValue=='In Progress' ){
+            fields.Status__c ='Inprogress';
+            
+        }else{
+            fields.Status__c =this.statusValue;
+        }
+          
+        console.log('status value'+this.statusValue);
+        if(event.detail.fields.Status__c=='Completed'){
+            fields.Completed_Date__c=this.TodayDate;    
+        }
+        console.log('in submit');
+        console.log('fields'+JSON.stringify(fields));
+        this.template.querySelector('lightning-record-edit-form[data-recid="Assignment"]').submit(fields);
+
+    }
+    handlestaffSuccess(event){
+        this.staffassigments=[]
+        this.staffEditFlag=false;
+        const toastEvent = new ShowToastEvent({
+            title: "Success",
+            message: "Training status updated successfully.",
+            variant: "success"
+        });
+        this.dispatchEvent(toastEvent); 
+        this.TodayDate=null;
+        if(event.detail.id){
+        setTimeout(() => {
+            this.loadStaffAssignment();
+        }, 1000);
+        }
+        
+    }
+    onFileUpload(event) {        
+        //this.isEdit=false;        
+       // console.log('in files upload',event.target.files.length);
+        if (event.target.files.length > 0) {
+            this.showSpinner = true;
+            this.selectedFilesToUpload = event.target.files;      
+            this.file = this.selectedFilesToUpload[0];
+            this.fileName = this.selectedFilesToUpload[0].name.split(" ").join("");
+            this.fileType = this.selectedFilesToUpload[0].type;
+            this.fileSize = this.selectedFilesToUpload[0].size;     
+            
+            if (this.file.size > this.MAX_FILE_SIZE || this.file.size < this.MIN_FILE_SIZE) {  
+                this.isattachError=true;
+            }
+            //create an intance of File
+            this.fileReaderObj = new FileReader();
+
+            //this callback function in for fileReaderObj.readAsDataURL
+            this.fileReaderObj.onloadend = (() => {        
+                //get the uploaded file in base64 format
+                let fileContents = this.fileReaderObj.result;
+                fileContents = fileContents.substr(fileContents.indexOf(',')+1);
+                
+                //read the file chunkwise
+                let sliceSize = 1024;           
+                let byteCharacters = atob(fileContents);
+                let bytesLength = byteCharacters.length;
+                let slicesCount = Math.ceil(bytesLength / sliceSize);                
+                let byteArrays = new Array(slicesCount);
+                for (let sliceIndex = 0; sliceIndex < slicesCount; ++sliceIndex) {
+                    let begin = sliceIndex * sliceSize;
+                    let end = Math.min(begin + sliceSize, bytesLength);                    
+                    let bytes = new Array(end - begin);
+                    for (let offset = begin, i = 0 ; offset < end; ++i, ++offset) {
+                        bytes[i] = byteCharacters[offset].charCodeAt(0);         
+                    }
+                    byteArrays[sliceIndex] = new Uint8Array(bytes);
+                }
+                
+                //from arraybuffer create a File instance
+                this.myFile =  new File(byteArrays, this.fileName, { type: this.fileType });
+                
+                //callback for final base64 String format
+                let reader = new FileReader();
+                reader.onloadend = (() => {
+                    let base64data = reader.result;
+                    this.base64FileData = base64data.substr(base64data.indexOf(',')+1);
+                });
+                reader.readAsDataURL(this.myFile);                                 
+            });
+            this.fileReaderObj.readAsDataURL(this.file);
+        }
+        this.showSpinner = false;
+       // console.log('fileName>>',typeof(JSON.stringify(event.target.files) ));
+       // console.log('FileName>>>>'+this.fileName);
+    }
+    reload(event){
+        this.modules=[];
+        this.loadModules();
+
+    }
+
+    @track isModalOpen = false;
+    @track currentUrl;
+
+    handleView(event) {
+        event.preventDefault(); 
+        const url = event.currentTarget.dataset.url;
+        this.currentUrl = url;
+       // console.log('file url  '+ this.currentUrl);  
+        this.isModalOpen = true;
+        this.isHome=false;
+    }
+
+    closeModal() {
+        this.isModalOpen = false;
+        this.currentUrl = null;
+    }
+
+    getFileName(url) {
+        return url.substring(url.lastIndexOf('/') + 1);
+    }
+
+    navigateToWyzed(event){
+        console.log('staff id '+event.currentTarget.dataset.id);
+        console.log('staff first name  '+event.currentTarget.dataset.firstname);
+        console.log('staff last name'+event.currentTarget.dataset.lastname);
+        console.log('staff email '+event.currentTarget.dataset.email);
+
+        if (!event.currentTarget.dataset.id || !event.currentTarget.dataset.firstname || !event.currentTarget.dataset.lastname || !event.currentTarget.dataset.email) {
+            const evt = new ShowToastEvent({
+                title: 'Error',
+                message: 'Please provide first name ,last name and email ID',
+                variant: 'error',
+            });
+            this.dispatchEvent(evt);
+            return;
+        }
+
+        redirectToWyzedSSO({ uid: event.currentTarget.dataset.id, firstname: event.currentTarget.dataset.firstname, surname: event.currentTarget.dataset.lastname, email: event.currentTarget.dataset.email,isAdmin:false })
+        .then((redirectUrl) => {
+            console.log('redirect url '+redirectUrl);
+            // Redirect the user to the URL returned from the Apex method
+          //  window.location.href = redirectUrl;
+                this[NavigationMixin.GenerateUrl]({
+                    type: 'standard__webPage',
+                    attributes: {
+                        url: redirectUrl
+                    }
+                }).then(generatedUrl => {
+                    window.open(generatedUrl, '_blank');
+                });
+          
+
+        })
+        .catch((error) => {
+            console.error('Error occurred during redirect: ', error);
+            // Handle any errors
+        });
+   
+    }
+    navigateToWyzedAdmin(){
+        console.log('AdminUserEmail '+ this.AdminUserEmail);
+         console.log('AdminUserFirstName '+this.AdminUserFirstName);
+          console.log('AdminUserlastName '+ this.AdminUserlastName);
+          console.log('user id '+Id);
+          let isAdmin=true;
+          if(this.individualstaffflag){
+             isAdmin =false;
+          }
+          
+          
+         redirectToWyzedSSO({ uid: Id, firstname: this.AdminUserFirstName, surname:this.AdminUserlastName, email: this.AdminUserEmail,isAdmin:isAdmin })
+        .then((redirectUrl) => {
+            console.log('redirect url '+redirectUrl);
+            // Redirect the user to the URL returned from the Apex method
+          //  window.location.href = redirectUrl;
+                this[NavigationMixin.GenerateUrl]({
+                    type: 'standard__webPage',
+                    attributes: {
+                        url: redirectUrl
+                    }
+                }).then(generatedUrl => {
+                    window.open(generatedUrl, '_blank');
+                });
+          
+
+        })
+                  .catch((error) => {
+    console.error('FULL ERROR:', JSON.stringify(error));
+
+    this.dispatchEvent(
+        new ShowToastEvent({
+            title: 'Error',
+            message: error?.body?.message || 'Unknown error',
+            variant: 'error'
+        })
+    );
+}); 
+    }
+
+    @track pageSizeOptions = [10, 25, 50, 75, 100]; //Page size options
+    @track records = []; //All records available in the data table
+    @track columns = []; //columns information available in the data table
+    @track totalRecords = 0; //Total no.of records
+    @track pageSize; //No.of records to be displayed per page
+    @track totalPages; //Total no.of pages
+    @track pageNumber = 1; //Page number
+    
+    get bDisableFirst() {
+        return this.pageNumber == 1;
+    }
+    get bDisableLast() {
+        return this.pageNumber == this.totalPages;
+    }    
+    handleRecordsPerPage(event) {
+        this.pageSize = event.target.value;
+        this.paginationHelper();
+    }
+    previousPage() {
+        this.pageNumber = this.pageNumber - 1;
+        this.paginationHelper();
+    }
+    nextPage() {
+        this.pageNumber = this.pageNumber + 1;
+        this.paginationHelper();
+    }
+    firstPage() {
+        this.pageNumber = 1;
+        this.paginationHelper();
+    }
+    lastPage() {
+        this.pageNumber = this.totalPages;
+        this.paginationHelper();
+    }
+    paginationHelper() {
+        this.modules = [];
+        if(this.totalRecords>0) {
+            this.noRecordsFlag=false;
+        }else{
+            this.noRecordsFlag=true;
+        } 
+    // Manendra added for sorting
+    let displayRecords = [...this.records];
+    if (this.sortField) {
+        displayRecords = this.sortData(
+            displayRecords,
+            this.sortField,
+            this.sortDirection
+        );
+    }
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+        if (this.pageNumber <= 1) {
+            this.pageNumber = 1;
+        } else if (this.pageNumber >= this.totalPages) {
+            this.pageNumber = this.totalPages;
+        }
+        let tempconList=[];   
+        for (let i = (this.pageNumber - 1) * this.pageSize; i < this.pageNumber * this.pageSize; i++) {
+            if (i === this.totalRecords) {
+                break;
+            }            
+            //let tempConRec = Object.assign({}, this.records[i]);    
+            let tempConRec = Object.assign({}, this.displayRecords[i]);   // manendra added for table sorting 
+            tempconList.push(tempConRec);    
+        }
+       // console.log('calling pagination Data >>'+JSON.stringify(tempconList));
+        this.modules = tempconList;
+        refreshApex(this.wiredFeedbackData);
+    }
+
+    @track pageSizeOptions1 = [10, 25, 50, 75, 100]; //Page size options
+    @track records1 = []; //All records available in the data table
+    @track columns1 = []; //columns information available in the data table
+    @track totalRecords1 = 0; //Total no.of records
+    @track pageSize1; //No.of records to be displayed per page
+    @track totalPages1; //Total no.of pages
+    @track pageNumber1 = 1; //Page number
+
+    get bDisableFirst1() {
+        return this.pageNumber1 == 1;
+    }
+    get bDisableLast1() {
+        return this.pageNumber1 == this.totalPages1;
+    }    
+    handleRecordsPerPage1(event) {
+        this.pageSize1 = event.target.value;
+        this.paginationHelper1();
+    }
+    previousPage1() {
+        this.pageNumber1 = this.pageNumber1 - 1;
+        this.paginationHelper1();
+    }
+    nextPage1() {
+        this.pageNumber1 = this.pageNumber1 + 1;
+        this.paginationHelper1();
+    }
+    firstPage1() {
+        this.pageNumber1 = 1;
+        this.paginationHelper1();
+    }
+    lastPage1() {
+        this.pageNumber1 = this.totalPages1;
+        this.paginationHelper1();
+    }
+    paginationHelper1() {
+        this.staffassigments = [];
+         if(this.totalRecords1>0) {
+            this.noRecordsFlag1=false;
+        }else{
+            this.noRecordsFlag1=true;
+        } 
+        this.totalPages1 = Math.ceil(this.totalRecords1 / this.pageSize1);
+        if (this.pageNumber1 <= 1) {
+            this.pageNumber1 = 1;
+        } else if (this.pageNumber1 >= this.totalPages1) {
+            this.pageNumber1 = this.totalPages1;
+        }
+        let tempconList=[];   
+        for (let i = (this.pageNumber1 - 1) * this.pageSize1; i < this.pageNumber1 * this.pageSize1; i++) {
+            if (i === this.totalRecords1) {
+                break;
+            }            
+            let tempConRec = Object.assign({}, this.records1[i]);           
+            tempconList.push(tempConRec);    
+        }
+       // console.log('calling pagination Data >>'+JSON.stringify(tempconList));
+        this.staffassigments = tempconList;
+        refreshApex(this.wiredFeedbackData);
+    }
+
+
+    handleKeyShortcut(event) {
+        if (this.isStaffVisible && event.ctrlKey && event.shiftKey && event.code === 'KeyC') {
+            event.preventDefault();
+            this.handleCreateNewtraining();
+            }
+    }
+
+getStatusClass(status) {
+    if (!status) return 'status-pill';
+
+    switch (status) {
+        case 'Completed':
+            return 'status-pill Completed';
+
+        case 'Inprogress':
+            return 'status-pill Inprogress';
+
+        case 'Pending':
+            return 'status-pill Pending';
+
+        default:
+            return 'status-pill';
+    }
+}
+
+    // manendra added for sorting the data in table
+        handleSort(event) {
+            const field = event.currentTarget.dataset.field;
+            if (!field) {
+                return;
+            }
+            if (this.sortField === field) {
+                this.sortDirection =
+                    this.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortField = field;
+                this.sortDirection = 'asc';
+            }
+            Object.keys(this.sortIcons).forEach(key => {
+                this.sortIcons[key] = '';
+            });
+            this.sortIcons[field] =
+                this.sortDirection === 'asc'
+                    ? 'arrow_upward'
+                    : 'arrow_downward';
+            this.sortIcons = { ...this.sortIcons };
+            this.pageNumber = 1;
+            this.myPaginationHelper()
+        }
+        sortData(data) {
+
+            if (!this.sortField) {
+                return [...data];
+            }
+            const direction = this.sortDirection === 'asc' ? 1 : -1;
+            return [...data].sort((a, b) => {
+                const valueA = a[this.sortField];
+                const valueB = b[this.sortField];
+                const emptyA =
+                    valueA === null ||
+                    valueA === undefined ||
+                    valueA === '' ||
+                    valueA === 'N/A';
+                const emptyB =
+                    valueB === null ||
+                    valueB === undefined ||
+                    valueB === '' ||
+                    valueB === 'N/A';
+                if (emptyA && emptyB) return 0;
+                if (emptyA) return 1;
+                if (emptyB) return -1;
+                return (
+                    String(valueA).localeCompare(
+                        String(valueB),
+                        undefined,
+                        {
+                            numeric: true,
+                            sensitivity: 'base'
+                        }
+                    ) * direction
+                );
+            });
+        }
+    //end
+}
