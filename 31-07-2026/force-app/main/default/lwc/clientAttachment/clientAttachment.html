@@ -1,0 +1,1164 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 05-27-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>
+  <!-- <div if:true={isHome} class="participantlayout" style="margin-bottom: 20px">
+    <div class="slds-grid main-container"> -->
+ <div if:true={isHome} class="slds-grid slds-gutters_none main-container participantlayout">    <!-- <span style="font-size: medium;">Attachments</span> -->
+
+      <!-- <div class="slds-col left-panel"> -->
+
+        <!-- ============ LEFT PANEL: FOLDER TREE ============ -->
+        <div class="slds-col left-panel custom-scroll">
+        <div class="new-folder-container slds-m-bottom_small">
+          <button class="new-folder-btn" onclick={openCreateFolderModal}>
+                    <span>+ New Folder</span>
+          </button>
+        </div>
+
+        <!-- <div class={allFolderClass}
+            data-id="ALL"
+            onclick={handleFolderClick}>
+
+            <div class="folder-row">
+
+                <div class="folder-left">
+                    <span class="material-icons folder-icon">folder</span>
+                    <span class="folder-name">All Documents</span>
+                </div>
+
+            </div>
+
+        </div> -->
+        <div class="leftlayout custom-scroll">
+        <!-- All Documents Root -->
+        <div class={allFolderClass} data-id="ALL" onclick={handleFolderClick} style="padding:6px 8px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <span class="material-icons folder-icon" style="font-size:18px;color:#6b6f76;">folder</span>
+            <span style="font-size:13px;">All Documents</span>
+        </div>        
+
+        <template for:each={folderTree} for:item="folder">
+            <c-treefolder-Lwc
+                key={folder.Id}
+                node={folder}
+                level="0"
+                is-staff={isStaff}
+                selected-id={currentFolderId}
+                onfolderselect={handleFolderSelect}
+                onpermissions={handleFolderPermissions}
+                onrefreshfolders={loadFolders}>
+            </c-treefolder-Lwc>
+        </template>
+        </div>
+
+      </div>
+
+      <div class="slds-col right-panel">
+
+        <div class="top-header">
+
+            <!-- LEFT -->
+            <div class="header-left">
+
+                <div class="selected-folder-label">
+
+                  <span class="folder-label-text">
+                      Folder: {currentFolderName}
+                  </span>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="header-right">
+
+              <template if:true={isStaff}>
+
+                <lightning-input
+                  type="search"
+                  variant="label-hidden"
+                  placeholder="Search Documents"
+                  value={searchKey}
+                  onkeyup={handleSearch}
+                  class="document-search">
+              </lightning-input>
+
+                <lightning-button
+                    variant="neutral"
+                    label="Archive"
+                    icon-name="utility:archive"
+                    onclick={openArchiveModal}>
+                </lightning-button>
+
+              </template>
+
+                <lightning-button
+                    variant="brand"
+                    label="Add Attachment"
+                    onclick={handleAttachment}
+                    disabled={disableContactUploads}>
+                </lightning-button>
+
+              <button
+                  class="slds-button slds-button_icon slds-button_icon-border"
+                  title="Refresh"
+                  onclick={RefreshAttachmentsData}>
+
+                  <svg class="slds-button__icon" aria-hidden="true">
+                      <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#refresh"></use>
+                  </svg>
+
+              </button>
+
+            </div>
+
+        </div>
+
+        <div class="table-wrapper">
+
+            <div class="table-container attachmentTable">
+
+                <!-- HEADER -->
+                <div class="header-wrapper">
+                    <table class="staff-table">
+                        <thead>
+                            <tr>
+                                <th title="Name">Name</th>
+                                <th title="Type">Type</th>
+                                <th title="Size (MB)">Size (MB)</th>
+                                <th title="Comments">Comments</th>
+                                <th title="User">User</th>
+                                <th title="Expiry Date">Expiry Date</th>
+                                <th class="center" title="Actions">Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div> 
+
+              <!-- BODY -->
+              <div class="custom-scroll attachmentTableHeight">
+                  <table class="staff-table">
+                      <tbody>
+
+                        <!-- TABLE -->
+                        <template if:false={noRecordsFlag}>
+
+                          <template for:each={data} for:item="attachment">
+                              <tr key={attachment.Id}>
+
+                                  <td title={attachment.Name}>{attachment.Name}</td>
+                                  <td title={attachment.type}>{attachment.type}</td>
+                                  <td title={attachment.fileSize}>{attachment.fileSize}</td>
+                                  <td title={attachment.comment}>{attachment.comment}</td>
+                                  <td title={attachment.UserName}>{attachment.UserName}</td>
+                                  <td title={attachment.Date}>{attachment.Date}</td>
+
+                                  <!-- ACTION -->
+                                  <td class="table-td center action-cell" title="visibility edit delete archive passkey --> passkey">
+
+                                      <!-- VIEW -->
+                                      <a href={attachment.AmazonURL}
+                                          data-id={attachment.Id}
+                                          data-url={attachment.AmazonURL}
+                                          onclick={handleView}
+                                          title="View Attachment"
+                                          class="icon-link">
+                                          <i class="material-icons view-icon">visibility</i>
+                                      </a>
+                                      <template if:false={isContactsContext}>
+                                      <!-- STAFF ACTIONS -->
+                                        <template if:true={isStaff}>
+
+                                          <!-- EDIT -->
+                                          <a href="javascript:void(0)"
+                                              data-id={attachment.Id}
+                                              data-key={attachment.Key__c}
+                                              data-type={attachment.type}
+                                              onclick={handleEdit}
+                                              title="Edit"
+                                              class="icon-link">
+                                              <i class="material-icons edit-icon">edit</i>
+                                          </a>
+
+                                          <template if:true={showPermissionIcon}>
+                                          
+                                            <a href="javascript:void(0)"
+
+                                                        data-id={attachment.Id}
+
+                                                        onclick={handleShare}
+
+                                                        title="Permissions"
+
+                                                        class="icon-link">
+                                            <i class="material-icons permissions-icon">passkey</i>
+                                            </a>
+                                          </template>
+
+                                          <!-- ARCHIVE -->
+                                          <a href="javascript:void(0)"
+                                              data-id={attachment.Id}
+                                              onclick={handleArchive}
+                                              title="Archive"
+                                              class="icon-link">
+
+                                              <i class="material-icons archive-icon">
+                                                  archive
+                                              </i>
+
+                                          </a>
+
+                                          <!-- DELETE -->
+                                          <a href="javascript:void(0)"
+                                              data-id={attachment.Id}
+                                              onclick={handleDelete}
+                                              title="Delete"
+                                              class="icon-link">
+                                              <i class="material-icons delete-icon">delete</i>
+                                          </a>
+
+                                          <!-- PERMISSIONS -->
+                                          <!-- <template if:true={showPermissionIcon}>
+                                              <a href="javascript:void(0)"
+                                                  data-id={attachment.Id}
+                                                  onclick={handleShare}
+                                                  title="Permissions"
+                                                  class="icon-link">
+                                                  <i class="material-icons permissions-icon">passkey</i>
+                                              </a>
+                                          </template> -->
+                                          
+                                        </template>
+ 
+                                      </template>
+
+                                  </td>
+
+                              </tr>
+                          </template>
+
+                        </template>
+
+                      </tbody>
+                  </table>
+              </div>
+
+            
+                <template if:true={noRecordsFlag}>
+                  <div class="no-data">
+                    <p>No records found</p>
+                  </div>
+                </template>            
+            
+            </div>
+
+      </div>
+
+
+
+      <template if:false={noRecordsFlag}>
+        <div
+          class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+          style="padding: 0.5em"
+        >
+          <!--RECORDS PER PAGE-->
+          <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+              <label
+                class="slds-text-color_weak slds-p-horizontal_x-small"
+                for="recordsPerPage"
+                >Page Size:</label
+              >
+              <div class="slds-select_container">
+                <select
+                  class="slds-select"
+                  id="recordsPerPage"
+                  onchange={handleRecordsPerPage}
+                >
+                  <template for:each={pageSizeOptions} for:item="option">
+                    <option key={option} value={option}>{option}</option>
+                  </template>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!--PAGE NAVIGATION-->
+          <div class="slds-align_absolute-center" style="height: 5rem">
+            <lightning-button
+              disabled={bDisableFirst}
+              icon-name="utility:jump_to_left"
+              label="First"
+              class="slds-p-horizontal_x-small"
+              alternative-text="first page"
+              onclick={firstPage}
+            ></lightning-button>
+            <lightning-button
+              disabled={bDisableFirst}
+              icon-name="utility:chevronleft"
+              label="Previous"
+              alternative-text="Previous"
+              onclick={previousPage}
+            ></lightning-button>
+            &nbsp;
+            <span class="slds-badge"
+              >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+              &nbsp;&nbsp;Page(s)</span
+            >
+            &nbsp;
+            <lightning-button
+              disabled={bDisableLast}
+              icon-name="utility:chevronright"
+              label="Next"
+              alternative-text="Next"
+              onclick={nextPage}
+              class="slds-p-horizontal_x-small"
+              icon-position="right"
+            ></lightning-button>
+            <lightning-button
+              disabled={bDisableLast}
+              icon-name="utility:jump_to_right"
+              label="Last"
+              alternative-text="last page"
+              onclick={lastPage}
+              icon-position="right"
+            ></lightning-button>
+          </div>
+          <!--TOTAL RECORDS-->
+          <div class="slds-clearfix">
+            <div class="slds-float_right">
+              <span class="slds-badge"> Total Records: {totalRecords}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+    </div>
+
+    <!-- <div class="slds-float_right">
+      <lightning-button
+        variant="brand"
+        label="Add Attachment"
+        onclick={handleAttachment}
+        slot="actions"
+        style="margin-right: 10px"
+      ></lightning-button>
+
+      <button
+        class="slds-button slds-button_icon slds-button_icon-border"
+        title="Refresh"
+        onclick={RefreshAttachmentsData}
+      >
+        <svg class="slds-button__icon" aria-hidden="true">
+          <use
+            xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"
+          ></use>
+        </svg>
+      </button>
+    </div> -->
+
+    <!-- </div> -->
+
+    <template if:true={isOpenModal}>
+      <div class="blur-overlay"></div>
+      <div class="right-align custom-scroll" style="width: 40%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <p
+            style="
+              font-weight: bold;
+              font-size: 140%;
+              margin: 0;
+              padding: 3% 0 0 3%;
+            "
+          >
+            Add Attachment
+          </p>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-right: 3%;
+              margin-top: 2%;
+            "
+          >
+            <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>                     -->
+          </div>
+        </div>
+
+        <div class="slds-p-around_medium">
+          <lightning-record-edit-form
+            object-api-name="Attachment__c"
+            record={defaultRecordValues}
+            onsuccess={handleSuccess}
+            onsubmit={handleSubmit}
+            onerror={handleError}
+          >
+            <lightning-messages></lightning-messages>
+            <div class="container-box custom-scroll">
+              <div class="slds-grid slds-wrap" style="padding-top: 20px">
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Attachment Name</span
+                    >
+                    <lightning-input-field
+                      field-name="Name"
+                      required="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Type</span
+                    >
+                    <!-- <lightning-input-field
+                      field-name="Type__c"
+                      required="true"
+                      variant="label-hidden"
+                      onchange={changeExpense}
+                    ></lightning-input-field> -->
+                     <c-tesseract-apps-single-combobox
+                        
+                        required
+                        placeholder="Select Type"
+                        options={typeOptions}
+                        value={selectedType}
+                        onchange={handleTypeChange}>
+                    </c-tesseract-apps-single-combobox>
+                  </div>
+                </div>
+
+                <template if:true={textboxFlag}>
+                  <div
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        >Other (Please Specify)</span
+                      >
+                      <lightning-input-field
+                        field-name="Other_Comments__c"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+                </template>
+                <template if:false={textboxFlag}> </template>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop">Expiry Date</span>
+                    <lightning-input-field
+                      field-name="Expiry_Date__c"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class={userClass}>
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>User</span
+                    >
+                    <lightning-input-field
+                      field-name="User__c"
+                      required="true"
+                      value={currentUserId}
+                      variant="label-hidden"
+                      onchange={handleErrorCss}
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_small"
+                >
+                  <div class="floating-label" style="height: 62px">
+                    <span class="label-text-drop">Comments</span>
+                    <lightning-input-field
+                      field-name="Comments__c"
+                      variant="label-hidden"
+                      maxlength="1000"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+
+    <div class="slds-box drag-drop"
+         ondragover={handleDragOver}
+         ondrop={handleDrop}>
+
+        <p class="slds-text-align_center">
+    Drag and drop file here <br/>
+    <a href="javascript:void(0);" onclick={triggerFileInput}>
+        Click to browse
+    </a>
+</p>
+
+<input
+    type="file"
+    style="display:none"
+     class="hidden-file-input"
+    onchange={handleFileSelect}/>
+
+        <template if:true={isFileExpand}>
+            <c-document-office-service
+                record-id={recordId}
+                module-path-from-parent="ticket"
+                allow-multiple="false"
+                onuploadcomplete={handleAwsUploadComplete}
+                onfiledeleted={handleFileDeleted}>
+            </c-document-office-service>
+        </template>
+
+    </div>
+
+    <!-- <template if:true={fileName}>
+        <div class="slds-m-top_small">
+            <b>File:</b> {fileName}
+        </div>
+    </template> -->
+
+</div>
+                <br /><br /><br /><br />
+                <template if:true={isattachError}>
+                  <p style="color: red">File Size Can not exceed 50MB</p>
+                </template>
+              </div>
+            </div>
+            <div class="slds-align_absolute-center" style="padding: 2%">
+              <lightning-button
+                label="Cancel"
+                onclick={hideModalBox}
+                variant="brand-outline"
+              ></lightning-button>
+              <lightning-button
+                class="slds-m-left_small"
+                type="submit"
+                variant="brand"
+                label="Save"
+              ></lightning-button
+              >&nbsp;&nbsp;
+
+              <!-- <button class="slds-button slds-button_outline-brand" onclick={hideModalBox}>Cancel</button><br><br> -->
+            </div>
+          </lightning-record-edit-form>
+        </div>
+      </div>
+    </template>
+
+    <!-- Spinner -->
+    <div if:true={showLoadingSpinner}>
+      <lightning-spinner
+        alternative-text="Loading"
+        size="large"
+      ></lightning-spinner>
+    </div>
+
+    <template if:true={isEdit}>
+      <div class="blur-overlay"></div>
+      <div class="right-align custom-scroll" style="width: 40%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <p
+            style="
+              font-weight: bold;
+              font-size: 140%;
+              margin: 0;
+              padding: 3% 0 0 3%;
+            "
+          >
+            Update Attachment
+          </p>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-right: 3%;
+              margin-top: 2%;
+            "
+          >
+            <!-- <lightning-button label="Back" variant="brand" onclick={hideModalBox}></lightning-button>  -->
+          </div>
+        </div>
+        <div class="slds-p-around_medium">
+          <lightning-record-edit-form
+            object-api-name="Attachment__c"
+            onsuccess={handleSuccess}
+            onsubmit={handleSubmit}
+            record-id={recordId}
+          >
+            <lightning-messages></lightning-messages>
+            <div class="container-box">
+              <div class="slds-grid slds-wrap" style="padding-top: 20px">
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Attachment Name</span
+                    >
+                    <lightning-input-field
+                      field-name="Name"
+                      required="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Type</span
+                    >
+                    <!-- <lightning-input-field
+                      field-name="Type__c"
+                      required="true"
+                      variant="label-hidden"
+                      onchange={changeExpense}
+                    ></lightning-input-field> -->
+                     <c-tesseract-apps-single-combobox
+                         
+                        required
+                        placeholder="Select Type"
+                        options={typeOptions}
+                        value={selectedType}
+                        onchange={handleTypeChange}>
+                    </c-tesseract-apps-single-combobox>
+                  </div>
+                </div>
+                <template if:true={textboxFlag}>
+                  <div
+                    class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                  >
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        >Other (Please Specify)</span
+                      >
+                      <lightning-input-field
+                        field-name="Other_Comments__c"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+                </template>
+                <template if:false={textboxFlag}> </template>
+
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop">Expiry Date</span>
+                    <lightning-input-field
+                      field-name="Expiry_Date__c"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>User</span
+                    >
+                    <lightning-input-field
+                      field-name="User__c"
+                      required="true"
+                      variant="label-hidden"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div
+                  class="slds-size_1-of-1 slds-medium-size_1-of-1 slds-p-around_small"
+                >
+                  <div class="floating-label" style="height: 62px">
+                    <span class="label-text-drop">Comments</span>
+                    <lightning-input-field
+                      field-name="Comments__c"
+                      variant="label-hidden"
+                      maxlength="1000"
+                    ></lightning-input-field>
+                  </div>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+
+    <div class="slds-box drag-drop"
+         ondragover={handleDragOver}
+         ondrop={handleDrop}>
+
+        <p class="slds-text-align_center">
+            Drag and drop file here <br/>
+            <a href="javascript:void(0);" onclick={triggerFileInput}>
+                Click to browse
+            </a>
+        </p>
+
+        <input
+            type="file"
+            style="display:none"
+            onchange={handleFileSelect}/>
+
+        <template if:true={isFileExpand}>
+            <c-document-office-service
+                record-id={recordId}
+                module-path-from-parent="ticket"
+                allow-multiple="false"
+                onuploadcomplete={handleAwsUploadComplete}
+                onfiledeleted={handleFileDeleted}>
+            </c-document-office-service>
+        </template>
+
+    </div>
+
+   <!--  <template if:true={fileName}>
+        <div class="slds-m-top_small">
+            <b>File:</b> {fileName}
+        </div>
+    </template> -->
+
+                </div>
+              </div>
+              <div class="slds-align_absolute-center" style="padding: 2%">
+                <lightning-button
+                  label="Cancel"
+                  onclick={hideModalBox}
+                  variant="brand-outline"
+                ></lightning-button>
+                <lightning-button
+                  class="slds-m-left_small"
+                  type="submit"
+                  variant="brand"
+                  label="Update"
+                ></lightning-button
+                >&nbsp;
+              </div>
+            </div>
+          </lightning-record-edit-form>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <template if:true={isModalOpen}>
+    <div class="slds-grid slds-grid_align-end">
+      <lightning-button
+        class="slds-m-left_medium"
+        slot="footer"
+        label="Close"
+        variant="brand"
+        onclick={closeModal}
+        style="margin-right: 1%; margin-top: 1%"
+      ></lightning-button>
+    </div>
+    <div style="padding: 1%">
+      <!-- class="main-container-iframe custom-scroll" -->
+
+      <iframe src={currentUrl} width="100%" height="1200px"></iframe>
+    </div>
+  </template>
+
+  <template if:true={deleteFlag}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 25%">
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Delete
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <!-- style="border-radius:0 0 15px 15px" -->
+          <div class="slds-m-around_small" style="text-align: center">
+            <div>
+              <p style="text-align: center">
+                Are you sure you want to delete this file?
+              </p>
+            </div>
+            <div class="button-container slds-m-top_medium">
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={handleclose}
+                class="slds-m-around_small"
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handledeletefile}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={assignmentFlag}>
+    <div class="blur-overlay"></div>
+    <div class="right-align custom-scroll" style="width:40%;"> 
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 2% 0 0 2%;">Grant Access</h3>
+        </div>
+    <div class="right-content custom-scroll">
+    <div class="seperator">
+
+        <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+
+          <div class="slds-size_1-of-1  slds-large-size_1-of-1 slds-p-around_small" >
+            <lightning-dual-listbox name="languages" 
+            label="Select Staff"
+            source-label="Available Staff"
+            selected-label="Selected Staff"
+            field-level-help="Select your staff"
+            options={filteredStaffOptions}
+            value={selectedStaffIds}
+            onchange={handleStaffChange}>
+            </lightning-dual-listbox>
+          </div>
+
+        </div>
+    </div>
+    </div>
+    
+    <div class="slds-align_absolute-center">
+      <lightning-button label="Cancel" variant="brand-outline" onclick={handleShareClose} type="close" class="slds-m-around_small"></lightning-button>
+      <lightning-button label="Save" variant="brand" onclick={handleassignmentinsert}  class="slds-m-around_small"></lightning-button>
+    </div>
+
+    </div>
+
+  </template>
+
+  <!-- CREATE FOLDER MODAL -->
+  <template if:true={isCreateFolderModalOpen}>
+      <div class="blur-overlay"></div>
+
+      <section class="slds-modal slds-fade-in-open" role="dialog">
+          <div class="slds-modal__container" style="max-width: 30%;">
+
+              <!-- HEADER -->
+              <header class="slds-modal__header" style="background:#002a52;">
+                  <h2 class="slds-text-heading_medium" style="color:white; text-align:center;">
+                      Create New Folder
+                  </h2>
+              </header>
+
+              <!-- BODY -->
+              <div class="slds-modal__content slds-p-around_medium">
+
+                  <!-- Folder Name -->
+                  <lightning-input
+                      label="Folder Name"
+                      value={folderName}
+                      onchange={handleFolderNameChange}
+                      required>
+                  </lightning-input>
+
+                  <!-- Parent Folder (READ ONLY) -->
+                  <div style="margin-top:15px;">
+                      <lightning-combobox
+                          label="Parent Folder"
+                          value={selectedParentFolderId}
+                          options={folderOptions}
+                          onchange={handleParentFolderChange}>
+                      </lightning-combobox>
+                  </div>
+
+              </div>
+
+              <!-- FOOTER -->
+              <footer class="slds-modal__footer">
+
+                  <lightning-button
+                      label="Cancel"
+                      onclick={closeFolderModal}>
+                  </lightning-button>
+
+                  <lightning-button
+                      variant="brand"
+                      label="Create Folder"
+                      onclick={createFolder}
+                      class="slds-m-left_small">
+                  </lightning-button>
+
+              </footer>
+
+          </div>
+      </section>
+
+      <!-- BACKDROP -->
+      <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  
+  <template if:true={isShowSpinner}>
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+      <div class="loader-container">
+        <img
+          src={logoUrl}
+          alt="Breathing Frame"
+          class="breathing-frame"
+        />
+        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+      </div>
+
+      <!-- Progress text instead of progress bar -->
+      <p class="progress-text">Loading<br />Please Wait...</p>
+    </div>
+  </template>
+
+  <!-- FOLDER SHARE MODAL -->
+  <template if:true={folderAssignmentFlag}>
+
+      <div class="blur-overlay"></div>
+
+      <div class="right-align custom-scroll" style="width:40%;">
+
+          <div
+              style="
+                  display:flex;
+                  align-items:center;
+                  justify-content:space-between;
+              ">
+
+              <h3
+                  style="
+                      font-weight:bold;
+                      font-size:150%;
+                      margin:0;
+                      padding:2% 0 0 2%;
+                  ">
+
+                  Share Folder
+
+              </h3>
+
+          </div>
+
+          <div class="right-content custom-scroll">
+
+              <div class="seperator">
+
+                  <div
+                      class="slds-grid slds-wrap"
+                      style="padding:20px 0px 20px 0px;">
+
+                      <div
+                          class="
+                              slds-size_1-of-1
+                              slds-large-size_1-of-1
+                              slds-p-around_small
+                          ">
+
+                          <lightning-dual-listbox
+
+                              name="folderShare"
+
+                              label="Select Staff"
+
+                              source-label="Available Staff"
+
+                              selected-label="Selected Staff"
+
+                              field-level-help="Select staff for folder access"
+
+                              options={filteredStaffOptions}
+
+                              value={selectedFolderStaffIds}
+
+                              onchange={handleFolderStaffChange}>
+
+                          </lightning-dual-listbox>
+
+                      </div>
+
+                  </div>
+
+              </div>
+
+          </div>
+
+          <div class="slds-align_absolute-center">
+
+              <lightning-button
+                  label="Cancel"
+                  variant="brand-outline"
+                  onclick={closeFolderShare}
+                  class="slds-m-around_small">
+              </lightning-button>
+
+              <lightning-button
+                  label="Save"
+                  variant="brand"
+                  onclick={saveFolderSharing}
+                  class="slds-m-around_small"
+                  disabled={folderSaveButtonDisable}>
+              </lightning-button>
+
+          </div>
+
+      </div>
+
+  </template>
+  
+  <template if:true={archiveModal}>
+      <section
+          class="slds-modal slds-fade-in-open"
+          role="dialog">
+          <div class="slds-modal__container modal-custom">
+              <!-- HEADER -->
+              <header class="slds-modal__header headercustom">
+                  <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+                      Archived Documents
+                  </h2>
+              </header>
+
+              <!-- BODY CONTENT --> 
+              <div class="slds-modal__content slds-p-around_small custom-scroll"> 
+                
+                <div class="slds-m-bottom_small slds-size_1-of-2">
+                    <lightning-input
+                        type="search"
+                        label="Search Documents"
+                        placeholder="Search by Name or Type of Document"
+                        value={archiveSearchKey}
+                        onchange={handleArchiveSearch}>
+                    </lightning-input>
+                </div>
+
+                <div class="table-container archive-table">
+
+                  <!-- HEADER -->
+                  <div class="header-wrapper">
+
+                      <table class="staff-table">
+
+                          <thead>
+                              <tr>
+                                  <th>Name</th>
+                                  <th>Type</th>
+                                  <th>Archived Date</th>
+                                  <th>Parent Folder</th>
+                                  <th>Folder Path</th>
+                                  <th class="center">Actions</th>
+                              </tr>
+                          </thead>
+                      </table>
+                  </div>
+
+                  <!-- BODY -->
+                  <div class="custom-scroll attachmentTableHeight">
+                      <table class="staff-table">
+                          <tbody>
+                              <template if:true={archivedRecords.length}>
+                                  <template
+                                      for:each={archivedRecords}
+                                      for:item="file">
+                                      <tr key={file.Id}>
+                                          <td>{file.Name}</td>
+                                          <td>{file.Type}</td>
+                                          <td>{file.ArchivedDate}</td>
+                                          <td title={file.ParentFolder}>{file.ParentFolder}</td>
+                                          <td title={file.FolderPath}>{file.FolderPath}</td>
+                                          <td class="table-td center action-cell">
+
+                                              <!-- VIEW -->
+                                              <a href={file.AmazonURL}
+                                                  data-id={file.Id}
+                                                  data-url={file.AmazonURL}
+                                                  onclick={handleArchiveView}
+                                                  title="View Attachment"
+                                                  class="icon-link">
+                                                  <i class="material-icons view-icon">visibility</i>
+                                              </a>
+
+                                              <!-- DOWNLOAD -->
+                                              <a href={file.AmazonURL}
+                                                  data-id={file.Id}
+                                                  data-url={file.AmazonURL}
+                                                  data-name={file.Name}
+                                                  onclick={handleDownload}
+                                                  title="Download Attachment"
+                                                  class="icon-link">
+                                                  <i class="material-icons">download</i>
+                                              </a>
+
+                                              <!-- RESTORE -->
+                                              <a href="javascript:void(0)"
+                                                  data-id={file.Id}
+                                                  onclick={handleRestore}
+                                                  title="Restore">
+                                                  <i class="material-icons">unarchive</i>
+                                              </a>
+                                          </td>
+                                      </tr>
+                                  </template>
+                              </template>
+
+                              <template if:false={archivedRecords.length}>
+                                  <tr>
+                                      <td colspan="4" class="no-data">
+                                          No archived documents found
+                                      </td>
+                                  </tr>
+                              </template>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+              </div>
+              <!-- FOOTER -->
+              <footer class="slds-modal__footer">
+                  <lightning-button
+                      label="Close"
+                      onclick={closeArchiveModal}>
+                  </lightning-button>
+              </footer>
+          </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+</template>
