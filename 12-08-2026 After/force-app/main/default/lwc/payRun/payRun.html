@@ -1,0 +1,1676 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 08-11-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>
+    <div class="main-container custom-scroll">
+        <div class="payruncontainer custom-scroll">
+            <template if:false={showMoreDetailsTemplate}>
+              <template if:true={isPayrollTitle}>
+                  <div class="slds-p-around_small" style="display: flex; align-items: center; justify-content: space-between;">
+                      <!-- Left side: Staff Details -->
+                      <!-- <p style="font-weight: bold; font-size:140% "> Payroll - {companyname}</p> -->
+                        <p style="font-weight: bold; font-size:140% "> Payroll</p>
+                  </div>
+              </template>
+              <div class="slds-p-horizontal_small" style="display: flex; align-items: center; justify-content: space-between;">
+                  <p style="font-weight: bold; font-size:140% ">Payruns</p>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                      <template if:true={ispayrun}>
+                          <template if:true={AddPayRunButton}>
+                              <lightning-button label="Add Payrun" disabled={addPayRunBtn} onclick={handleaddPayrun} variant="brand"></lightning-button>
+                          </template>
+                      </template>
+                  </div>
+              </div>
+              <!-- <div class="payruntext">Pay runs</div> -->
+              <!-- <div class="slds-float_right"><button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={RefreshHandle}><svg class="slds-button__icon" aria-hidden="true"><use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use></svg></button></div> -->
+              <template if:true={isaddpayrun}>
+                  <div if:true={isDesktop}>
+                      <div class="slds-p-around_small">
+                          <div class="slds-size_1-of-2">
+                              <div class="slds-col slds-size_1-of-2" style="padding: 0 0 3% 0;">
+                                  <div class="floating-label">
+                                      <span class="label-text-drop">
+                      <span style="color:red">*</span>Name of the Payrun </span>
+                                      <lightning-combobox name="payrollSetting" label="Name of the Payrun" value={payrunSettingnewValue} placeholder="Select Payrun" options={payrollSettingNewList} onchange={handlePayrollSettingChange} required="true" variant="label-hidden"></lightning-combobox>
+                                  </div>
+                              </div>
+                          </div>
+                          <template if:true={payrunSettingnewValue}>
+                              <div class="slds-grow" style="display:flex; flex-direction:column; min-height:0;">
+                                  <div class="table-container addpayrun-table slds-grow slds-m-around_small" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                                      <!-- HEADER -->
+                                      <div class="header-wrapper">
+                                          <table class="staff-table fixed-table">
+                                              <thead>
+                                                  <tr class="table-row">
+                                                      <th class="table-th" title="First Name">First Name</th>
+                                                      <th class="table-th" title="Last Name">Last Name</th>
+                                                      <th class="table-th" title="Frequency">Frequency</th>
+                                                      <th class="table-th" title="Contact Number">Contact Number</th>
+                                                  </tr>
+                                              </thead>
+                                          </table>
+                                      </div>
+                                      <!-- BODY -->
+                                      <div class="table-body custom-scroll">
+                                          <table class="staff-table fixed-table">
+                                              <tbody>
+                                                  <template if:true={staffrecordsAddPayrun}>
+                                                      <template for:each={staffrecordsAddPayrun} for:item="acc">
+                                                          <tr key={acc.Staff__r.Id} class="table-row">
+                                                              <td class="table-td" title={acc.Staff__r.Name}>{acc.Staff__r.Name}</td>
+                                                              <td class="table-td" title={acc.Staff__r.Last_Name__c}>{acc.Staff__r.Last_Name__c}</td>
+                                                              <td class="table-td" title={acc.Staff__r.Employment_type__c}>{acc.Staff__r.Employment_type__c}</td>
+                                                              <td class="table-td" title={acc.Staff__r.Contact_Number__c}>{acc.Staff__r.Contact_Number__c}</td>
+                                                          </tr>
+                                                      </template>
+                                                  </template>
+                                              </tbody>
+                                          </table>
+                                      </div>
+                                  </div>
+                                  <!--   <template if:true={staffrecordsAddPayrun}> -->
+                                  <div slot="footer" class="slds-m-around_medium slds-align_absolute-center">
+                                      <lightning-button class="slds-m-left_medium" slot="footer" label="Save" variant="brand" onclick={saveaddPayRun} disabled={issavedpayrun}></lightning-button>
+                                      <lightning-button class="slds-m-left_medium" slot="footer" label="Close" variant="brand" onclick={closeaddPayRun}></lightning-button>
+                                  </div>
+                                  <!--  </template> -->
+                              </div>
+                          </template>
+                      </div>
+                  </div>
+              </template>
+              <template if:true={ispayrun}>
+                  <div if:true={isDesktop}>
+                      <div class="slds-size_7-of-7">
+                          <!--slds-m-left_xx-largex slds-var-m-top_xx-large-->
+                          <div class="table-container payrun-table slds-grow slds-m-around_small" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                              <!-- HEADER -->
+                              <div class="header-wrapper">
+                                  <table class="staff-table fixed-table">
+                                      <thead>
+                                          <tr class="table-row">
+                                              <th class="table-th" title="Pay Schedule #">Pay Schedule #</th>
+                                              <th class="table-th" title="Cycle">Cycle</th>
+                                              <th class="table-th" title="Facility">Facility</th>
+                                              <th class="table-th" title="Payment Date">Payment Date</th>
+                                              <th class="table-th" title="Status">Status</th>
+                                          </tr>
+                                      </thead>
+                                  </table>
+                              </div>
+                              <!-- BODY -->
+                              <div class="table-body custom-scroll">
+                                  <table class="staff-table fixed-table">
+                                      <tbody>
+                                          <template for:each={payrun} for:item="acc">
+                                              <tr key={acc.Id} class="table-row">
+                                                  <td class="table-td" title={acc.Period__c}>
+                                                      <a data-id={acc.Id} data-name={acc.Status__c} data-date={acc.Next_Pay_Date__c} data-groupname={acc.Group_Name__c} data-enddate={acc.Period_End_Date__c} href="javascript:void(0)" onclick={openPaysettings}> {acc.Period__c} </a>
+                                                  </td>
+                                                  <td class="table-td" title={acc.Frequency__c}>{acc.Frequency__c}</td>
+                                                  <td class="table-td" title={acc.Facility_Name__c}>{acc.Facility_Name__c}&nbsp;{acc.Frequency__c}</td>
+                                                  <td class="table-td" title={acc.paymentDate}>{acc.paymentDate}</td>
+                                                  <td class="table-td" title={acc.Status__c}>
+                                                      <label class="status">{acc.Status__c}</label>
+                                                  </td>
+                                              </tr>
+                                          </template>
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                          <div>
+                              <!-- <div class="payruntext">Historical Payruns</div> -->
+                              <!-- <strong style="font-size: medium;">Historical Pay runs</strong> -->
+                              <!--Refresh Button-->
+                              <!-- <div class="slds-float_right"></div><template if:true={showSpinner}><lightning-spinner alternative-text="Refreshing Data" size="medium"></lightning-spinner></template><div class="slds-grid slds-wrap" style="float:right;margin-bottom:30px;margin-top:-10px;"><lightning-input style="width: 300px;height: 45px;" name="SearchPayroll" label="Search" type="search" value={searchGroupName} onchange={handleSearch} class="slds-size_1-of-4 slds-m-right_medium slds-m-left_xx-large --slds-c-input-radius-border:150px;" ></lightning-input><lightning-combobox style="width: 240px;height: 45px;margin-right:10px;" name="status" label="Status" value={payRollStatusValue} placeholder="Select Status" options={payRollStatusOptions} onchange={handleSearch}  class="slds-size_1-of-3"></lightning-combobox><button class="slds-button slds-button_icon slds-button_icon-border" style="margin-top:22px;" title="Refresh" onclick={fetchPayrun}><svg class="slds-button__icon" aria-hidden="true"><use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use></svg></button></div><br/> -->
+                              <!-- <div class="header"><div  class="action-section"><div >Historical Payruns</div></div><div class="search-section"><div class="floating-label slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3"><span class="label-text-drop"><span style="color:red">*</span>Search</span><lightning-input  name="SearchPayroll" variant="label-hidden" label="Search" type="search" value={searchGroupName} onchange={handleSearch}  ></lightning-input></div><div class="floating-label slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3"><span class="label-text-drop">Status</span><lightning-combobox  name="status" variant="label-hidden" label="Status" value={payRollStatusValue} placeholder="Select Status" options={payRollStatusOptions} onchange={handleSearch}  ></lightning-combobox></div><button class="slds-button slds-button_icon slds-button_icon-border"  title="Refresh" onclick={fetchPayrun}><svg class="slds-button__icon" aria-hidden="true"><use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use></svg></button></div></div> -->
+                              <div class="slds-p-horizontal_small" style="display: flex; align-items: center; justify-content: space-between;">
+                                  <!-- Left side: Staff Details -->
+                                  <p style="font-weight: bold; font-size:140%">Historical Payruns</p>
+                                  <!-- Right side: Back button and image icon -->
+                                  <div style="display: flex; align-items: center; gap: 10px;margin-right:5%;">
+                                      <div class="floating-label slds-col slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2">
+                                          <span class="label-text-drop">
+                        Search </span>
+                                          <lightning-input name="SearchPayroll" variant="label-hidden" label="Search" type="search" value={searchGroupName} onchange={handleSearch}></lightning-input>
+                                      </div>
+                                      <div class="floating-label slds-col slds-small-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2">
+                                          <span class="label-text-drop">Status</span>
+                                          <lightning-combobox name="status" variant="label-hidden" label="Status" value={payRollStatusValue} placeholder="Select Status" options={payRollStatusOptions} onchange={handleSearch}></lightning-combobox>
+                                      </div>
+                                      <button class="slds-button slds-button_icon slds-button_icon-border" title="Refresh" onclick={fetchPayrun}>
+                                          <svg class="slds-button__icon" aria-hidden="true">
+                                              <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                                          </svg>
+                                      </button>
+                                  </div>
+                              </div>
+                              <div class="table-container historical-payrun-table slds-grow slds-m-around_small" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                                  <template if:false={noRecordsFlag}>
+                                      <!-- HEADER -->
+                                      <div class="header-wrapper">
+                                          <table class="staff-table fixed-table">
+                                              <thead>
+                                                  <tr class="table-row">
+                                                      <th class="table-th" title="Pay Schedule #">Pay Schedule #</th>
+                                                      <th class="table-th" title="Cycle">Cycle</th>
+                                                      <th class="table-th" title="Facility">Facility</th>
+                                                      <th class="table-th" title="Processed Date">Processed Date</th>
+                                                      <th class="table-th" title="Status">Status</th>
+                                                  </tr>
+                                              </thead>
+                                          </table>
+                                      </div>
+                                      <!-- BODY -->
+                                      <div class="table-body custom-scroll">
+                                          <table class="staff-table fixed-table">
+                                              <tbody>
+                                                  <template for:each={payrunList} for:item="acc">
+                                                      <tr key={acc.Id} class="table-row">
+                                                          <td class="table-td" title={acc.Period__c}>
+                                                              <a data-id={acc.Id} data-name={acc.Status__c} data-date={acc.Next_Pay_Date__c} data-groupname={acc.Group_Name__c} data-enddate={acc.Period_End_Date__c} href="javascript:void(0)" onclick={openPaysettings}> {acc.Period__c} </a>
+                                                          </td>
+                                                          <td class="table-td" title={acc.Frequency__c}>{acc.Frequency__c}</td>
+                                                          <td class="table-td" title={acc.Facility_Name__c}>{acc.Facility_Name__c}&nbsp;{acc.Frequency__c}</td>
+                                                          <td class="table-td" title={acc.paymentDate}>{acc.paymentDate}</td>
+                                                          <template if:false={acc.StatusChecking}>
+                                                              <td class="table-td" title={acc.Status__c}>
+                                                                  <label class={acc.Status__c}>{acc.Status__c}</label>
+                                                              </td>
+                                                          </template>
+                                                          <template if:true={acc.StatusChecking}>
+                                                              <td class="table-td" title={acc.Status__c}>
+                                                                  <label class="STP">{acc.Status__c}</label>
+                                                                  <lightning-icon icon-name="utility:threedots" alternative-text="threedots" title="Export to CSV" data-id={acc.Id} onclick={handleExportCSV} size="xx-small" variant="success" class="slds-float_right slds-m-right_medium slds-m-bottom_medium "></lightning-icon>
+                                                              </td>
+                                                          </template>
+                                                      </tr>
+                                                  </template>
+                                              </tbody>
+                                          </table>
+                                      </div>
+                                  </template>
+                                  <template if:true={noRecordsFlag}>
+                                      <div class="no-data">
+                                          <p>No records found</p>
+                                      </div>
+                                  </template>
+                              </div>
+                              <template if:false={noRecordsFlag}>
+                                  <template if:true={totalRecords}>
+                                      <div if:true={visible} class="fixed-pagination">
+                                          <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                                              <!--PAGE NAVIGATION-->
+                                              <div class="slds-align_absolute-center">
+                                                  <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+                                                  <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button> &nbsp; <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span> &nbsp;
+                                                  <lightning-button disabled={bDisableLast} icon-name="utility:chevronright"
+                                                  label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+                                                  <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                                              </div>
+                                              <!--TOTAL RECORDS-->
+                                              <div class="slds-clearfix">
+                                                  <div class="slds-float_right ">
+                                                      <span class="slds-badge"> Total Records: {totalRecords}</span>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </template>
+                              </template>
+                          </div>
+                      </div>
+                  </div>
+              </template>
+              <template if:true={isopenPaysettings}>
+                  <div if:true={isDesktop}>
+                      <div class="slds-p-around_small">
+                          <lightning-record-edit-form object-api-name="Payroll_Setting__c" record-id={paysetId}>
+                              <div class="slds-grid slds-wrap">
+                                  <!--  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small"><label class="labelClass" style="display: flex; align-items: left;"><div style="flex: 0 0 30%; font-weight: bold;">Facility</div><div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div><div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;"><lightning-output-field field-name="Facility_Name__c" variant="label-hidden"></lightning-output-field></div></label></div> -->
+                                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                      <label class="labelClass" style="display: flex; align-items: left;">
+                                          <div style="flex: 0 0 30%; font-weight: bold;">Frequency</div>
+                                          <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                                          <div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;">
+                                              <lightning-output-field field-name="Frequency__c" variant="label-hidden"></lightning-output-field>
+                                          </div>
+                                      </label>
+                                  </div>
+                                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                      <label class="labelClass" style="display: flex; align-items: left;">
+                                          <div style="flex: 0 0 30%; font-weight: bold;">Period Start Date</div>
+                                          <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                                          <div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;">
+                                              <lightning-output-field field-name="Period_Start_Date__c" variant="label-hidden"></lightning-output-field>
+                                          </div>
+                                      </label>
+                                  </div>
+                                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                      <label class="labelClass" style="display: flex; align-items: left;">
+                                          <div style="flex: 0 0 30%; font-weight: bold;">Period</div>
+                                          <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                                          <div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;">
+                                              <lightning-output-field field-name="Period__c" variant="label-hidden"></lightning-output-field>
+                                          </div>
+                                      </label>
+                                  </div>
+                                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3" if:false={paymentProcessDate}>
+                                      <label class="labelClass" style="display: flex; align-items: left;">
+                                          <div style="flex: 0 0 30%; font-weight: bold;" class="slds-p-around_small">Next Pay Date</div>
+                                          <div style="flex: 0 0 5%; font-weight: bold; text-align: center;" class="slds-p-around_small">:</div>
+                                          <div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;padding-top:2%;">
+                                              <lightning-input-field field-name="Next_Pay_Date__c" onchange={paymentDateChanged} variant="label-hidden"></lightning-input-field>
+                                          </div>
+                                      </label>
+                                  </div>
+                                  <!-- <div if:true={paymentProcessDate} class="slds-size_1-of-2"><div class="slds-m-right_medium slds-m-left_medium " style="margin-top:5px"><span style="margin-top:5px;margin-left :5px"><p>Processed Date</p></span><span   ><lightning-input type="date" name="input1" value={processdate} label="" onchange={paymentDateChanged} disabled={editProcessedDate} style="width: 25%; margin-left:170px ;margin-top:-43px" ></lightning-input></span></div></div>  -->
+                                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 " if:true={paymentProcessDate}>
+                                      <label class="labelClass" style="display: flex; align-items: left;">
+                                          <div style="flex: 0 0 30%; font-weight: bold;" class="slds-p-around_small">Processed Date</div>
+                                          <div style="flex: 0 0 5%; font-weight: bold; text-align: center;" class="slds-p-around_small">:</div>
+                                          <div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;padding-top:2%;">
+                                              <lightning-input type="date" name="input1" value={processdate} label="" onchange={paymentDateChanged} disabled={editProcessedDate} variant="label-hidden"></lightning-input>
+                                          </div>
+                                      </label>
+                                  </div>
+                                  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small">
+                                      <label class="labelClass" style="display: flex; align-items: center;">
+                                          <div style="flex: 0 0 30%; font-weight: bold;">Status</div>
+                                          <div style="flex: 0 0 5%; font-weight: bold; text-align: center;">:</div>
+                                          <div style="flex: 1 1 65%; text-align: left; padding-left: 8px; margin: 0;">
+                                              <lightning-output-field field-name="Status__c" variant="label-hidden"></lightning-output-field>
+                                          </div>
+                                      </label>
+                                  </div>
+                              </div>
+                          </lightning-record-edit-form>
+                          <!--Start Below lines of code written by Nagendra, Please don't delete-->
+                          <!--<lightning-record-edit-form object-api-name="Staff_Payroll_Setting__c"><div class="slds-size_1-of-2"><div class="slds-m-right_medium slds-m-left_medium"><lightning-input-field field-name="Pay_Date__c" value={chpaymentDate} disabled="true"></lightning-input-field></div></div></lightning-record-edit-form>-->
+                          <!--End Please don't delete-->
+                      </div>
+                      <div class="slds-var-m-top_large slds-p-around_small">
+                          <template if:true={showSpinner}>
+                              <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                          </template>
+                          <div class="table-container staffrecords-table slds-grow" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                              <!-- HEADER -->
+                              <div class="header-wrapper">
+                                  <table class="staff-table fixed-table">
+                                      <thead>
+                                          <tr class="table-row">
+                                              <th class="table-th" title="First Name">First Name</th>
+                                              <th class="table-th" title="Last Name">Last Name</th>
+                                              <th class="table-th" title="Total Hours">Total Hours</th>
+                                              <th class="table-th" title="Earnings">Earnings</th>
+                                              <th class="table-th" title="Superannuation">Superannuation</th>
+                                              <th class="table-th" title="Gross Salary">Gross Salary</th>
+                                              <th class="table-th" title="Tax">Tax</th>
+                                              <th class="table-th" title="Net Pay">Net Pay</th>
+                                              <th if:true={ispayslip} class="table-th" title="View/Open Payslip">View/Open Payslip</th>
+                                          </tr>
+                                      </thead>
+                                  </table>
+                              </div>
+                              <!-- BODY -->
+                              <div class="table-body custom-scroll">
+                                  <table class="staff-table fixed-table">
+                                      <tbody>
+                                          <template if:true={staffrecords}>
+                                              <template for:each={staffrecords} for:item="acc">
+                                                  <tr key={acc.Staff__r.Id} class="table-row">
+                                                      <td class="table-td" title={acc.Staff__r.Name}>
+                                                          <div if:false={isStatus}>
+                                                              <a data-id={acc.Id} data-staffid={acc.Staff__r.Id} href="javascript:void(0)" data-typeofuser={acc.Type_of_User__c} onclick={handleEditPayStaff}> {acc.Staff__r.Name} </a>
+                                                          </div>
+                                                          <div if:true={isStatus}> {acc.Staff__r.Name} </div>
+                                                      </td>
+                                                      <td class="table-td" title={acc.Staff__r.Last_Name__c}>{acc.Staff__r.Last_Name__c}</td>
+                                                      <td class="table-td" title={acc.totalHours}>{acc.totalHours}</td>
+                                                      <td class="table-td" title={acc.grossSalary}>${acc.grossSalary}</td>
+                                                      <td class="table-td" title={acc.superAnnuation}>${acc.superAnnuation}</td>
+                                                      <td class="table-td" title={acc.grossPerWeek}>${acc.grossPerWeek}</td>
+                                                      <td class="table-td" title={acc.tax}>${acc.tax}</td>
+                                                      <td class="table-td" title={acc.netPay}>${acc.netPay}</td>
+                                                      <td if:true={ispayslip} class="table-td center" title="View/Open Payslip">
+                                                          <div class="slds-align_absolute-center">
+                                                              <a href={acc.Amazon_URL__c} data-url={acc.Amazon_URL__c} onclick={handleView}>
+                                                                  <!-- <lightning-icon icon-name="utility:preview" size="small" title="View Payslip"></lightning-icon> -->
+                                                                  <!-- <a href="javascript:void(0)" data-id={docdata.Id} data-url={acc.Amazon_URL__c}  name="view_details" onclick={handleRowActions} title="View"
+                                                              style="text-decoration: none;"> -->
+                                                                  <i class="material-icons view-icon">visibility</i>
+                                                              </a>
+                                                          </div>
+                                                      </td>
+                                                  </tr>
+                                              </template>
+                                          </template>
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                          <template if:true={buttonsONPayroll}>
+                              <div slot="footer" class="slds-m-around_medium slds-align_absolute-center">
+                                  <div if:false={isSubmitbtn}>
+                                      <lightning-button class="slds-m-left_medium" slot="footer" label="Submit" variant="brand" name="Submitted" disabled={disableSubmitButton} onclick={handleSubmit}></lightning-button>
+                                  </div>
+                                  <div if:false={ispayslip}>
+                                      <lightning-button class="slds-m-left_medium" slot="footer" label="Save" variant="brand" onclick={closeaddPayRun}></lightning-button>
+                                      <lightning-button class="slds-m-left_medium" slot="footer" label="Delete" name="Delete" data-message="delete" variant="brand" onclick={handleSubmit}></lightning-button>
+                                  </div>
+                                  <lightning-button class="slds-m-left_medium" slot="footer" label="Edit" variant="brand" disabled={Editbutton} onclick={EditPayRun}></lightning-button>
+                                  <lightning-button class="slds-m-left_medium" slot="footer" label="Close" variant="brand" onclick={closeaddPayRun}></lightning-button>
+                                  <lightning-button class="slds-m-left_medium" slot="footer" label="File STP" variant="brand" disabled={fileStpbutton} onclick={handlefileSTP}></lightning-button>
+                                  <lightning-button class="slds-m-left_medium" slot="footer" label="Superannuation" variant="brand" disabled={superannuationButtonDisabled} onclick={handleSuperannuation}></lightning-button>
+                                  <lightning-button class="slds-m-left_medium" slot="footer" label="Pay" variant="brand" disabled={payButtonDisabled} onclick={handlePay}></lightning-button>
+                                  <lightning-button class="slds-m-left_medium" slot="footer" label="Process Payment" variant="brand" disabled={processPaymentButtonDisabled} onclick={handleProcessPayment}></lightning-button>
+                              </div>
+                          </template>
+                          <!-- modal start -->
+                          <!-- <lightning-button class="slds-m-left_medium" slot="footer" label="Open Activity log"
+                            variant="brand"  disabled={activityLogButton} onclick={openActivityLog}></lightning-button><lightning-button class="slds-m-left_medium" slot="footer" label="Close"
+                            variant="brand"  disabled={activityLogButton} onclick={closeActivityLog}></lightning-button></br></br>-->
+                          <template if:true={showSignatureTemplate}>
+                              <!-- <c-stp-pull-request-signature parent-payset-id={paysetId}></c-stp-pull-request-signature> -->
+                              <!-- In PayRun.html, modify the child component -->
+                              <template if:true={showSignatureTemplate}>
+                                  <c-stp-pull-request-signature parent-payset-id={paysetId} oncloseparentandopennew={handleCloseParentAndOpenNew}>
+                                  </c-stp-pull-request-signature>
+                              </template>
+                          </template>
+                          <template if:true={isFileSTP}>
+                              <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-02" aria-modal="true" aria-describedby="modal-content-id-2" class="slds-modal slds-fade-in-open">
+                                  <div class="slds-modal__container">
+                                      <!-- style="width: auto; height: auto;" -->
+                                      <!-- modal header start -->
+                                      <header class="slds-modal__header" style="background: #002A52;">
+                                          <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={hideModalBox}><lightning-icon icon-name="utility:close"
+                  alternative-text="close"
+                  variant="inverse"
+                  size="small" ></lightning-icon><span class="slds-assistive-text">Close</span></button> -->
+                                          <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align: center;">Acknowledgement Form</h2>
+                                      </header>
+                                      <!-- modal body start -->
+                                      <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                                          <div class="fileSTPHeadings">
+                                              <p>
+                                                  <b>Pay run</b> {groupName}
+                                              </p>
+                                          </div>
+                                          <div class="fileSTPHeadings">
+                                              <p>
+                                                  <b>ABN</b> {orgABN}
+                                              </p>
+                                          </div>
+                                          <div class="fileSTPHeadings">
+                                              <p>
+                                                  <b>Branch</b> 1
+                                              </p>
+                                          </div>
+                                          <br />
+                                          <div class="authorizationtoFile"> Authorization to file </div>
+                                          <br />
+                                          <div class="currentUser"> {currentUser} </div>
+                                          <br />
+                                          <div class="paragraph">
+                                              <p>
+                                                  <b> &bull; </b>I have reviewed the information to be filed in this payroll report and that it is true and correct.
+                                              </p>
+                                          </div>
+                                          <br />
+                                          <div class="paragraph">
+                                              <p>
+                                                  <b> &bull; </b>I am authorized to file the information in this payroll report to the commissioner and make this declaration
+                                              </p>
+                                          </div>
+                                          <br />
+                                          <div class="paragraph">
+                                              <p>
+                                                  <b> &bull; </b>I have read and accepted the terms and conditions of the <a href="https://www.sbr.gov.au/sbr-products-register/sbr-end-user-agreement" target="_blank">SBR end user agreement</a>
+                                              </p>
+                                          </div>
+                                          <br />
+                                          <div class="paragraph">
+                                              <p>
+                                                  <b> &bull; </b>I understand that Pinnacle IT Services Australia Pty Ltd is not providing an agent service and is not responsible for the accuracy of what I am filling, preparation of any taxation, superannuation
+                                                  or other related documents on behalf of my business/entity.
+                                              </p>
+                                          </div>
+                                          <br />
+                                          <div class="byClickingParagraph">
+                                              <p>
+                                                  <b> &bull; </b> By clicking &lsquo;Submit to ATO&rsquo; you are signing this declaration and authorizing Pinnacle IT Services to file this report with the ATO on your behalf
+                                              </p>
+                                          </div>
+                                          <br />
+                                      </div>
+                                      <!-- modal footer start-->
+                                      <footer class="slds-modal__footer">
+                                          <lightning-input type="checkbox" name="valid" label={chkLabel} onchange={handleStpauth}></lightning-input>
+                                          <lightning-button label="Cancel" variant="Brand-Outline" onclick={hideModalBox} class="slds-m-around_small"></lightning-button>
+                                          <button class="slds-button slds-button_neutral" disabled={hideSTPButton} onclick={submitSTP}>Submit to ATO</button>
+                                      </footer>
+                                  </div>
+                              </section>
+                              <div class="slds-backdrop slds-backdrop_open"></div>
+                          </template>
+                      </div>
+                  </div>
+                  <div if:true={showProgressbar}>
+                      <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open ">
+                          <div class="slds-modal__container ">
+                              <div class="slds-modal__header">
+                                  <h1 class="slds-modal__title slds-hyphenate" tabindex="-1">File STP</h1>
+                              </div>
+                              <div class="slds-modal__content slds-p-around_medium slds-text-align_center" style="font-size: medium; ">
+                                  <b>Your file STP is in progress please wait for some time</b>
+                              </div>
+                              <div if:false={isProgressing} class="slds-modal__content slds-p-around_medium slds-text-align_center">
+                                  <img class="slds-m-around_large" style="max-height: 95px; max-width: 95px" alt="STP" name="STP" src={STPloading} />
+                              </div>
+                          </div>
+                      </section>
+                      <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+                  </div>
+              </template>
+              <template if:true={showCsvExtract}>
+                  <lightning-card>
+                      <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open slds-modal_medium">
+                          <div class="slds-modal__container">
+                              <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse">
+            <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+              <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+            </svg>
+            <span class="slds-assistive-text">Cancel and close</span>
+          </button> -->
+                              <div class="slds-modal__header">
+                                  <h1 class="slds-modal__title slds-hyphenate">CSV Extract</h1>
+                              </div>
+                              <div></div>
+                              <div class="slds-modal__content slds-p-around_medium" style="overflow-x: auto;">
+                                  <div class="slds-grid slds-wrap">
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer BMS Id:</b> {csvOrgBmsID}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer ABN:</b> {csvOrgABNNum}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer Branch Code:</b> {csvOrgBranchCode}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer Name:</b>{csvOrgName}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer Contact Name:</b> {csvOrgContactName}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer Email:</b> {csvOrgPhone}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer Phone:</b>{csvOrgPostalCode}
+                                              </p>
+                                          </div>
+                                      </div>
+                                      <div class="slds-size_1-of-2">
+                                          <div class="slds-m-right_medium slds-m-left_medium">
+                                              <p>
+                                                  <b>Payer Postal Code:</b>{csvOrgEmail}
+                                              </p>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div class="table-container csv-extract-table slds-grow" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                                      <div class="table-scroll-x">
+                                          <!-- HEADER -->
+                                          <div class="header-wrapper">
+                                              <table class="staff-table fixed-table">
+                                                  <thead>
+                                                      <tr class="table-row">
+                                                          <th class="table-th" title="Payee TFN">Payee TFN</th>
+                                                          <th class="table-th" title="Contractor ABN">Contractor ABN</th>
+                                                          <th class="table-th" title="Payee Payroll ID">Payee Payroll ID</th>
+                                                          <th class="table-th" title="Previous Payroll ID">Previous Payroll ID</th>
+                                                          <th class="table-th" title="Payee Family Name">Payee Family Name</th>
+                                                          <th class="table-th" title="Payee First Name">Payee First Name</th>
+                                                          <th class="table-th" title="Payee Other Name">Payee Other Name</th>
+                                                          <th class="table-th" title="Payee Date of Birth">Payee Date of Birth</th>
+                                                          <th class="table-th" title="Payee Address Line 1">Payee Address Line 1</th>
+                                                          <th class="table-th" title="Payee Address Line 2">Payee Address Line 2</th>
+                                                          <th class="table-th" title="Payee Suburb/Town">Payee Suburb/Town</th>
+                                                          <th class="table-th" title="Payee State/Territory">Payee State/Territory</th>
+                                                          <th class="table-th" title="Payee Postcode">Payee Postcode</th>
+                                                          <th class="table-th" title="Payee Country Code">Payee Country Code</th>
+                                                          <th class="table-th" title="Payee E-mail Address">Payee E-mail Address</th>
+                                                          <th class="table-th" title="Payee Phone Number">Payee Phone Number</th>
+                                                          <th class="table-th" title="Payee Commencement Date">Payee Commencement Date</th>
+                                                          <th class="table-th" title="Payee Cessation Date">Payee Cessation Date</th>
+                                                          <th class="table-th" title="Employment Basis Code">Employment Basis Code</th>
+                                                          <th class="table-th" title="Cessation Type Code">Cessation Type Code</th>
+                                                          <th class="table-th" title="Tax Treatment Code">Tax Treatment Code</th>
+                                                          <th class="table-th" title="Tax Offset Amount">Tax Offset Amount</th>
+                                                          <th class="table-th" title="Period Start Date">Period Start Date</th>
+                                                          <th class="table-th" title="Period End Date">Period End Date</th>
+                                                          <th class="table-th" title="Final Event Indicator">Final Event Indicator</th>
+                                                          <th class="table-th" title="Income Stream Type Code">Income Stream Type Code</th>
+                                                          <th class="table-th" title="Country Code">Country Code</th>
+                                                          <th class="table-th" title="Last Tax YTD">Last Tax YTD</th>
+                                                          <th class="table-th" title="Foreign Tax Paid Amount">Foreign Tax Paid Amount</th>
+                                                          <th class="table-th" title="Exempt Foreign Income Amount">Exempt Foreign Income Amount</th>
+                                                          <th class="table-th" title="Current Taxble Gross Salary YTD">Current Taxble Gross Salary YTD</th>
+                                                          <th class="table-th" title="Paid Leaves">Paid Leaves</th>
+                                                          <th class="table-th" title="Allowances">Allowances</th>
+                                                          <th class="table-th" title="Over time Amount">Over time Amount</th>
+                                                          <th class="table-th" title="Bonuses And Commissions Amount">Bonuses And Commissions Amount</th>
+                                                          <th class="table-th" title="Directors Fees Amount">Directors Fees Amount</th>
+                                                          <th class="table-th" title="Salary Sacrifices">Salary Sacrifices</th>
+                                                          <th class="table-th" title="Lump Sum Payments">Lump Sum Payments</th>
+                                                          <th class="table-th" title="Super Entitlement TypeCode">Super Entitlement TypeCode</th>
+                                                          <th class="table-th" title="Super Entitlement Amount">Super Entitlement Amount</th>
+                                                          <th class="table-th" title="Reportable Fringe Benefits">Reportable Fringe Benefits</th>
+                                                      </tr>
+                                                  </thead>
+                                              </table>
+                                          </div>
+                                          <!-- BODY -->
+                                          <div class="table-body custom-scroll">
+                                              <table class="staff-table fixed-table">
+                                                  <tbody>
+                                                      <template if:true={stpCSVTable}>
+                                                          <template for:each={stpCSVTable} for:item="acc">
+                                                              <tr key={acc.Staff__r.Id} class="table-row">
+                                                                  <td class="table-td" title={acc.Staff__r.TFN_number__c}>{acc.Staff__r.TFN_number__c}</td>
+                                                                  <td class="table-td" title={acc.Org_ABN__c}>{acc.Org_ABN__c}</td>
+                                                                  <td class="table-td" title={acc.Staff__c}>{acc.Staff__c}</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Name__c}>{acc.Staff__r.Name__c}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Last_Name__c}>{acc.Staff__r.Last_Name__c}</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Date_Of_Birth__c}>{acc.Staff__r.Date_Of_Birth__c}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Address__Street__s}>{acc.Staff__r.Address__Street__s}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Address__City__s}>{acc.Staff__r.Address__City__s}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Address__PostalCode__s}>{acc.Staff__r.Address__PostalCode__s}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Address__StateCode__s}>{acc.Staff__r.Address__StateCode__s}</td>
+                                                                  <td class="table-td" title="au">au</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Email_Address__c}>{acc.Staff__r.Email_Address__c}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Contact_Number__c}>{acc.Staff__r.Contact_Number__c}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Emp_Start_Date__c}>{acc.Staff__r.Emp_Start_Date__c}</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Emp_exit_date__c}>{acc.Staff__r.Emp_exit_date__c}</td>
+                                                                  <td class="table-td" title="F">F</td>
+                                                                  <td class="table-td" title={acc.Staff__r.Exit_Reason_Code__c}>{acc.Staff__r.Exit_Reason_Code__c}</td>
+                                                                  <td class="table-td" title="RDXXXX">RDXXXX</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title={acc.Payroll_Setting__r.Period_Start_Date__c}>{acc.Payroll_Setting__r.Period_Start_Date__c}</td>
+                                                                  <td class="table-td" title={acc.Payroll_Setting__r.Period_End_Date__c}>{acc.Payroll_Setting__r.Period_End_Date__c}</td>
+                                                                  <td class="table-td" title="false">false</td>
+                                                                  <td class="table-td" title="SAW">SAW</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title={acc.Last_Tax_YTD__c}>{acc.Last_Tax_YTD__c}</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title={acc.Current_Taxble_Gross_Salary_YTD__c}>{acc.Current_Taxble_Gross_Salary_YTD__c}</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                                  <td class="table-td" title="L">L</td>
+                                                                  <td class="table-td" title={acc.Super_Annuation_Final__c}>{acc.Super_Annuation_Final__c}</td>
+                                                                  <td class="table-td" title="NULL">NULL</td>
+                                                              </tr>
+                                                          </template>
+                                                      </template>
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="slds-modal__footer">
+                                  <button class="slds-button slds-button_neutral" aria-label="Cancel and close" onclick={handlecloseCsv}>Cancel</button>
+                                  <button class="slds-button slds-button_brand" onclick={handleDownloadCSV}>Download File STP</button>
+                              </div>
+                          </div>
+                      </section>
+                      <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+                  </lightning-card>
+              </template>
+            </template>
+            <!-- Superannuation Details Template -->
+            <template if:true={showMoreDetailsTemplate}>
+                <div style="padding: 20px; background: #ffffff; height: 100%; width: 100%;">
+                    <!-- Header with back button -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px 0;">
+                        <div>
+                            <h2 style="font-size: 24px; font-weight: bold; color: #002A52; margin: 0;">
+                                Superannuation Details
+                            </h2>
+                            <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">
+                                Total Validation Logs: {validationTotalRecords}
+                            </p>
+                        </div>
+                        <!-- Retry Button for Selected Failed Logs -->
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div if:true={showRetryButton}>
+                                <lightning-button 
+                                    label="Retry Selected"
+                                    variant="brand"
+                                    onclick={handleRetrySelected}
+                                    style="font-size: 14px; padding: 8px 20px;">
+                                </lightning-button>
+                            </div>
+                            <lightning-button label="Back to Payruns" variant="brand" onclick={handleCloseMoreDetails}></lightning-button>
+                        </div>
+                    </div>
+                    
+                    <!-- Validation Logs Table -->
+                    <div class="table-container validation-logs-table">
+                        <!-- HEADER -->
+                        <div class="header-wrapper">
+                            <table class="staff-table" role="table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-th">Select</th>
+                                        <th class="table-th">Log Name</th>
+                                        <th class="table-th">Staff</th>
+                                        <th class="table-th">Super Fund</th>
+                                        <th class="table-th">Contribution</th>
+                                        <th class="table-th">Status</th>
+                                        <th class="table-th center">Response</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                        
+                        <!-- BODY -->
+                        <div class="body-scroll custom-scroll validation-logs-height">
+                            <table class="staff-table">
+                                <tbody>
+                                    <template if:true={validationLogsList.length}>
+                                        <template for:each={validationLogsList} for:item="log">
+                                            <tr key={log.Id} class="table-row">
+                                                <td class="table-td center">
+                                                    <template if:true={log.isFailed}>
+                                                        <lightning-input 
+                                                            type="checkbox"
+                                                            label=""
+                                                            variant="label-hidden"
+                                                            data-id={log.Id}
+                                                            onchange={handleRetryCheckbox}
+                                                            style="margin: 0;">
+                                                        </lightning-input>
+                                                    </template>
+                                                </td>
+                                                <td class="table-td">
+                                                    <span>{log.Name}</span>
+                                                </td>
+                                                <td class="table-td">
+                                                    <span>{log.employeeName}</span>
+                                                </td>
+                                                <td class="table-td">
+                                                    <span>{log.superFundName}</span>
+                                                </td>
+                                                <td class="table-td">
+                                                    <span>${log.contributionAmount}</span>
+                                                </td>
+                                                <td class="table-td">
+                                                    <span class={log.statusClass}>
+                                                        {log.statusLabel}
+                                                    </span>
+                                                </td>
+                                                <td class="table-td center">
+                                                    <lightning-button 
+                                                        label="View"
+                                                        variant="neutral"
+                                                        onclick={handleViewLogResponse}
+                                                        data-id={log.Id}
+                                                        data-response={log.STP_Response__c}
+                                                        style="font-size: 12px; padding: 4px 12px; height: auto;">
+                                                    </lightning-button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template if:false={validationLogsList.length}>
+                                        <tr class="table-row">
+                                            <td colspan="7" class="table-td center" style="text-align: center; padding: 20px;">
+                                                <span>No validation logs found</span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination Section -->
+                    <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-around_small" style="background: #ffffff; border-top: 1px solid #d8dde6;">
+                        
+                        <div class="slds-list_inline">
+                            <span style="margin-right: 5px; margin-top: 5px; font-size: 12px;">Page Size:</span>
+                            <div class="slds-select_container">
+                                <select class="slds-select" id="recordsPerPage" onchange={handleValidationRecordsPerPage} style="height: 32px; font-size: 12px; width: 70px;">
+                                    <template for:each={validationPageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>{option}</option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-align_absolute-center">
+                            <lightning-button disabled={validationBDisableFirst} icon-name="utility:jump_to_left" label="First" 
+                                            alternative-text="first page" onclick={validationFirstPage} style="margin-right: 10px;"></lightning-button>
+                            <lightning-button disabled={validationBDisableFirst} icon-name="utility:chevronleft" label="Previous" 
+                                            alternative-text="Previous" onclick={validationPreviousPage} style="margin-right: 5px;"></lightning-button>
+                            
+                            <span class="slds-badge">Showing {validationPageNumber} &nbsp;of&nbsp; {validationTotalPages} Page(s)</span>
+                            
+                            <lightning-button disabled={validationBDisableLast} icon-name="utility:chevronright" label="Next" 
+                                            alternative-text="Next" onclick={validationNextPage} class="slds-p-horizontal_x-small" 
+                                            icon-position="right"></lightning-button>
+                            <lightning-button disabled={validationBDisableLast} icon-name="utility:jump_to_right" label="Last" 
+                                            alternative-text="last page" onclick={validationLastPage} icon-position="right"></lightning-button>
+                        </div>
+                        
+                        <div class="slds-clearfix">
+                            <div class="slds-float_right">
+                                <span class="slds-badge">Total Records: {validationTotalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Full Response Section -->
+                    <template if:true={showFullResponse}>
+                        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                            <div class="slds-modal__container modal-custom">
+                                
+                                <!-- HEADER -->
+                                <header class="slds-modal__header headercustom">
+                                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+                                        Full Response Details
+                                    </h2>
+                                    <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                                            onclick={handleCloseFullResponse} title="Close">
+                                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                                        <span class="slds-assistive-text">Close</span>
+                                    </button> -->
+                                </header>
+                                
+                                <!-- BODY CONTENT -->
+                                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                                    <!-- Reference Info -->
+                                    <!-- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; border: 1px solid #d8dde6;">
+                                        <div>
+                                            <strong style="font-size: 14px; color: #002A52;">Type:</strong> {moreDetailsData.type}
+                                        </div>
+                                        <div>
+                                            <strong style="font-size: 14px; color: #002A52;">Ref ID:</strong> {moreDetailsData.refId}
+                                        </div>
+                                    </div> -->
+                                    
+                                    <!-- Additional Details Grid -->
+                                    <div if:true={moreDetailsData.validationDetails} style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; padding: 10px; background: #ffffff; border-radius: 4px; border: 1px solid #d8dde6;">
+                                        <div>
+                                            <strong>Staff:</strong> {moreDetailsData.validationDetails.employeeName}
+                                        </div>
+                                        <div>
+                                            <strong>Super Fund:</strong> {moreDetailsData.validationDetails.superFundName}
+                                        </div>
+                                        <div>
+                                            <strong>Super ABN:</strong> {moreDetailsData.validationDetails.superABN}
+                                        </div>
+                                        <div>
+                                            <strong>Super Number:</strong> {moreDetailsData.validationDetails.superNumber}
+                                        </div>
+                                        <div>
+                                            <strong>Contribution Amount:</strong> ${moreDetailsData.validationDetails.contributionAmount}
+                                        </div>
+                                        <div>
+                                            <strong>Validation Status:</strong> 
+                                            <span class={moreDetailsData.validationDetails.statusClass}>
+                                                {moreDetailsData.validationDetails.validationStatus}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <strong>Validation Date:</strong> {moreDetailsData.validationDetails.validationDate}
+                                        </div>
+                                        <div>
+                                            <strong>Upload UUID:</strong> {moreDetailsData.validationDetails.uploadUUID}
+                                        </div>
+                                        <div>
+                                            <strong>USI:</strong> {moreDetailsData.validationDetails.usi}
+                                        </div>
+                                        <div>
+                                            <strong>Processed by OZEDI:</strong> 
+                                            <template if:true={moreDetailsData.validationDetails.processedByOZEDI}>
+                                                <span style="color: #2e7d32; font-weight: bold;">Yes</span>
+                                            </template>
+                                            <template if:false={moreDetailsData.validationDetails.processedByOZEDI}>
+                                                <span style="color: #c62828; font-weight: bold;">No</span>
+                                            </template>
+                                        </div>
+                                        <!-- <div if:true={moreDetailsData.validationDetails.errorTypes}>
+                                            <strong>Error Types:</strong> {moreDetailsData.validationDetails.errorTypes}
+                                        </div> -->
+                                        <!-- <div if:true={moreDetailsData.validationDetails.validationRules}>
+                                            <strong>Validation Rules:</strong> {moreDetailsData.validationDetails.validationRules}
+                                        </div> -->
+                                        <!-- <div if:true={moreDetailsData.validationDetails.urlSlugs}>
+                                            <strong>URL Slugs:</strong> {moreDetailsData.validationDetails.urlSlugs}
+                                        </div> -->
+                                    </div>
+                                    
+                                    <!-- Validation Errors Section -->
+                                    <div if:true={moreDetailsData.validationDetails.formattedValidationErrors.length} 
+                                        style="margin-bottom: 15px; padding: 10px; background: #fff5f5; border-radius: 4px; border: 1px solid #fecaca;">
+                                        <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Validation Errors:</strong>
+                                        <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                                            <template for:each={moreDetailsData.validationDetails.formattedValidationErrors} for:item="error">
+                                                <li key={error.number} style="margin-bottom: 5px; color: #991b1b; font-size: 13px;">
+                                                    {error.number}) {error.message}
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Response Container -->
+                                    <!-- <div style="background-color: #ffffff; padding: 15px; border-radius: 4px; 
+                                                max-height: 200px; overflow-y: auto; white-space: pre-wrap; 
+                                                font-family: 'Courier New', monospace; font-size: 12px; 
+                                                border: 1px solid #d8dde6;">
+                                        <strong style="font-size: 13px; color: #002A52;">Response:</strong>
+                                        <div style="margin-top: 5px;">
+                                            {moreDetailsData.response}
+                                        </div>
+                                    </div> -->
+                                </div>
+                                
+                                <!-- FOOTER -->
+                                <footer class="slds-modal__footer">
+                                    <lightning-button 
+                                        variant="neutral" 
+                                        label="Close" 
+                                        onclick={handleCloseFullResponse}>
+                                    </lightning-button>
+                                </footer>
+                                
+                            </div>
+                        </section>
+                        
+                        <div class="slds-backdrop slds-backdrop_open"></div>
+                    </template>
+                </div>
+            </template>
+            <!-- </lightning-card> -->
+        </div>
+        <template if:true={isModalOpen}>
+            <!-- <div class="slds-p-around_medium">
+                <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand" onclick={closeModal} style="float:right;margin-bottom:5px;"></lightning-button>
+                <iframe src={currentUrl} width="100%" height="1300px"></iframe>
+            </div> -->
+            <div class="pdf-viewer-container slds-p-around_medium">
+                <div class="pdf-button-bar">
+                    <lightning-button label="Back" variant="brand" onclick={closeModal}></lightning-button>
+                </div>
+                <iframe src={currentUrl} class="pdf-iframe"></iframe>
+            </div>            
+        </template>
+        <template if:true={childPdf}>
+            <c-child-ndis-pdf ndis-payroll-records={currentRecordPdf}></c-child-ndis-pdf>
+        </template>
+        <template if:true={payruneditFlag}>
+            <!-- <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+            class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1"><div class="slds-modal__container" style="width:10%;"><header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0"><h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Please Confirm</h2></header><div class="slds-modal__content slds-p-around_medium"  style="border-radius:0 0 15px 15px"><div class="slds-m-around_small"><div><h1>Are you sure you want to edit this Payrun?<br>Note: Please ensure that next payruns are edited in order to reflect accurate YTD values.</h1></div><div style="margin-top:10px;align-items:center;"><lightning-button label="Yes" variant="brand"  onclick={handleeditpayrun} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button><lightning-button label="No" variant="brand" onclick={handlepayrunclose}
+                        class="slds-m-around_small"></lightning-button></div></div></div></div></section> -->
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true" class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+                <div class="slds-modal__container modal-container" style="max-width:25%;">
+                    <header class="slds-modal__header" style="background: #002A52;">
+                        <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">Please Confirm</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium modal-content">
+                        <!-- style="border-radius:0 0 15px 15px" -->
+                        <div class="slds-m-around_small" style="text-align:center">
+                            <div>
+                                <p style="text-align: center;">Are you sure you want to edit this Payrun?
+                                    <br>Note: Please ensure that next payruns are edited in order to reflect accurate YTD values. </p>
+                            </div>
+                            <div class="button-container slds-m-top_medium">
+                                <lightning-button label="No" variant="brand" onclick={handlepayrunclose} class="slds-m-around_small"></lightning-button>
+                                <lightning-button label="Yes" variant="brand" onclick={handleeditpayrun} class="slds-m-around_small"></lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+    <template if:true={payrunEdit}>
+        <div class="blur-overlay"></div>
+        <div class="right-align" style="width:40%;padding:1%;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <!-- Left side: Staff Details -->
+                <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:1%;">Edit Payrun</h3>
+                <!-- Right side: Back button and image icon -->
+                <!-- <div style="display: flex; align-items: center; gap: 10px;margin-top:1%;margin-right:1%"><lightning-button label="Back" variant="brand" onclick={handleeditClose}></lightning-button></div> -->
+            </div>
+            <lightning-record-edit-form object-api-name="Staff_Payroll_Setting__c" record-id={staffpaysetId} onsuccess={handleeditSuccess} onsubmit={HandleSubmitStaffPayRoll} data-staffpay="staffPayrollForm">
+                <div class="right-content custom-scroll">
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="StaffDetails" style="cursor: pointer;">
+                            <span>Staff Details</span>
+                            <span>{sectionIcons.StaffDetails}</span>
+                        </div>
+                        <div class="section-content" data-section="StaffDetails">
+                            <template if:true={sectionFlags.StaffDetails}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Staff</span>
+                                            <lightning-input-field field-name="Staff__c" disabled="true" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Gross Salary</span>
+                                            <lightning-input-field field-name="Gross_Salary_Display__c" disabled="true" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Working Hours Rate</span>
+                                            <lightning-input-field field-name="Working_Hours_Rate__c" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Management Fee</span>
+                                            <lightning-input-field field-name="Management_Fee__c" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="WorkingHours" style="cursor: pointer;">
+                            <span>Working Hours</span>
+                            <span>{sectionIcons.WorkingHours}</span>
+                        </div>
+                        <div class="section-content" data-section="WorkingHours">
+                            <template if:true={sectionFlags.WorkingHours}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Total Hours</span>
+                                            <lightning-input-field field-name="Working_Hours__c" disabled={isDisbaleWorkingHours} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Public Holiday Hours</span>
+                                            <lightning-input-field field-name="Public_Holiday__c" disabled={isDisbaleWorkingHours} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Saturday Working Hours</span>
+                                            <lightning-input-field field-name="Saturday_hours__c" disabled={isDisbaleWorkingHours} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Sunday Working Hours</span>
+                                            <lightning-input-field field-name="Sunday_hours__c" disabled={isDisbaleWorkingHours} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <!-- <div class="slds-size_1-of-2"><div class="slds-m-right_medium slds-m-left_medium"><lightning-input-field field-name="Working_Hours__c" disabled="true"></lightning-input-field></div></div> -->
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="PreTaxDetails" style="cursor: pointer;">
+                            <span>Pre Tax Deduction</span>
+                            <span>{sectionIcons.PreTaxDetails}</span>
+                        </div>
+                        <div class="section-content" data-section="PreTaxDetails">
+                            <template if:true={sectionFlags.PreTaxDetails}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <template if:true={firstPretax}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Description One</span>
+                                                <lightning-input-field field-name="Pre_Tax_One_Description__c" variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Value</span>
+                                                <lightning-input-field field-name="Pre_Tax_One_Value__c" name="PreTaxonevalue" onchange={handlePreTaxChange} variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template if:true={secondPretax}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Description Two</span>
+                                                <lightning-input-field field-name="Pre_Tax_Two_Description__c" variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Value</span>
+                                                <lightning-input-field field-name="Pre_Tax_Two_Value__c" name="PreTaxTwovalue" onchange={handlePreTaxChange} variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template if:true={ThirdPretax}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Description Three</span>
+                                                <lightning-input-field field-name="Pre_Tax_Three_Description__c" variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Value</span>
+                                                <lightning-input-field field-name="Pre_Tax_Three_Value__c" name="pretaxthreevalue" onchange={handlePreTaxChange} variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template if:true={fourthPretax}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Description Four</span>
+                                                <lightning-input-field field-name="Pre_Tax_Four_Description__c" variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Value</span>
+                                                <lightning-input-field field-name="Pre_Tax_Four_Value__c" name="pretaxFourvalue" onchange={handlePreTaxChange} variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template if:true={fifthPretax}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Description Five</span>
+                                                <lightning-input-field field-name="Pre_Tax_Five_Description__c" variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Value</span>
+                                                <lightning-input-field field-name="Pre_Tax_Five_Value__c" name="pretaxFivevalue" onchange={handlePreTaxChange} variant="label-hidden"></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small"></div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Total Pre Tax</span>
+                                            <lightning-input-field field-name="Pre_tax_values__c" value={totalPretaxvalue} name="totalPreTax" onchange={handlePreTaxChange} disabled="true" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="PostTaxDetails" style="cursor: pointer;">
+                            <span>Post Tax Deduction</span>
+                            <span>{sectionIcons.PostTaxDetails}</span>
+                        </div>
+                        <div class="section-content" data-section="PostTaxDetails">
+                            <template if:true={sectionFlags.PostTaxDetails}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Description:</span>
+                                            <lightning-input-field field-name="Post_Tax_Decription__c" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Value</span>
+                                            <lightning-input-field field-name="Post_tax_values__c" value={postTaxlabelValue} variant="label-hidden" name="posttax" onchange={handlePostTaxhandler}></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="reimbursements" style="cursor: pointer;">
+                            <span>Reimbursements</span>
+                            <span>{sectionIcons.reimbursements}</span>
+                        </div>
+                        <div class="section-content" data-section="reimbursements">
+                            <template if:true={sectionFlags.reimbursements}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Reimbursements</span>
+                                            <lightning-input-field field-name="Reimbursements__c" name="reimbursements" value={reimburementsValue} onchange={handleReimbureseMents} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="toggle-bar" onclick={handleSectionToggle} data-id="superAnnuation" style="cursor: pointer;">
+                            <span>SuperAnnuation</span>
+                            <span>{sectionIcons.superAnnuation}</span>
+                        </div>
+                        <div class="section-content" data-section="superAnnuation">
+                            <template if:true={sectionFlags.superAnnuation}>
+                                <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Guaranteed Superannuation</span>
+                                            <lightning-input-field field-name="Super_Annuation_Final__c" variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-2"></div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Voluntary Contribution</span>
+                                            <lightning-input-field field-name="Voluntary_Contribution__c" onchange={VoluntaryChange} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small" if:true={VoluntaryContributionCurrency}>
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Value</span>
+                                            <lightning-input-field field-name="Voluntary_Contribution_Fixed__c" name="contributionFixed" onchange={VoluntaryChange} value={voluntaryContributionCureencyVal} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small" if:true={VoluntaryContributionPercent}>
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Value</span>
+                                            <lightning-input-field field-name="Voluntary_Contribution_Percent__c" name="contributionPercent" onchange={VoluntaryChange} value={voluntaryContributionPercentVal} variant="label-hidden"></lightning-input-field>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!--  <h3 style="width:100%;height:30px" class=" slds-page-header slds-page-header__row slds-section slds-is-open slds-section__title slds-m-right_medium slds-m-left_small">Previous Employee YTD Details</h3> -->
+                    <template if:true={FinalisedYtdFlag}>
+                        <div class="container-box">
+                            <div class="toggle-bar" onclick={handleSectionToggle} data-id="PreviousEmployeeYTDDetails" style="cursor: pointer;">
+                                <span>Previous Employee YTDDetails</span>
+                                <span>{sectionIcons.PreviousEmployeeYTDDetails}</span>
+                            </div>
+                            <div class="section-content" data-section="PreviousEmployeeYTDDetails">
+                                <template if:true={sectionFlags.PreviousEmployeeYTDDetails}>
+                                    <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Pre Tax YTD</span>
+                                                <lightning-input-field field-name="Last_Pre_Tax_YTD__c" value={LastPreTaxYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Post Tax YTD</span>
+                                                <lightning-input-field field-name="Last_Post_Tax_YTD__c" value={LastPostTaxYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Tax YTD</span>
+                                                <lightning-input-field field-name="Last_Tax_YTD__c" value={LastTaxYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Superannuation YTD</span>
+                                                <lightning-input-field field-name="Last_Superannuation_YTD__c" value={LastSuperannuationYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Taxable Gross Salary YTD</span>
+                                                <lightning-input-field field-name="Last_Taxable_Gross_Salary_YTD__c" value={LastGrossSalaryYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Net Pay Salary</span>
+                                                <lightning-input-field field-name="Last_Net_Pay_Salary__c" value={LastNetPaySalaryYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Salary Wages YTD</span>
+                                                <lightning-input-field field-name="Last_Salary_Wages_YTD__c" value={LastSalaryWagesYTD} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Voluntary Superannuation YTD</span>
+                                                <lightning-input-field field-name="Last_Voluntary_Superannuation_YTD__c" value={LastVoluntarySuperAnnuationYtd} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Super and Voluntary YTD</span>
+                                                <lightning-input-field field-name="Last_Super_and_Voluntaryannuation_YTD__c" value={LastSuperAndVoluntarySuperAnnuationYtd} variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={NormalYtdFlag}>
+                        <div class="container-box">
+                            <div class="toggle-bar" onclick={handleSectionToggle} data-id="PreviousEmployeeYTDDetails" style="cursor: pointer;">
+                                <span>Previous Employee YTD Details</span>
+                                <span>{sectionIcons.PreviousEmployeeYTDDetails}</span>
+                            </div>
+                            <div class="section-content" data-section="PreviousEmployeeYTDDetails">
+                                <template if:true={sectionFlags.PreviousEmployeeYTDDetails}>
+                                    <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Pre Tax YTD</span>
+                                                <lightning-input-field field-name="Last_Pre_Tax_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Post Tax YTD</span>
+                                                <lightning-input-field field-name="Last_Post_Tax_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Tax YTD</span>
+                                                <lightning-input-field field-name="Last_Tax_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Superannuation YTD</span>
+                                                <lightning-input-field field-name="Last_Superannuation_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Taxable Gross Salary YTD</span>
+                                                <lightning-input-field field-name="Last_Taxable_Gross_Salary_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Net Pay Salary</span>
+                                                <lightning-input-field field-name="Last_Net_Pay_Salary__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Salary Wages YTD</span>
+                                                <lightning-input-field field-name="Last_Salary_Wages_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Voluntary Superannuation YTD</span>
+                                                <lightning-input-field field-name="Last_Voluntary_Superannuation_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Last Super and Voluntary YTD</span>
+                                                <lightning-input-field field-name="Last_Super_and_Voluntaryannuation_YTD__c" variant="label-hidden" disabled={disableYTD}></lightning-input-field>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="slds-align_absolute-center slds-m-around_small">
+                    <lightning-button label="Cancel" variant="outline" onclick={handleeditClose} class="slds-m-around_small"></lightning-button>
+                    <lightning-button label="Update" variant="brand" type="submit" class="slds-m-around_small"></lightning-button>
+                    <!--   <lightning-button label="Finalized" variant="brand" disabled={blhdfinalized} onclick={handleFinalized}
+                    class="slds-m-around_small"></lightning-button> -->
+                </div>
+            </lightning-record-edit-form>
+        </div>
+        <!-- modal footer start-->
+    </template>
+    <!-- Validation Error Modal -->
+    <template if:true={showValidationErrorModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-validation-heading" class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container custom-popup" style="max-width: 70%;">
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 id="modal-validation-heading" class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:center;">
+                        Superannuation Summary
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content" style="max-height: 60vh; overflow-y: auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; line-height: 1.6;">
+                    <!-- Iterate through error items -->
+                    <template for:each={validationErrorItems} for:item="section">
+                        <div key={section.title}>
+                            <!-- <h3 style="color: {section.color};">
+                                {section.title}
+                            </h3>
+                            <hr style="border: 1px solid {section.borderColor}; margin: 5px 0 15px 0;"> -->
+                            
+                            <!-- Success items (simple list) -->
+                            <template if:true={section.isSuccess}>
+                                <template for:each={section.items} for:item="name">
+                                    <div key={name} style="padding: 2px 0;">• {name}</div>
+                                </template>
+                            </template>
+                            
+                            <!-- Error items (boxed format) -->
+                            <template if:true={section.isError}>
+                                <template for:each={section.items} for:item="employee">
+                                    <div key={employee.name} style="border: 2px solid #d32f2f; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
+                                        <div style="background: #d32f2f; color: white; padding: 8px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                                            <span>{employee.name}</span>
+                                            <span style="background: white; color: #d32f2f; padding: 2px 10px; border-radius: 12px; font-size: 12px;">
+                                                {employee.errors.length} Error(s)
+                                            </span>
+                                        </div>
+                                        <div style="padding: 12px 15px; background: #fff5f5;">
+                                            <template for:each={employee.errors} for:item="error">
+                                                <div key={error} style="padding: 4px 0; display: flex; align-items: flex-start; gap: 8px;">
+                                                    <span style="color: #d32f2f; min-width: 20px;">•</span>
+                                                    <span style="color: #333;">{error}</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+                            
+                            <!-- Info items - FIXED: using a separate property for uploadId -->
+                            <template if:true={section.isInfo}>
+                                <div style="padding: 8px 12px; background: #e3f2fd; border-radius: 4px; margin: 5px 0;">
+                                    <strong>Upload ID:</strong> {section.uploadId}
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    
+                    <!-- <hr style="border: 1px solid #666; margin: 15px 0;">
+                    <div style="color: #0d47a1; font-weight: bold;">💡 Please fix the errors above and click "Retry Selected" button.</div> -->
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Close" variant="brand" onclick={closeValidationModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    
+    <!-- ABA Extract Modal -->
+    <template if:true={showAbaExtract}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-aba-heading" 
+                class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container" style="max-width: 60%;">
+                
+                <!-- Header -->
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 id="modal-aba-heading" class="slds-text-heading_medium slds-hyphenate" 
+                        style="color:white;font-weight:bold;text-align:center;">
+                        ABA File Extract
+                    </h2>
+                    <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            onclick={closeAbaExtract} title="Close">
+                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button> -->
+                </header>
+                
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium" style="max-height: 60vh; overflow-y: auto;">
+                    
+                    <!-- Summary Information -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; 
+                                margin-bottom: 15px; padding: 10px; background: #f8f9fa; 
+                                border-radius: 4px; border: 1px solid #d8dde6;">
+                        <div>
+                            <strong style="font-size: 14px; color: #002A52;">File Name:</strong> 
+                            <span style="font-family: monospace;">{abaFileName}</span>
+                        </div>
+                        <div>
+                            <strong style="font-size: 14px; color: #002A52;">Total Records:</strong> 
+                            <span>{abaExtractData.length}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- ABA Content Preview -->
+                    <div style="background-color: #ffffff; padding: 15px; border-radius: 4px; 
+                                max-height: 400px; overflow-y: auto; white-space: pre-wrap; 
+                                font-family: 'Courier New', monospace; font-size: 12px; 
+                                border: 1px solid #d8dde6;">
+                        <strong style="font-size: 13px; color: #002A52;">ABA File Content:</strong>
+                        <div style="margin-top: 5px;">
+                            {abaContent}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Close" onclick={closeAbaExtract} 
+                                    class="slds-m-around_small"></lightning-button>
+                    <lightning-button variant="brand" label="Download ABA" onclick={downloadABAFile} 
+                                    class="slds-m-around_small"></lightning-button>
+                </footer>
+                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Pay Employees Popup -->
+    <template if:true={showPayEmployeesPopup}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-pay-heading"
+                class="slds-modal slds-fade-in-open slds-modal_medium pay-emp-modal">
+            <div class="slds-modal__container pay-emp-container">
+
+                <!-- Header -->
+                <header class="slds-modal__header pay-emp-header">
+                    <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            onclick={closePayPopup} title="Close">
+                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button> -->
+                    <div class="pay-emp-header-inner">
+                        <!-- <div class="pay-emp-header-icon">
+                            <lightning-icon icon-name="utility:money" variant="inverse" size="small"></lightning-icon>
+                        </div> -->
+                        <div>
+                            <h2 id="modal-pay-heading" class="slds-text-heading_medium slds-hyphenate pay-emp-title">
+                                Pay Employees
+                            </h2><!-- 
+                            <p class="pay-emp-subtitle">Choose a payment method and confirm the details below</p> -->
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Body -->
+                <div class="slds-modal__content pay-emp-content">
+
+                    <!-- PAYMENT METHOD Section -->
+                    <div class="pay-section">
+                        <div class="pay-section-label">
+                            <span class="pay-section-bar"></span>
+                            PAYMENT METHOD
+                        </div>
+
+                        <!-- Radio Buttons -->
+                        <div class="pay-method-list">
+                            <!-- ABA -->
+                            <label class="pay-method-card pay-method-card--active">
+                                <input type="radio" name="paymentMethod" value="ABA" checked onchange={handlePaymentMethodChange} />
+                                <div class="pay-method-card-body">
+                                    <div class="pay-method-card-top">
+                                        <span class="pay-method-name">ABA Bank Transfer</span>
+                                        <span class="pay-method-badge pay-method-badge--active">Available</span>
+                                    </div>
+                                    <span class="pay-method-desc">Generate an ABA file to upload to your bank for processing employee payments.</span>
+                                </div>
+                            </label>
+
+                            <!-- NPP -->
+                            <label class="pay-method-card pay-method-card--disabled">
+                                <input type="radio" name="paymentMethod" value="NPP" disabled />
+                                <div class="pay-method-card-body">
+                                    <div class="pay-method-card-top">
+                                        <span class="pay-method-name">NPP / PayPal Instant</span>
+                                        <span class="pay-method-badge pay-method-badge--soon">Coming soon</span>
+                                    </div>
+                                    <span class="pay-method-desc">Instant payments via the New Payments Platform.</span>
+                                </div>
+                            </label>
+
+                            <!-- Manual -->
+                            <label class="pay-method-card pay-method-card--disabled">
+                                <input type="radio" name="paymentMethod" value="Manual" disabled />
+                                <div class="pay-method-card-body">
+                                    <div class="pay-method-card-top">
+                                        <span class="pay-method-name">Manual Payment</span>
+                                        <span class="pay-method-badge pay-method-badge--soon">Coming soon</span>
+                                    </div>
+                                    <span class="pay-method-desc">Record a payment made outside of this system.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="pay-divider"></div>
+
+                    <!-- Payment Details -->
+                    <div class="pay-section">
+                        <div class="pay-section-label">
+                            <span class="pay-section-bar"></span>
+                            PAYMENT DETAILS
+                        </div>
+
+                        <div class="pay-field">
+                            <label class="pay-field-label">Payment Date</label>
+                            <lightning-input type="date" value={paymentDate} onchange={handlePaymentDateChange}
+                                            variant="label-hidden"></lightning-input>
+                        </div>
+
+                        
+                        <div class="pay-field">
+                            <label class="pay-field-label">Reference</label>
+                            <lightning-input value={paymentReference} onchange={handleReferenceChange}
+                                            placeholder="Enter payment reference" variant="label-hidden"></lightning-input>
+                        </div>
+
+                        <div class="pay-checkbox-row">
+                            <lightning-input type="checkbox" label="Set as default payment method"
+                                        checked={defaultPaymentMethod} onchange={handleDefaultPaymentChange}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Employee Summary -->
+                    <div class="pay-summary">
+                        <div class="pay-summary-item">
+                            <span class="pay-summary-label">Total Employees</span>
+                            <span class="pay-summary-value">{totalEmployeesForPayment}</span>
+                        </div>
+                        <div class="pay-summary-divider"></div>
+                        <div class="pay-summary-item">
+                            <span class="pay-summary-label">Total Amount</span>
+                            <span class="pay-summary-value pay-summary-value--accent">${totalPaymentAmount}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="slds-modal__footer pay-emp-footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closePayPopup}></lightning-button>
+                    <lightning-button variant="brand" label="Generate ABA File" onclick={generateABAFileDownload}></lightning-button>
+                </footer>
+
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open pay-emp-backdrop"></div>
+    </template>
+
+
+    <!-- Confirmation Modal -->
+    <template if:true={showConfirmationModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-confirmation-heading"
+                class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container" style="max-width: 45%;">
+                
+                <!-- Header -->
+                <header class="slds-modal__header" style="background: #002A52;">
+                    <h2 id="modal-confirmation-heading" class="slds-text-heading_medium slds-hyphenate"
+                        style="color:white;font-weight:bold;text-align:center;">
+                        Confirm Payment
+                    </h2>
+                </header>
+                
+                <!-- Body -->
+                <div class="slds-modal__content slds-p-around_medium" 
+                    style="white-space: pre-wrap; font-family: 'Roboto', sans-serif; font-size: 14px; line-height: 1.8; max-height: 60vh; overflow-y: auto;">
+                    {confirmationMessage}
+                </div>
+                
+                <!-- Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeConfirmationModal}
+                                    class="slds-m-around_small"></lightning-button>
+                    <lightning-button variant="brand" label="Confirm & Process" onclick={confirmProcessPayment}
+                                    class="slds-m-around_small"></lightning-button>
+                </footer>
+                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>
