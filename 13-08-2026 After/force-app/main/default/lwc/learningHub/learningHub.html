@@ -1,0 +1,466 @@
+<template>
+    <div class="main-container">
+      
+
+            <div class="menu-container">
+             <div class={tvideosClass} onclick={handleTvideos} title="TApps Tutorials">TApps Tutorials</div> 
+             <div class={onboardClass} onclick={handleOnboard} title="Onboarding Tutorials">Onboarding Tutorials</div>
+             <div class="menu-spacer"></div>
+
+                 <div class="floating-label">
+                      
+                        <lightning-input
+                            type="search"
+                            variant="label-hidden"
+                            placeholder="Search"
+                            value={searchTerm}
+                            onchange={handleSearch}>
+                        </lightning-input>
+                         </div>
+                    <!-- </div>
+                </div> -->
+                <div class="platform-filter">
+                    <select value={selectedPlatform} onchange={handlePlatformChange} class="platform-select" title="Filter by Platform">
+                        <template for:each={platformOptions} for:item="option">
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        </template>
+                    </select>
+                </div>
+           
+         </div>
+
+
+            <!-- Header Section -->
+            <!-- <div class="hub-header">
+            
+                     
+            </div> -->
+
+            
+<template if:true={tvideosflag}>
+
+              <div class="learning-hub">
+
+            <!-- Video Categories -->
+            <div class="categories-container custom-scroll">
+                <template for:each={filteredVideoData} for:item="category">
+                    <div key={category.id} class="category-section">
+                        <div class="category-header">
+                            <span class="category-title" title={category.dynamicTitle}>
+                                {category.dynamicTitle}
+                            </span>
+                            <!-- <div class="platform-tabs">
+                                <button class="tab-button active">Web</button>
+                                <button class="tab-button">Mobile</button>
+                            </div> -->
+                            <!-- <div class="platform-tabs">
+<button
+    class={category.tabClasses.web}
+    data-platform="web"
+    data-category-id={category.id}
+    onclick={handlePlatformTabClick}
+>
+    Web
+</button>
+
+<button
+    class={category.tabClasses.mobile}
+    data-platform="mobile"
+    data-category-id={category.id}
+    onclick={handlePlatformTabClick}
+>
+    Mobile
+</button>
+
+
+</div> -->
+
+                        </div>
+
+                        <div class="video-grid">
+                            <template for:each={category.filteredVideos} for:item="video">
+                                
+                                <div 
+                                    key={video.id} 
+                                    class="video-card"
+                                    data-video-id={video.id}
+                                    data-category-id={category.id}
+                                    onclick={handleVideoClick}
+                                    title={video.title}
+                                >
+                                    <div class="video-thumbnail">
+                                        <img src={video.thumbnail} alt={video.title} class="thumbnail-image" />
+                                        <div class="duration-badge">{video.duration}</div>
+                                        <!-- <div class="thumbnail-gradient-overlay">
+                    <div class="thumbnail-title">{video.title}</div>
+                </div> -->
+                                        <!-- <template if:true={video.completed}>
+                                            <div class="completion-badge">
+                                                <lightning-icon icon-name="utility:check" alternative-text="Completed" size="xx-small"></lightning-icon>
+                                                <span>Completed</span>
+                                            </div>
+                                        </template> -->
+                                        <div class="play-overlay" title="Play Video">
+                                            <lightning-icon icon-name="utility:play" alternative-text="Play" size="medium"></lightning-icon>
+                                        </div>
+                                    </div>
+                                    <div class="video-info">
+                                        <h3 class="video-title" title={video.title}>{video.title}</h3>
+                                        <div class="video-meta">
+                                            <span class="platform-tag" title={video.platform}>{video.platform}</span>
+                                            <!-- <span class="upload-date">{video.uploadedDate}</span> -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <template if:false={category.filteredVideos.length}>
+                                <div class="no-data">
+                                    No videos available in this platform.
+                                </div>
+                            </template>
+                        </div>
+                        <div class="category-divider"></div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Video Modal -->
+            
+        </div>
+
+</template>
+
+
+<template if:true={onboardflag}>
+  <div class="onboard-container">
+
+    <!-- Header row -->
+
+
+    <!-- LIST VIEW (default) -->
+   <template if:false={showOnboardCreate}>
+  <div class="categories-container custom-scroll">
+
+    <template if:true={hasOnboardRecords}>
+
+      <template for:each={onboardGroupedByRole} for:item="section">
+        <div key={section.role} class="category-section">
+          <div class="category-header">
+            <span class="category-title" title={section.title}>{section.role} ({section.count})</span>
+          </div>
+
+          <div class="video-grid">
+            <template for:each={section.records} for:item="rec">
+              <div key={rec.Id} class="video-card" title={rec.Title__c}>
+                <div class="video-thumbnail">
+                  <img src={rec.thumbnailUrl} class="thumbnail-image" alt={rec.Title__c} />
+
+                  <div class="play-overlay"
+                       data-rec-id={rec.Id}
+                       onclick={handlePlayOnboardClick}
+                       title="Play Tutorial">
+                    <lightning-icon icon-name="utility:play" alternative-text="Play" size="medium"></lightning-icon>
+                  </div>
+                </div>
+
+                <div class="video-info">
+                  <h3 class="video-title" title={rec.Title__c}>{rec.Title__c}</h3>
+                  <div class="video-meta">
+                    <span class="platform-tag" title={rec.platform}>{rec.platform}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="category-divider"></div>
+        </div>
+      </template>
+
+    </template>
+
+    <template if:false={hasOnboardRecords}>
+      <div class="no-data">No onboarding tutorials found for this organisation.</div>
+    </template>
+
+  </div>
+</template>
+
+
+
+
+  </div>
+
+
+
+                     
+
+ 
+
+      <div class="button-group-container">
+        <template if:true={canUploadTutorials}>
+  <template if:false={showOnboardCreate}>
+    <div class="custom-back-btn" onclick={handleNewOnboard} title="Upload Tutorial">
+      Upload Tutorial
+    </div>
+  </template>
+</template>
+
+
+        <template if:true={showOnboardCreate}>
+          
+
+          <div class="custom-edit-btn" onclick={handleBackToList} title="Back">
+                            Back
+                        </div>
+        </template>
+      </div>
+    
+
+
+
+</template>
+
+<template if:true={isVideoModalOpen}>
+                <div class="modal-backdrop">
+                    <div class="video-modal">
+                        
+
+                        <div class="video-container-mix">
+                        <div class="video-gradient-overlay">
+                            <div class="video-title-text">{selectedVideo.title}</div>
+                        </div>
+
+                        <div class="modal-header top-right">
+                         
+                            <button class="close-button" onclick={closeVideoModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                            </button>
+                        </div>
+
+    <video 
+        class="video-player"
+        src={selectedVideo.videoUrl}
+        poster={selectedVideo.thumbnail}
+        controls
+        disablepictureinpicture
+        oncontextmenu={handleContextMenu}
+        ontimeupdate={handleVideoTimeUpdate}
+    ></video>
+</div>
+
+                        </div>
+                    
+                </div>
+            </template>
+
+
+
+    </div>
+
+        <!-- CREATE VIEW -->
+    <template if:true={showOnboardCreate}>
+      <div class="blur-overlay"></div>
+        <div class="right-align fade-in">    
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size:140%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:1.5%;">Upload Tutorial</h3>
+            </div>
+            <div class="container-box">
+<div class="slds-p-around_large">
+
+  <!-- TITLE (one row) -->
+  <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+    <div class="slds-size_1-of-1">
+      <div class="floating-label">
+        <span class="label-text-drop">Title</span>
+        <lightning-input
+          type="text"
+          variant="label-hidden"
+          value={title}
+          onchange={handleTitleChange}>
+        </lightning-input>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESCRIPTION (one row) -->
+  <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+    <div class="slds-size_1-of-1">
+      <div class="floating-label" style="height: 62px;">
+        <span class="label-text-drop">Description</span>
+        <lightning-textarea
+          variant="label-hidden"
+          value={description}
+          onchange={handleDescChange}>
+        </lightning-textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORGANIZATION + PLATFORM (same row) -->
+  <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-right_small">
+      <div class="floating-label">
+        <span class="label-text-drop">Organization</span>
+        <lightning-combobox
+          variant="label-hidden"
+          value={organizationId}
+          options={orgOptions}
+          placeholder="Select Organization"
+          onchange={handleOrgChange}>
+        </lightning-combobox>
+      </div>
+    </div>
+
+    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-left_small">
+      <div class="floating-label">
+        <span class="label-text-drop">Platform</span>
+        <lightning-combobox
+          variant="label-hidden"
+          value={platformValue}
+          options={platformOptionsUpload}
+          placeholder="Select Platform"
+          onchange={handlePlatformPick}>
+        </lightning-combobox>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLE (one row, future toggle space) -->
+  <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-right_small">
+      <div class="floating-label">
+        <span class="label-text-drop">Role</span>
+        <lightning-combobox
+          variant="label-hidden"
+          value={roleValue}
+          options={roleOptions}
+          placeholder="Select Role"
+          onchange={handleRolePick}>
+        </lightning-combobox>
+      </div>
+    </div>
+
+     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-left_small">
+      <div class="floating-label">
+       <span class="label-text-drop">Expire Date</span>
+      <lightning-input
+        type="date"
+        variant="label-hidden"
+        value={expireDate}
+        onchange={handleExpireDateChange}>
+      </lightning-input>
+      </div>
+    </div>
+
+
+  </div>
+
+<!-- THUMBNAIL + VIDEO ROW -->
+<div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+
+  <!-- THUMBNAIL -->
+   <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-right_small">
+    <div class="floating-label">
+     
+
+      <input
+        type="file"
+        accept="image/*"
+        data-type="thumbnail"
+        onchange={onFileUpload}
+        style="display:none" />
+
+      <button
+        type="button"
+        class="file-upload-button"
+        style="display:flex;"
+        onclick={triggerFileInput}>
+        <i class="material-icons">upload</i>
+        Upload Thumbnail
+      </button>
+
+      
+    </div>
+    <template if:true={thumbnailFileName}>
+        <div class="slds-text-body_small slds-m-top_x-small">
+          Selected: <strong>{thumbnailFileName}</strong>
+        </div>
+      </template>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-left_small">
+
+    <div class="floating-label">
+    
+
+      <input
+        type="file"
+        accept="video/*"
+        data-type="video"
+        onchange={onFileUpload}
+        style="display:none" />
+
+      <button
+        type="button"
+        class="file-upload-button"
+        style="display:flex;"
+        onclick={triggerFileInput}>
+        <i class="material-icons">upload</i>
+        Upload Video
+      </button>
+
+      
+    </div>
+    <template if:true={videoFileName}>
+        <div class="slds-text-body_small slds-m-top_x-small">
+          Selected: <strong>{videoFileName}</strong>
+        </div>
+      </template>
+  </div>
+
+</div>
+
+
+  <!-- STATUS -->
+  <div class="slds-m-bottom_medium">
+    <p class="slds-text-body_small">{status}</p>
+  </div>
+
+  <!-- BUTTONS (bottom middle) -->
+  <div class="slds-grid slds-grid_align-center slds-m-top_large">
+    <div class="slds-button-group" role="group">
+      <lightning-button
+        label="Cancel"
+        onclick={handleBackToList}>
+      </lightning-button>
+
+      <lightning-button
+        class="slds-m-left_small"
+        variant="brand"
+        label="Submit"
+        onclick={handleSubmit}
+        disabled={isSaving}>
+      </lightning-button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+      
+        </div>
+    </template>
+
+     <template if:true={isLoadingCircle}>
+    <div class="loading-screen-container">
+      <div class="loading-content">
+        <!-- Rotating Loader Circle -->
+        <div class="loading-circle"></div>
+        <h2 class="loading-text">Uploading...</h2>
+      </div>
+    </div>
+  </template>
+</template>

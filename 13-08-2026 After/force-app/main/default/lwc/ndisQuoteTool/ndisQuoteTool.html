@@ -1,0 +1,1548 @@
+<template>
+    <div class="mainContainer">
+
+    <template if:true={isMenuContainer}>
+                <div class="menu-container">
+
+                    <div class={newQuoteClass}
+                        onclick={handleNewQuoteClick}>
+                        New Quote
+                    </div>
+
+                    <div class={quoteDraftClass}
+                        onclick={handleQuoteDraftClick}>
+                        Quote Draft
+                    </div>
+
+                    <template if:false={isStart}>
+
+                        <div class={tSignClass}
+                            onclick={handleTSignHistoryClick}>
+                            T-Sign Quote History
+                        </div>
+
+                    </template>
+
+                    <lightning-button
+                        class="close-btn"
+                        variant="brand-outline"
+                        onclick={closeQuote}
+                        label="Close">
+                    </lightning-button>
+
+                    
+
+                </div>
+
+    </template>
+                 <!-- =======================
+                     NEW QUOTE SCREEN
+                    ======================== -->
+    <template if:true={isNewQuoteScreen}>
+
+         <!-- Sub Tabs -->
+        <div class="subTabs slds-border_bottom">
+
+
+                <div class="tab-view-wrapper">
+                    <button
+                        class={participantsTabClass}
+                        onclick={handleParticipantsTabClick}
+                    >
+                        Participants
+                    </button>
+
+                    <button
+                        class={newContactsTabClass}
+                        onclick={handleNewContactsTabClick}
+                    >
+                        New Contacts
+                    </button>
+
+                    <template if:true={isNewContactsTab}>
+                        <lightning-button
+                            class="slds-float_right"
+                            style="padding: 0.2%;"
+                            label="Add New Contact"
+                            variant="brand"
+                            onclick={handleNewContact}>
+                        </lightning-button>
+                    </template>
+
+                </div>
+        </div>
+    <!-- <template if:true={isNewQuoteScreen}> -->
+            <!-- <pARTICIPANTS> -->
+            <template if:true={isParticipantsTab}>
+                <div class="slds-grow slds-p-around_small" style="min-height:0; display:flex; flex-direction:column;">
+                    <div class="slds-grid slds-gutters slds-wrap slds-flex-shrink-none" style="padding-bottom:0.6%;">
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                            <lightning-input type="search" variant="label-hidden" placeholder="Search by name, email or phone..." value={searchTerm} onchange={handleSearchKey}></lightning-input>
+                        </div>
+                    </div>
+                       <!--  <template if:true={isLoading}>
+                            <div class="slds-align_absolute-center slds-p-vertical_medium slds-flex-shrink-none">
+                                <lightning-spinner alternative-text="Loading"></lightning-spinner>
+                            </div>
+                         </template>
+                            -->
+
+                        <template if:true={pageClients.length}>
+
+                            <div class="table-container ndis-participants-table slds-grow" style="min-height:0; display:flex; flex-direction:column;">
+
+                                <!-- HEADER -->
+                                <div class="header-wrapper">
+                                    <table class="staff-table" role="table">
+                                        <thead>
+                                            <tr>
+                                                <th class="table-th" title="Name">Name</th>
+                                                <th class="table-th" title="NDIS Number">NDIS Number</th>
+                                                <th class="table-th" title="Email">Email</th>
+                                                <th class="table-th" title="Phone">Phone</th>
+                                                <th class="table-th" title="State">State</th>
+                                                <th class="table-th" title="Action">Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+
+                                <!-- BODY (SCROLL ONLY) -->
+                                <div class="body-scroll custom-scroll tableHeight table-body">
+                                    <table class="staff-table">
+                                        <tbody>
+
+                                            <template for:each={pageClients} for:item="c">
+                                                <tr key={c.Id} class="table-row">
+
+                                                    <!-- Name -->
+                                                    <td class="table-td" title={c.fullName}>
+                                                        <div class="avatar-name">
+                                                            <div class="avatar-circle">
+                                                                {c.initials}
+                                                            </div>
+                                                            <span class="avatar-text">{c.fullName}</span>
+                                                        </div>
+                                                    </td>
+
+                                                    <!-- NDIS Number -->
+                                                    <td class="table-td" title={c.ndisNumber}>{c.ndisNumber}</td>
+
+                                                    <!-- Email -->
+                                                    <td class="table-td" title={c.Email__c}>{c.Email__c}</td>
+
+                                                    <!-- Phone -->
+                                                    <td class="table-td" title={c.Contact_Number__c}>{c.Contact_Number__c}</td>
+
+                                                    <!-- State -->
+                                                    <td class="table-td" title={c.State__c}>{c.State__c}</td>
+
+                                                    <!-- Action -->
+                                                    <td class="table-td" title="Select">
+                                                       <!--  <lightning-button
+                                                            label="Select"
+                                                            variant="brand"
+                                                            data-id={c.Id}
+                                                            data-quoteid={c.qid}
+                                                            onclick={handleParticipantSelect}>
+                                                        </lightning-button> -->
+
+                                                        <span class="material-icons edit-icon"
+                                                            data-id={c.Id}
+                                                            data-quoteid={c.qid}
+                                                            data-industry ={c.industry}
+                                                            onclick={handleParticipantSelect} title="Generate Quote" style="cursor: pointer;">
+                                                         Receipt_Long 
+                                                      </span>
+                                                    </td>
+
+                                                </tr>
+                                            </template>
+
+                                            <!-- Empty State -->
+                                            <template if:true={noResults}>
+                                                <tr>
+                                                    <td colspan="6" class="table-td no-data" title="No contacts found">
+                                                        No contacts found
+                                                    </td>
+                                                </tr>
+                                            </template>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                          
+                        </template>
+                        <template if:false={pageClients.length}>
+                            <div class="no-data">
+                                <p>No records found</p>
+                            </div>
+                        </template>
+
+
+                        <template if:true={hasError}>
+                            <div class="slds-text-color_error slds-p-around_small slds-flex-shrink-none">{errorMessage}</div>
+                        </template>
+
+                        <template if:true={noResults}>
+                            <div class="slds-text-align_center slds-p-vertical_medium slds-text-color_weak slds-flex-shrink-none">No contacts found.</div>
+                        </template>
+                </div>
+                            <!-- PAGINATION -->
+                         <template if:true={paginationVisible}>
+                            <div class="fixed-pagination">
+                                <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-horizontal_small">
+
+                                    <div class="slds-col">
+                                        <div class="slds-list_inline">
+                                            <span style="margin-right:5px;">Page Size:</span>
+                                            <div class="slds-select_container">
+                                                <select class="slds-select" onchange={handleRecordsPerPage}>
+                                                    <template for:each={pageSizeOptions} for:item="option">
+                                                        <option key={option} value={option}>{option}</option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-align_absolute-center">
+                                    <lightning-button
+                                            class="slds-m-horizontal_xx-small"
+                                            disabled={isFirstPage}
+                                            icon-name="utility:jump_to_left"
+                                            label="First"
+                                            onclick={firstPage}>
+                                        </lightning-button>
+
+                                        <lightning-button
+                                            class="slds-m-horizontal_xx-small"
+                                            disabled={isFirstPage}
+                                            icon-name="utility:chevronleft"
+                                            label="Previous"
+                                            onclick={previousPage}>
+                                        </lightning-button>
+
+                                        <span class="slds-badge slds-m-horizontal_xx-small">
+                                            Showing {pageNumber} of {totalPages} Page(s)
+                                        </span>
+
+                                        <lightning-button
+                                            class="slds-m-horizontal_xx-small"
+                                            disabled={isLastPage}
+                                            icon-name="utility:chevronright"
+                                            label="Next"
+                                            onclick={nextPage}>
+                                        </lightning-button>
+
+                                        <lightning-button
+                                            class="slds-m-horizontal_xx-small"
+                                            disabled={isLastPage}
+                                            icon-name="utility:jump_to_right"
+                                            label="Last"
+                                            onclick={lastPage}>
+                                        </lightning-button>
+                                    </div>
+
+                                    <div class="slds-col slds-text-align_right">
+                                        <span class="slds-badge">Total Records: {totalRecords}</span>
+                                    </div>
+
+                                </div>
+                            </div>
+                         </template>                  
+            </template>
+            <!-- =========================
+                 NEW CONTACTS LIST + New Contact
+            ========================== -->
+            <!-- <template if:true={isNewContactsTab}>
+
+                <div class="contact-scroll custom-scroll">
+
+
+                                    <table class="quote-table slds-m-around_small">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>State</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            <template for:each={newContactList} for:item="contact">
+                                                <tr key={contact.Id}>
+                                                    <td>
+                                                        <div class="avatar-circle">
+                                                            {contact.initials}
+                                                        </div>
+                                                    </td>
+
+                                                    <td>{contact.Name}</td>
+                                                    <td>{contact.Email__c}</td>
+                                                    <td>{contact.Phone__c}</td>
+                                                    <td>{contact.State__c}</td>
+                                                    <td>New Contact</td>
+
+                                                    <td>
+                                                        <lightning-button
+                                                            label="Select"
+                                                            variant="brand"
+                                                            data-id={contact.Id}
+                                                            onclick={handleNewContactSelect}>
+                                                        </lightning-button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+
+
+
+                </div>
+            </template> -->
+
+            <template if:true={isNewContactsTab}>
+                <div class="slds-grow slds-p-around_small" style="min-height:0; display:flex; flex-direction:column;">
+                    <template if:false={noContactRecordsFlag}>
+                        <div class="table-container ndis-new-contacts-table slds-grow" style="min-height:0; display:flex; flex-direction:column;">
+
+                            <!-- HEADER -->
+                            <div class="header-wrapper">
+                                <table class="staff-table" role="table">
+                                    <thead>
+                                        <tr>
+                                            <th class="table-th" title="Name">Name</th>
+                                            <th class="table-th" title="Email">Email</th>
+                                            <th class="table-th" title="Phone">Phone</th>
+                                            <th class="table-th" title="State">State</th>
+                                            <th class="table-th" title="Status">Status</th>
+                                            <th class="table-th" title="Action">Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <!-- BODY -->
+                            <div class="body-scroll custom-scroll tableHeight table-body">
+                                <table class="staff-table">
+                                    <tbody>
+                                        
+                                        <template for:each={pageNewContacts} for:item="contact">
+                                            <tr key={contact.Id} class="table-row">
+
+                                                <!-- Avatar + Name (SAME TD) -->
+                                                <td class="table-td" title={contact.Name}>
+                                                    <div class="avatar-name">
+                                                        <div class="avatar-circle">
+                                                            {contact.initials}
+                                                        </div>
+                                                        <span class="avatar-text">
+                                                            {contact.Name}
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                <td class="table-td" title={contact.Email__c}>{contact.Email__c}</td>
+                                                <td class="table-td" title={contact.Phone__c}>{contact.Phone__c}</td>
+                                                <td class="table-td" title={contact.State__c}>{contact.State__c}</td>
+
+                                                <td class="table-td" title="New Contact">
+                                                    <span class="status-pill new-contact">
+                                                        New Contact
+                                                    </span>
+                                                </td>
+
+                                                <td class="table-td" title="Select">
+                                                <!--  <lightning-button
+                                                        label="Select"
+                                                        variant="brand"
+                                                        data-id={contact.Id}
+                                                        onclick={handleNewContactSelect}>
+                                                    </lightning-button> -->
+                                                    <span class="material-icons edit-icon"
+                                                        data-id={contact.Id}
+                                                        data-industry ={contact.industryType}
+                                                        onclick={handleNewContactSelect} title="Generate Quote" style="cursor: pointer;">
+                                                    Receipt_Long 
+                                                    </span>
+                                                    <span class="material-icons edit-icon"
+                                                        data-id={contact.Id}
+                                                        onclick={handleEditNewContact} title="Edit" style="cursor: pointer;">
+                                                        edit_document
+                                                    </span>
+                                                </td>
+
+                                            </tr>
+                                        </template>
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </template>
+                    <template if:true={noContactRecordsFlag}>
+                        <div class="no-data">
+                            <p>No records found</p>
+                        </div>
+                    </template>
+                </div>
+            <template if:true={paginationVisible}>
+            <div class="fixed-pagination">
+                <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-horizontal_small">
+
+                    <div class="slds-col">
+                        <div class="slds-list_inline">
+                            <span style="margin-right:5px;">Page Size:</span>
+                            <div class="slds-select_container">
+                                <select class="slds-select" onchange={handleRecordsPerPage}>
+                                    <template for:each={pageSizeOptions} for:item="option">
+                                        <option key={option} value={option}>{option}</option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slds-align_absolute-center">
+                        <lightning-button
+                        class="slds-m-horizontal_xx-small"
+                            disabled={isFirstPage}
+                            icon-name="utility:jump_to_left"
+                            label="First"
+                            onclick={firstPage}>
+                        </lightning-button>
+
+                        <lightning-button
+                            disabled={isFirstPage}
+                            class="slds-m-horizontal_xx-small"
+                            icon-name="utility:chevronleft"
+                            label="Previous"
+                            onclick={previousPage}>
+                        </lightning-button>
+
+                        <span class="slds-badge slds-m-horizontal_xx-small">
+                            Showing {pageNumber} of {totalPages} Page(s)
+                        </span>
+
+                        <lightning-button
+                            disabled={isLastPage}
+                            class="slds-m-horizontal_xx-small"
+                            icon-name="utility:chevronright"
+                            label="Next"
+                            onclick={nextPage}>
+                        </lightning-button>
+
+                        <lightning-button
+                            disabled={isLastPage}
+                            class="slds-m-horizontal_xx-small"
+                            icon-name="utility:jump_to_right"
+                            label="Last"
+                            onclick={lastPage}>
+                        </lightning-button>
+                    </div>
+
+                    <div class="slds-col slds-text-align_right">
+                        <span class="slds-badge">
+                            Total Records: {totalRecordsContact}
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+        </template>                
+            </template>
+
+
+
+
+    </template>
+               <!-- BUILDER SCREEN -->
+              <template if:true={isBuilderScreen}>
+                <div class="slds-grow" style="min-height:0; display:flex; flex-direction:column;">
+                  <div class="selectedCard slds-grow slds-scrollable_y custom-scroll slds-p-around_small" style="min-height:0;">
+                                <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center" style="Padding: 0 0 0.8% 0.1%;">
+                                    <div>
+                                        <h2 class="slds-text-title_bold">NDIS Quote Tool</h2>
+                                        <p class="slds-text-color_weak">Add support items and configure the quote</p>
+                                    </div>
+
+                                    <div>
+                                        <lightning-button 
+                                            label="Back" 
+                                            title="Back"
+                                            variant="brand" 
+                                            onclick={goBackToList}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+
+                            <template if:true={clientflag}>
+                                <template if:true={selectedClient}>
+                                <div class="slds-box slds-m-bottom_medium quoteCardSelected">
+                                    <p class="slds-text-title_bold">{selectedClient.fullName}</p>
+                                    <p class="slds-text-body_small">NDIS: {selectedClient.NDIS_Number__c} · {selectedClient.Email__c} · {selectedClient.Contact_Number__c}</p>
+                                </div>
+                             </template>
+                             </template>
+                            <template if:true={contactflag}>
+                             <template if:true={selectedContact}>
+                                <div class="slds-box slds-m-bottom_medium quoteCardSelected">
+                                    <p class="slds-text-title_bold">{selectedContact.Name}</p>
+                                    <p class="slds-text-body_small">{selectedContact.Email__c}·{selectedContact.Phone__c}.{selectedContact.State__c}</p>
+                                </div>
+                             </template>
+                             </template>
+
+                             <div class="slds-box slds-m-bottom_medium quoteCardSelected">
+                                    <h2 class="slds-text-title_bold slds-m-bottom_medium">Quote Configuration</h2>
+                                <!-- ROW 1: 4 Fields -->
+                                <div class="slds-grid slds-gutters">
+                                    
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                         <lightning-input 
+                                            label="Quote Number" 
+                                            value={quoteNumber}
+                                            required
+                                            disabled
+                                            onchange={handleQuoteNumber}>
+                                        </lightning-input>
+
+                                        
+                                    </div>
+
+                                   <!--  <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4"> -->
+                                       <!--  <lightning-combobox 
+                                            label="State" 
+                                            value={state} 
+                                            required
+                                            options={stateOptions}
+                                            onchange={handleQuoteStateChange}>
+                                        </lightning-combobox>
+ -->
+                                       <!--  <c-tesseract-apps-single-combobox
+                                            
+                                            options={stateOptions}
+                                            value={state} 
+                                             onchange={handleQuoteStateChange}>
+                                        </c-tesseract-apps-single-combobox>
+                                    </div> -->
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label">
+                                                <abbr class="slds-required" title="required">*</abbr>
+                                                State
+                                            </label>
+
+                                            <c-tesseract-apps-single-combobox
+                                                options={stateOptions}
+                                                value={state}
+                                                onchange={handleQuoteStateChange}>
+                                            </c-tesseract-apps-single-combobox>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <lightning-combobox 
+                                            label="Valid for (days)" 
+                                            value={validFor} 
+                                            required
+                                            options={validForOptions}
+                                            onchange={handleValidForChange}>
+                                        </lightning-combobox>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <lightning-input 
+                                            type="text"
+                                            label="Prepared By (Optional)" 
+                                            value={preparedBy}
+                                            onchange={handlePreparedBy}>
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+
+                                <!-- ROW 2: Date Fields (still 4 columns) -->
+                                <div class="slds-grid slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <lightning-input 
+                                            type="date" 
+                                            label="Service Period Start" 
+                                            required
+                                            value={serviceStart} 
+                                            onchange={handleStartDate}>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <lightning-input 
+                                            type="date" 
+                                            label="Service Period End" 
+                                            required
+                                            value={serviceEnd} 
+                                            onchange={handleEndDate}>
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+
+
+                                <template if:true={hasQuoteCoverage}>
+                                    <div class="quote-coverage-card slds-m-top_medium">
+                                        <span class="material-icons info-icon">info</span>
+
+                                        <div>
+                                            <strong>
+                                                Quote Coverage: {quoteCoverage.weeks} weeks ({quoteCoverage.months} months)
+                                            </strong>
+                                            <p class="slds-m-top_x-small">
+                                                This is the period that supports will be delivered. The quote total represents the maximum projected cost
+                                                for this duration. Actual spending occurs as services are delivered.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </template>
+                                </div>
+                                <div class="slds-grid slds-gutters slds-m-bottom_medium summary-grid">
+
+                                    <div class="slds-col">
+                                        <div class="summary-card card-line-items">
+                                            <div class="summary-title">Line Items</div>
+                                            <div class="summary-value">{lineItemCount}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-col">
+                                        <div class="summary-card card-total-hours">
+                                            <div class="summary-title">Total Hours</div>
+                                            <div class="summary-value">{totalHours}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-col">
+                                        <div class="summary-card card-avg-rate">
+                                            <div class="summary-title">Avg. Rate / Hour</div>
+                                            <div class="summary-value">
+                                                <lightning-formatted-number
+                                                    value={avgRatePerHour}
+                                                    format-style="currency"
+                                                    currency-code="AUD">
+                                                </lightning-formatted-number>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!-- Calculate costs + inline rows -->
+                                <div class="slds-box slds-m-bottom_medium" style="padding:0; border-radius:0.75rem;">
+                                    <div class="section-header">
+                                        <div class="left">
+                                            <h2 class="slds-text-title_bold">Calculate costs</h2>
+                                            <p class="subtitle">Easily adjust the quantity, frequency, and duration of your supports to calculate an estimate of total costs</p>
+                                        </div>
+
+                                        <lightning-button variant="neutral" label="+ Add Support Item" onclick={addSupportRow}></lightning-button>
+                                    </div>
+                                    <div class="table-container">
+                                        <!-- HEADER (fixed inside scroll wrapper) -->
+                                        <div class="header-wrapper">
+                                            <table class="quote-table" role="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="table-th quotepd" title="Service Type">Service Type</th>
+                                                        <th class="table-th quotepd" title="Support Item">Support Item</th>
+                                                        <th class="table-th quotepd" title="Price">Price</th>
+                                                        <th class="table-th quotepd" title="Qty(hrs)">Qty(hrs)</th>
+                                                        <th class="table-th quotepd1" title="Freq">Freq</th>
+                                                        <th class="table-th quotepd" title="Interval">Interval</th>
+                                                        <th class="table-th quotepd" title="Duration">Duration</th>
+                                                        <th class="table-th quotepd1" title="Period">Period</th>
+                                                        <th class="table-th quotepd" title="Cost">Cost</th>
+                                                        <th class="table-th quotepd" title="Action">Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+
+                                        <!-- SCROLLABLE BODY -->
+                                        <div class="body-scroll custom-scroll tableHeight" style="overflow:visible;">
+                                            <table class="quote-table">
+                                                <tbody>
+                                                    <template for:each={quoteSupportItems} for:item="row">
+                                                        <tr key={row.id}>
+
+                                                            <!-- Service Type -->
+                                                            <td class="table-td" title={row.serviceTypeLabel}>
+                                                                 <c-tesseract-apps-single-combobox
+                                                                    variant="label-hidden"
+                                                                    data-id={row.id}
+                                                                    options={serviceTypeOptions}
+                                                                    title={row.serviceTypeLabel}
+                                                                    value={row.serviceType}
+                                                                    onchange={handleRowServiceTypeChange}>
+                                                                 </c-tesseract-apps-single-combobox>
+                                                            </td>
+
+                                                            <!-- Support Item -->
+                                                            <td class="table-td" title={row.supportItemLabel}>
+                                                                 <c-tesseract-apps-single-combobox
+                                                                    variant="label-hidden"
+                                                                    data-id={row.id}
+                                                                    options={row.supportItemOptions}
+                                                                    title={row.supportItemLabel}
+                                                                    value={row.supportItem}
+                                                                    onchange={handleRowSupportItemChange}>
+                                                                 </c-tesseract-apps-single-combobox>
+                                                            </td>
+
+                                                            <!-- Price -->
+                                                            <td class="table-td" title={row.priceDisplay}>
+                                                                {row.priceDisplay}
+                                                            </td>
+
+                                                            <!-- Qty -->
+                                                            <td class="table-td" title={row.qty}>
+                                                                <lightning-input 
+                                                                    variant="label-hidden"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.01"
+                                                                      formatter="decimal"
+                                                                    data-id={row.id}
+                                                                    value={row.qty}
+                                                                    onchange={handleRowQtyChange}>
+                                                                </lightning-input>
+                                                            </td>
+
+                                                            <!-- Frequency -->
+                                                            <td class="table-td" title={row.freq}>
+                                                                <lightning-input 
+                                                                    variant="label-hidden"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    data-id={row.id}
+                                                                    value={row.freq}
+                                                                    onchange={handleRowFreqChange}>
+                                                                </lightning-input>
+                                                            </td>
+
+                                                            <!-- Interval -->
+                                                           <td class="table-td interval-cell" title={row.interval}>
+                                                                <div class="interval-wrapper">
+                                                                    <lightning-combobox
+                                                                        variant="label-hidden"
+                                                                        data-id={row.id}
+                                                                        value={row.interval}
+                                                                        options={intervalOptions}
+                                                                        onchange={handleRowIntervalChange}>
+                                                                    </lightning-combobox>
+                                                                     <template if:true={row.frequencyLabel}>
+                                                                        <div class="freq-tooltip">
+                                                                            {row.frequencyLabel}
+                                                                        </div>
+                                                                    </template>
+                                                                </div>
+                                                            </td>
+
+                                                            <!-- Duration -->
+                                                            <td class="table-td" title={row.dur}>
+                                                                <lightning-input 
+                                                                    variant="label-hidden"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.01"
+                                                                    formatter="decimal"
+                                                                    data-id={row.id}
+                                                                    value={row.dur}
+                                                                    onchange={handleRowDurChange}>
+                                                                </lightning-input>
+                                                            </td>
+
+                                                            <!-- Duration Period -->
+                                                            <td class="table-td" title={row.durationPeriod}>
+                                                                <lightning-combobox
+                                                                    variant="label-hidden"
+                                                                    data-id={row.id}
+                                                                    value={row.durationPeriod}
+                                                                    options={durationPeriodOptions}
+                                                                    onchange={handleRowDurationPeriodChange}>
+                                                                </lightning-combobox>
+                                                            </td>
+
+                                                            <!-- Cost -->
+                                                            <td class="table-td" title={row.costDisplay}>
+                                                                {row.costDisplay}
+                                                            </td>
+
+                                                            <!-- Action -->
+                                                            <td class="table-td actions" title="Delete">
+                                                               <!--  <lightning-button-icon
+                                                                    icon-name="utility:delete"
+                                                                    alternative-text="Delete"
+                                                                    data-id={row.id}
+                                                                    onclick={handleDeleteLineItem}
+                                                                    variant="bare">
+                                                                </lightning-button-icon> -->
+                                                                 <span class="material-icons delete-icon"
+                                                                    data-id={row.id}
+                                                                     onclick={handleDeleteLineItem} title="Delete" style="cursor: pointer;">
+                                                                    delete
+                                                                </span>
+                                                            </td>
+
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="slds-text-align_right slds-m-top_medium total_Est">
+                                        <div class="slds-text-title">Total Estimate:</div>
+                                        <div class="slds-text-heading_medium">
+                                            <lightning-formatted-number
+                                                value={totalEstimate}
+                                                format-style="currency"
+                                                currency-code="AUD">
+                                            </lightning-formatted-number>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="slds-box slds-m-bottom_medium quoteCardSelected">
+                                    <div class="floating-label-terms">
+                                        <span class="label-text-drop-terms slds-form-element__label">Terms and Conditions</span>
+                                        <lightning-input-rich-text
+                                        label={richtextLable}
+                                        value={termsAndConditions}
+                                        onchange={handleTermsAndConditions}
+                                        formats="bold italic underline list">
+                                    </lightning-input-rich-text>
+                                    </div>
+                                </div>
+                                <div class="slds-box slds-m-bottom_medium quoteCardSelected">
+                                    <lightning-textarea label="Additional Notes (Optional)" value={additionalNotes} onchange={handleAdditionalNotes}></lightning-textarea>
+                                </div>
+                            
+                  </div>
+
+                  <div class="slds-grid slds-grid_align-end  quote-footer-bar slds-border_top" style="background-color: white; flex-shrink: 0; position: sticky; bottom: 0; z-index: 10;padding:1% 0 1% 0">
+                                        <lightning-button 
+                                            class="slds-m-right_small"
+                                            label="Back" 
+                                            title="Back"
+                                            variant="brand" 
+                                            onclick={goBackToList}>
+                                        </lightning-button>
+                                        <template if:true={resetflag} >                          
+                                            <lightning-button label="Reset" class="slds-m-right_small" onclick={handleReset}></lightning-button>
+                                        </template>
+                                        <lightning-button variant="brand" label="Save Draft" class="slds-m-right_small" onclick={handleSaveDraft} disabled={disablesave}></lightning-button>
+                  </div>   
+                </div>
+              </template>
+
+                <!-- Loading Spinner -->
+                    <template if:true={isQuoteLoading}>
+                        <div class="overlay-logo"></div>
+                        <div class="spinner-wrapper">
+                            <div class="loader-container">
+                                <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                                <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                            </div>
+                            <p class="progress-text">Loading</br>Please Wait...</p>
+                        </div>
+                    </template>
+
+                                <!-- Quote header -->
+      
+                    <!-- ===============================
+                        QUOTE DRAFT SCREEN
+                    ================================ -->
+        <template if:true={isQuoteDraftScreen}>
+            <template if:true={isFileExpand}>
+                                    <c-document-office-service
+                                        record-id={recordId}
+                                        module-path-from-parent="ticket"
+                                        onuploadcomplete={handleAwsUploadComplete}
+                                        onfiledeleted={handleFileDeleted}
+                                        oncancel={handlefilecancel}>
+
+                                    </c-document-office-service>
+                                </template> 
+            <div class="slds-grow slds-p-around_small" style="min-height:0; display:flex; flex-direction:column;">
+
+                <h2 class=" slds-m-bottom_small slds-flex-shrink-none" style="font-weight:bold;">
+                    Quote Drafts
+                </h2>
+
+
+            <template if:true={draftQuotes}>
+                <div class="table-container ndis-quote-table slds-grow" style="min-height:0; display:flex; flex-direction:column;">
+
+                    <!-- HEADER -->
+                    <div class="header-wrapper">
+                        <table class="staff-table" role="table">
+                            <thead>
+                                <tr>
+                                     <th class="table-th" title="Quote Number">Quote Number</th>
+                                    <th class="table-th" title="Name">Name</th>
+                                    <th class="table-th" title="Status">Status</th>
+                                    <th class="table-th" title="State">State</th>
+                                    <th class="table-th" title="Action">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <!-- BODY (SCROLL ONLY) -->
+                    <div class="body-scroll custom-scroll tableHeight table-body">
+                        <table class="staff-table">
+                            <tbody>
+
+                                <template for:each={pageDraftQuotes} for:item="q">
+                                    <tr key={q.Id} class="table-row">
+
+                                        <td class="table-td" title={q.Quote_Number__c}>
+                                            {q.Quote_Number__c}
+                                        </td>
+                                        <td class="table-td" title={q.displayName}>
+                                            {q.displayName}
+                                        </td>
+                                        <td class="table-td" title={q.Status__c}>
+                                            <span class="status-pill">
+                                                {q.Status__c}
+                                            </span>
+                                        </td>
+                                        <td class="table-td" title={q.State__c}>
+                                            {q.State__c}
+                                        </td>
+                                        <td class="table-td" title="Actions">
+                                           <!--  <lightning-button
+                                                label="Open"
+                                                variant="brand"
+                                                data-id={q.Id}
+                                                onclick={handleOpenDraft}>
+                                            </lightning-button> &nbsp; -->
+
+                                             <span class="material-icons edit-icon"
+                                                       data-id={q.Id}
+                                                      onclick={handleOpenDraft} title="Edit" style="cursor: pointer;">
+                                                    edit_document
+                                                </span>
+
+                                             
+                                            <!-- <lightning-button
+                                                variant="brand"
+                                                label="Preview"
+                                                class="slds-m-left_small"
+                                                data-url={q.QuotePdf_Url__c}
+                                                data-quoteid={q.Id}
+                                                onclick={handleView}>
+                                            </lightning-button> -->
+
+                                            <span class="material-icons view-icon slds-m-left_small"
+                                                      data-url={q.QuotePdf_Url__c}
+                                                      data-quoteid={q.Id}
+                                                      
+                                                      onclick={handleView} title="View" style="cursor: pointer;">
+                                                    visibility
+                                                </span>
+
+
+                                        </td>    
+                                    </tr>
+                                </template>
+
+                                <!-- Empty State -->
+                                <template if:false={pageDraftQuotes.length}>
+                                    <tr>
+                                        <td colspan="5" class="table-td no-data" title="No draft quotes available">
+                                            No draft quotes available.
+                                        </td>
+                                    </tr>
+                                </template>
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </template>
+            </div>
+            <template if:true={paginationVisible}>
+                <div class="fixed-pagination">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-horizontal_small">
+
+                        <div class="slds-col">
+                            <div class="slds-list_inline">
+                                <span style="margin-right:5px;">Page Size:</span>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" onchange={handleDraftRecordsPerPage}>
+                                        <template for:each={pageSizeOptions} for:item="option">
+                                            <option key={option} value={option}>{option}</option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slds-align_absolute-center">
+                            <lightning-button
+                                label="First"
+                                class="slds-m-horizontal_xx-small"
+                                onclick={draftFirstPage}
+                                disabled={isDraftFirstPage}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Previous"
+                                class="slds-m-horizontal_xx-small"
+                                onclick={draftPreviousPage}
+                                disabled={isDraftFirstPage}>
+                            </lightning-button>
+
+                            <span class="slds-badge slds-m-horizontal_xx-small">
+                                Showing {draftPageNumber} of {draftTotalPages} Page(s)
+                            </span>
+
+                            <lightning-button
+                                label="Next"
+                                class="slds-m-horizontal_xx-small"
+                                onclick={draftNextPage}
+                                disabled={isDraftLastPage}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Last"
+                                class="slds-m-horizontal_xx-small"
+                                onclick={draftLastPage}
+                                disabled={isDraftLastPage}>
+                            </lightning-button>
+                        </div>
+
+                        <div class="slds-col slds-text-align_right">
+                            <span class="slds-badge">
+                                Total Records: {draftTotalRecords}
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <!-- LOADING STATE -->
+            <template if:false={draftQuotes}>
+                <p class="slds-text-color_weak slds-p-around_small slds-flex-shrink-none">
+                    Loading draft quotes...
+                </p>
+            </template>
+        </template>
+
+    
+                    <!-- <Below template Place in T-Sign Quote History> -->
+                    <!-- <template if:true={isPreviewHistory}> -->
+    <template if:true={isTSignHistoryScreen}>
+        <div class="slds-grow" style="min-height:0; display:flex; flex-direction:column;">
+            
+            <!-- Filters row -->
+            <div class="dropdown-row slds-flex-shrink-none">
+                <!-- Document Status Dropdown -->
+                <div class="dropdown-groupP">
+                    <div class="floating-label">
+                        <span class="label-text-drop floating-label-support">Document Status</span>
+            
+                        <select id="documentStatus" class="custom-dropdown" value={selectedStatus} onchange={handleStatusChange}>
+                            <option value="" disabled>Choose an option</option>
+                            <option value="Draft">Pending</option>
+                            <option value="Pending">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="All" selected>All</option>
+                        </select>
+                    </div>
+                </div>
+            
+                <!-- Sort Order Dropdown with Icon -->
+                <div class="dropdown-group">
+                    <div class="floating-label">
+                        <span class="label-text-drop floating-label-support">Sort Order</span>
+
+                        <select id="sortOrder" class="custom-dropdown" onchange={handleSortOrderChange}>
+                            <option value="desc" selected>Newest</option>
+                            <option value="asc">Oldest</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div slot="title" class="custom-logo-title">
+                    <img src={logo} alt="Te_sign Logo" class="logo-title-image" />
+                </div>
+            </div>
+
+            <!-- Content Area with Table -->
+            <div class="slds-grow slds-p-around_small" style="min-height:0; display:flex; flex-direction:column;">
+                <template if:true={selectedStatus}>
+                    <template if:true={displayedDocuments.length}>
+                        <div class="table-container ndis-tsign-table slds-grow" style="min-height:0; display:flex; flex-direction:column;">
+
+                            <!-- HEADER -->
+                            <div class="header-wrapper">
+                                <table class="staff-table" role="table">
+                                    <thead>
+                                        <tr>
+                                            <th class="table-th" title="File Name">File Name</th>
+                                            <th class="table-th" title="Created Date">Created Date</th>
+                                            <th class="table-th" title="Recipients">Recipients</th>
+
+                                            <!-- Show Status Column Only if Not Draft -->
+                                            <template if:false={isDraftView}>
+                                                <th class="table-th" title="Status">Status</th>
+                                            </template>
+
+                                            <!-- Show Actions Column Only if Not Draft or In-Progress -->
+                                            <template if:false={isDraftView}>
+                                                <template if:false={isInProgressView}>
+                                                    <th class="table-th" title="Action">Action</th>
+                                                </template>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <!-- BODY (SCROLL ONLY) -->
+                            <div class="body-scroll custom-scroll tableHeight table-body">
+                                <table class="staff-table">
+                                    <tbody>
+                                        <template for:each={displayedDocuments} for:item="document">
+                                            <tr key={document.Id} class="table-row">
+
+                                                <!-- File Name -->
+                                                <td class="table-td" title={document.FileName}>
+                                                    {document.FileName}
+                                                </td>
+
+                                                <!-- Created Date -->
+                                                <td class="table-td" title={document.FormattedCreatedDate}>
+                                                    {document.FormattedCreatedDate}
+                                                </td>
+
+                                                <!-- Recipients -->
+                                                <td class="table-td"
+                                                    style="white-space: pre-line;"
+                                                    lwc:dom="manual"
+                                                    data-id={document.Id}
+                                                    title={document.AllRecipients}>
+                                                </td>
+
+                                                <!-- Status Column Only if Not Draft -->
+                                                <template if:false={isDraftView}>
+                                                    <td class="table-td" style="text-align: left; vertical-align: middle;" title={document.Status}>
+                                                        {document.Status}
+                                                    </td>
+                                                </template>
+
+                                                <!-- Actions Column Only if Not Draft or In-Progress -->
+                                                <template if:false={isDraftView}>
+                                                    <template if:false={isInProgressView}>
+                                                        <td class="table-td" style="text-align: left; vertical-align: middle;" title="Actions">
+                                                            <template if:true={document.showViewIcon}>
+                                                                <a href="javascript:void(0);"
+                                                                   title="View Document"
+                                                                   data-id={document.Id}
+                                                                   data-action="view"
+                                                                   onclick={handleRowAction}
+                                                                   class="view-icon-link">
+                                                                    <i class="material-icons view-icon">visibility</i>
+                                                                </a>
+
+                                                                <a href="javascript:void(0);"
+                                                                   title="Download PDF"
+                                                                   data-id={document.Id}
+                                                                   data-action="download"
+                                                                   onclick={handleRowAction}
+                                                                   class="view-icon-link"
+                                                                   style="margin-left: 10px;">
+                                                                    <i class="material-icons view-icon">download</i>
+                                                                </a>
+                                                            </template>
+                                                        </td>
+                                                    </template>
+                                                </template>
+
+                                            </tr>
+                                        </template>
+
+                                        <template if:false={displayedDocuments.length}>
+                                            <div class="no-data">
+                                                <p>No records found</p>
+                                            </div>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </template>
+                </template>
+            </div>
+
+            <!-- Sticky Bottom Pagination -->
+            <!-- <template if:true={selectedStatus}>
+                <template if:true={displayedDocuments.length}>
+                    <div class="fixed-pagination">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-p-horizontal_small">
+                            <div class="slds-col">
+                                <div class="slds-list_inline">
+                                    <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+                                    <div class="slds-select_container">
+                                        <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                            <template for:each={pageSizeOptions} for:item="option">
+                                                <option key={option} value={option}>{option}</option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="slds-align_absolute-center">
+                                <lightning-button
+                                    class="slds-m-horizontal_xx-small"
+                                    disabled={isFirstPage}
+                                    icon-name="utility:jump_to_left"
+                                    label="First"
+                                    onclick={firstPage}>
+                                </lightning-button>
+                                <lightning-button
+                                    class="slds-m-horizontal_xx-small"
+                                    disabled={isFirstPage}
+                                    icon-name="utility:chevronleft"
+                                    label="Previous"
+                                    onclick={previousPage}>
+                                </lightning-button>
+                                <span class="slds-badge slds-m-horizontal_xx-small">
+                                    Showing {pageNumber} of {totalPages} Page(s)
+                                </span>
+                                <lightning-button
+                                    class="slds-m-horizontal_xx-small"
+                                    disabled={isLastPage}
+                                    icon-name="utility:chevronright"
+                                    label="Next"
+                                    onclick={nextPage}>
+                                </lightning-button>
+                                <lightning-button
+                                    class="slds-m-horizontal_xx-small"
+                                    disabled={isLastPage}
+                                    icon-name="utility:jump_to_right"
+                                    label="Last"
+                                    onclick={lastPage}>
+                                </lightning-button>
+                            </div>
+                            
+                            <div class="slds-col slds-text-align_right">
+                                <span class="slds-badge">Total Records: {totalRecords}</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template> -->
+            <!-- PDF Viewer Modal -->
+            <template if:true={showPdfViewer}>
+            <div class="pdf-modal">
+                <div class="modal-header">
+                    <lightning-button-icon icon-name="utility:close" alternative-text="Close"
+                        onclick={closePdfViewer}>
+                    </lightning-button-icon>
+                </div>
+                <iframe src={pdfViewerUrl} class="pdf-iframe"></iframe>
+            </div>
+            <div class="modal-backdrop"></div>
+            </template>
+
+            <template if:true={showChatterModal}>
+            <div class="messenger-modal">
+                <!-- Header Section -->
+                <div class="modal-header">
+                    <h2 class="header-title">Team Conversations</h2>
+                    <span class="close-icon" onclick={closeChatterModal}>&#x2716;</span>
+                </div>
+                
+
+                <!-- Messages Section -->
+                <div class="messages-container">
+                    <template for:each={messages} for:item="message">
+                        <template if:true={message.isDateDivider}>
+                            <div key={message.date} class="date-divider">{message.date}</div>
+                        </template>
+                        <template if:false={message.isDateDivider}>
+                            <div
+                                key={message.id}
+                                class={message.class}
+                                data-id={message.id}
+                                ondblclick={handleDoubleClick}>
+                                <template if:true={message.repliedTo}>
+                                    <div class="replied-to-message" onclick={scrollToMessage}>
+                                        <span class="replied-from">{message.repliedTo.from}:</span>
+                                        <span class="replied-text">{message.repliedTo.text}</span>
+                                    </div>
+                                </template>
+                                <div class="message-content">
+                                    <span class="text">{message.text}</span>
+                                    <span class="timestamp">
+                                        {message.timestamp}
+                                        <lightning-icon icon-name="utility:check" alternative-text="Saved" size="x-small"></lightning-icon>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+
+                <!-- Input Section -->
+                <div class="input-container">
+                    <template if:true={replyToMessage}>
+                        <div class="reply-preview">
+                            <span class="reply-preview-text">Replying to: {replyToMessage.text}</span>
+                            <span class="cancel-reply" onclick={cancelReply}>&#x2716;</span>
+                        </div>
+                    </template>
+                    <textarea
+                        class="message-input"
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        oninput={handleMessageInput}
+                        onkeydown={handleKeyDown}>
+                    </textarea>
+                    <img
+                        src={sendIcon}
+                        alt="Send"
+                        class="send-icon"
+                        onclick={sendReply}>
+                </div>
+            </div>
+            <div class="modal-backdrop"></div>
+            </template>
+
+            <template if:true={isPdfViewerVisible}>
+            <div class="modal-overlay">
+            <section class="pdf-preview-modal">
+                <div class="modal-header">
+                    <h2>PDF Preview</h2>
+                    <lightning-icon
+                        icon-name="action:close"
+                        alternative-text="Close"
+                        onclick={closePdfViewer}
+                        style="background-color: transparent; border: none; box-shadow: none;cursor:pointer"
+                    ></lightning-icon>
+
+                </div>
+
+                <div class="pdf-canvas-container custom-scroll">
+                    <canvas class="pdf-canvas"></canvas>
+                </div>
+
+                <div class="modal-footer">
+                    <lightning-button label="Previous" onclick={showPreviousPage} disabled={isPreviousDisabled}></lightning-button>
+                    <span>Page {currentPage} of {totalPages2}</span>
+                    <lightning-button label="Next" onclick={showNextPage} disabled={isNextDisabled}></lightning-button>
+                </div>
+            </section>
+            </div>
+            </template>
+        </div>
+    </template>
+    <!-- </div> -->
+                            <!-- New Contact MODAL -->
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modal-custom "> 
+                    <!-- <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeModal}>
+                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                </button> -->
+                <!-- HEADER --> 
+                <header class="slds-modal__header headercustom"> 
+                <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">{modalTitle}</h2> 
+                <p class="slds-text-body_small slds-text-color_inverse">Enter contact details to generate a quote.</p>
+                </header>             
+                
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">  
+                <!-- <div class="slds-modal__content slds-p-around_large"> -->
+                    <!-- <h2 class="slds-text-heading_medium slds-m-bottom_x-small h2custom">Create New Contact</h2>
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_large">Enter contact details to generate a quote.</p> -->
+                <lightning-input
+                    label="Name"
+                    value={name} 
+                    onchange={handleNameChange} 
+                    required>
+                </lightning-input>
+
+                    <!-- <lightning-combobox label="State"
+                        value={state} options={stateOptions} 
+                        onchange={handleStateChange} 
+                        class="slds-m-top_medium" 
+                        required></lightning-combobox> -->
+
+                        
+                        <div class="slds-col slds-size_1-of-1" style="padding-top:1%;">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    State
+                                </label>
+
+                                <c-tesseract-apps-single-combobox
+                                    options={stateOptions}
+                                    value={state}
+                                     onchange={handleStateChange}>
+                                </c-tesseract-apps-single-combobox>
+                            </div>
+                        </div>
+                         <div class="slds-col slds-size_1-of-1" style="padding-top:1%;">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    Facility
+                                </label>
+
+                                <c-tesseract-apps-single-combobox
+                                    options={facilityDropdownOptions}
+                                    placeholder="Select Facility"
+                                    value={selectedFacilityId}
+                                    onchange={handleFacilitySelection}>
+                                </c-tesseract-apps-single-combobox>
+                            </div>
+                        </div>
+                    
+                    <lightning-input type="email" 
+                    label="Email"
+                    value={email} onchange={handleEmailChange} 
+                    class="slds-m-top_medium" required>
+                    </lightning-input>
+                
+                    <lightning-input label="Phone"
+                        value={phone} 
+                        onchange={handlePhoneChange} class="slds-m-top_medium" 
+                        required>
+                    </lightning-input>
+
+                    <lightning-combobox label="Role"
+                        value={role} 
+                        options={roleList}
+                        onchange={handleRoleChange} class="slds-m-top_medium" 
+                        required>
+                    </lightning-combobox>
+
+                     <lightning-input label="NDIS ID"
+                        value={NdisId} 
+                        onchange={handleNdisId} class="slds-m-top_medium" 
+                        >
+                    </lightning-input>
+
+                <!-- <lightning-input label="Organization (Optional)" 
+                    value={organization} 
+                    onchange={handleOrgChange} class="slds-m-top_medium">
+                </lightning-input> -->
+
+                    <!-- <div class="slds-grid slds-grid_align-spread slds-m-top_x-large">
+                        <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                        <lightning-button variant="brand" label="Create & Continue" onclick={handleSave}></lightning-button>
+                    </div> -->
+                </div>
+
+                    <!-- FOOTER --> 
+                    <footer class="slds-modal__footer"> 
+                    <lightning-button 
+                    variant="neutral" 
+                    label="Cancel" 
+                    onclick={closeModal}> 
+                    </lightning-button> 
+                    
+                    
+                    <lightning-button 
+                    class="slds-m-left_small" 
+                    variant="brand" 
+                    label={modalTitle} 
+                    onclick={handleSave}> 
+                    </lightning-button> 
+                    </footer> 
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>          
+       <!-- PDF preview -->
+    <template if:true={isPreviewModalOpen}>
+            <div class="slds-p-around_medium">                               
+                <!-- 🔹 PREVIEW TOOLBAR (THIS IS THE BLUE AREA YOU DREW) -->
+                        <div class="preview-toolbar">
+                            <!-- <div class="preview-actions-left">
+                                <lightning-button
+                                    label="Back"
+                                    variant="brand"
+                                    onclick={closePreviewModal}>
+                                </lightning-button>
+                            </div> -->
+
+                           
+                            <div style="display: flex; align-items: center; justify-content: space-between;padding-bottom:1%;">
+                            <div class="title-block">
+                                <template if:false={isStart}>
+                                    <lightning-button
+                                        label="Send via TSign"
+                                        variant="brand"
+                                        onclick={handleSendViaTsign}>
+                                    </lightning-button>
+                                </template>
+                            </div>
+                            <div style="display: flex; align-items: center;   gap:10px;">
+                            <lightning-button class="back-button" slot="footer" label="Back" variant="brand"
+                                        onclick={closePreviewModal}></lightning-button>
+                                
+                            </div>
+                            </div>
+                        </div>
+               <!--  <div class="back-actions"> -->
+                    <!-- <lightning-button class="back-button" slot="footer" label="Back" variant="brand"
+                        onclick={closePreviewModal}></lightning-button> -->
+                       <!--  <lightning-button class="back-button" slot="footer" label="Back" variant="brand"
+                        onclick={closePreviewModal}></lightning-button> -->
+               <!--  </div> -->
+            
+                <div class="iframe-wrapper custom-scroll">
+                    <iframe src={currentUrl} width="100%" height="2400px" title="Quote PDF Preview"></iframe>
+                </div>
+            </div>
+    </template>
+    </div>
+                         
+    <!-- Footer buttons always visible -->
+
+
+     <!-- Loading Spinner -->
+    <template if:true={isLoading}>
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+        <div class="loader-container">
+            <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+            <img src={imageUrl} alt="T Logo" class="Tlogo" />
+        </div>
+
+        <!-- Progress text instead of progress bar -->
+        <p class="progress-text">Setting Up Things,</br>Please Wait...</p>
+    </div>
+    </template>                  
+
+</template>

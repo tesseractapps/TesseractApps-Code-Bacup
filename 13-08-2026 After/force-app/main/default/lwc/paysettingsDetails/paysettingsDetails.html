@@ -1,0 +1,242 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             : 
+  @last modified on  : 07-10-2023
+  @last modified by  : Raja Sekhar Reddy
+-->
+<template>
+    <!-- <lightning-button label="Edit" slot="actions" class="slds-float_right slds-m-right_medium" style="margin-top:-2.5%;margin-right:1%" variant="brand" onclick={handleEditStaff}></lightning-button> -->
+    <!-- <lightning-icon icon-name="action:edit" alternative-text="Edit" title="Edit"
+        onclick={handleEditStaff}  size="xx-small" class="slds-float_right slds-m-right_medium"
+        style="cursor:pointer;color:white;background:#0099DE; margin-top:-2.5%;margin-right:1%;">
+    </lightning-icon>
+    <div style="margin-left:93.5%;margin-bottom:10px; margin-top:1%;">
+        <lightning-button   label="Back" variant="brand"
+                onclick={closeaddPayRun} ></lightning-button>
+    </div> -->
+
+
+
+    <div style="display: flex; align-items: center; justify-content: space-between;padding:1%">
+         <div>     <!--margin-top:0px-->
+        <p> <b> Group Name: {payGroupName} </b></p>
+    </div> 
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <lightning-icon icon-name="action:edit" alternative-text="Edit" title="Edit"
+            onclick={handleEditStaff}  size="xx-small" class="slds-m-right_medium"
+            style="cursor:pointer;color:white;background:#0099DE; margin-top:1%;">
+        </lightning-icon>
+        <lightning-button label="Back" variant="brand" onclick={handleBack} style=" margin-top:1%; margin-right: 2%;"></lightning-button> 
+       </div>
+    </div>       
+
+
+
+
+   <div>
+    <!-- <lightning-card> -->
+          <div class="">
+            <lightning-record-view-form object-api-name="Payroll_Setting__c" record-id={paysetId}>
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-output-field field-name="Facility_Name__c"> </lightning-output-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-output-field field-name="Frequency__c"> </lightning-output-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-output-field field-name="Period_Start_Date__c"> </lightning-output-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-output-field field-name="Period_End_Date__c"> </lightning-output-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-output-field field-name="Next_Pay_Date__c"> </lightning-output-field>
+                        </div>
+                    </div>
+                    <div class="slds-size_1-of-2">
+                        <div class="slds-m-right_medium slds-m-left_medium">
+                            <lightning-output-field field-name="Status__c"> </lightning-output-field>
+                        </div>
+                    </div>
+                </div>
+            </lightning-record-view-form>
+        </div>
+    <!-- </lightning-card> -->
+    <!-- <lightning-card > -->
+        <div class="">
+        <div class="table-container payroll-staff-table slds-m-around_small">
+            <!-- HEADER -->
+            <div class="header-wrapper">
+                <table class="staff-table fixed-table">
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-th" title="First Name">First Name</th>
+                            <th class="table-th" title="Last Name">Last Name</th>
+                            <th class="table-th" title="Frequency">Frequency</th>
+                            <th class="table-th" title="Contact Number">Contact Number</th>
+                            <th if:true={iststaus} class="table-th center" title="Action">Action</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <!-- BODY -->
+            <div class="table-body custom-scroll">
+                <table class="staff-table fixed-table">
+                    <tbody>
+                        <template if:true={payrollStaff}>
+                            <template for:each={payrollStaff} for:item="acc">
+                                <tr key={acc.Id} class="table-row">
+                                    <td class="table-td" title={acc.Staff__r.Name}>{acc.Staff__r.Name}</td>
+                                    <td class="table-td" title={acc.Staff__r.Last_Name__c}>{acc.Staff__r.Last_Name__c}</td>
+                                    <td class="table-td" title={acc.Staff__r.Employment_type__c}>{acc.Staff__r.Employment_type__c}</td>
+                                    <td class="table-td" title={acc.Staff__r.Contact_Number__c}>{acc.Staff__r.Contact_Number__c}</td>
+                                    <td  if:true={iststaus} class="table-td center">
+                                        <a href="javascript:void(0)"
+                                            data-id={acc.Id}
+                                            onclick={handleDelete}
+                                            title="Delete"
+                                            style="text-decoration: none;">
+
+                                            <i class="material-icons delete-icon">delete</i>
+                                        </a>
+
+                                    </td>
+                                </tr>
+                            </template>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div if:false={isstaffList} class="sticky-footer">
+            <lightning-button if:true={iststaus} label="Add Staff" onclick={displayStaffList} variant="brand"></lightning-button>
+        </div>
+       
+    </div> 
+    <template if:true={isstaffList}>
+        <!-- <div class="slds-m-top_xx-large slds-m-bottom_medium" style="margin-right:10%;margin-left:6%">
+            <lightning-datatable data={staffrecords} columns={columns} onrowselection={onRowSelection}
+                key-field="id" class="slds-m-top_xx-large">
+            </lightning-datatable>
+        </div> -->
+<div class="datatable-theme slds-m-around_small">
+    <lightning-datatable
+        key-field="Id"
+        data={staffrecords}
+        columns={columns}
+        onrowselection={onRowSelection}>
+    </lightning-datatable>
+</div>        
+
+        <template if:true={buttonsONPayroll}>
+            <div class="sticky-footer">
+                <lightning-button class="slds-m-left_medium" label="Close" variant="brand"
+                    onclick={closeaddPayRun}></lightning-button>
+                <lightning-button class="slds-m-left_medium" label="Save" variant="brand"
+                    onclick={savePayrunSetting}></lightning-button>
+            </div>
+        </template>
+    </template>
+    
+    <!-- </lightning-card> -->
+    </div>
+    <template if:true={paysetEdit}>
+        <!-- <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+          aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+          <div class="slds-modal__container "> -->
+            <!-- modal header start -->
+            <!-- <header class="slds-modal__header">
+              <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close"
+                onclick={handleeditClose}>
+                <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"
+                  size="small"></lightning-icon>
+                <span class="slds-assistive-text">Close</span>
+              </button>
+              <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Edit Pay Setting</h2>
+            </header> -->
+            <!-- modal body start -->
+             <div class="blur-overlay"></div>
+             <div class="right-align" style="width:40%;">
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <h3 style="font-weight: bold;font-size:150%; margin: 0; padding: 3% 0 0 3%;">Edit Pay Setting</h3> 
+              </div>
+            <div class=" slds-p-around_medium">
+              <lightning-record-edit-form object-api-name="Payroll_Setting__c" record-id={paysetId} onsuccess={handleSuccess} onsubmit={handleSubmit}>
+               <div class="seperator"> 
+               <div class="slds-grid slds-wrap" style="padding: 20px 0px 20px 0px;">
+                  
+                  <!--  <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Facility Name</span>
+                               <lightning-input-field field-name="Facility_Name__c"  required="true" variant="label-hidden"></lightning-input-field>
+                            </div>
+                     </div>
+                   -->
+                  <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Frequency</span>
+                               <lightning-input-field field-name="Frequency__c" required="true" onchange={handleFrequencyChange} name="frequency" variant="label-hidden"></lightning-input-field>
+                            </div>
+                     </div>
+                  
+                   <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Period Start Date</span>
+                               <lightning-input-field field-name="Period_Start_Date__c" required="true" onchange={handleDateChange} value={sdate} variant="label-hidden"></lightning-input-field>
+                            </div>
+                     </div>
+                  
+                   <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop">Period End Date</span>
+                               <lightning-input-field field-name="Period_End_Date__c" disabled="true" value={edate} variant="label-hidden"></lightning-input-field>
+                            </div>
+                     </div>
+                  
+                  
+                  
+                   <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Payment Date</span>
+                               <lightning-input-field field-name="Next_Pay_Date__c" onchange={handleNextpayChange} required="true" variant="label-hidden"></lightning-input-field>
+                            </div>
+                     </div>
+                  
+                   <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop">Status</span>
+                               <lightning-input-field field-name="Status__c" variant="label-hidden"></lightning-input-field>
+                            </div>
+                     </div>
+                </div>
+             </div>
+                <div class="slds-grid slds-grid_align-center">
+                   
+                  <lightning-button label="Cancel"  variant="outline" onclick={handleeditClose}
+                    class="slds-m-around_small"></lightning-button>
+                <lightning-button label="Update" variant="brand" type="submit"
+                    class="slds-m-around_small"></lightning-button>
+                </div>
+              </lightning-record-edit-form>
+           </div>
+           </div>
+            
+            <!-- modal footer start-->
+
+
+         <!--  </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div> -->
+    </template>
+</template>
