@@ -1,0 +1,193 @@
+<template>
+    <div class="main-container">
+
+
+ <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding:3px;">
+                        <div style="justify-content: flex-start;">
+                            <div class="floating-label-new">
+                               
+                            <lightning-combobox
+                name="orgPicker"
+                label="Select Organisation"
+                variant="label-hidden"
+                value={selectedOrgId}
+                placeholder="Select an organisation"
+                options={organisationOptions}
+                style="width: 300px;"
+                onchange={handleOrgChange}>
+            </lightning-combobox>
+                            
+                            </div> 
+                        </div>
+                
+                       
+                    </div>
+
+
+
+
+
+
+
+
+
+<div class="slds-p-around_medium">
+<div class="table-container">
+    <!-- HEADER (separate table) -->
+    <div class="header-wrapper">
+        <table class="staff-table" role="table">
+            <thead>
+                <tr>
+                    <th class="table-th">Organisation</th>
+                    <th class="table-th">Sender</th>
+                    <th class="table-th">Last Message Time</th>
+                    <th class="table-th">Unread</th>
+                    <th class="table-th">Status</th>
+                    <th class="table-th">Action</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <!-- BODY (scroll only tbody) -->
+    <div class="body-scroll custom-scroll tableHeight">
+        <table class="staff-table">
+            <tbody>
+                <template if:false={noRecordsFlag}>
+                    <template for:each={notifications} for:item="notif">
+                        <tr key={notif.senderUserId} class="table-row">
+                            <td class="table-td" title={notif.organisationName}>
+                                {notif.organisationName}
+                            </td>
+
+                            <td class="table-td" title={notif.senderName}>
+                                {notif.senderName}
+                            </td>
+
+                            <td class="table-td" title={notif.lastMessageTimeDisplay}>
+                                {notif.lastMessageTimeDisplay}
+                            </td>
+
+                            <td class="table-td">
+                                <span class="points-pill">{notif.unread}</span>
+                            </td>
+
+                            <td class="table-td">
+                                <span class={notif.statusClass}>{notif.statusText}</span>
+                            </td>
+
+                            <td class="table-td actions-col">
+                                <template if:true={notif.showAction}>
+                                    <a
+                                        href="javascript:void(0)"
+                                        class="action-icon"
+                                        title="Open Chat"
+                                        data-senderuid={notif.senderUID}
+                                        data-senderid={notif.senderUserId}
+                                        data-orgid={notif.organisationId}
+                                        onclick={handleOpenChat}
+                                    >
+                                        <i class="material-icons chat-icon">mark_unread_chat_alt</i>
+                                    </a>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+
+                <template if:true={noRecordsFlag}>
+                    <tr>
+                        <td colspan="6" class="table-td no-data">No notifications found</td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+    <!-- Pagination -->
+    <div
+        class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+        style="padding-top: 0.5em"
+    >
+        <!-- RECORDS PER PAGE -->
+      <div class="slds-col">
+    <div class="slds-list_inline slds-p-bottom_xx-small">
+        <label
+            class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center">
+            Page Size:
+        </label>
+
+        <lightning-combobox
+            name="recordsPerPage"
+            variant="label-hidden"
+            value={pageSizeString}
+            options={pageSizeOptionObjects}
+            onchange={handleRecordsPerPageCombobox}>
+        </lightning-combobox>
+    </div>
+</div>
+
+
+        <!-- PAGE NAVIGATION -->
+        <div class="slds-align_absolute-center" style="height: 5rem">
+            <lightning-button
+                disabled={bDisableFirst}
+                icon-name="utility:jump_to_left"
+                label="First"
+                class="slds-p-horizontal_x-small"
+                alternative-text="first page"
+                onclick={firstPage}
+            ></lightning-button>
+            <lightning-button
+                disabled={bDisableFirst}
+                icon-name="utility:chevronleft"
+                label="Previous"
+                alternative-text="Previous"
+                onclick={previousPage}
+            ></lightning-button>
+            &nbsp;
+            <span class="slds-badge">
+                Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)
+            </span>
+            &nbsp;
+            <lightning-button
+                disabled={bDisableLast}
+                icon-name="utility:chevronright"
+                label="Next"
+                alternative-text="Next"
+                onclick={nextPage}
+                class="slds-p-horizontal_x-small"
+                icon-position="right"
+            ></lightning-button>
+            <lightning-button
+                disabled={bDisableLast}
+                icon-name="utility:jump_to_right"
+                label="Last"
+                alternative-text="last page"
+                onclick={lastPage}
+                icon-position="right"
+            ></lightning-button>
+        </div>
+
+        <!-- TOTAL RECORDS -->
+        <div class="slds-clearfix">
+            <div class="slds-float_right">
+                <span class="slds-badge">
+                    Total Records: {totalRecords}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <div class="slds-p-around_medium">
+            <div id="cometChatMount"></div>
+        </div>
+
+
+    </div>
+</template>
