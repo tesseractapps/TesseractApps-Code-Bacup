@@ -1,0 +1,537 @@
+<template>
+  <div class="main-container slds-p-top_small">
+    <div class="slds-grow slds-scrollable_y custom-scroll" style="min-height:0;">
+
+    <!-- METRIC TILES -->
+    <div class="metrics-grid tiles">
+      <div class="metric-card highlight-blue">
+        <div class="metric-title">Total Staff</div>
+        <div class="metric-value">{totalStaff}</div>
+      </div>
+      <div class="metric-card highlight-green">
+        <div class="metric-title">Fully Compliant</div>
+        <div class="metric-value">{fullyCompliant}</div>
+        <div class="sub">All 3 categories</div>
+      </div>
+      <div class="metric-card highlight-orange">
+        <div class="metric-title">Partially Compliant</div>
+        <div class="metric-value">{partiallyCompliant}</div>
+        <div class="sub">Some categories</div>
+      </div>
+      <div class="metric-card highlight-purple">
+        <div class="metric-title">Non Compliant</div>
+        <div class="metric-value">{nonCompliant}</div>
+        <div class="sub">Action required</div>
+      </div>
+    </div>
+
+
+    <!-- FILTERS / SEARCH -->
+    <div class="slds-grid slds-gutters slds-wrap">
+
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-large-size_1-of-6">
+        <lightning-input type="search" label="Search" placeholder="Search Staff"
+            value={searchText} onchange={handleSearch}>
+        </lightning-input>
+      </div>
+
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-large-size_1-of-6">
+        <lightning-combobox label="Status" value={selectedStatus}
+            options={statusOptions} onchange={handleStatusChange}>
+        </lightning-combobox>
+      </div>
+
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-large-size_1-of-6">
+        <lightning-combobox label="Role" value={selectedRole}
+            options={roleOptions} onchange={handleRoleChange}>
+        </lightning-combobox>
+      </div>
+
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-large-size_1-of-6">
+        <lightning-input type="date" label="Start Date"
+            value={startDate} data-field="start" onchange={handleDateChange}>
+        </lightning-input>
+      </div>
+
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-large-size_1-of-6">
+        <lightning-input type="date" label="End Date"
+            value={endDate} data-field="end" onchange={handleDateChange}>
+        </lightning-input>
+      </div>
+
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-large-size_1-of-6" style="margin-top: 24px;">
+        <lightning-button variant="brand" label="Export"
+            onclick={handleExport}>
+        </lightning-button>
+      </div>
+
+    </div>
+
+
+    <!-- TABLE SECTION -->
+    <div class="table-container slds-m-top_large" style="min-height:0; display:flex; flex-direction:column; flex:1 1 auto;">
+      <div class="header-wrapper">
+        <table class="staff-table" role="table">
+          <thead>
+            <tr>
+              <!-- <th class="table-th" title="Staff Member">Staff Member</th>
+              <th class="table-th" title="Role">Role</th>
+              <th class="table-th" title="Documents">Documents</th>
+              <th class="table-th" title="Training">Training</th>
+              <th class="table-th" title="Shift Compliance">Shift Compliance</th> -->
+            <th class="table-th sortable-header"
+                title="Staff Member"
+                data-field="name"
+                onclick={handleSort}>
+                <div class="sort-header-inner">
+                    <span class="sort-label">Staff Member</span>
+                    <span class="sort-arrow" data-arrow={sortIcons.name}></span>
+                </div>
+            </th>
+
+            <th class="table-th" title="Role">Role</th>
+
+            <th class="table-th sortable-header"
+                title="Documents"
+                data-field="documents"
+                onclick={handleSort}>
+                <div class="sort-header-inner">
+                    <span class="sort-label">Documents</span>
+                    <span class="sort-arrow" data-arrow={sortIcons.documents}></span>
+                </div>
+            </th>
+
+            <th class="table-th sortable-header"
+                title="Training"
+                data-field="training"
+                onclick={handleSort}>
+                <div class="sort-header-inner">
+                    <span class="sort-label">Training</span>
+                    <span class="sort-arrow" data-arrow={sortIcons.training}></span>
+                </div>
+            </th>
+
+            <th class="table-th sortable-header"
+                title="Shift Compliance"
+                data-field="shift"
+                onclick={handleSort}>
+                <div class="sort-header-inner">
+                    <span class="sort-label">Shift Compliance</span>
+                    <span class="sort-arrow" data-arrow={sortIcons.shift}></span>
+                </div>
+            </th>           
+              <th class="table-th" title="Actions">Actions</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+
+      <!-- SCROLL ONLY TBODY -->
+      <div class="body-scroll custom-scroll custom-scroll1">
+        <table class="staff-table">
+          <tbody>
+            <template for:each={pagedList} for:item="stf">
+              <tr key={stf.id} class="table-row">
+                <td class="table-td clickable-name" title={stf.name}>
+                  <div>{stf.name}</div>
+                </td>
+
+                <td class="table-td" title={stf.role}>
+                  <span class="role-pill" title={stf.role} style="max-width: 100%; text-overflow: ellipsis; overflow: hidden;">{stf.role}</span>
+                </td>
+
+                <td class="table-td" title={stf.documents}>
+                  <span class={stf.documentsClass} title={stf.documents}>{stf.documents}</span>
+                </td>
+
+                <td class="table-td" title={stf.training}>
+                  <span class={stf.trainingClass} title={stf.training}>{stf.training}</span>
+                </td>
+
+                <td class="table-td" title={stf.shift}>
+                  <span class={stf.shiftClass} title={stf.shift}>{stf.shift}</span>
+                </td>
+
+                <td class="table-td actions-col action-column" title="Actions">
+                  <a
+                    href="javascript:void(0)"
+                    data-id={stf.id}
+                    onclick={handleViewDetails}
+                  >
+                    <i class="material-icons"></i> View Details
+                  </a>
+                </td>
+              </tr>
+            </template>
+
+            <template if:true={isEmpty}>
+              <tr><td colspan="6" class="table-td no-data">No records found</td></tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+    <!-- PAGINATION ROW (reusing facilityDocument style) -->
+    <div class="pagination-row fixed-pagination">
+      <div class="slds-list_inline slds-p-bottom_xx-small">
+        <label class="slds-text-color_weak slds-p-horizontal_x-small" for="recordsPerPage">Page Size:</label>
+        <div class="slds-select_container slds-align_absolute-center">
+          <select class="slds-select" id="recordsPerPage" onchange={handlePageSizeChange}>
+            <template for:each={pageSizeOptions} for:item="option">
+              <option key={option} value={option}>{option}</option>
+            </template>
+          </select>
+        </div>
+      </div>
+
+      <div class="slds-align_absolute-center">
+        <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" onclick={firstPage}  class="slds-p-horizontal_x-small" ></lightning-button>
+        <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" onclick={previousPage} ></lightning-button>
+        &nbsp;
+        <span class="slds-badge">Showing {pageNumber} of {totalPages} Page(s)</span>
+        &nbsp;
+        <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" onclick={nextPage} icon-position="right"  class="slds-p-horizontal_x-small"></lightning-button>
+        <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" onclick={lastPage} icon-position="right"></lightning-button>
+      </div>
+
+      <div class="slds-clearfix">
+        <div class="slds-float_right">
+          <span class="slds-badge">Total Records: {totalStaff}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <template if:true={showModal1}>
+    <!-- MODAL -->
+    <section
+        role="dialog"
+        tabindex="-1"
+        aria-modal="true"
+        class="slds-modal slds-fade-in-open">
+
+        <div class="slds-modal__container modal-custom">
+
+            <!-- ================= HEADER ================= -->
+            <header class="slds-modal__header headercustom">
+                <h2 class="slds-modal__title slds-text-heading_medium" style="color: white;">
+                    Staff Compliance Details
+                </h2>
+            </header>
+
+            <!-- ================= BODY ================= -->
+            <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                <!-- STAFF INFO -->
+                <div class="slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small">
+                        {modalData.name}
+                    </h3>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        {modalData.email} · {modalData.role}
+                    </p>
+                </div>
+
+                <!-- OVERALL COMPLIANCE -->
+                <div class="slds-box slds-theme_default">
+
+                  <!-- HEADER -->
+                  <div class="slds-text-heading_small slds-m-bottom_x-small">
+                      Compliance Overview
+                  </div>
+
+                  <div class="slds-text-body_regular slds-m-bottom_medium">
+                      Overall compliance rate:
+                      <strong>{overallCompliancePercent}%</strong>
+                  </div>
+
+                  <!-- DOCUMENTS -->
+                  <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                      <div class="label">Documents</div>
+                      <div class="bar-container">
+                          <div class="overallbar" style={documentsBarStyle}></div>
+                      </div>
+                      <div class="percent">{modalData.documents.percent}%</div>
+                  </div>
+
+                  <!-- TRAINING -->
+                  <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                      <div class="label">Training</div>
+                      <div class="bar-container">
+                          <div class="overallbar" style={trainingBarStyle}></div>
+                      </div>
+                      <div class="percent">{modalData.training.percent}%</div>
+                  </div>
+
+                  <!-- SHIFT -->
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                      <div class="label">Shift Compliance</div>
+                      <div class="bar-container">
+                          <div class="overallbar" style={shiftBarStyle}></div>
+                      </div>
+                      <div class="percent">{shiftComplianceSummary.summary.percent}%</div>
+                  </div>
+
+              </div>
+
+
+                <!-- DOCUMENTS COMPLIANCE -->
+               
+            <div class="slds-box slds-m-bottom_medium">
+
+                <!-- HEADER -->
+                <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+                      onclick={toggleDocuments}
+                      style="cursor:pointer">
+
+                      <!-- LEFT SIDE (Label only) -->
+                      <span class="slds-text-heading_small">
+                          Documents Compliance
+                      </span>
+
+                      <!-- RIGHT SIDE (Badge + Chevron) -->
+                      <div class="slds-grid slds-grid_vertical-align-center">
+                          <span class={documentsBadgeClass}>
+                              {modalData.documents.status}
+                          </span>
+
+                          <lightning-icon
+                              icon-name={documentsChevronIcon}
+                              size="x-small"
+                              class="slds-m-left_small">
+                          </lightning-icon>
+                      </div>
+
+                  </div>
+
+
+
+                <!-- PROGRESS -->
+                <lightning-progress-bar
+                    value={modalData.documents.percent}
+                    size="small">
+                </lightning-progress-bar>
+
+                <div class="slds-text-body_small slds-m-top_x-small">
+                    {modalData.documents.percent}% compliant •
+                    {modalData.documents.text}
+                </div>
+
+                <!-- CONTENT -->
+                <div class={documentsSectionClass}>
+                    <div class="slds-section__content slds-m-top_medium">
+
+                        <template for:each={modalData.documents.items} for:item="item">
+                            <div key={item.key}
+                                class="slds-box slds-box_x-small slds-m-bottom_small
+                                        slds-grid slds-grid_vertical-align-center">
+
+                         
+                                <i class={item.class}                      
+                                 >
+                                                       {item.icon}
+                                                      </i>
+
+                                <div>
+                                    <div class="slds-text-body_regular">
+                                        {item.label}
+                                    </div>
+                                    <div class="slds-text-color_weak slds-text-body_small">
+                                        {item.description}
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+            </div>
+
+
+                <!-- TRAINING COMPLIANCE -->
+              <div class="slds-box slds-m-bottom_medium">
+
+                  <!-- HEADER -->
+                  <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+                  onclick={toggleTraining}
+                  style="cursor:pointer">
+
+                  <!-- LEFT SIDE -->
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                      <span class="slds-text-heading_small">
+                          Training Compliance
+                      </span>
+                  </div>
+
+                  <!-- RIGHT SIDE -->
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                      <span class={trainingBadgeClass}>
+                          {modalData.training.status}
+                      </span>
+
+                      <lightning-icon
+                          icon-name={trainingChevronIcon}
+                          size="x-small"
+                          class="slds-m-left_small">
+                      </lightning-icon>
+                  </div>
+
+              </div>
+
+
+                  <!-- PROGRESS -->
+                  <lightning-progress-bar
+                      value={modalData.training.percent}
+                      size="small">
+                  </lightning-progress-bar>
+
+                  <div class="slds-text-body_small slds-m-top_x-small">
+                      {modalData.training.percent}% compliant •
+                      {modalData.training.text}
+                  </div>
+
+                  <!-- CONTENT -->
+                  <div class={trainingSectionClass}>
+                      <div class="slds-section__content slds-m-top_medium">
+
+                          <template for:each={modalData.training.items} for:item="item">
+                              <div key={item.key}
+                                  class="slds-box slds-box_x-small slds-m-bottom_small
+                                          slds-grid slds-grid_vertical-align-center">
+
+                                   <i class={item.class}                      
+                                 >
+                                                       {item.icon}
+                                                      </i>
+
+                                  <div>
+                                      <div class="slds-text-body_regular">
+                                          {item.label}
+                                      </div>
+                                      <div class="slds-text-color_weak slds-text-body_small">
+                                          {item.description}
+                                      </div>
+                                  </div>
+                              </div>
+                          </template>
+
+                      </div>
+                  </div>
+              </div>
+
+
+                <!-- SHIFT / IDENTITY COMPLIANCE -->
+                <div class="slds-box">
+                  <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+                      onclick={toggleSection}
+                      style="cursor:pointer">
+
+                      <!-- LEFT SIDE -->
+                      <div class="slds-grid slds-grid_vertical-align-center">
+                          <span class="slds-text-heading_small">
+                              Shift Compliance
+                          </span>
+                      </div>
+
+                      <!-- RIGHT SIDE -->
+                      <div class="slds-grid slds-grid_vertical-align-center">
+                          <template if:true={hasShiftComplianceData}>
+                              <span class={shiftBadgeClass}>
+                                  {shiftComplianceSummary.summary.status}
+                              </span>
+                          </template>
+
+                          <lightning-icon
+                              icon-name={chevronIcon}
+                              size="x-small"
+                              class="slds-m-left_small">
+                          </lightning-icon>
+                      </div>
+
+                  </div>
+
+
+                  <!-- PROGRESS -->
+                    <template if:true={hasShiftComplianceData}>
+                        <lightning-progress-bar
+                          value={shiftComplianceSummary.summary.percent}
+                          size="small">
+                         </lightning-progress-bar>
+                          <div class="slds-text-body_small slds-m-top_x-small">
+                            {shiftComplianceSummary.summary.percent}% compliant •
+                            {shiftComplianceSummary.summary.metText}
+                         </div>
+                         <!-- COLLAPSIBLE CONTENT -->
+                      <div class={sectionClass}>
+                          <div class="slds-section__content slds-m-top_medium">
+
+                              <template for:each={shiftComplianceSummary.rules} for:item="rule">
+                                  <div key={rule.label}
+                                      class="slds-box slds-box_x-small slds-m-bottom_small
+                                              slds-grid slds-grid_align-spread
+                                              slds-grid_vertical-align-center">
+
+                                      <div class="slds-grid slds-grid_vertical-align-center">
+                                         <!--  <lightning-icon
+                                              icon-name={rule.icon}
+                                              size="small"
+                                              variant={rule.variant}
+                                              class="slds-m-right_small">
+                                          </lightning-icon> -->
+                                           <i class={rule.class}                      
+                                 >
+                                                       {rule.icon}
+                                                      </i>
+
+                                          <div>
+                                              <div class="slds-text-body_regular">
+                                                  {rule.label}
+                                              </div>
+                                              <div class="slds-text-color_weak slds-text-body_small">
+                                                  {rule.description}
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </template>
+
+                          </div>
+                      </div>
+
+                    </template>
+               
+
+                   
+                      
+                </div>
+
+            </div>
+
+            <!-- ================= FOOTER ================= -->
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    variant="neutral"
+                    label="Close"
+                    onclick={closeModal}>
+                </lightning-button>
+
+                <!-- <lightning-button
+                    class="slds-m-left_small"
+                    variant="brand"
+                    label="View Staff Profile"
+                    onclick={navigateToProfile}>
+                </lightning-button> -->
+            </footer>
+
+        </div>
+    </section>
+
+    <!-- BACKDROP -->
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+
+</template>

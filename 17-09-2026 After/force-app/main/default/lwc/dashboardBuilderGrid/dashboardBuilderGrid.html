@@ -1,0 +1,147 @@
+<template>
+    <div class="grid-container" style={gridStyle}>
+        <!-- Premium Grid Lanes Guide (Edit Mode only) -->
+        <template if:true={isEditMode}>
+            <div class="grid-guidelines-backdrop">
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+                <div class="grid-lane"></div>
+            </div>
+        </template>
+
+        <!-- Ghost Placeholder shadow (where item will drop) -->
+        <div class="grid-ghost-placeholder" style={placeholderStyle}></div>
+
+        <!-- Rendered snap-aligned widgets -->
+        <template for:each={styledWidgets} for:item="widget">
+            <div key={widget.id}
+                 class="grid-widget-card"
+                 style={widget.style}
+                 data-id={widget.id}
+                 onpointerdown={handleDragStart}
+                 onpointermove={handleDragMove}
+                 onpointerup={handleDragEnd}
+                 onlostpointercapture={handleDragEnd}>
+                 
+                <!-- Drag Handle & Card Header -->
+                <div class={widget.headerClass}>
+                    <div class="widget-title-sec">
+                        <template if:true={isEditMode}>
+                            <template if:true={widget.hasChartSettings}>
+                                <div class="settings-dropdown-wrapper" onclick={handleSettingsWrapperClick}>
+                                    <button class="header-ctrl-btn slds-m-right_x-small" data-id={widget.id} onclick={handleWidgetSettingsClick} title="Change Chart Type" style="cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                        <lightning-icon icon-name="utility:rows" size="xx-small" class="ctrl-icon-fill"></lightning-icon>
+                                    </button>
+                                    <template if:true={widget.isSettingsOpen}>
+                                        <div class="chart-type-popover">
+                                            <div class="popover-header">CHART TYPE</div>
+                                            <div class="popover-options">
+                                                <template for:each={widget.availableChartTypes} for:item="opt">
+                                                    <button key={opt.value} class={opt.itemClass} data-id={widget.id} data-chart-type={opt.value} onclick={handleChartTypeSelect}>
+                                                        <span class="opt-label">{opt.label}</span>
+                                                        <template if:true={opt.isSelected}>
+                                                            <lightning-icon icon-name="utility:check" size="xx-small" class="check-icon slds-m-left_auto"></lightning-icon>
+                                                        </template>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                        <div>
+                            <h3 class={widget.titleClass} data-id={widget.id} data-type={widget.type} onclick={handleTitleClick}>{widget.title}</h3>
+                        </div>
+                    </div>
+
+                    <!-- Builder Controls -->
+                    <template if:true={isEditMode}>
+                        <div class="widget-builder-header-ctrls">
+                            <button class="header-ctrl-btn delete-btn" data-id={widget.id} onclick={handleDeleteWidget} title="Remove Widget">
+                                <lightning-icon icon-name="utility:delete" size="xx-small" class="ctrl-icon-fill"></lightning-icon>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Widget Body Content Area -->
+                <div class={widget.bodyClass}>
+                    <c-dashboard-builder-widget
+                        class="widget-item"
+                        type={widget.type}
+                        widget-id={widget.id}
+                        facility-id={facilityId}
+                        is-edit-mode={isEditMode}
+                        title={widget.title}
+                        subtitle={widget.subtitle}
+                        chart-type={widget.chartType}
+                        properties={widget.properties}
+                        date-range={dateRange}
+                    ></c-dashboard-builder-widget>
+                </div>
+
+                <!-- Drag Resizer Handles (Edit Mode only) -->
+                <template if:true={isEditMode}>
+                    <div class="resize-handle top-handle" 
+                         data-mode="top" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle bottom-handle" 
+                         data-mode="bottom" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle left-handle" 
+                         data-mode="left" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle right-handle" 
+                         data-mode="right" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle top-left-handle" 
+                         data-mode="top-left" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle top-right-handle" 
+                         data-mode="top-right" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle bottom-left-handle" 
+                         data-mode="bottom-left" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                    <div class="resize-handle corner-handle" 
+                         data-mode="corner" 
+                         data-widget-id={widget.id} 
+                         onpointerdown={handleResizeStart}
+                         onpointermove={handleResizeMove}
+                         onpointerup={handleResizeEnd}></div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

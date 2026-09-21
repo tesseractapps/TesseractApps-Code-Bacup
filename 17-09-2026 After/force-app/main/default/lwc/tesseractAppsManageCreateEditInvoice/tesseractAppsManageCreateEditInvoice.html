@@ -1,0 +1,836 @@
+<template>
+    <!-- <div class="main-container"> -->
+        
+        <template if:true={isInvoiceflag}>
+
+            <!-- =========================================================
+                 INVOICE PAGE CONTAINER
+                 ========================================================= -->
+            <div class="invoice-page">
+
+                <!-- ================= FIXED / STICKY HEADER ================= -->
+                <header class="invoice-header slds-p-around_x-small">
+
+                    <div class="invoice-header-left">
+                        <!-- <div class="invoice-title-icon">
+                            <lightning-icon
+                                icon-name="utility:form"
+                                alternative-text="Invoice"
+                                size="small">
+                            </lightning-icon>
+                        </div> -->
+
+                        <div>
+                            <h1 class="invoice-title">{createEditInvoice}</h1>
+                            <p class="invoice-subtitle">
+                                <!-- Update the invoice details and line items below. -->
+                                 {invoiceSubtitle}
+                            </p>
+
+                        </div>
+                    </div>
+
+                    <lightning-button
+                        label="Back"
+                        variant="brand"
+                        onclick={handleback}>
+                    </lightning-button>
+
+                </header>
+
+
+                <!-- ================= SCROLLABLE CONTENT AREA ================= -->
+                <main class="invoice-scroll-area slds-p-horizontal_small custom-scroll">
+
+                    <!-- ================= INVOICE DETAILS ================= -->
+                    <section class="invoice-section">
+
+                        <div class="section-heading slds-p-around_x-small">
+                            <div>
+                                <h2>Invoice Details</h2>
+                                <p>Enter the required invoice information.</p>
+                            </div>
+                        </div>
+
+                        <div class="invoice-details-grid">
+
+                            <!-- Participant -->
+                            <template if:true={showParticipantField}>
+                                <div class="invoice-field">
+                                    <label class="field-label">
+                                        <span class="required">*</span>
+                                        Participant Name
+                                    </label>
+
+                                    <div class="field-control">
+                                        <c-tesseract-apps-single-combobox
+                                            name="participantName"
+                                            variant="label-hidden"
+                                            title={selectedParticipantName}
+                                            value={selectedParticipantName}
+                                            options={participantOptions}
+                                            onchange={handleChange}
+                                            required="true">
+                                        </c-tesseract-apps-single-combobox>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Entity -->
+                            <div class="invoice-field">
+                                <label class="field-label">
+                                    <span class="required">*</span>
+                                    Entities Name
+                                </label>
+
+                                <div class="field-control">
+                                    <c-tesseract-apps-single-combobox
+                                        name="entityName"
+                                        variant="label-hidden"
+                                        title={selectedEntityName}
+                                        value={selectedEntityName}
+                                        options={entryNameOptions}
+                                        onchange={handleChange}
+                                        required="true">
+                                    </c-tesseract-apps-single-combobox>
+                                </div>
+                            </div>
+
+                            <!-- Invoice Date -->
+                            <div class="invoice-field">
+                                <label class="field-label">
+                                    <span class="required">*</span>
+                                    Invoice Date
+                                </label>
+
+                                <div class="field-control">
+                                    <lightning-input
+                                        type="date"
+                                        name="InvoiceDate"
+                                        data-id="invoiceDateField"
+                                        title={invoiceDate}
+                                        variant="label-hidden"
+                                        value={invoiceDate}
+                                        required="true"
+                                        onchange={handleChange}>   <!-- title="Shortcut: Ctrl+D"-->
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <!-- Post Date -->
+                            <div class="invoice-field">
+                                <label class="field-label">
+                                    <span class="required">*</span>
+                                    Post Date
+                                </label>
+
+                                <div class="field-control">
+                                    <lightning-input
+                                        type="date"
+                                        name="PostDate"
+                                        data-id="postDateField"
+                                        title={postDate}
+                                        variant="label-hidden"
+                                        value={postDate}
+                                        required="true"
+                                        onchange={handleChange}>    <!-- title="Shortcut: Ctrl+P"-->
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <!-- Due Date -->
+                            <div class="invoice-field">
+                                <label class="field-label">
+                                    <span class="required">*</span>
+                                    Due Date
+                                </label>
+
+                                <div class="field-control">
+                                    <lightning-input
+                                        type="date"
+                                        name="DueDate"
+                                        title={dueDate}
+                                        data-id="dueDate"
+                                        variant="label-hidden"
+                                        value={dueDate}
+                                        required="true"
+                                        onchange={handleChange}>    <!-- title="Shortcut: Alt+D"-->
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="invoice-field">
+                                <label class="field-label">
+                                    <span class="required">*</span>
+                                    Status
+                                </label>
+
+                                <div class="field-control">
+                                    <lightning-combobox
+                                        name="Status"
+                                        variant="label-hidden"
+                                         title={selectedStatus}
+                                        options={statusOptions}
+                                        value={selectedStatus}
+                                        required="true"
+                                        onchange={handleChange}>
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                            <template if:true={showTaxInclusiveField}>
+                                <div class="invoice-field">
+                                    <label class="field-label">
+                                        Tax Inclusive
+                                    </label>
+
+                                    <div class="field-control">
+                                       <lightning-input 
+                                            type="toggle" 
+                                            name="taxInclusive"
+                                            data-id="taxInclusiveToggle"
+                                            onchange={handleChange}
+                                            checked={taxInclusive}
+                                            message-toggle-active="" 
+                                            size="xx-small" 
+                                            message-toggle-inactive="" >
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                            </template>
+
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ================= LINE ITEMS ================= -->
+                    <section class="invoice-section line-items-section">
+
+                        <div class="section-heading slds-p-around_x-small line-items-heading">
+
+                            <div>
+                                <h2>Invoice Line Items</h2>
+                                <p>Add the services or items included in this invoice.</p>
+                            </div>
+
+                            <lightning-button
+                                label="Add New Line"
+                                icon-name="utility:add"
+                                variant="brand"
+                                onclick={addRow}
+                                data-id="addNewLineBtn"
+                                title="Add New Line">     <!-- title="Shortcut: Ctrl+L"-->
+                            </lightning-button>
+
+                        </div>
+
+                        <!-- SALES TABLE -->
+                        <div class={salesTableContainerClass}>
+
+                            <!-- TABLE HEADER -->
+                            <div class="header-wrapper">
+                                <table class="staff-table fixed-table">
+                                    <thead>
+                                        <tr class="table-row">
+
+                                            <th class="table-th center">
+                                                S.No
+                                            </th>
+                                            <!-- <template if:true={showParticipantField}> -->
+                                                <th class="table-th">
+                                                    Support Item
+                                                </th>
+                                            <!-- </template> -->
+
+                                            <th class="table-th">
+                                                Description
+                                            </th>
+
+                                            <template if:true={isAccounting}>
+                                                <th class="table-th">
+                                                    Account List
+                                                </th>
+                                            </template>
+
+                                            <th class="table-th center">
+                                                Quantity
+                                            </th>
+
+                                            <th class="table-th center">
+                                                Unit Price
+                                            </th>
+                                            <template if:true={showTaxInclusiveField}>
+                                                <th class="table-th center">
+                                                    Tax
+                                                </th>
+                                            </template>
+
+                                            <th class="table-th center">
+                                                Action
+                                            </th>
+
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <!-- TABLE BODY -->
+                            <div class="table-body custom-scroll">
+
+                                <table class="staff-table fixed-table">
+
+                                    <tbody>
+
+                                        <template
+                                            for:each={salesEntryList}
+                                            for:item="sales"
+                                            for:index="index">
+
+                                            <tr
+                                                key={sales.Id}
+                                                class="table-row"
+                                               >    <!--  title="Delete Active Row: Ctrl+Delete"-->
+
+                                                <!-- S.NO -->
+                                                <td class="table-td center invoice-sno">
+                                                    {sales.sno}
+                                                </td>
+
+                                                <!-- SUPPORT ITEM -->
+                                                <!-- <template if:true={showParticipantField}> -->
+                                                    <td class="table-td">
+
+                                                        <div class="table-input ignore-roster-paste">
+                                                            <lightning-input
+                                                                name="supportItem"
+                                                                value={sales.lineItems}
+                                                                onchange={handleInputChange}
+                                                                onfocus={handleRowFocus}
+                                                                data-row={sales.Id}
+                                                                data-id={sales.Id}
+                                                                data-field="lineItems"
+                                                                title={sales.lineItems}
+                                                                variant="label-hidden">
+                                                            </lightning-input>
+                                                        </div>
+
+                                                    </td>
+                                                <!-- </template> -->
+
+                                                <!-- DESCRIPTION -->
+                                                <td class="table-td">
+
+                                                    <div class="table-textarea ignore-roster-paste">   
+                                                        <lightning-textarea
+                                                            name="description"
+                                                            value={sales.Description__c}
+                                                            onchange={handleInputChange}
+                                                            onfocus={handleRowFocus}
+                                                            data-row={sales.Id}
+                                                            data-id={sales.Id}
+                                                            data-field="Description__c"
+                                                            title={sales.Description__c}
+                                                            variant="label-hidden">     <!-- title="Shortcut: Ctrl+Shift+B"-->
+                                                        </lightning-textarea>
+                                                    </div>
+
+                                                </td>
+
+                                                <!-- ACCOUNT -->
+                                                <template if:true={isAccounting}>
+
+                                                    <td class="table-td">
+
+                                                        <div class="table-input">
+                                                            <div class="dropdown">
+                                                                <input
+                                                                    type="text"
+                                                                    class="dropdown-input"
+                                                                    placeholder="Search account..."
+                                                                    value={sales.accountList}
+                                                                    data-id={sales.Id}
+                                                                    data-row={sales.Id}
+                                                                    title={sales.accountList}
+                                                                    onclick={handleDropdownPosition}
+                                                                    onfocus={handleRowFocus}
+                                                                    oninput={handleCustomerSearch}/>
+                                                            </div>
+                                                        </div>
+
+                                                    </td>
+
+                                                </template>
+
+                                                <!-- QUANTITY -->
+                                                <td class="table-td">
+
+                                                    <div class="table-input">
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="quantity"
+                                                            data-id={sales.Id}
+                                                            data-field="Quantity__c"
+                                                            data-row={sales.Id}
+                                                            value={sales.Quantity__c}
+                                                            step="0.01"
+                                                            title={sales.Quantity__c}
+                                                            onchange={handleInputChange}
+                                                            onfocus={handleRowFocus}
+                                                            variant="label-hidden">
+                                                        </lightning-input>
+                                                    </div>
+
+                                                </td>
+
+                                                <!-- UNIT PRICE -->
+                                                <td class="table-td">
+
+                                                    <div class="table-input">
+                                                        <lightning-input
+                                                            type="number"
+                                                            name="amount"
+                                                            data-id={sales.Id}
+                                                            data-field="Amount__c"
+                                                            data-row={sales.Id}
+                                                            value={sales.Amount__c}
+                                                            step="0.01"
+                                                            formatter="currency"
+                                                            title={sales.Amount__c}
+                                                            onchange={handleInputChange}
+                                                            onfocus={handleRowFocus}
+                                                            variant="label-hidden">
+                                                        </lightning-input>
+                                                    </div>
+
+                                                </td>
+                                                <template if:true={showTaxInclusiveField}>
+                                                    <td class="table-td">
+
+                                                        <div class="table-input">
+                                                            <div class="dropdown">
+                                                                <input
+                                                                    type="text"
+                                                                    class="dropdown-input"
+                                                                    placeholder="Search Tax"
+                                                                    value={sales.tax}
+                                                                    data-id={sales.Id}
+                                                                    data-row={sales.Id}
+                                                                    title={sales.tax}
+                                                                    onclick={toggleDropdownTax}
+                                                                    onfocus={handleRowFocus}
+                                                                    oninput={handleTaxSearch}/>
+                                                            </div>
+                                                        </div>
+
+                                                    </td>
+                                                </template>
+
+                                                <!-- DELETE -->
+                                                <td class="table-td center">
+
+                                                    <button
+                                                        type="button"
+                                                        class="delete-row-button delete-row-link"
+                                                        data-id={sales.Id}
+                                                        onclick={handleDeleteRow}
+                                                        title="Delete">
+
+                                                        <lightning-icon
+                                                            icon-name="utility:delete"
+                                                            alternative-text="Delete"
+                                                            size="x-small">
+                                                        </lightning-icon>
+
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+
+                                        </template>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ================= ACCOUNT DROPDOWN TABLE ================= -->
+                    <div if:true={customerShowTable} data-id="accountListTableDropdown">
+                        <div style={customerDropdownStyle}>
+                            <table class="dropdown-table">
+                                <thead>
+                                    <tr>
+                                        <th>Account Number</th>
+                                        <th>Ledger Item Name</th>
+                                        <th>Category</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={FilteredLedgerItems} for:item="item">
+                                        <tr key={item.id} 
+                                            data-accno={item.accNo} 
+                                            data-value={item.itemName} 
+                                            data-id={item.id} 
+                                            onclick={handleCustomerSelection}>
+                                            <td>{item.accNo}</td>
+                                            <td>{item.itemName}</td>
+                                            <td>{item.category}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                     <div if:true={showtableTax} data-id="taxTableDropdown">
+                        <div style={taxDropdownStyle}>
+                            <table class="dropdown-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Description</th>
+                                        <th>Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={filteredTaxCodes} for:item="taxCode">
+                                        <tr key={taxCode.id} 
+                                            data-code={taxCode.code} 
+                                            data-description={taxCode.description} 
+                                            data-rate={taxCode.rate} 
+                                            data-value={taxCode.label}
+                                            onclick={handleSelectionTax}>
+                                            <td>{taxCode.code}</td>
+                                            <td>{taxCode.description}</td>
+                                            <td>{taxCode.rate}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                    <!-- ================= BOTTOM AREA ================= -->
+                    <section class="invoice-bottom-section">
+
+                        <!-- LEFT: COMMENTS & NOTES -->
+                        <div class="invoice-notes-card slds-p-around_x-small">
+
+                            <div class="notes-field ignore-roster-paste">
+
+                                <label>Comments</label>
+
+                                <lightning-textarea
+                                    name="comments"
+                                    variant="label-hidden"
+                                    data-id="commentsField"
+                                    value={comments}
+                                    onchange={handleChange}
+                                    title={comments}
+                                    placeholder="Comments...">      <!-- title="Shortcut: Ctrl+M"-->
+                                </lightning-textarea>
+
+                            </div>
+
+                            <div class="notes-field ignore-roster-paste">
+
+                                <label>Notes</label>
+
+                                <lightning-textarea
+                                    name="notes"
+                                    variant="label-hidden"
+                                    data-id="notesField"
+                                    title={notes}
+                                    value={notes}
+                                    onchange={handleChange}
+                                    placeholder="Notes...">     <!-- Shortcut: Ctrl+Q"-->
+                                </lightning-textarea>
+
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT: TOTALS SUMMARY -->
+                        <div class="invoice-summary-card slds-p-around_x-small">
+
+                            <div class="summary-row">
+                                <span>Sub Total</span>
+                                <strong>
+                                    <lightning-formatted-number
+                                        value={subTotal}
+                                        format-style="currency">
+                                    </lightning-formatted-number>
+                                </strong>
+                            </div>
+
+                            <div class="summary-row">
+                                <span>Tax Amount</span>
+                                <strong>
+                                    <lightning-formatted-number
+                                        value={taxAmount}
+                                        format-style="currency">
+                                    </lightning-formatted-number>
+                                </strong>
+                            </div>
+
+                            <div class="summary-divider"></div>
+
+                            <div class="summary-total">
+                                <span>Total</span>
+                                <strong>
+                                    <lightning-formatted-number
+                                        value={totalAmount}
+                                        format-style="currency">
+                                    </lightning-formatted-number>
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ================= HISTORY & ACTIVITY SECTION ================= -->
+                    <template if:true={showHistoryTable}>
+                        <section class="invoice-section invoice-history-section">
+
+                            <div class="section-heading slds-p-around_x-small">
+                                <div>
+                                    <h2>Invoice Activity & History</h2>
+                                    <p>Track all modifications and field updates made to this invoice.</p>
+                                </div>
+                                <!-- <template if:true={totalRecordsHistory}>
+                                    <div class="history-badge">
+                                        <span>{totalRecordsHistory} Records</span>
+                                    </div>
+                                </template> -->
+                            </div>
+
+                            <div class="table-container history-table-container">
+
+                                <!-- HEADER -->
+                                <div class="header-wrapper">
+                                    <table class="staff-table fixed-table">
+                                        <thead>
+                                            <tr class="table-row">
+                                                <th class="table-th center" title="S.No">S.No</th>
+                                                <th class="table-th" title="Field Name">Field Name</th>
+                                                <th class="table-th" title="Old Value">Old Value</th>
+                                                <th class="table-th" title="New Value">New Value</th>
+                                                <th class="table-th" title="Last Modified By">Last Modified By</th>
+                                                <th class="table-th" title="Date/Time">Date/Time</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+
+                                <!-- BODY -->
+                                <div class="table-body custom-scroll">
+                                    <table class="staff-table fixed-table">
+                                        <tbody>
+                                            <template if:true={historyRows.length}>
+                                                <template for:each={historyRows} for:item="row">
+                                                    <tr key={row.sno} class="table-row">
+                                                        <td class="table-td center invoice-sno" title={row.sno}>{row.sno}</td>
+                                                        <td class="table-td font-semibold" title={row.fieldName}>{row.fieldName}</td>
+                                                        <td class="table-td text-muted" title={row.oldValue}>{row.oldValue}</td>
+                                                        <td class="table-td text-success" title={row.newValue}>{row.newValue}</td>
+                                                        <td class="table-td" title={row.modifiedBy}>{row.modifiedBy}</td>
+                                                        <td class="table-td text-muted" title={row.modifiedDate}>{row.modifiedDate}</td>
+                                                    </tr>
+                                                </template>
+                                            </template>
+                                            <template if:false={historyRows.length}>
+                                                <tr class="table-row no-data-row">
+                                                    <td colspan="6" class="no-data">No history records found for this invoice.</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- PAGINATION -->
+                                <template if:true={paginationVisibleHistory}>
+                                    <div class="fixed-pagination slds-p-around_x-small">
+                                        <div class="pagination-left">
+                                            <span>Page Size:</span>
+                                            <div class="slds-select_container">
+                                                <select class="slds-select" id="recordsPerPageHistory" onchange={handleRecordsPerPageHistory}>
+                                                    <template for:each={pageSizeOptionsHistory} for:item="option">
+                                                        <option key={option} value={option}>{option}</option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="pagination-center">
+                                            <lightning-button
+                                                disabled={bDisableFirstHistory}
+                                                icon-name="utility:jump_to_left"
+                                                label="First"
+                                                onclick={firstPageHistory}>
+                                            </lightning-button>
+                                            <lightning-button
+                                                disabled={bDisableFirstHistory}
+                                                icon-name="utility:chevronleft"
+                                                label="Previous"
+                                                onclick={previousPageHistory}>
+                                            </lightning-button>
+                                            <span class="pagination-badge">
+                                                Showing {pageNumberHistory} of {totalPagesHistory} Page(s)
+                                            </span>
+                                            <lightning-button
+                                                disabled={bDisableLastHistory}
+                                                icon-name="utility:chevronright"
+                                                label="Next"
+                                                icon-position="right"
+                                                onclick={nextPageHistory}>
+                                            </lightning-button>
+                                            <lightning-button
+                                                disabled={bDisableLastHistory}
+                                                icon-name="utility:jump_to_right"
+                                                label="Last"
+                                                icon-position="right"
+                                                onclick={lastPageHistory}>
+                                            </lightning-button>
+                                        </div>
+
+                                        <div class="pagination-right">
+                                            <span class="pagination-badge">Total Records: {totalRecordsHistory}</span>
+                                        </div>
+                                    </div>
+                                </template>
+
+                            </div>
+
+                        </section>
+                    </template>
+
+                </main>
+
+
+                <!-- ================= FIXED / STICKY BOTTOM ACTION BAR ================= -->
+                <footer class="invoice-action-bar slds-p-around_x-small">
+
+                    <div class="activity-toggle-area">
+                        <template if:true={isShowActivity}>
+                            <button
+                                type="button"
+                                class="activity-button"
+                                onclick={handleHistoryClick}>
+                                <lightning-icon
+                                    icon-name="utility:list"
+                                    size="x-small"
+                                    class="activity-icon">
+                                </lightning-icon>
+                                <span>{activityToggleLabel}</span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <div class="invoice-actions">
+
+                        <lightning-button
+                            label="Cancel"
+                            variant="neutral"
+                            title="Cancel"
+                            onclick={handleClear}>
+                        </lightning-button>
+
+                        <lightning-button
+                            variant="brand"
+                            label={buttonLabel}
+                            title="Save: Ctrl+S"
+                            data-id="saveBtn"
+                            onclick={handleSave}
+                            disabled={disabledSave}>    <!-- title="Save: Ctrl+S"-->
+                        </lightning-button>
+
+                        <lightning-button
+                            variant="brand"
+                            label="Submit"
+                            title="Submit: Ctrl+Enter"
+                            data-id="submitBtn"
+                            onclick={handleSubmit}>    <!-- title="Submit: Ctrl+Enter"-->
+                        </lightning-button>
+
+                    </div>
+
+                </footer>
+
+            </div>
+        </template>
+        <template if:true={showAcknowledgementModal}> 
+            <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open"> 
+                <div class="slds-modal__container modal-custom1 "> 
+                
+                <!-- HEADER --> 
+                <header class="slds-modal__header headercustom"> 
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom"> Acknowledgement</h2> 
+                    <button
+                        class="slds-button slds-button_icon close-btn1"
+                        title="Close"
+                        onclick={hideAcknowledgementModal}>
+
+                        <lightning-icon
+                            icon-name="utility:close"
+                            alternative-text="close"
+                            size="small">
+                        </lightning-icon>
+                    </button> 
+                </header> 
+                
+                <!-- BODY CONTENT --> 
+                <div class="slds-modal__content slds-p-around_medium">  
+                    <!-- <div class="slds-grid slds-wrap slds-gutters">  -->
+                    <div class="slds-text-align_center">
+                        <p>
+                            Please confirm that you are responsible for the changes made to this invoice.<br/>
+                               
+                        </p>
+                    </div>
+                    <div class="slds-m-top_medium slds-text-align_center">
+                        <lightning-input
+                            type="checkbox"
+                            name="ackValid"
+                            label={chkLabel}
+                            onchange={handleAckCheckboxChange}
+                            checked={isAckChecked}>
+                        </lightning-input>
+                    </div>
+
+                    
+                    <!-- </div>  -->
+                </div> 
+
+                <!-- FOOTER --> 
+                <footer class="slds-modal__footer"> 
+                    <lightning-button 
+                    variant="neutral" 
+                    label="No" 
+                    onclick={hideAcknowledgementModal}> 
+                    </lightning-button> 
+                
+                    <lightning-button 
+                    class="slds-m-left_small" 
+                    variant="brand" 
+                    label="Yes" 
+                    onclick={confirmAcknowledgement}> 
+                    </lightning-button> 
+                </footer> 
+                </div> 
+            </section> 
+        
+            <div class="slds-backdrop slds-backdrop_open"></div> 
+        </template> 
+    <!-- </div> -->
+</template>
