@@ -1,0 +1,616 @@
+<template>
+
+    <div class="xero-settings-wrapper">
+
+        <!-- =====================================================
+             TOP HEADER
+        ====================================================== -->
+
+        <div class="top-header">
+
+            <div class="header-left">
+
+                <div class="header-title-container">
+
+                    <span class="section-title">
+                        Xero Settings
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Edit Mode Indicator -->
+            <template if:true={isEditMode}>
+                <div class="edit-mode-indicator">
+                    <lightning-icon icon-name="utility:edit" size="x-small"></lightning-icon>
+                    <span>Editing: {editingRoleName}</span>
+                    <lightning-button
+                        label="Cancel Edit"
+                        variant="neutral"
+                        size="x-small"
+                        onclick={handleCancelEdit}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- Back Button -->
+            <div class="header-right">
+
+                <lightning-button
+                    label="Back"
+                    variant="brand"
+                    onclick={handleBack}>
+                </lightning-button>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+             XERO SETTINGS FORM — SLDS GRID, 4 IN A ROW
+        ====================================================== -->
+
+        <div class="xero-settings-form slds-box slds-box_x-small">
+
+            <div class="slds-grid slds-wrap slds-gutters_small">
+
+                <!-- PAY ITEM TYPE -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                    <lightning-combobox
+                        name="payItemType"
+                        label="Pay Item Type"
+                        value={selectedPayItemType}
+                        placeholder="Select Pay Item Type"
+                        options={payItemTypeOptions}
+                        onchange={handlePayItemTypeChange}
+                        variant="label-stacked"
+                        required
+                        disabled={isEditMode}>
+                    </lightning-combobox>
+                    <template if:true={isEditMode}>
+                        <div class="edit-role-display">
+                            <lightning-icon icon-name="utility:lock" size="x-small"></lightning-icon>
+                            <span>Pay Item Type is locked during edit</span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ROLE - Only show for Earnings -->
+                <template if:true={isEarningsSelected}>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            name="role"
+                            label="Role"
+                            value={selectedRole}
+                            placeholder="Select Role"
+                            options={roleOptions}
+                            onchange={handleRoleChange}
+                            variant="label-stacked"
+                            required
+                            disabled={isRoleDisabled}>
+                        </lightning-combobox>
+                        <template if:true={isEditMode}>
+                            <div class="edit-role-display">
+                                <lightning-icon icon-name="utility:lock" size="x-small"></lightning-icon>
+                                <span>Role is locked during edit</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- ============================================================
+                     EARNINGS FIELDS - Only show when Earnings is selected
+                ============================================================ -->
+                <template if:true={isEarningsSelected}>
+
+                    <!-- SHIFT TYPE -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            name="shiftType"
+                            label="Shift Type"
+                            value={selectedShiftType}
+                            placeholder="Select Shift Type"
+                            options={shiftTypeOptions}
+                            onchange={handleShiftTypeChange}
+                            variant="label-stacked"
+                            required>
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- BROKEN TYPE — only when Shift Type = Broken -->
+                    <template if:true={isBrokenShiftType}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                            <lightning-combobox
+                                name="brokenType"
+                                label="Broken Type"
+                                value={selectedBrokenType}
+                                placeholder="Select Broken Type"
+                                options={brokenTypeOptions}
+                                onchange={handleBrokenTypeChange}
+                                variant="label-stacked"
+                                required>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- SLEEPOVER RATE TYPE — only when Shift Type = Sleepover -->
+                    <template if:true={isSleepoverShiftType}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                            <lightning-combobox
+                                name="sleepoverType"
+                                label="Sleepover Rate Type"
+                                value={selectedSleepoverType}
+                                placeholder="Select Sleepover Rate Type"
+                                options={sleepoverTypeOptions}
+                                onchange={handleSleepoverTypeChange}
+                                variant="label-stacked"
+                                required>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- CUSTOM SHIFT TYPE — only when Shift Type = Custom -->
+                    <template if:true={isCustomShiftType}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                            <lightning-combobox
+                                name="customShiftType"
+                                label="Custom Shift Type"
+                                value={selectedCustomShiftType}
+                                placeholder="Select Custom Shift Type"
+                                options={customShiftTypeOptions}
+                                onchange={handleCustomShiftTypeChange}
+                                variant="label-stacked"
+                                required>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- CUSTOM RATE TYPE — only when Custom Shift Type = General or Morning -->
+                    <template if:true={isCustomRateTypeVisible}>
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                            <lightning-combobox
+                                name="customRateType"
+                                label="Rate Type"
+                                value={selectedCustomRateType}
+                                placeholder="Select Rate Type"
+                                options={customRateTypeOptions}
+                                onchange={handleCustomRateTypeChange}
+                                variant="label-stacked"
+                                required>
+                            </lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- CATEGORY -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                        <lightning-combobox
+                            name="category"
+                            label="Category"
+                            value={selectedCategory}
+                            placeholder="Select Category"
+                            options={categoryOptions}
+                            onchange={handleCategoryChange}
+                            variant="label-stacked"
+                            required>
+                        </lightning-combobox>
+                    </div>
+
+                </template>
+
+                <!-- XERO PAYITEM - Show for both Earnings and Reimbursement -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                    <lightning-combobox
+                        name="xeroPayitem"
+                        label={payitemLabel}
+                        value={selectedPayitem}
+                        placeholder={payitemPlaceholder}
+                        options={xeroPayitemOptions}
+                        onchange={handlePayitemChange}
+                        variant="label-stacked"
+                        required>
+                    </lightning-combobox>
+                </div>
+
+            </div>
+
+            <!-- REIMBURSEMENT INFO MESSAGE -->
+            <template if:true={isReimbursementSelected}>
+                <div class="reimbursement-info-message">
+                    <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                    <span>For Reimbursement, only Payitem is required. Role is not applicable. Only one Reimbursement record is allowed per organisation.</span>
+                </div>
+            </template>
+
+            <!-- REIMBURSEMENT ALREADY EXISTS ERROR -->
+            <template if:true={isReimbursementExistsError}>
+                <div class="error-message">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>A Reimbursement record already exists for this organisation. Only one Reimbursement record is allowed.</span>
+                </div>
+            </template>
+
+            <!-- ROLE LOADING -->
+            <template if:true={isLoadingRoles}>
+                <div class="loading-message">
+                    Loading roles...
+                </div>
+            </template>
+
+            <!-- ERROR -->
+            <template if:true={errorMessage}>
+                <div class="error-message">
+                    {errorMessage}
+                </div>
+            </template>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+
+                <!-- Cancel Button -->
+                <template if:true={isEditMode}>
+                    <lightning-button
+                        label="Clear"
+                        variant="neutral"
+                        onclick={handleCancelEdit}
+                        disabled={isSaving}>
+                    </lightning-button>
+                </template>
+                <template if:false={isEditMode}>
+                    <lightning-button
+                        label="Clear"
+                        variant="neutral"
+                        onclick={handleCancel}
+                        disabled={isSaving}>
+                    </lightning-button>
+                </template>
+
+                <!-- Save/Update Button -->
+                <template if:true={isEditMode}>
+                    <lightning-button
+                        label="Update"
+                        variant="brand"
+                        onclick={handleSave}
+                        disabled={isSaveDisabled}>
+                    </lightning-button>
+                </template>
+                <template if:false={isEditMode}>
+                    <lightning-button
+                        label="Save"
+                        variant="brand"
+                        onclick={handleSave}
+                        disabled={isSaveDisabled}>
+                    </lightning-button>
+                </template>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+             SAVED XERO SETTINGS TABLE
+        ====================================================== -->
+
+        <div class="table-wrapper">
+
+            <div class="table-container xeroSettingsTable">
+
+                <div class="header-wrapper">
+
+                    <table class="xero-table">
+
+                        <thead>
+
+                            <tr>
+                                <th title="Pay Item Type" class="payitem-type-column">Pay Item Type</th>
+                                <th title="Role" class="role-column">Role</th>
+                                <th title="Shift Type" class="shift-type-column">Shift Type</th>
+                                <th title="Custom Shift" class="custom-shift-column">Custom Shift</th>
+                                <th title="Broken Type" class="broken-column">Broken Type</th>
+                                <th title="Sleepover Type" class="sleepover-column">Sleepover Type</th>
+                                <th title="Rate Type" class="rate-type-column">Rate Type</th>
+                                <th title="Category" class="category-column">Category</th>
+                                <th title="Xero Payitem" class="payitem-column">Xero Payitem</th>
+                                <th title="Actions" class="actions-column">Actions</th>
+                            </tr>
+
+                        </thead>
+
+                    </table>
+
+                </div>
+
+                <div class="custom-scroll xeroSettingsTableHeight">
+
+                    <table class="xero-table">
+
+                        <tbody>
+
+                            <template if:true={pagedSavedSettings.length}>
+
+                                <template for:each={pagedSavedSettings} for:item="setting">
+
+                                    <tr key={setting.Id} class={setting.rowClass}>
+
+                                        <td class="payitem-type-column" title={setting.payItemTypeDisplay}>
+                                            <span class="payitem-type-badge">{setting.payItemTypeDisplay}</span>
+                                        </td>
+
+                                        <td class="role-column" title={setting.roleName}>
+                                            <span class="role-name">{setting.roleName}</span>
+                                        </td>
+
+                                        <td class="shift-type-column" title={setting.Shift_Type__c}>
+                                            <span class="shift-type-badge">{setting.Shift_Type__c}</span>
+                                        </td>
+
+                                        <td class="custom-shift-column" title={setting.customShiftDisplay}>
+                                            {setting.customShiftDisplay}
+                                        </td>
+
+                                        <td class="broken-column" title={setting.brokenTypeDisplay}>
+                                            {setting.brokenTypeDisplay}
+                                        </td>
+
+                                        <td class="sleepover-column" title={setting.sleepoverTypeDisplay}>
+                                            {setting.sleepoverTypeDisplay}
+                                        </td>
+
+                                        <td class="rate-type-column" title={setting.customRateTypeDisplay}>
+                                            {setting.customRateTypeDisplay}
+                                        </td>
+
+                                        <td class="category-column" title={setting.Category__c}>
+                                            {setting.Category__c}
+                                        </td>
+
+                                        <td class="payitem-column" title={setting.Xero_Payitem_Name__c}>
+                                            <span class="payitem-name">{setting.Xero_Payitem_Name__c}</span>
+                                        </td>
+
+                                        <td class="actions-column">
+
+                                            <div class="action-icons">
+
+                                                <lightning-button-icon
+                                                    icon-name="utility:edit"
+                                                    alternative-text="Edit"
+                                                    title="Edit"
+                                                    variant="bare"
+                                                    data-id={setting.Id}
+                                                    data-role={setting.roleName}
+                                                    data-shift-type={setting.Shift_Type__c}
+                                                    data-category={setting.Category__c}
+                                                    data-payitem={setting.Xero_Payitem__c}
+                                                    data-payitem-name={setting.Xero_Payitem_Name__c}
+                                                    data-custom-shift={setting.Custom_Shift_Type__c}
+                                                    data-broken-type={setting.Broken_Type__c}
+                                                    data-sleepover-type={setting.Sleepover_Type__c}
+                                                    data-custom-rate-type={setting.Custom_Rate_Type__c}
+                                                    data-pay-item-type={setting.Pay_Item_Type__c}
+                                                    onclick={handleEdit}>
+                                                </lightning-button-icon>
+
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Delete"
+                                                    title="Delete All"
+                                                    variant="bare"
+                                                    data-id={setting.Id}
+                                                    data-setting-ids={setting.settingIds}
+                                                    onclick={handleDelete}>
+                                                </lightning-button-icon>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                </template>
+
+                            </template>
+
+                            <template if:false={pagedSavedSettings.length}>
+
+                                <tr>
+                                    <td colspan="10" class="no-data">
+                                        <div class="no-data-content">
+                                            <lightning-icon 
+                                                icon-name="utility:info" 
+                                                alternative-text="No records"
+                                                size="medium">
+                                            </lightning-icon>
+                                            <span>No records found. Create your first Xero setting!</span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                            </template>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- =====================================================
+            PAGINATION & PAGE SIZE
+        ====================================================== -->
+
+        <div class="pagination-row fixed-pagination">
+
+            <!-- RECORDS PER PAGE -->
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+
+                <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="xeroRecordsPerPage"
+                    style="padding-top: 4%;">
+
+                    Page Size:
+
+                </label>
+
+                <div class="slds-select_container slds-align_absolute-center">
+
+                    <select
+                        class="slds-select"
+                        id="xeroRecordsPerPage"
+                        onchange={handlePageSizeChange}>
+
+                        <template
+                            for:each={pageSizeOptions}
+                            for:item="option">
+
+                            <option
+                                key={option}
+                                value={option}>
+
+                                {option}
+
+                            </option>
+
+                        </template>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- PAGE NAVIGATION -->
+            <div class="slds-align_absolute-center">
+
+                <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    class="slds-p-horizontal_x-small"
+                    alternative-text="First page"
+                    onclick={firstPage}>
+                </lightning-button>
+
+
+                <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    alternative-text="Previous"
+                    onclick={previousPage}>
+                </lightning-button>
+
+
+                &nbsp;
+
+                <span class="slds-badge">
+
+                    Showing {pageNumber}
+                    &nbsp;of&nbsp;
+                    {totalPages}
+                    &nbsp;&nbsp;Page(s)
+
+                </span>
+
+                &nbsp;
+
+
+                <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    alternative-text="Next"
+                    onclick={nextPage}
+                    class="slds-p-horizontal_x-small"
+                    icon-position="right">
+
+                </lightning-button>
+
+
+                <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    alternative-text="Last page"
+                    onclick={lastPage}
+                    icon-position="right">
+
+                </lightning-button>
+
+            </div>
+
+
+            <!-- TOTAL RECORDS -->
+            <div class="slds-clearfix">
+
+                <div class="slds-float_right">
+
+                    <span class="slds-badge">
+
+                        Total Records: {totalRecords}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <template if:true={isLoadingSettings}>
+            <div class="table-loading-overlay">
+                <lightning-spinner alternative-text="Loading Xero settings" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+    </div>
+
+    <!-- ADD NEW PAYITEM MODAL -->
+    <template if:true={showAddPayitemModal}>
+        <div class="modal-backdrop">
+            <div class="modal-container">
+
+                <div class="modal-header">
+                    <h2>Add New PayItem</h2>
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        variant="bare"
+                        onclick={handleModalClose}>
+                    </lightning-button-icon>
+                </div>
+
+                <div class="modal-body">
+                    <lightning-input
+                        type="text"
+                        label="PayItem Name"
+                        value={newPayitemName}
+                        placeholder="Enter new PayItem name"
+                        onchange={handleNewPayitemChange}
+                        required>
+                    </lightning-input>
+                </div>
+
+                <div class="modal-footer">
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleModalClose}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Add"
+                        variant="brand"
+                        onclick={handleAddNewPayitem}
+                        disabled={isAddButtonDisabled}>
+                    </lightning-button>
+                </div>
+
+            </div>
+        </div>
+    </template>
+
+</template>
