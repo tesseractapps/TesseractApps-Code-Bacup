@@ -1,0 +1,1281 @@
+<template>
+
+    <template if:false={launchedFromDashboard}>
+        <div class="mainContainer custom-scroll">
+
+            <div class="menu-container ">
+                <div class="menu-left">
+                    <div class="menu-item1">Goal Management & Tracking</div>
+                </div>
+
+                <div class="search-box">
+                    <!-- <lightning-input 
+                        type="search"
+                        placeholder="Search Provider or Email"
+                        variant="label-hidden"
+                        value={searchProvider}
+                        onchange={handleSearchProvider}>
+                    </lightning-input> -->
+                </div>
+
+                <template if:false={showGoalDetails}>
+                    <div class="slds-button-group custom-button-group" role="group">
+                        <lightning-button label="Create Goal" variant="brand" class="slds-m-right_small"
+                            onclick={openAddGoalModal}>
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <template if:true={showGoalDetails}>
+                    <lightning-button label="Back" variant="brand" class="slds-m-right_small"
+                        onclick={handleBackToParticipants}>
+                    </lightning-button>
+                </template>
+            </div>
+
+            <div class="slds-p-around_medium goals-content">
+                <template if:false={showGoalDetails}>
+                    <!-- METRICS GRID -->
+                    <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_large">
+
+                        <div class="slds-col slds-size_2-of-8">
+                            <div
+                                class="slds-box_x-small metrics-blue slds-text-align_left slds-p-around_medium metrics-card metrics-flex">
+                                <p>Total Active Goals</p>
+                                <h1 class="slds-text-heading_large">{totalActiveGoals}</h1>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_2-of-8">
+                            <div
+                                class="slds-box_x-small metrics-green slds-text-align_left slds-p-around_medium metrics-card metrics-flex">
+                                <p>Average Progress</p>
+                                <h1 class="slds-text-heading_large">{avgProgressGlobal}%</h1>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_2-of-8">
+                            <div
+                                class="slds-box_x-small metrics-orange slds-text-align_left slds-p-around_medium metrics-card metrics-flex">
+                                <p>Goals Achieved</p>
+                                <h1 class="slds-text-heading_large">{totalCompletedGoals}</h1>
+                            </div>
+                        </div>
+
+                        <div class="slds-col slds-size_2-of-8">
+                            <div
+                                class="slds-box_x-small metrics-purple slds-text-align_left slds-p-around_medium metrics-card metrics-flex">
+                                <p>In Progress</p>
+                                <h1 class="slds-text-heading_large">{totalInProgressGoals}</h1>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="table-section">
+                        <!-- PARTICIPANT LIST -->
+                        <div class="table-container participantTable">
+
+                            <!-- HEADER -->
+                            <div class="header-wrapper">
+                                <table class="staff-table" role="table">
+                                    <thead>
+                                        <tr>
+                                            <th class="table-th">Participant Name</th>
+                                            <th class="table-th">Goals</th>
+                                            <!-- <th class="table-th">Avg Goals</th> -->
+                                            <th class="table-th">Completing Avg</th>
+                                            <th class="table-th">Recent Goal Name</th>
+                                            <th class="table-th">Goal Created Date </th>
+                                            <th class="table-th">Goal Target Date</th>
+                                            <th class="table-th center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <!-- BODY -->
+                            <div class="body-scroll custom-scroll participantTableHeight">
+                                <table class="staff-table">
+                                    <tbody>
+                                        <template for:each={participants} for:item="p">
+                                            <tr key={p.id} class="table-row">
+
+                                                <!-- PARTICIPANT -->
+                                                <td class="table-td">
+                                                    <div class="avatar-row">
+                                                        <span class="slds-avatar slds-avatar_circle slds-avatar_medium">
+                                                            <template if:true={p.hasImage}>
+                                                                <img src={p.imageUrl} alt={p.name} />
+                                                            </template>
+
+                                                            <template if:false={p.hasImage}>
+                                                                <abbr class="avatar-circle" title={p.name}>
+                                                                    {p.initials}
+                                                                </abbr>
+                                                            </template>
+                                                        </span>
+
+                                                        <div>
+                                                            <div class="participant-name">{p.name}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <!-- GOAL COUNT -->
+                                                <td class="table-td">
+                                                    <span>{p.goalCount}</span>
+                                                </td>
+
+                                                <!-- AVG GOALS -->
+                                                <td class="table-td">
+                                                    <span class="avg-goal">{p.avgGoals}%</span>
+                                                </td>
+
+                                                <!-- GOAL PROGRESS -->
+                                                <!-- <td class="table-td">
+                                            <template for:each={p.previewGoals} for:item="g">
+                                                <div key={g.id} class="goal-progress-item">
+                                                    <div class="goal-title">{g.title}</div>
+
+                                                    <div class="slds-progress-bar">
+                                                        <span
+                                                            class="slds-progress-bar__value"
+                                                            style={g.progressStyle}>
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="goal-percent">{g.progress}%</div>
+                                                </div>
+                                            </template>
+                                        </td> -->
+
+                                                <!-- <td class="table-td">
+                                            <div class="goal-progress-container">
+                                                <template for:each={p.previewGoals} for:item="g">
+                                                    <div key={g.id} class="goal-progress-item" style={g.widthStyle}>
+                                                        <div class="goal-title slds-truncate">{g.title}</div>
+                                                        <div class="slds-progress-bar">
+                                                            <span class="slds-progress-bar__value" style={g.progressStyle}></span>
+                                                        </div>
+                                                        <div class="goal-percent">{g.progress}%</div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </td> -->
+
+                                                <!-- Recent GOAL Name -->
+                                                <td class="table-td">
+                                                    <span class="slds-truncate"
+                                                        title={p.recentGoalName}>{p.recentGoalName}</span>
+                                                </td>
+
+                                                <!--  GOAL Created Date -->
+                                                <td class="table-td">
+                                                    <span>{p.goalCreatedDate}</span>
+                                                </td>
+
+                                                <!--  GOAL Target Date -->
+                                                <td class="table-td">
+                                                    <span>{p.goalTargetDate}</span>
+                                                </td>
+
+                                                <!-- VIEW DETAILS -->
+                                                <td class="table-td center">
+
+                                                    <a href="javascript:void(0)" class="slds-m-right_x-small"
+                                                        data-id={p.id} data-name={p.name} onclick={handleViewDetails}
+                                                        title="View">
+                                                        <i class="material-icons table-icon">visibility</i>
+                                                    </a>
+
+                                                    <a href="javascript:void(0)" data-id={p.id} data-name={p.name}
+                                                        onclick={handleAddGoalForParticipant} title="Add Goal">
+                                                        <i class="material-icons table-icon">add_notes</i>
+                                                    </a>
+                                                </td>
+
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- <template if:true={participants.length}>
+                    <div class="slds-grid slds-grid_vertical-align-center
+                                slds-grid_align-spread
+                                slds-m-top_medium
+                                slds-p-around_small">
+
+                        <div class="slds-col slds-size_2-of-12 slds-grid slds-grid_vertical-align-center">
+                            <span class="slds-m-right_x-small slds-text-body_small">Page Size :</span>
+                            <lightning-combobox
+                                value={pageSize}
+                                options={pageSizeOptions}
+                                onchange={handlePageSizeChange}
+                                variant="label-hidden">
+                            </lightning-combobox>
+                        </div>
+
+                        <div class="slds-col slds-size_7-of-12 slds-align_absolute-center">
+                            <lightning-button
+                                label="« First"
+                                variant="neutral"
+                                onclick={handleFirstPage}
+                                disabled={isFirstPage}>
+                            </lightning-button>
+
+                            <lightning-button
+                                class="slds-m-left_x-small"
+                                label="‹ Previous"
+                                variant="neutral"
+                                onclick={handlePreviousPage}
+                                disabled={isFirstPage}>
+                            </lightning-button>
+
+                            <span class="slds-m-horizontal_medium slds-text-body_small slds-text-bold">
+                                Showing {currentPage} of {totalPages} Page(s)
+                            </span>
+
+                            <lightning-button
+                                class="slds-m-right_x-small"
+                                label="Next ›"
+                                variant="brand-outline"
+                                onclick={handleNextPage}
+                                disabled={isLastPage}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Last »"
+                                variant="brand-outline"
+                                onclick={handleLastPage}
+                                disabled={isLastPage}>
+                            </lightning-button>
+                        </div>
+
+                        <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                            <span class="slds-badge slds-theme_inverse">
+                                Total Records: {totalRecords}
+                            </span>
+                        </div>
+
+                    </div>
+                </template> -->
+
+
+
+                </template>
+
+                <!-- GOAL VIEW DETAILS -->
+                <template if:true={showGoalDetails}>
+                    <div class="gd-wrap">
+
+                        <!-- ── TOP BAR ──────────────────────────────────────── -->
+                        <div class="gd-topbar">
+                            <!-- <div class="gd-topbar__left"> -->
+                            <div class="gd-participant-pill">
+                                <div class="gd-avatar">{participantInitial}</div>
+                                <div>
+                                    <p class="gd-participant-name">{selectedParticipantName}</p>
+                                    <p class="gd-participant-sub">Goal details &amp; progress overview</p>
+                                </div>
+                            </div>
+                            <!-- </div> -->
+
+                            <!--<div class="gd-topbar__right">
+                            
+
+                            <lightning-button
+                                label="Review Goal"
+                                variant="brand"
+                                icon-name="utility:check"
+                                onclick={handleReviewGoal}
+                                disabled={isGoalCompleted}
+                                class="gd-btn-gap">
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Edit"
+                                variant="neutral"
+                                icon-name="utility:edit"
+                                onclick={handleEditGoal}>
+                            </lightning-button>
+                        </div> -->
+                        </div>
+                        <!-- GOAL SELECTOR CARD -->
+                        <div class="gd-card">
+                            <div class="gd-card__title">
+                                <lightning-icon icon-name="utility:target" size="x-small"
+                                    class="slds-m-right_x-small"></lightning-icon>
+                                Goal details
+                            </div>
+                            <div class="gd-goal-row">
+                                <div class="gd-goal-row__left">
+                                    <lightning-combobox label="Select goal" value={selectedGoalId} options={goalOptions}
+                                        onchange={handleGoalSelection} class="gd-goal-select">
+                                    </lightning-combobox>
+                                </div>
+                                <div class="gd-goal-row__right">
+                                    <lightning-button label="Review Goal" variant="brand" icon-name="utility:check"
+                                        onclick={handleReviewGoal} disabled={isGoalCompleted} class="gd-btn-gap">
+                                    </lightning-button>
+
+                                    <lightning-button label="Edit" variant="neutral" icon-name="utility:edit"
+                                        onclick={handleEditGoal}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── PROGRESS STRIP ───────────────────────────────── -->
+                        <div class="gd-prog-card">
+                            <div class="gd-prog-row">
+                                <span class="gd-prog-label">Goal progress</span>
+                                <span class="gd-prog-val">{totalProgress}%</span>
+                            </div>
+                            <div class="gd-track">
+                                <div class="gd-fill gd-fill--blue" style={totalProgressStyle}></div>
+                            </div>
+
+                            <!-- <template if:true={selectedGoal.Budget__c}>
+                            <div class="gd-prog-row slds-m-top_x-small">
+                                <span class="gd-prog-label">Budget usage</span>
+                                <span class="gd-prog-val">${totalBudgetSpent} / ${selectedGoal.Budget__c}</span>
+                            </div>
+                            <div class="gd-track">
+                                <div class="gd-fill gd-fill--amber" style={budgetProgressStyle}></div>
+                            </div>
+                        </template> -->
+                        </div>
+
+                        <!-- ── MAIN GRID ─────────────────────────────────────── -->
+                        <div class="gd-main-grid">
+
+                            <!-- LEFT COL -->
+                            <div class="gd-left">
+
+                                <!-- GOAL SELECTOR CARD -->
+                                <!-- <div class="gd-card">
+                                <div class="gd-card__title">
+                                    <lightning-icon icon-name="utility:target" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Goal details
+                                </div>
+
+                                <lightning-combobox
+                                    label="Select goal"
+                                    value={selectedGoalId}
+                                    options={goalOptions}
+                                    onchange={handleGoalSelection}
+                                    class="gd-goal-select">
+                                </lightning-combobox>
+                            </div> -->
+
+                                <!-- SMART FRAMEWORK CARD -->
+                                <div class="gd-card slds-m-top_small">
+                                    <div class="gd-card__title">
+                                        <lightning-icon icon-name="utility:strategy" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        SMART goal framework
+                                    </div>
+
+                                    <!-- S -->
+                                    <div class="gd-smart gd-smart--blue">
+                                        <span class="gd-smart__badge gd-smart__badge--blue">S</span>
+                                        <div>
+                                            <p class="gd-smart__label gd-smart__label--blue">Specific</p>
+                                            <p class="gd-smart__text">{selectedGoal.Specific__c}</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- M -->
+                                    <div class="gd-smart gd-smart--green">
+                                        <span class="gd-smart__badge gd-smart__badge--green">M</span>
+                                        <div>
+                                            <p class="gd-smart__label gd-smart__label--green">Measurable</p>
+                                            <p class="gd-smart__text">{selectedGoal.Measurable__c}</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- A -->
+                                    <div class="gd-smart gd-smart--amber">
+                                        <span class="gd-smart__badge gd-smart__badge--amber">A</span>
+                                        <div>
+                                            <p class="gd-smart__label gd-smart__label--amber">Achievable</p>
+                                            <p class="gd-smart__text">{selectedGoal.Achievable__c}</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- R -->
+                                    <div class="gd-smart gd-smart--purple">
+                                        <span class="gd-smart__badge gd-smart__badge--purple">R</span>
+                                        <div>
+                                            <p class="gd-smart__label gd-smart__label--purple">Relevant</p>
+                                            <p class="gd-smart__text">{selectedGoal.Relevant__c}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SUB GOALS CARD -->
+                                <div class="gd-card slds-m-top_small">
+                                    <div class="gd-card__title">
+                                        <lightning-icon icon-name="utility:steps" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        Sub-goals
+                                    </div>
+
+                                    <template if:true={selectedSubGoals.length}>
+                                        <template for:each={selectedSubGoals} for:item="sg">
+                                            <div key={sg.id} class="gd-subgoal">
+                                                <p class="gd-subgoal__title">{sg.title}</p>
+                                                <lightning-radio-group data-id={sg.id} name={sg.id}
+                                                    options={subGoalStatusOptions} value={sg.status} type="radio"
+                                                    onchange={handleSubGoalStatusChange}>
+                                                </lightning-radio-group>
+                                            </div>
+                                        </template>
+                                    </template>
+
+                                    <template if:false={selectedSubGoals.length}>
+                                        <p class="gd-empty">No sub-goals available.</p>
+                                    </template>
+                                </div>
+
+                                <!-- REVIEWS CARD -->
+                                <div class="gd-card slds-m-top_small">
+                                    <div class="gd-card__title">
+                                        <lightning-icon icon-name="utility:list" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        Review evidence
+                                    </div>
+
+                                    <template if:true={goalReviews.length}>
+                                        <template for:each={goalReviews} for:item="r">
+                                            <div key={r.Id} class="gd-review">
+                                                <div class="gd-review__hdr">
+                                                    <div>
+                                                        <p class="gd-review__date">{r.formattedReviewDate}</p>
+                                                        <p class="gd-review__text">{r.Progress_Summary__c}</p>
+                                                    </div>
+                                                    <div class="gd-review__right">
+                                                        <span
+                                                            class="gd-badge gd-badge--green">{r.Update_Progress__c}%</span>
+                                                        <lightning-button-icon icon-name="utility:edit"
+                                                            alternative-text="Edit Review" title="Edit Review"
+                                                            size="small" variant="bare" data-id={r.Id}
+                                                            onclick={handleEditReview}>
+                                                        </lightning-button-icon>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </template>
+
+                                    <template if:false={goalReviews.length}>
+                                        <p class="gd-empty">No reviews yet.</p>
+                                    </template>
+                                </div>
+
+                                <!-- NOTES CARD -->
+                                <!-- <div class="gd-card slds-m-top_small">
+                                <div class="gd-card__title">
+                                    <lightning-icon icon-name="utility:note" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Notes
+                                </div>
+
+                                <template if:true={goalNotes.length}>
+                                    <template for:each={goalNotes} for:item="n">
+                                        <div key={n.Id} class="gd-note">
+                                            <div class="gd-note__hdr">
+                                                <div>
+                                                    <p class="gd-note__date">{n.formattedDate}</p>
+                                                    <p class="gd-note__text">{n.Activity_Details__c}</p>
+                                                </div>
+                                                <span class={n.badgeClass}>{n.billableLabel}</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <template if:false={goalNotes.length}>
+                                    <p class="gd-empty">No notes found.</p>
+                                </template>
+                            </div> -->
+
+                            </div>
+
+                            <!-- RIGHT COL -->
+                            <div class="gd-right">
+
+                                <!-- STAT GRID -->
+                                <div class="gd-stat-grid">
+                                    <div class="gd-stat">
+                                        <p class="gd-stat__num gd-stat__num--blue">{totalProgress}%</p>
+                                        <p class="gd-stat__lbl">Progress</p>
+                                    </div>
+                                    <div class="gd-stat">
+                                        <p class="gd-stat__num gd-stat__num--red">{remainingProgress}%</p>
+                                        <p class="gd-stat__lbl">Remaining</p>
+                                    </div>
+                                </div>
+
+                                <!-- BUDGET CARD -->
+                                <!-- <div class="gd-card slds-m-top_small">
+                                <div class="gd-card__title">
+                                    <lightning-icon icon-name="utility:chart" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                    Budget overview
+                                </div>
+
+                                <p class="gd-budget-pct {budgetPctClass}">{budgetSpentPercent}%</p>
+
+                                <div class="gd-track slds-m-bottom_small">
+                                    <div class="gd-fill gd-fill--amber" style={budgetProgressStyle}></div>
+                                </div>
+
+                                <div class="gd-budget-rows">
+                                    <div class="gd-budget-row">
+                                        <span class="gd-budget-row__lbl">Total budget</span>
+                                        <span class="gd-budget-row__val">${selectedGoal.Budget__c}</span>
+                                    </div>
+                                    <div class="gd-budget-row">
+                                        <span class="gd-budget-row__lbl">Spent</span>
+                                        <span class="gd-budget-row__val gd-val--danger">${totalBudgetSpent}</span>
+                                    </div>
+                                    <div class="gd-budget-row gd-budget-row--border">
+                                        <span class="gd-budget-row__lbl">Remaining</span>
+                                        <span class="gd-budget-row__val gd-val--success">${remainingBudget}</span>
+                                    </div>
+                                </div>
+                            </div> -->
+
+
+                                <div class="gd-card slds-m-top_small">
+                                    <div class="gd-card__title">
+                                        <lightning-icon icon-name="utility:info" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        Goal Details
+                                    </div>
+
+                                    <div class="gd-meta-rows">
+                                        <div class="gd-meta-row">
+                                            <span class="gd-meta-row__lbl">Status</span>
+                                            <span class={goalStatusClass}>{selectedGoal.Status__c}</span>
+                                        </div>
+                                        <div class="gd-meta-row">
+                                            <span class="gd-meta-row__lbl">Priority</span>
+                                            <span class={goalPriorityClass}>{selectedGoal.Priority__c}</span>
+                                        </div>
+                                        <div class="gd-meta-row">
+                                            <span class="gd-meta-row__lbl">Category</span>
+                                            <span class="gd-meta-row__val">{selectedGoal.Goal_Category__c}</span>
+                                        </div>
+                                        <div class="gd-meta-row">
+                                            <span class="gd-meta-row__lbl">Review freq</span>
+                                            <span class="gd-meta-row__val">{selectedGoal.Review_Frequency__c}</span>
+                                        </div>
+                                        <div class="gd-meta-row">
+                                            <span class="gd-meta-row__lbl">Target date</span>
+                                            <span class="gd-meta-row__val">{formattedTargetDate}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--
+                            <div class={budgetNoticeClass}>
+                                <lightning-icon
+                                    icon-name={budgetNoticeIcon}
+                                    size="small"
+                                    class="slds-m-right_x-small">
+                                </lightning-icon>
+                                <div>
+                                    <p class="gd-notice__title">{budgetNoticeTitle}</p>
+                                    <p class="gd-notice__msg">{budgetNoticeMsg}</p>
+                                </div>
+                            </div> -->
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+            </div>
+
+            <template if:false={showGoalDetails}>
+                <template if:true={participants.length}>
+                    <template if:true={participants.length}>
+                        <div
+                            class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                            <div class="slds-list_inline">
+                                <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="recordsPerPage" onchange={handlePageSizeChange}>
+                                        <template for:each={pageSizeOptions} for:item="option">
+                                            <option key={option} value={option}>{option}</option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="slds-align_absolute-center">
+                                <lightning-button disabled={isFirstPage} icon-name="utility:jump_to_left" label="First"
+                                    alternative-text="first page" onclick={handleFirstPage} style="margin-right: 10px;">
+                                </lightning-button>
+
+                                <lightning-button disabled={isFirstPage} icon-name="utility:chevronleft"
+                                    label="Previous" alternative-text="Previous" onclick={handlePreviousPage}
+                                    style="margin-right: 5px;">
+                                </lightning-button>
+
+                                <span class="slds-badge">Showing {currentPage} &nbsp;of&nbsp; {totalPages}
+                                    Page(s)</span>
+
+                                <lightning-button disabled={isLastPage} icon-name="utility:chevronright" label="Next"
+                                    alternative-text="Next" onclick={handleNextPage} class="slds-p-horizontal_x-small"
+                                    icon-position="right">
+                                </lightning-button>
+
+                                <lightning-button disabled={isLastPage} icon-name="utility:jump_to_right" label="Last"
+                                    alternative-text="last page" onclick={handleLastPage} icon-position="right">
+                                </lightning-button>
+                            </div>
+
+                            <div class="slds-clearfix">
+                                <div class="slds-float_right">
+                                    <span class="slds-badge">Total Records: {totalRecords}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </template>
+
+
+    <!-- ADD NEW GOAL POPUP -->
+    <template if:true={showGoalModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modal-custom">
+                <!-- <header class="slds-modal__header headercustom">
+                    <div class="goal-header">
+                        <div class="goal-header-top">
+                            <h2 class="goal-title">
+                                {modalTitle}
+                            </h2>
+                            <span class="step-badge">
+                                {stepLabel}
+                            </span>
+                        </div>
+                        <p class="goal-subtitle">
+                            Create SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
+                            goals that drive participant outcomes
+                        </p>
+                    </div>
+                </header> -->
+
+                <header class="slds-modal__header headercustom  modal-header-custom">
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                        {modalTitle}
+                    </h2>
+                    <button class="slds-button slds-button_icon close-btn" title="Close" onclick={closeGoalModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close"
+                            size="small"></lightning-icon>
+                    </button>
+                </header>
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                    <!-- STAGE PATH (INDICATOR ONLY) -->
+                    <!-- <div class="slds-path slds-m-bottom_medium">
+                        <div class="slds-grid slds-path__track">
+                            <div class="slds-grid slds-path__scroller-container">
+                                <div class="slds-path__scroller">
+                                    <div class="slds-path__scroller_inner">
+                                        <ul class="slds-path__nav" role="listbox">
+
+                                            <li class={basicsClass} role="presentation">
+                                                <span class="slds-path__link" data-stage="BASICS"
+                                                    onclick={handlePathClick}>
+                                                    <span class="slds-path__title">Basics</span>
+                                                </span>
+                                            </li>
+
+                                            <li class={smartClass} role="presentation">
+                                                <span class="slds-path__link" data-stage="SMART"
+                                                    onclick={handlePathClick}>
+                                                    <span class="slds-path__title">Smart</span>
+                                                </span>
+                                            </li>
+
+                                            <li class={actionsClass} role="presentation">
+                                                <span class="slds-path__link" data-stage="ACTIONS"
+                                                    onclick={handlePathClick}>
+                                                    <span class="slds-path__title">Actions</span>
+                                                </span>
+                                            </li>
+
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <lightning-progress-indicator current-step={currentStage} type="path"
+                        onstepfocus={handlePathClick} class="slds-m-bottom_medium">
+                        <lightning-progress-step label="Basics" value="BASICS"></lightning-progress-step>
+                        <lightning-progress-step label="Smart" value="SMART"></lightning-progress-step>
+                        <lightning-progress-step label="Actions" value="ACTIONS"></lightning-progress-step>
+                    </lightning-progress-indicator>                    
+
+                    <!-- BASICS STAGE -->
+                    <template if:true={isBasicsStage}>
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <!-- Participant -->
+                            <!-- Participant (Global Add Goal) -->
+                            <template if:false={isParticipantPreselected}>
+                                <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                    <lightning-combobox label="Participant" placeholder="Select Participant"
+                                        value={goal.SupportClient_To_Goals__c} options={participantOptions}
+                                        data-field="SupportClient_To_Goals__c" onchange={handleGoalChange} required>
+                                    </lightning-combobox>
+                                </div>
+                            </template>
+
+                            <!-- Participant (Preselected from card, e.g. Sai) -->
+                            <template if:true={isParticipantPreselected}>
+                                <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                    <lightning-input label="Participant" value={selectedParticipantName} disabled>
+                                    </lightning-input>
+                                </div>
+                            </template>
+
+                            <!-- Goal Title -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <lightning-input label="Goal Title" value={goal.Name} data-field="Name"
+                                    onchange={handleGoalChange} required>
+                                </lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <lightning-combobox label="Status" placeholder="Select Status" value={goal.Status__c}
+                                    options={statusOptions} data-field="Status__c" onchange={handleGoalChange} required>
+                                </lightning-combobox>
+                            </div>
+                            <!-- Priority -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <lightning-combobox label="Priority" placeholder="Select Priority"
+                                    value={goal.Priority__c} options={priorityOptions} data-field="Priority__c"
+                                    onchange={handleGoalChange} required>
+                                </lightning-combobox>
+                            </div>
+                            <!-- Goal Category -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <lightning-combobox label="Goal Category" placeholder="Select Category"
+                                    value={goal.Goal_Category__c} options={goalCategoryOptions}
+                                    data-field="Goal_Category__c" onchange={handleGoalChange} required>
+                                </lightning-combobox>
+                            </div>
+                            <!-- Review Frequency -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <lightning-combobox label="Review Frequency" placeholder="Select Review Frequency"
+                                    value={goal.Review_Frequency__c} options={reviewFrequencyOptions}
+                                    data-field="Review_Frequency__c" onchange={handleGoalChange} required>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- <template if:true={isSmartStage}>
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Specific</strong> - What exactly do you want to achieve?
+                                    </div>
+
+                                    <div class="slds-form-element__control">
+                                        <lightning-textarea variant="label-hidden" value={goal.Specific__c}
+                                            data-field="Specific__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                            onblur={handleBlur}
+                                            placeholder="Enter specific details here or start speaking...">
+                                        </lightning-textarea>
+                                        <c-speech-to-text data-type="goal" data-field="Specific__c"
+                                            value={goal.Specific__c} show-mute-icon={showSpecificMuteIcon}
+                                            ontranscript={handleTranscript} onclear={handleClear}></c-speech-to-text>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Measurable</strong> - How will we know when you've achieved this?
+                                    </div>
+
+                                    <div class="slds-form-element__control">
+                                        <lightning-textarea variant="label-hidden" value={goal.Measurable__c}
+                                            data-field="Measurable__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                            onblur={handleBlur}
+                                            placeholder="Enter measurable details here or start speaking...">
+                                        </lightning-textarea>
+                                        <c-speech-to-text data-type="goal" data-field="Measurable__c"
+                                            value={goal.Measurable__c} show-mute-icon={showMeasurableMuteIcon}
+                                            ontranscript={handleTranscript} onclear={handleClear}>
+                                        </c-speech-to-text>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Achievable</strong> - What support do you need to make this happen?
+                                    </div>
+
+                                    <div class="slds-form-element__control">
+                                        <lightning-textarea variant="label-hidden" value={goal.Achievable__c}
+                                            data-field="Achievable__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                            onblur={handleBlur}
+                                            placeholder="Enter achievable details here or start speaking...">
+                                        </lightning-textarea>
+                                        <c-speech-to-text data-type="goal" data-field="Achievable__c"
+                                            value={goal.Achievable__c} show-mute-icon={showAchievableMuteIcon}
+                                            ontranscript={handleTranscript} onclear={handleClear}>
+                                        </c-speech-to-text>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Relevant</strong> - Why is this goal important to you?
+                                    </div>
+
+                                    <div class="slds-form-element__control">
+                                        <lightning-textarea variant="label-hidden" value={goal.Relevant__c}
+                                            data-field="Relevant__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                            onblur={handleBlur}
+                                            placeholder="Enter relevant details here or start speaking...">
+                                        </lightning-textarea>
+                                        <c-speech-to-text data-type="goal" data-field="Relevant__c"
+                                            value={goal.Relevant__c} show-mute-icon={showRelevantMuteIcon}
+                                            ontranscript={handleTranscript} onclear={handleClear}>
+                                        </c-speech-to-text>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+
+                                <label class="slds-form-element__label">
+                                    <strong>Time bound</strong> - When do you want to achieve this by?
+                                </label>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input type="date" label="Target Date" value={goal.Target_Date__c}
+                                            data-field="Target_Date__c" onchange={handleGoalChange} min={todayDate}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input type="text" label="Timeline Description"
+                                            placeholder="e.g., By end of next month"
+                                            value={goal.Timeline_Description__c} data-field="Timeline_Description__c"
+                                            onchange={handleGoalChange} required>
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </template> -->
+
+
+                    <template if:true={isSmartStage}>
+                        <div class="slds-grid slds-wrap -gutters">
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Specific</strong> - What exactly do you want to achieve?
+                                    </div>
+
+                                    <div class="slds-form-element__control slds-grid slds-grid_vertical-align-center">
+                                        <div class="slds-col slds-grow">
+                                            <lightning-textarea variant="label-hidden" value={goal.Specific__c}
+                                                data-field="Specific__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                                onblur={handleBlur}
+                                                placeholder="Enter specific details here or start speaking...">
+                                            </lightning-textarea>
+                                        </div>
+                                        <div class="slds-col slds-no-flex slds-m-left_x-small">
+                                            <c-speech-to-text data-type="goal" data-field="Specific__c"
+                                                value={goal.Specific__c} show-mute-icon={showSpecificMuteIcon}
+                                                ontranscript={handleTranscript} onclear={handleClear}></c-speech-to-text>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Measurable</strong> - How will we know when you've achieved this?
+                                    </div>
+
+                                    <div class="slds-form-element__control slds-grid slds-grid_vertical-align-center">
+                                        <div class="slds-col slds-grow">
+                                            <lightning-textarea variant="label-hidden" value={goal.Measurable__c}
+                                                data-field="Measurable__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                                onblur={handleBlur}
+                                                placeholder="Enter measurable details here or start speaking...">
+                                            </lightning-textarea>
+                                        </div>
+                                        <div class="slds-col slds-no-flex slds-m-left_x-small">
+                                            <c-speech-to-text data-type="goal" data-field="Measurable__c"
+                                                value={goal.Measurable__c} show-mute-icon={showMeasurableMuteIcon}
+                                                ontranscript={handleTranscript} onclear={handleClear}>
+                                            </c-speech-to-text>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Achievable</strong> - What support do you need to make this happen?
+                                    </div>
+
+                                    <div class="slds-form-element__control slds-grid slds-grid_vertical-align-center">
+                                        <div class="slds-col slds-grow">
+                                            <lightning-textarea variant="label-hidden" value={goal.Achievable__c}
+                                                data-field="Achievable__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                                onblur={handleBlur}
+                                                placeholder="Enter achievable details here or start speaking...">
+                                            </lightning-textarea>
+                                        </div>
+                                        <div class="slds-col slds-no-flex slds-m-left_x-small">
+                                            <c-speech-to-text data-type="goal" data-field="Achievable__c"
+                                                value={goal.Achievable__c} show-mute-icon={showAchievableMuteIcon}
+                                                ontranscript={handleTranscript} onclear={handleClear}>
+                                            </c-speech-to-text>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <div class="slds-form-element">
+
+                                    <div class="slds-form-element__label">
+                                        <span style="color:red">*</span>
+                                        <strong>Relevant</strong> - Why is this goal important to you?
+                                    </div>
+
+                                    <div class="slds-form-element__control slds-grid slds-grid_vertical-align-center">
+                                        <div class="slds-col slds-grow">
+                                            <lightning-textarea variant="label-hidden" value={goal.Relevant__c}
+                                                data-field="Relevant__c" onchange={handleGoalChange} onfocus={handleFocus}
+                                                onblur={handleBlur}
+                                                placeholder="Enter relevant details here or start speaking...">
+                                            </lightning-textarea>
+                                        </div>
+                                        <div class="slds-col slds-no-flex slds-m-left_x-small">
+                                            <c-speech-to-text data-type="goal" data-field="Relevant__c"
+                                                value={goal.Relevant__c} show-mute-icon={showRelevantMuteIcon}
+                                                ontranscript={handleTranscript} onclear={handleClear}>
+                                            </c-speech-to-text>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                                <!-- <div class="slds-text-heading_small slds-m-bottom_x-small">
+                            Time bound – When do you want to achieve this by?
+                        </div> -->
+                                <label class="slds-form-element__label">
+                                    <strong>Time bound</strong> - When do you want to achieve this by?
+                                </label>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <!-- Target Date -->
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input type="date" label="Target Date" value={goal.Target_Date__c}
+                                            data-field="Target_Date__c" onchange={handleGoalChange} min={todayDate}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+                                    <!-- Timeline Description -->
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input type="text" label="Timeline Description"
+                                            placeholder="e.g., By end of next month"
+                                            value={goal.Timeline_Description__c} data-field="Timeline_Description__c"
+                                            onchange={handleGoalChange} required>
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </template>                    
+
+                    <template if:true={isActionsStage}>
+                        <div class="slds-box slds-theme_default">
+                            <!-- Header -->
+                            <div class="slds-text-heading_small slds-m-bottom_small">
+                                Sub-Goals & Action Steps
+                            </div>
+                            <!-- Sub-Goals List -->
+                            <template for:each={subGoals} for:item="sg" for:index="index">
+                                <div key={sg.id} class="slds-box slds-m-bottom_small slds-theme_shade">
+                                    <!-- Delete icon -->
+                                    <div class="slds-grid slds-grid_align-end">
+                                        <lightning-button-icon icon-name="utility:delete" alternative-text="Delete"
+                                            title="Delete" data-index={index} onclick={handleDeleteSubGoal}>
+                                        </lightning-button-icon>
+                                    </div>
+                                    <!-- Sub-goal title -->
+                                    <lightning-input label="Sub-Goal Title" value={sg.title} data-index={index}
+                                        data-field="title" onchange={handleSubGoalChange}>
+                                    </lightning-input>
+
+                                    <!-- Action steps -->
+                                    <div class="slds-form-element__label">Action Steps</div>
+                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                        <div class="slds-col slds-grow">
+                                            <lightning-textarea variant="label-hidden" value={sg.description} data-index={index}
+                                                data-field="description" onchange={handleSubGoalChange} onfocus={handleFocus}
+                                                onblur={handleBlur} placeholder="Enter action steps here or start speaking...">
+                                            </lightning-textarea>
+                                        </div>
+                                        <div class="slds-col slds-no-flex slds-m-left_x-small">
+                                            <c-speech-to-text data-type="subgoal" data-index={index} data-field="description"
+                                                value={sg.description} show-mute-icon={sg.showMuteIcon}
+                                                ontranscript={handleTranscript} onclear={handleClear}></c-speech-to-text>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <!-- Add Sub-Goal -->
+                            <div class="slds-align_absolute-center slds-m-top_small">
+                                <lightning-button label="Add Sub-Goal" icon-name="utility:add"
+                                    onclick={handleAddSubGoal}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="slds-modal__footer slds-grid slds-grid_align-spread">
+                    <!-- LEFT: Back -->
+                    <div>
+
+                    </div>
+                    <!-- RIGHT: Cancel + Next -->
+                    <div>
+
+                        <template if:false={isBasicsStage}>
+                            <lightning-button label="Back" onclick={handleBack} class="slds-m-right_small"
+                                disabled={isBasicsStage}>
+                            </lightning-button>
+                        </template>
+
+                        <lightning-button label="Cancel" class="slds-m-right_small" onclick={closeGoalModal}>
+                        </lightning-button>
+                        <template if:false={isLastStage}>
+                            <lightning-button variant="brand" label="Next" onclick={handleNext}>
+                            </lightning-button>
+                        </template>
+                        <template if:true={isLastStage}>
+                            <lightning-button variant="brand" label={saveButtonLabel} onclick={saveGoal}>
+                            </lightning-button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- BACKDROP -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- review goal -->
+    <!-- ================= REVIEW GOAL MODAL ================= -->
+    <template if:true={showReviewModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container modal-custom">
+
+                <!-- HEADER -->
+                <!-- <header class="slds-modal__header headercustom">
+                    <div class="goal-header">
+                        <div class="goal-header-top">
+                            <h2 class="goal-title">
+                                {reviewModalTitle}
+                            </h2>
+
+                            <span class="step-badge">
+                                Remaining: {remainingProgress}%
+                            </span>
+                        </div>
+
+                        <p class="goal-subtitle">
+                            Record progress, evidence, and next steps for this goal
+                        </p>
+                    </div>
+                </header> -->
+
+                <header class="slds-modal__header headercustom  modal-header-custom">
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                        {reviewModalTitle}
+                    </h2>
+                    <button class="slds-button slds-button_icon close-btn" title="Close" onclick={closeReviewModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close"
+                            size="small"></lightning-icon>
+                    </button>
+                </header>
+
+
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                    <div class="slds-grid slds-wrap slds-gutters">
+
+                        <!-- Progress Summary -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                            <lightning-textarea label="Progress Summary" value={reviewForm.Progress_Summary__c}
+                                data-field="Progress_Summary__c" onchange={handleReviewChange} required>
+                            </lightning-textarea>
+                        </div>
+
+                        <!-- Evidence of Progress -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                            <lightning-textarea label="Evidence of Progress" value={reviewForm.Evidence_Of_Progress__c}
+                                data-field="Evidence_Of_Progress__c" onchange={handleReviewChange}>
+                            </lightning-textarea>
+                        </div>
+
+                        <!-- Barriers Identified -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                            <lightning-textarea label="Barriers Identified" value={reviewForm.Barriers_Identified__c}
+                                data-field="Barriers_Identified__c" onchange={handleReviewChange}>
+                            </lightning-textarea>
+                        </div>
+
+                        <!-- Enablers -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                            <lightning-textarea label="Enablers / What Worked Well" value={reviewForm.Enablers__c}
+                                data-field="Enablers__c" onchange={handleReviewChange}>
+                            </lightning-textarea>
+                        </div>
+
+                        <!-- Next Steps -->
+                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
+                            <lightning-textarea label="Next Steps & Recommendations" value={reviewForm.Next_Steps__c}
+                                data-field="Next_Steps__c" onchange={handleReviewChange}>
+                            </lightning-textarea>
+                        </div>
+
+                        <!-- Update Progress -->
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <lightning-input type="number" label="Update Progress %" placeholder="Enter progress %"
+                                value={reviewForm.Update_Progress__c} data-field="Update_Progress__c"
+                                onchange={handleReviewChange} min="1" max="100" step="1" required>
+                            </lightning-input>
+                        </div>
+
+                        <!-- Review Date -->
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <lightning-input type="date" label="Next Review Date" value={reviewForm.Review_Date__c}
+                                data-field="Review_Date__c" onchange={handleReviewChange}
+                                required={isReviewDateRequired}>
+                            </lightning-input>
+                        </div>
+
+
+                        <!-- <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                        <lightning-input
+                            type="number"
+                            label="Budget Spent ($)"
+                            placeholder="Enter spent amount"
+                            value={reviewForm.BudgetSpent__c}
+                            data-field="BudgetSpent__c"
+                            onchange={handleReviewChange}
+                            min="0"
+                            step="0.01">
+                        </lightning-input>
+                    </div> -->
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <!-- <footer class="slds-modal__footer slds-grid slds-grid_align-spread">
+
+                    <lightning-button
+                        label="Cancel"
+                        onclick={closeReviewModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        variant="brand"
+                        label={reviewSaveLabel}
+                        onclick={saveReviewGoal}>
+                    </lightning-button>
+
+                </footer> -->
+                <div class="slds-modal__footer slds-grid slds-grid_align-spread">
+                    <!-- LEFT: Back -->
+                    <div>
+
+                    </div>
+                    <!-- RIGHT: Cancel + Next -->
+                    <div>
+
+
+                        <lightning-button label="Cancel" class="slds-m-right_small" onclick={closeReviewModal}>
+                        </lightning-button>
+
+                        <lightning-button variant="brand" label={reviewSaveLabel} onclick={saveReviewGoal}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showNotesModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modal-custom">
+                <c-support-coordinator-notes participant-id={selectedParticipantId} goal-id={selectedGoalId}
+                    oncancel={handleCloseNotes} onsuccess={handleNoteSaved}>
+                </c-support-coordinator-notes>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

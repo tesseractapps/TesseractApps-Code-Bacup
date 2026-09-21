@@ -1,0 +1,211 @@
+<template>
+    
+    <template if:true={isHome}>  
+    <div class="main-container">
+         <div>
+               
+            </div>
+                
+            <!-- <div style="display: flex; align-items: center; justify-content: space-between;">
+                <p style="font-weight: bold; padding: 0% 0 0 1%; font-size: 140%; "> BalanceSheet - {companyname}</p>
+                <lightning-button label="Back" variant="brand" onclick={handleBack} style=" margin-top:1%;margin-bottom: 1%; margin-left: 55%; "></lightning-button> 
+                <button 
+                    class="slds-button slds-button_icon slds-button_icon-border" 
+                    title="Refresh" 
+                    onclick={fetchReplist}>
+                    <svg class="slds-button__icon" aria-hidden="true">
+                        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+                    </svg>
+                </button>
+            </div>     -->
+            
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+    <!-- Left: Title -->
+    <p style="font-weight: bold; padding: 0% 0 0 1%; font-size: 140%;">
+        BalanceSheet - {companyname}
+    </p>
+
+    <!-- Right: Button group -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <lightning-button 
+            label="Back" 
+            variant="brand" 
+            onclick={handleBack}
+            style="margin-top: 1%; margin-bottom: 1%;">
+        </lightning-button>
+
+        <button 
+            class="slds-button slds-button_icon slds-button_icon-border" 
+            title="Refresh" 
+            onclick={fetchReplist}>
+            <svg class="slds-button__icon" aria-hidden="true">
+                <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"></use>
+            </svg>
+        </button>
+    </div>
+</div>
+           <!--  <div class="slds-size_1-of-3 slds-p-around_small">
+                <div class="floating-label">
+                    <span class="label-text-drop"><span style="color:red">*</span>Company</span>
+                    <lightning-combobox label="Company" variant="label-hidden" name="selectedCompany" 
+                        value={selectedCompany} options={companyOptions} onchange={handleChangeCompany} 
+                        data-field="selectedCompany" required>
+                    </lightning-combobox>
+                </div>
+            </div> -->
+          <!-- </div> -->
+          <!-- <h3 style="font-weight:bold;margin-left:48%;">Balance Sheet</h3> -->
+          <div class="slds-grid table-div listview custom-scroll">
+            <!-- Expense Section -->
+            <div style="width:50%; border-right: 1px solid rgba(0, 41, 70, 0.6);">
+                <table class="ledger-table">
+                    <tr>
+                        <th colspan="2">
+                            <h2 style="font-weight:bold;">Liabilities</h2>
+                        </th>
+                    </tr>
+                    <template if:true={liabilityData}>
+                        <template for:each={liabilityData} for:item="subcategory">
+                            <tr key={subcategory.uniqueKey}>
+                                <td colspan="2" style="font-weight:bold;">{subcategory.subcategoryName}</td>
+                            </tr>
+                            <template for:each={subcategory.ledgerNames} for:item="ledger">
+                                <tr key={ledger.ledgerName}>
+                                    <td colspan="2">{ledger.ledgerName}</td>
+                                </tr>
+                                <template for:each={ledger.ledgerItems} for:item="ledgerItem">
+                                    <tr key={ledgerItem.uniqueKey}>
+                                        <td style="padding-left:2%;text-align:left;">{ledgerItem.name}</td>
+                                        <td style="text-align:right;">
+                                        <lightning-formatted-number 
+                                            value={ledgerItem.amount}
+                                            format-style="currency"
+                                            currency-code="AUD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2">
+                                        </lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </template>
+                            <tr key={subcategory.subtotalKey}>
+                                <td style="padding-left:2%;text-align:left; font-weight:bold;">Subtotal:</td>
+                                <td style="text-align:right; font-weight:bold;">
+                                    <lightning-formatted-number 
+                                            value={subcategory.subTotal}
+                                            format-style="currency"
+                                            currency-code="AUD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2">
+                                    </lightning-formatted-number>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+                </table>
+            </div>
+            
+            
+        
+            <!-- Income Section -->
+            <div style="width:50%;">
+                <table class="ledger-table">
+                    <tr>
+                        <th colspan="2"><h2 style="font-weight:bold;">Assets</h2></th>
+                    </tr>
+                    <!-- Loop through each Income Subcategory -->
+                    <template if:true={assetData}>
+                        <template for:each={assetData} for:item="subcategory">
+                            <tr key={subcategory.uniqueKey}>
+                                <!-- Subcategory Name -->
+                                <td colspan="2" style="font-weight:bold;">{subcategory.subcategoryName}</td>
+                            </tr>
+            
+                            <!-- Loop through each Ledger under Subcategory -->
+                            <template for:each={subcategory.ledgerNames} for:item="ledger">
+                                <tr key={ledger.ledgerName}>
+                                    <td colspan="2">{ledger.ledgerName}</td>
+                                </tr>
+                                <template for:each={ledger.ledgerItems} for:item="item">
+                                    <tr key={item.uniqueKey}>
+                                        <td style="padding-left:2%;text-align:left;">{item.name}</td>
+                                        <td style="text-align:right;">
+                                            <lightning-formatted-number 
+                                            value={item.amount}
+                                            format-style="currency"
+                                            currency-code="AUD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2">
+                                           </lightning-formatted-number>
+                                        </td>
+                                    </tr>
+                                </template>
+                               
+                            </template>
+            
+                            <!-- Subtotal for the Subcategory -->
+                            <tr key={subcategory.subtotalKey}>
+                                <td style="padding-left:2%;text-align:left; font-weight:bold;">Subtotal:</td>
+                                <td style="text-align:right; font-weight:bold;">
+                                     <lightning-formatted-number 
+                                            value={subcategory.subTotal}
+                                            format-style="currency"
+                                            currency-code="AUD"
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="2">
+                                     </lightning-formatted-number>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+                </table>
+            </div>
+            
+            
+        </div>
+        
+        <!-- Total Row -->
+        <div class="slds-grid total-div" style="font-weight: bold; text-align: center;border-radius: 0px 0px 8px 8px;">
+            <div style="width:50%; border-right: 1px solid rgba(0, 41, 70, 0.6); padding-right: 10px;">
+                <p>Total Liabilities: <span style="float:right;">
+                    <lightning-formatted-number 
+                        value={totalLiability}
+                        format-style="currency"
+                        currency-code="AUD"
+                        minimum-fraction-digits="2"
+                        maximum-fraction-digits="2">
+                    </lightning-formatted-number>
+                </span></p>
+            </div>
+            <div style="width:50%; padding-right: 10px;">
+                <p>Total Assests: <span style="float:right;">
+                   <lightning-formatted-number 
+                        value={totalAsset}
+                        format-style="currency"
+                        currency-code="AUD"
+                        minimum-fraction-digits="2"
+                        maximum-fraction-digits="2">
+                    </lightning-formatted-number> 
+                </span></p>
+            </div>
+        </div>
+        
+        <!-- Profit or Loss Row -->
+        <!-- <div class="slds-grid total-div" style="font-weight: bold; text-align: center;  border-radius: 0px 0px 8px 8px;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div style="width:100%;">
+                <p>Profit or Loss: <span style="float:right;padding-right: 10px;">{profitOrLoss}</span></p>
+            </div>
+        </div> -->
+        
+        
+
+    
+        
+    </div>
+    </template>
+
+    <template if:true={backFlag}>
+        <c-tesseract-apps-accounting-reports-lwc orgid={orgid}></c-tesseract-apps-accounting-reports-lwc>
+    </template>
+
+</template>
