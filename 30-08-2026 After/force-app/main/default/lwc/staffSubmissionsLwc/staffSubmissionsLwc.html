@@ -1,0 +1,2187 @@
+<template>
+  <div class="main-container">
+    <!-- Header Navigation -->
+    <!-- <div class="header-nav"> -->
+    <!-- <div class="tab-container">
+                <button class={approvalsTabClass} onclick={handleTabChange} data-tab="approvals">
+                    Approvals
+                </button>
+                <button class={submissionsTabClass} onclick={handleTabChange} data-tab="submissions">
+                    Submissions
+                </button>
+            </div> -->
+    <template if:true={isHomeApprovals}>
+      <div class="menu-container">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+          "
+        >
+          <!-- Tabs -->
+          <div style="display: flex">
+            <template if:true={isAdmin}>
+              <div
+                class={approvalsTabClass}
+                onclick={handleTabChange}
+                data-tab="approvals"
+              >
+                Approvals
+              </div>
+            </template>
+            <div
+              class={submissionsTabClass}
+              onclick={handleTabChange}
+              data-tab="submissions"
+            >
+              Submissions
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Approvals Tab Content -->
+    <template if:true={showApprovals1}>
+      <template if:true={showApprovals}>
+        <template if:false={showApprovalModal}>
+        <div class="content-section slds-grow" style="display: flex; flex-direction: column; min-height: 0; height: 100%;">
+          <template if:true={isLoading}>
+            <lightning-spinner
+              alternative-text="Loading..."
+              size="medium"
+            ></lightning-spinner>
+          </template>
+
+          <!-- Scrollable Content Wrapper -->
+          <div class="slds-grow" style="min-height: 0; flex-grow: 1; padding-bottom: 10px; display: flex; flex-direction: column;">
+            <div class="filters-container">
+              <!-- Left side - Status -->
+              <div class="status-container">
+                <div class="floating-label">
+                  <span class="label-text-drop">Status</span>
+                 <!--  <lightning-combobox
+                    name="status"
+                    label="Status"
+                    value={statusValue}
+                    placeholder="Status"
+                    options={statusOptions}
+                    onchange={handleStatusChange}
+                    required="true"
+                    variant="label-hidden"
+                    class="status-combobox"
+                  ></lightning-combobox> -->
+                  <c-tesseract-apps-single-combobox
+                      options={statusOptions}
+                      value={statusValue}
+                      onchange={handleStatusChange}>
+                  </c-tesseract-apps-single-combobox>
+                </div>
+              </div>
+
+              <!-- Right side - Dates -->
+              <div class="dates-container">
+                <div class="floating-label">
+                  <span class="label-text-drop">Start Date</span>
+                  <lightning-input
+                    type="date"
+                    name="sdate"
+                    value={sdate}
+                    onchange={handleDates}
+                    variant="label-hidden"
+                  ></lightning-input>
+                </div>
+
+                <div class="floating-label">
+                  <span class="label-text-drop">End Date</span>
+                  <lightning-input
+                    type="date"
+                    name="edate"
+                    value={edate}
+                    onchange={handleDates}
+                    variant="label-hidden"
+                  ></lightning-input>
+                </div>
+              </div>
+            </div>
+
+            <template if:true={paginatedList.length}>
+              <div class="table-container adminTable staffSubmissionTable" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto;">
+                <!-- HEADER -->
+                <div class="header-wrapper">
+                  <table class="staff-table">
+<!--                     <thead>
+                      <tr>
+                        <th class="table-th" title="Profile">Profile</th>
+                        <th class="table-th" title={staffPreferredName}>{staffPreferredName} Name</th>
+                        <th class="table-th" title="Shift Date">Shift Date</th>
+                        <th class="table-th" title="Mileage in KM's">Mileage in KM's</th>
+                        <th class="table-th" title="Type of Vehicle">Type of Vehicle</th>
+                        <th class="table-th" title="Cost per KM">Cost per KM</th>
+                        <th class="table-th" title="Mileage Amount">Mileage Amount</th>
+                        <th class="table-th" title="Total Amount">Total Amount</th>
+                        <th class="table-th" title="Status">Status</th>
+                        <th class="table-th" title="Approved Date">Approved Date</th>
+                        <th class="table-th" title="View">View</th>
+                        <template if:true={isAdmin}>
+                          <th class="table-th" title="Action">Action</th>
+                        </template>
+                      </tr>
+                    </thead> -->
+                    <thead>
+                        <tr>
+
+                            <th class="table-th" title="Profile">Profile</th>
+
+                            <th class="table-th sortable-header"
+                                data-field="staffName"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">{staffPreferredName} Name</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.staffName}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="shiftDate"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Shift Date</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.shiftDate}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="mileage"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Mileage in KM's</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.mileage}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="vehicleType"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Type of Vehicle</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.vehicleType}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="costPerKm"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Cost per KM</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.costPerKm}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="mileageAmount"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Mileage Amount</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.mileageAmount}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="totalAmount"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Total Amount</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.totalAmount}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="status"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Status</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.status}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th sortable-header"
+                                data-field="approvedDate"
+                                data-table="reimbursement"
+                                onclick={handleSort}>
+                                <div class="sort-header-inner">
+                                    <span class="sort-label">Approved Date</span>
+                                    <span class="sort-arrow" data-arrow={tableSortState.reimbursement.icons.approvedDate}></span>
+                                </div>
+                            </th>
+
+                            <th class="table-th" title="View">View</th>
+
+                            <template if:true={isAdmin}>
+                                <th class="table-th" title="Action">Action</th>
+                            </template>
+
+                        </tr>
+                    </thead>                   
+                  </table>
+                </div>
+                <!-- BODY -->
+                <div class="body-scroll custom-scroll table-size adminTableHeight" style="overflow-y: auto; overflow-x: hidden; flex-grow: 1; min-height: 0;">
+                  <table class="staff-table">
+                    <tbody>
+                      <template for:each={paginatedList} for:item="reimbursement">
+                        <tr key={reimbursement.Id} class="table-row">
+                          <td class="table-td center" title="Profile">
+                            <div class="profile-image">
+                              <template if:true={reimbursement.profileImage}>
+                                <img
+                                  src={reimbursement.profileImage}
+                                  alt="Profile"
+                                />
+                              </template>
+                              <template if:false={reimbursement.profileImage}>
+                                <lightning-icon
+                                  icon-name="action:user"
+                                  variant="error"
+                                  size="small"
+                                  class="avatar-small fallback-icon"
+                                  style="
+                                    background: #02275b;
+                                    justify-content: center;
+                                    display: flex;
+                                  "
+                                >
+                                </lightning-icon>
+                              </template>
+                            </div>
+                          </td>
+
+                          <td class="table-td" title={reimbursement.staffName}>
+                            <div class="staff-name-link">
+                              <span class="staff-name-text">{reimbursement.staffName}</span>
+                              <template if:true={reimbursement.hasUnreadDot}>
+                                <div class="new-badge">New</div>
+                              </template>
+                            </div>
+                          </td>
+                           
+                          <td class="table-td" title={reimbursement.shiftDate}>{reimbursement.shiftDate}</td>
+                          <td class="table-td" title={reimbursement.mileage}>{reimbursement.mileage}</td>
+                          <td class="table-td" title={reimbursement.vehicleType}>
+                            <span class={reimbursement.vehicleTypeClass}
+                              >{reimbursement.vehicleType}</span
+                            >
+                          </td>
+                          <td class="table-td" title={reimbursement.costPerKm}>
+                            <lightning-formatted-number
+                              value={reimbursement.costPerKm}
+                              format-style="currency"
+                              currency-code="AUD"
+                              minimum-fraction-digits="2"
+                              maximum-fraction-digits="2"
+                            >
+                            </lightning-formatted-number>
+                          </td>
+                          <td class="table-td" title={reimbursement.mileageAmount}>
+                            <lightning-formatted-number
+                              value={reimbursement.mileageAmount}
+                              format-style="currency"
+                              currency-code="AUD"
+                              minimum-fraction-digits="2"
+                              maximum-fraction-digits="2"
+                            >
+                            </lightning-formatted-number>
+                          </td>
+                          <td class="table-td" title={reimbursement.totalAmount}>
+                            <lightning-formatted-number
+                              value={reimbursement.totalAmount}
+                              format-style="currency"
+                              currency-code="AUD"
+                              minimum-fraction-digits="2"
+                              maximum-fraction-digits="2"
+                            >
+                            </lightning-formatted-number>
+                          </td>
+
+                          <td class="table-td" title={reimbursement.status}>
+                            <span class={reimbursement.statusClass}
+                              >{reimbursement.status}</span
+                            >
+                          </td>
+
+                          <td class="table-td" title={reimbursement.approvedDate}>{reimbursement.approvedDate}</td>
+
+                          <td class="table-td center" title="View">
+                            <template if:true={reimbursement.hasFile}>
+                              <a
+                                href="javascript:void(0)"
+                                data-file-url={reimbursement.Amazon_file_URL__c}
+                                data-record-id={reimbursement.Id}
+                                onclick={handleView}
+                                name="view_details"
+                                title="View"
+                                style="text-decoration: none"
+                              >
+                                <i
+                                  class="material-icons view-icon"
+                                  data-record-id={reimbursement.Id}
+                                  >visibility</i
+                                >
+                              </a>
+                            </template>
+                             <template if:false={reimbursement.hasFile}>-</template>
+                          </td>
+
+                          <template if:true={isAdmin}>
+                            <td class="table-td center" title="Actions">
+                              <div class="footer-container">
+                                <div class="icon-container">
+                                  <template if:true={reimbursement.isPending}>
+                                    <span
+                                      class="material-icons thumb up"
+                                      title="Approve"
+                                      data-name={reimbursement.Name}
+                                      data-record-id={reimbursement.Id}
+                                      data-status={reimbursement.Status__c}
+                                      data-mileageamount={reimbursement.Mileage_Amount__c}
+                                      data-amount={reimbursement.Amount__c}
+                                      data-shiftwithstaffid={reimbursement.shiftWithStaffId}
+                                       data-id={reimbursement.Id}
+                                      onclick={handleApprove}
+                                    >
+                                      thumb_up_off_alt
+                                    </span>
+
+                                    <span
+                                      class="material-icons thumb down"
+                                      title="Reject"
+                                      data-name={reimbursement.Name}
+                                      data-record-id={reimbursement.Id}
+                                      data-status={reimbursement.status}
+                                      data-id={reimbursement.Id}
+                                      onclick={handleReject}
+                                    >
+                                      thumb_down_off_alt
+                                    </span>
+                                  </template>
+                                </div>
+
+                                <div>
+                                  <template if:true={reimbursement.isApproved}>
+                                    <div class="review-container">
+                                    <span class="material-icons thumb1 up1" >
+                                      thumb_up_off_alt
+                                    </span>
+                                       <a href="javascript:void(0);"
+                                        class="review-link"
+                                        data-name={reimbursement.Name}
+                                      data-record-id={reimbursement.Id}
+                                      data-status={reimbursement.Status__c}
+                                      data-mileageamount={reimbursement.Mileage_Amount__c}
+                                      data-amount={reimbursement.Amount__c}
+                                      data-shiftwithstaffid={reimbursement.shiftWithStaffId}
+                                      onclick={handleApprove}>
+                                                  Review
+                                              </a>
+                                              </div>
+                                  </template>
+
+                                  <template if:true={reimbursement.isRejected}>
+                                     
+
+                                     <div class="review-container">
+                                     <span class="material-icons thumb1 down1">
+                                      thumb_down_off_alt
+                                    </span>
+                                       <a href="javascript:void(0);"
+                                        class="review-link"
+                                        data-name={reimbursement.Name}
+                                      data-record-id={reimbursement.Id}
+                                      data-status={reimbursement.Status__c}
+                                      data-mileageamount={reimbursement.Mileage_Amount__c}
+                                      data-amount={reimbursement.Amount__c}
+                                      data-shiftwithstaffid={reimbursement.shiftWithStaffId}
+                                      onclick={handleReject}>
+                                                  Review
+                                              </a>
+                                              </div>
+                                  </template>
+                                </div>
+                              </div>
+                            </td>
+                          </template>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </template>
+
+            <template if:false={paginatedList.length}>
+              <div class="no-data">
+                <p>No reimbursements found for the selected dates.</p>
+              </div>
+            </template>
+          </div>
+
+
+        </div>
+          <!-- Fixed Pagination -->
+          <template if:true={paginatedList.length}>
+            <div class="fixed-pagination">
+              <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread" style="padding-top: 0.5em">
+                <!--RECORDS PER PAGE-->
+                <div class="slds-col">
+                  <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                      class="slds-text-color_weak slds-p-horizontal_x-small"
+                      for="recordsPerPage"
+                      >Page Size:</label
+                    >
+                    <div class="slds-select_container">
+                      <select
+                        class="slds-select"
+                        id="recordsPerPage"
+                        onchange={handleRecordsPerPage}
+                      >
+                        <template for:each={pageSizeOptions} for:item="option">
+                          <option key={option} value={option}>{option}</option>
+                        </template>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!--PAGE NAVIGATION-->
+                <div class="slds-align_absolute-center">
+                  <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    class="slds-p-horizontal_x-small"
+                    alternative-text="first page"
+                    onclick={firstPage}
+                  ></lightning-button>
+                  <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    alternative-text="Previous"
+                    onclick={previousPage}
+                  ></lightning-button>
+                  &nbsp;
+                  <span class="slds-badge"
+                    >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+                    &nbsp;&nbsp;Page(s)</span
+                  >
+                  &nbsp;
+                  <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    alternative-text="Next"
+                    onclick={nextPage}
+                    class="slds-p-horizontal_x-small"
+                    icon-position="right"
+                  ></lightning-button>
+                  <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    alternative-text="last page"
+                    onclick={lastPage}
+                    icon-position="right"
+                  ></lightning-button>
+                </div>
+                <!--TOTAL RECORDS-->
+                <div class="slds-clearfix">
+                  <div class="slds-float_right">
+                    <span class="slds-badge"> Total Records: {totalRecords}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>        
+        </template>
+          <template if:true={showApprovalModal}>
+            <div class="slds-grow" style="display: flex; flex-direction: column; min-height: 0; height: 100%;">
+              <div class="data-table-container slds-grow slds-scrollable_y custom-scroll table-size2" style="overflow-x: hidden; min-height: 0; flex-grow: 1;">
+                <div class="header-container">
+                    <div>
+                        <h2 class="title">
+                            Reimbursement Details <!-- — {selectedRecord.Name} -->
+                        </h2>
+
+                        <div class="badge-group">
+                            <span class={approvalStatusClass} title={selectedRecord.Approval_Status__c}>{selectedRecord.Approval_Status__c}</span>
+                            <span class="badge transport" title={selectedRecord.Transport_Type__c}>{selectedRecord.Transport_Type__c}</span>
+                        </div>
+                    </div>
+
+                    <lightning-button
+                        label="Back"
+                        onclick={handleClose}
+                        variant="brand">
+                    </lightning-button>
+                </div>
+
+                <!-- MAIN GRID -->
+                <div class="main-grid">
+
+                    <!-- LEFT SIDE -->
+                    <div>
+
+                         <div class="card">
+
+                          <!-- Header -->
+                          <div class="card-header">
+                              📅 Shift & Staff Details
+                          </div>
+
+                          <!-- Inner Content -->
+                          <div class="inner-card">
+
+                              <div class="slds-grid slds-wrap">
+                                  <!-- Shift Date -->
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Shift Date</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.ShiftDate__c}>
+                                          {selectedRecord.ShiftDate__c}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <!-- Submitted Date -->
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Submitted Date</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.SubmittedDate}>
+                                        {selectedRecord.SubmittedDate}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <!-- Login Time -->
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Login Time</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Shift_login_time_Formula__c}>
+                                        {selectedRecord.Shift_login_time_Formula__c}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <!-- Logout Time -->
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Logout Time</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Shift_log_out_time_formula__c}>
+                                          {selectedRecord.Shift_log_out_time_formula__c}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Staff Name</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.staffName}>
+                                          {selectedRecord.staffName}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Reimbursement Type</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Transport_Type__c}>
+                                        {selectedRecord.Transport_Type__c} 
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Comments</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Comments__c}>
+                                          {selectedRecord.Comments__c}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                              </div>
+
+                          </div>
+
+                         </div>
+                          <template if:false={isTransportType}>
+                         <div class="card">
+
+                          <!-- Header -->
+                          <div class="card-header">
+                              📍Travel & Route Info
+                          </div>
+
+                          <!-- Inner Content -->
+                          <div class="inner-card">
+
+                              <div class="slds-grid slds-wrap">
+                               <template if:true={isProviderType}>
+                                 <!-- Login Time -->
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Travel Start Time</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Travel_Start_Time__c}>
+                                        {selectedRecord.Travel_Start_Time__c}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <!-- Logout Time -->
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                                      <label class="labelClass" style="display: flex; align-items: left">
+                                        <div class="label-text-long">Travel End Time</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Travel_End_Time__c}>
+                                          {selectedRecord.Travel_End_Time__c}
+                                        </div>
+                                      </label>
+                                    </div>
+                                    </template>
+
+
+                                  <template if:false={isActivityPublic}>
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Odometer Start</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.OdometerStart}>
+                                         {selectedRecord.OdometerStart}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Odometer End</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.OdometerEnd}>
+                                         {selectedRecord.OdometerEnd}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Kilometers</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Mileage_Others__c}>
+                                         {selectedRecord.Mileage_Others__c}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <!-- Submitted Date -->
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">KM Rate</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.Cost_per_KM__c}>
+                                           $<lightning-formatted-number
+                                              value={selectedRecord.Cost_per_KM__c}
+                                              minimum-fraction-digits="2"
+                                              maximum-fraction-digits="2">
+                                          </lightning-formatted-number>
+                                        </div>
+                                      </label>
+                                    </div>
+                                    </template>
+
+                                     <template if:true={isActivityType}>
+                                    <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Transport Mode</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.transportMethod}>
+                                       {selectedRecord.transportMethod}
+                                        </div>
+                                      </label>
+                                    </div>
+
+                                    <template if:false={isActivityPublic}>
+                                    
+                                     <div
+                                      class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                    >
+                                      <label
+                                        class="labelClass"
+                                        style="display: flex; align-items: left"
+                                      >
+                                        <div class="label-text-long">Vehicle</div>
+                                        <div class="label-separator">:</div>
+                                        <div class="label-field-long" title={selectedRecord.ActivityTransportVehicle}>
+                                       {selectedRecord.ActivityTransportVehicle}
+                                        </div>
+                                      </label>
+                                    </div>
+                                    </template>
+                                    </template>
+
+                              </div>
+
+                          </div>
+
+                         </div>
+                         </template>
+
+                        <template if:true={isTransportType}>
+                        <div class="card">
+                            <div class="card-header">
+                                💸 Expense Details
+                            </div>
+
+                            <div class="inner-card">
+
+                                    <template for:each={expenseList} for:item="expense">
+                                        
+                                        <div key={expense.Id} class="slds-grid slds-wrap">
+
+                                              <div
+                                                  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                                >
+                                                  <label
+                                                    class="labelClass"
+                                                    style="display: flex; align-items: left"
+                                                  >
+                                                    <div class="label-text-long">Expense Type</div>
+                                                    <div class="label-separator">:</div>
+                                                    <div class="label-field-long" title={expense.expenseType}>
+                                                    {expense.expenseType}
+                                                    </div>
+                                                  </label>
+                                                </div>
+
+                                            <div
+                                                  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                                >
+                                                  <label
+                                                    class="labelClass"
+                                                    style="display: flex; align-items: left"
+                                                  >
+                                                    <div class="label-text-long">Amount</div>
+                                                    <div class="label-separator">:</div>
+                                                    <div class="label-field-long" title={expense.amount}>
+                                                    $<lightning-formatted-number
+                                                         value={expense.amount}
+                                                         minimum-fraction-digits="2"
+                                                         maximum-fraction-digits="2">
+                                                     </lightning-formatted-number>
+                                                    </div>
+                                                  </label>
+                                                </div>
+
+                                            <div
+                                                  class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small"
+                                                >
+                                                  <label
+                                                    class="labelClass"
+                                                    style="display: flex; align-items: left"
+                                                  >
+                                                    <div class="label-text-long">View</div>
+                                                    <div class="label-separator">:</div>
+                                                    <div class="label-field-long" title="View Expense File">
+                                                      <template if:true={expense.fileUrl}>
+                                                    <a
+                                                href="javascript:void(0)"
+                                                data-file-url={expense.fileUrl}
+                                                onclick={handleView}
+                                                name="view_details"
+                                                title="View"
+                                                style="text-decoration: none"
+                                              >
+                                                <i
+                                                  class="material-icons view-icon"
+                                                  >visibility</i
+                                                >
+                                              </a>
+                                              </template>
+                                                    </div>
+                                                  </label>
+                                                </div>
+
+                                            <hr/>
+                                        </div>
+
+                                    </template>
+
+                            </div>
+                        </div>
+                        </template>
+                       
+
+                        <div class="card">
+
+                            <!-- Header -->
+                            <div class="card-header">
+                                💳 Staff Mileage Reimbursement
+                            </div>
+
+                            <!-- Body -->
+                            <div class="inner-card">
+
+                                <div class="highlight-box">
+                                    Paid to <b>{selectedRecord.staffName}</b> at ATO rate
+                                </div>
+
+                                <div class="slds-grid slds-wrap">
+                                  <template if:false={isTransportType}>
+                                  <template if:false={isActivityPublic}>
+                                <div class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                                <label class="labelClass" style="display: flex; align-items: left">
+                                  <div class="label-text-long">KM Travelled</div>
+                                  <div class="label-separator">:</div>
+                                  <div class="label-field-long" title={selectedRecord.Mileage_Others__c}>
+                                    {selectedRecord.Mileage_Others__c} km
+                                  </div>
+                                </label>
+                              </div>
+                              
+
+                                 <div class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                                <label class="labelClass" style="display: flex; align-items: left">
+                                  <div class="label-text-long">Rate</div>
+                                  <div class="label-separator">:</div>
+                                  <div class="label-field-long" title={selectedRecord.Cost_per_KM__c}>
+                                    $<lightning-formatted-number
+                                    value={selectedRecord.Cost_per_KM__c}
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2">
+                                </lightning-formatted-number>/km
+                                  </div>
+                                </label>
+                              </div>
+                              </template>
+                              </template>
+
+                                 <div class="slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-around_small">
+                                <label class="labelClass" style="display: flex; align-items: left">
+                                  <div class="label-text-long">Submitted</div>
+                                  <div class="label-separator">:</div>
+                                  <div class="label-field-long" title={selectedRecord.Total_Amount__c}>
+                                   $<lightning-formatted-number
+                                    value={selectedRecord.Total_Amount__c}
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="2">
+                                </lightning-formatted-number>
+                                  </div>
+                                </label>
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                        </div>
+                        <div class="slds-size_1-of-1 slds-p-around_small">
+                          <lightning-textarea
+                              label="Approver Comments"
+                              value={approverComments}
+                              onchange={handleCommentsChange}>
+                          </lightning-textarea>
+                        </div>
+                           
+
+                </div>
+
+                <template if:true={isApproved}>
+                  <div style="padding:1%;">
+                    <div style="display: flex;justify-content:space-between;padding-bottom:0.5%;">
+                      <div>
+                          💰 Participant Cost (NDIS Invoice)
+                      </div>
+                      <lightning-button label="Add Row" onclick={addRow} variant="brand" disabled={isViewMode}></lightning-button>
+                    </div>
+
+                    <table class="reimbursement-table" style="table-layout: fixed;">
+                        <thead>
+                            <tr>
+                                <th class="table-th" style="width:18%;" title="Participant">Participant</th>
+                                <th class="table-th" style="width:18%;" title="Service Type">Service Type</th>
+                                <template if:false={isTransportType}>
+                                  <th class="table-th" style="width:20%;" title="Transport Line Item">Transport Line Item</th>
+                                  <th class="table-th" style="width:12%;" title="Quantity">Quantity</th>
+                                  <th class="table-th" style="width:12%;" title="Rate">Rate</th>
+                                </template>
+                                <th class="table-th" style="width:12%;" title="Total">Total</th>
+                                <th class="table-th" style="width:8%;" title="Action">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <template for:each={reimbursementRows} for:item="row">
+                                <tr key={row.id} class="table-row">
+
+                                    <!-- Participant -->
+                                    <td class="table-td" title="Participant">
+                                        <lightning-combobox class="slds-size_1-of-1"
+                                            data-id={row.id}
+                                            options={participantOptions}
+                                            value={row.participantId}
+                                            onchange={handleParticipantChange} variant="label-hidden" disabled={isViewMode}>
+                                        </lightning-combobox>
+                                    </td>
+
+                                    <!-- Service -->
+                                    <td class="table-td" title="Service Type">
+                                        <lightning-combobox class="slds-size_1-of-1"
+                                            data-id={row.id}
+                                            options={row.services}
+                                            value={row.selectedshiftServiceItem}
+                                            onchange={handleServiceChange} variant="label-hidden" disabled={isViewMode}>
+                                        </lightning-combobox>
+                                    </td>
+
+                                     <template if:false={isTransportType}>
+                                    <!-- Transport -->
+                                    <td class="table-td" title="Transport Line Item">
+                                        <lightning-combobox class="slds-size_1-of-1"
+                                            data-id={row.id}
+                                            options={row.transports}
+                                            value={row.selectedTransportItem}
+                                            onchange={handleTransportChange} variant="label-hidden" disabled={isViewMode}>
+                                        </lightning-combobox>
+                                    </td>
+
+                                    <!-- Quantity -->
+                                    <td class="table-td" title="Quantity">
+                                        <lightning-input
+                                            type="number"
+                                            data-id={row.id}
+                                            name="transportQty"
+                                            value={row.transportQty}
+                                            onchange={handleInputChange} disabled={isViewMode}
+                                            variant="label-hidden">
+                                        </lightning-input>
+                                    </td>
+
+                                    <!-- Rate -->
+                                    <td class="table-td" title="Rate">
+                                        <lightning-input
+                                            type="number"
+                                            data-id={row.id}
+                                            name="transportRate"
+                                            value={row.transportRate}
+                                            onchange={handleInputChange}
+                                            formatter="currency"       
+                                            currency-code="USD"
+                                            variant="label-hidden" disabled={isViewMode}>
+                                        </lightning-input>
+                                    </td>
+                                    </template>
+
+                                    <!-- Total -->
+                                    <td class="table-td" title="Total">
+                                        <lightning-input
+                                            type="number"
+                                            data-id={row.id}
+                                            name="transportTotal"
+                                            value={row.transportTotal}
+                                            onchange={handleInputChange}
+                                            formatter="currency"       
+                                            currency-code="USD"
+                                            variant="label-hidden" disabled={isViewMode}>
+                                        </lightning-input>
+                                    </td>
+                                    <td class="table-td center" title="Delete Row">
+                                      <lightning-button-icon
+                                          icon-name="utility:delete"
+                                          alternative-text="Delete"
+                                          title="Delete"
+                                          data-id={row.id}
+                                          onclick={handleDeleteRow}
+                                          variant="border-filled" disabled={isViewMode}>
+                                      </lightning-button-icon>
+                                  </td>
+
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Fixed Pagination Footer -->
+              <div class="fixed-pagination slds-text-align_center">
+                <lightning-button
+                  label="Cancel"
+                  onclick={handleClose}
+                  variant="neutral"
+                  class="slds-m-right_small"
+                ></lightning-button>
+                <lightning-button
+                   onclick={handleUpdate} 
+                  label="Update"
+                  variant="brand" disabled={isViewMode}
+                ></lightning-button>
+              </div>
+            </div> 
+            </div>
+          </template>      </template>
+      </template>
+
+    <!-- Submissions Tab Content -->
+    <template if:true={showSubmissions}>
+      <div class="content-section1 slds-grow" style="display: flex; flex-direction: column; min-height: 0; height: 100%;">
+        <div class="slds-grow" style="min-height: 0; flex-grow: 1; display: flex; flex-direction: column;">
+          <div class="filters-container1 slds-p-horizontal_small">
+            <!-- Left side - Status -->
+            <div class="status-container">
+              <div class="floating-label">
+                <span class="label-text-drop">Status</span>
+                <lightning-combobox
+                  name="status"
+                  label="Status"
+                  value={statusValue}
+                  placeholder="Status"
+                  options={statusOptions}
+                  onchange={handleStatusChange}
+                  required="true"
+                  variant="label-hidden"
+                  class="status-combobox"
+                ></lightning-combobox>
+              </div>
+            </div>
+
+            <!-- Right side - Dates -->
+            <div class="dates-container">
+              <div class="floating-label">
+                <span class="label-text-drop">Start Date</span>
+                <lightning-input
+                  type="date"
+                  name="sdate"
+                  value={sdate}
+                  onchange={handleDates}
+                  variant="label-hidden"
+                ></lightning-input>
+              </div>
+
+              <div class="floating-label">
+                <span class="label-text-drop">End Date</span>
+                <lightning-input
+                  type="date"
+                  name="edate"
+                  value={edate}
+                  onchange={handleDates}
+                  variant="label-hidden"
+                ></lightning-input>
+              </div>
+            </div>
+          </div>
+          <!-- Tab Navigation -->
+          <div class="slds-tabs_default slds-grow" style="display: flex; flex-direction: column; min-height: 0; flex-grow: 1;">
+            <!-- Tab Content (Shared Table) -->
+             
+            <template if:true={rejectedSubmission1}>
+              <div class="slds-card" style="display: flex; flex-direction: column; min-height: 0; flex: 1;">
+                <!-- Section Heading -->
+                <div class="slds-card__header slds-grid slds-m-bottom_none">
+                  <h2 class="slds-card__header-title">
+                    <span>My Submissions</span>
+                  </h2>
+                </div>
+                <!-- Table -->
+                <template if:true={paginatedSubList.length}>
+                  <div class="table-container slds-m-around_small staffSubmissionTableApproval" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto; flex-grow: 1;">
+
+                      <!-- HEADER -->
+                      <div class="header-wrapper">
+                          <table class="staff-table">
+<!--                               <thead>
+                                  <tr>
+                                      <th class="table-th" title="Shift Date">Shift Date</th>
+                                      <th class="table-th" title="Name">{staffPreferredName} Name</th>
+                                      <th class="table-th" title="Mileage (Kms)">Mileage (Kms)</th>
+                                      <th class="table-th" title="Vehicle Type">Vehicle Type</th>
+                                      <th class="table-th" title="Mileage Amount">Mileage Amount</th>
+                                      <th class="table-th" title="Total Amount">Total Amount</th>
+                                      <th class="table-th center" title="Status">Status</th>
+                                      <th class="table-th" title="Submitted Date">Submitted Date</th>
+                                  </tr>
+                              </thead> -->
+                              <thead>
+                                <tr>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="formattedDate"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Shift Date</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.formattedDate}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="staffName"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">{staffPreferredName} Name</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.staffName}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="mileage"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Mileage (Kms)</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.mileage}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="Typeofvechile"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Vehicle Type</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.Typeofvechile}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="Mileage_Amount__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Mileage Amount</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.Mileage_Amount__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="Total_Amount__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Total Amount</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.Total_Amount__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="Approval_Status__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Status</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.Approval_Status__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="submission"
+                                        data-field="formattedDate"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Submitted Date</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.submission.icons.formattedDate}></span>
+                                        </div>
+                                    </th>
+
+                                </tr>
+                            </thead>
+                          </table>
+                      </div>
+
+                      <!-- BODY -->
+                      <div class="body-scroll custom-scroll staffSubmissionTableApprovalHeight" style="flex-grow: 1; min-height: 0; overflow-y: auto;">
+                          <table class="staff-table">
+                              <tbody>
+                                  <template for:each={paginatedSubList} for:item="submission">
+                                      <tr key={submission.Id} class="table-row">
+                                          <!-- Shift Date -->
+                                          <td class="table-td" title={submission.formattedDate}>
+                                              {submission.formattedDate}
+                                          </td>
+
+                                          <!-- Name -->
+                                          <td class="table-td"
+                                              title={submission.ShiftwithStaff__r.Staff__r.NameToDisplay__c}>
+                                              {submission.ShiftwithStaff__r.Staff__r.NameToDisplay__c}
+                                          </td>
+
+                                          <!-- Mileage -->
+                                          <td class="table-td" title={submission.Mileage_Others__c}>
+                                              {submission.mileage}
+                                          </td>
+
+                                          <!-- Vehicle -->
+                                          <td class="table-td" title={submission.Typeofvechile}>
+                                              <span class={submission.vehicleStyle}>
+                                                  {submission.Typeofvechile}
+                                              </span>
+                                          </td>
+
+                                          <!-- Mileage Amount -->
+                                          <td class="table-td" title={submission.Mileage_Amount__c}>
+                                              <lightning-formatted-number
+                                                  value={submission.Mileage_Amount__c}
+                                                  format-style="currency"
+                                                  currency-code="AUD"
+                                                  minimum-fraction-digits="2"
+                                                  maximum-fraction-digits="2">
+                                              </lightning-formatted-number>
+                                          </td>
+
+                                          <!-- Total Amount -->
+                                          <td class="table-td" title={submission.Total_Amount__c}>
+                                              <lightning-formatted-number
+                                                  value={submission.Total_Amount__c}
+                                                  format-style="currency"
+                                                  currency-code="AUD"
+                                                  minimum-fraction-digits="2"
+                                                  maximum-fraction-digits="2">
+                                              </lightning-formatted-number>
+                                          </td>
+
+                                          <!-- Status -->
+                                          <td class="table-td center" title={submission.Approval_Status__c}>
+                                             <div class="status-wrapper">
+                                              <span class={submission.statusStyle}>
+                                                  {submission.Approval_Status__c}
+                                              </span>
+                                               <template if:true={submission.isRejected}>
+                                                 <i class="material-icons edit-icon" title="Edit"
+                                                    data-id={submission.Id}
+                                                    data-shiftid={submission.ShiftwithStaff__c}
+                                                    onclick={handleEditSubmission}>edit</i>
+                                               </template>
+                                               <template if:false={submission.isRejected}>
+                                                  <span class="icon-placeholder"></span>
+                                               </template>
+                                             </div>
+                                          </td>
+
+                                          <!-- Submitted Date -->
+                                          <td class="table-td" title={submission.formattedDate}>
+                                              {submission.formattedDate}
+                                          </td>
+                                      </tr>
+                                  </template>
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+
+                  <!-- Pagination wrapper outside scrollable table -->
+                  <div class="fixed-pagination" style="flex-shrink: 0; padding-top: 5px;">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                      <!-- PAGE SIZE DROPDOWN -->
+                      <div class="slds-col">
+                        <div class="slds-list_inline slds-p-bottom_xx-small">
+                          <label
+                            class="slds-text-color_weak slds-p-horizontal_x-small"
+                            for="recordsPerPageSub"
+                          >
+                            Page Size:
+                          </label>
+                          <div class="slds-select_container">
+                            <select
+                              class="slds-select"
+                              id="recordsPerPageSub"
+                              onchange={handleRecordsPerPageSub}
+                            >
+                              <template
+                                for:each={pageSizeOptionssub}
+                                for:item="option"
+                              >
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              </template>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- PAGE NAVIGATION -->
+                      <div class="slds-align_absolute-center">
+                        <lightning-button
+                          disabled={bDisableFirstSub}
+                          icon-name="utility:jump_to_left"
+                          label="First"
+                          class="slds-p-horizontal_x-small"
+                          onclick={firstPageSub}
+                        ></lightning-button>
+
+                        <lightning-button
+                          disabled={bDisableFirstSub}
+                          icon-name="utility:chevronleft"
+                          label="Previous"
+                          onclick={previousPageSub}
+                        ></lightning-button>
+
+                        &nbsp;
+                        <span class="slds-badge">
+                          Showing {pageNumberSub} of {totalPagesSub} Page(s)
+                        </span>
+                        &nbsp;
+
+                        <lightning-button
+                          disabled={bDisableLastSub}
+                          icon-name="utility:chevronright"
+                          label="Next"
+                          onclick={nextPageSub}
+                          class="slds-p-horizontal_x-small"
+                          icon-position="right"
+                        ></lightning-button>
+
+                        <lightning-button
+                          disabled={bDisableLastSub}
+                          icon-name="utility:jump_to_right"
+                          label="Last"
+                          onclick={lastPageSub}
+                          icon-position="right"
+                        ></lightning-button>
+                      </div>
+
+                      <!-- TOTAL RECORDS -->
+                      <div class="slds-clearfix">
+                        <div class="slds-float_right">
+                          <span class="slds-badge"
+                            >Total Records: {totalRecordsSub}</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <template if:false={paginatedSubList.length}>
+                  <div class="no-data" style="padding: 1%">
+                    <p>No reimbursements found for the selected dates.</p>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <template if:true={PreviousSubmission1}>
+              <div class="slds-card slds-m-top_none" style="display: flex; flex-direction: column; min-height: 0; flex: 1;">
+                <!-- 🟢 Section Heading -->
+                <div class="slds-card__header slds-grid slds-m-bottom_none">
+                  <h2 class="slds-card__header-title">
+                    <span>Available Shifts for Reimbursement</span>
+                  </h2>
+                </div>
+
+                <!-- TABLE -->
+                <template if:true={pagedSigninList.length}>
+                  <div class="table-container slds-m-around_small signinTable" style="min-height: 0; display: flex; flex-direction: column; flex: 1 1 auto; flex-grow: 1;">
+
+                      <!-- HEADER -->
+                      <div class="header-wrapper">
+                          <table class="staff-table">
+<!--                               <thead>
+                                  <tr>
+                                      <th class="table-th" title="Location">Location</th>
+                                      <th class="table-th" title="Date">Date</th>
+                                      <th class="table-th" title="Start Time">Start Time</th>
+                                      <th class="table-th" title="End Time">End Time</th>
+                                      <th class="table-th" title="Role">Role</th>
+                                      <th class="table-th" title={facilityPreferredName}>{facilityPreferredName}</th>
+                                      <th class="table-th center" title="Action">Action</th>
+                                  </tr>
+                              </thead> -->
+                              <thead>
+                                <tr>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="signin"
+                                        data-field="Shift_Locations__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Location</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.signin.icons.Shift_Locations__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="signin"
+                                        data-field="formattedDate"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Date</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.signin.icons.formattedDate}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="signin"
+                                        data-field="Start_time_Formula__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Start Time</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.signin.icons.Start_time_Formula__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="signin"
+                                        data-field="End_time_formula__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">End Time</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.signin.icons.End_time_formula__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="signin"
+                                        data-field="Role_formula__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">Role</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.signin.icons.Role_formula__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th sortable-header"
+                                        data-table="signin"
+                                        data-field="Facility_Names__c"
+                                        onclick={handleSort}>
+                                        <div class="sort-header-inner">
+                                            <span class="sort-label">{facilityPreferredName}</span>
+                                            <span class="sort-arrow" data-arrow={tableSortState.signin.icons.Facility_Names__c}></span>
+                                        </div>
+                                    </th>
+
+                                    <th class="table-th center">Action</th>
+
+                                </tr>
+                            </thead>
+                          </table>
+                      </div>
+
+                      <!-- BODY -->
+                      <div class="body-scroll custom-scroll signinTableHeight" style="flex-grow: 1; min-height: 0; overflow-y: auto;">
+                          <table class="staff-table">
+                              <tbody>
+                                  <template for:each={pagedSigninList} for:item="list">
+                                      <tr key={list.Id} class="table-row">
+                                          <!-- Location -->
+                                          <td class="table-td" title={list.Shift_Locations__c}>
+                                              {list.Shift_Locations__c}
+                                          </td>
+
+                                          <!-- Date -->
+                                          <td class="table-td" title={list.formattedDate}>
+                                              {list.formattedDate}
+                                          </td>
+
+                                          <!-- Start -->
+                                          <td class="table-td" title={list.Start_time_Formula__c}>
+                                              {list.Start_time_Formula__c}
+                                          </td>
+
+                                          <!-- End -->
+                                          <td class="table-td" title={list.End_time_formula__c}>
+                                              {list.End_time_formula__c}
+                                          </td>
+
+                                          <!-- Role -->
+                                          <td class="table-td" title={list.Role_formula__c}>
+                                              {list.Role_formula__c}
+                                          </td>
+
+                                          <!-- Facility -->
+                                          <td class="table-td" title={list.Facility_Names__c}>
+                                              {list.Facility_Names__c}
+                                          </td>
+
+                                          <!-- Action -->
+                                          <td class="table-td center" title="Apply">
+                                              <a
+                                                  href="javascript:void(0)"
+                                                  data-id={list.Id}
+                                                  data-logout={list.Log_Out_Date_Time__c}
+                                                  title="Apply"
+                                                  onclick={handleSignInRowSelection}>
+                                                  <i class="material-icons save-icon">task</i>
+                                              </a>
+                                          </td>
+                                      </tr>
+                                  </template>
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+                  
+                  <!-- PAGINATION CONTROLS wrapper outside scrollable table -->
+                  <div class="fixed-pagination" style="flex-shrink: 0; padding-top: 5px;">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                      <!-- PAGE SIZE DROPDOWN -->
+                      <div class="slds-col">
+                        <div class="slds-list_inline slds-p-bottom_xx-small">
+                          <label
+                            class="slds-text-color_weak slds-p-horizontal_x-small"
+                            for="recordsPerPageSub"
+                          >
+                            Page Size:
+                          </label>
+                          <div class="slds-select_container">
+                            <select
+                              class="slds-select"
+                              id="recordsPerPageSub1"
+                              onchange={handlePageSizeChange}
+                            >
+                              <template
+                                for:each={pageSizeOptionssub1}
+                                for:item="option"
+                              >
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              </template>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- PAGE NAVIGATION -->
+                      <div class="slds-align_absolute-center">
+                        <lightning-button
+                          disabled={bDisableFirstSub1}
+                          icon-name="utility:jump_to_left"
+                          label="First"
+                          class="slds-p-horizontal_x-small"
+                          onclick={goToFirst}
+                        ></lightning-button>
+                        <lightning-button
+                          disabled={bDisableFirstSub1}
+                          icon-name="utility:chevronleft"
+                          label="Previous"
+                          onclick={goToPrevious}
+                        ></lightning-button>
+
+                        &nbsp;
+                        <span class="slds-badge">
+                          Showing {pageNumberSub1} of {totalPagesSub1} Page(s)
+                        </span>
+                        &nbsp;
+
+                        <lightning-button
+                          disabled={bDisableLastSub1}
+                          icon-name="utility:chevronright"
+                          label="Next"
+                          class="slds-p-horizontal_x-small"
+                          onclick={goToNext}
+                          icon-position="right"
+                        ></lightning-button>
+                        <lightning-button
+                          disabled={bDisableLastSub1}
+                          icon-name="utility:jump_to_right"
+                          label="Last"
+                          onclick={goToLast}
+                          icon-position="right"
+                        ></lightning-button>
+                      </div>
+
+                      <!-- TOTAL RECORDS -->
+                      <div class="slds-clearfix">
+                        <div class="slds-float_right">
+                          <span class="slds-badge"
+                            >Total Records: {totalRecordsSub1}</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <template if:false={pagedSigninList.length}>
+                  <div class="no-data" style="padding: 1%">
+                    <p>No reimbursements found for the selected dates.</p>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Sliding Drawer / Form Overlay -->
+        <template if:true={shiftselected}>
+          <div class="blur-overlay"></div>
+          <!-- Container -->
+          <div class="right-align slds-p-around_medium" style="width: 50%; height: 100%; display: flex; flex-direction: column; min-height: 0;">
+            <!-- Header -->
+            <div
+              class="slds-grid slds-align_absolute-space-between slds-m-bottom_medium"
+              style="display: flex; justify-content: space-between; flex-shrink: 0;"
+            >
+              <div>
+                <h3 class="slds-text-heading_medium" style="margin: 0">
+                  Reimbursement Form
+                </h3>
+              </div>
+              <div class="slds-m-left_auto">
+                <lightning-button
+                  label="Back"
+                  onclick={handleCloseForm}
+                  variant="brand"
+                >
+                </lightning-button>
+              </div>
+            </div>
+            <!-- Scrollable Content -->
+            <div
+              class="slds-box slds-theme_default slds-p-around_medium slds-grow slds-scrollable_y custom-scroll"
+              style="background-color: white; border-radius: 8px; min-height: 0;"
+            >
+              <!-- Form Fields -->
+              <div class="slds-grid slds-wrap slds-gutters">
+                <!-- Type of Vehicle -->
+               <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Reimbursement Type</span
+                    >
+                    <lightning-combobox
+                      name="transportType"
+                      value={transportType}
+                      placeholder="Select Transport Type"
+                      options={TransportTypeOptions}
+                      variant="label-hidden"
+                      onchange={handleChange1}
+                      disabled={disabletransportType}
+                      required
+                    >
+                    </lightning-combobox>
+                  </div>
+                </div>
+                  <template if:true={isActivityTransport}>
+
+                  <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                      <div class="floating-label">
+                          <span class="label-text-drop">Transport Mode</span>
+
+                          <lightning-combobox
+                              name="transportMode"
+                              value={transportMode}
+                              placeholder="Select Transport Mode"
+                              options={transportModeOptions}
+                              variant="label-hidden"
+                              onchange={handleChange1}>
+                          </lightning-combobox>
+
+                      </div>
+                  </div>
+
+                </template>
+
+                <template if:true={isActivityVehicleType}>
+
+                  <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                      <div class="floating-label">
+                          <span class="label-text-drop">Vehicle Used</span>
+
+                          <lightning-combobox
+                              name="activityVehicleType"
+                              value={activityVehicleType}
+                              placeholder="Select vehicle"
+                              options={activityTransportOptions}
+                              variant="label-hidden"
+                              onchange={handleChange1}>
+                          </lightning-combobox>
+
+                      </div>
+                  </div>
+
+                </template>
+       
+                <template if:false={isTransportExpense}>
+                 <template if:false={isActivityPublicVehicle}>
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Type of Vehicle</span
+                    >
+                    <lightning-combobox
+                      name="vehicle"
+                      value={vehicleValue}
+                      placeholder="Select Type of Vehicle"
+                      options={vehicleOptions}
+                      variant="label-hidden"
+                      onchange={handleChange}
+                      required
+                    >
+                    </lightning-combobox>
+                  </div>
+                </div>
+
+              
+              
+                 <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      >Odometer Start</span
+                    >
+                   <lightning-input
+                      type="number"
+                      name="odoStart"  data-id="odoStart"
+                      value={odoStart}  variant="label-hidden"
+                      onchange={handleChange}>
+                  </lightning-input>
+                  </div>
+                </div>
+
+                   <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      >Odometer End</span
+                    >
+                   <lightning-input
+                      type="number"
+                      name="odoEnd"  data-id="odoEnd"
+                      value={odoEnd}  variant="label-hidden"
+                      onchange={handleChange}>
+                  </lightning-input>
+                  </div>
+                </div>
+
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Mileage in Km's</span
+                    >
+                    <lightning-input
+                      type="number"
+                      step=".01"
+                      data-id="kmsField"
+                      value={others}
+                      name="others"
+                      variant="label-hidden"
+                      onchange={handleChange}
+                      max="300.00"
+                      required
+                    >
+                    </lightning-input>
+                  </div>
+                </div>
+               </template>
+
+                
+                
+                </template>
+
+                <template if:true={isProviderTravel}>
+
+                    <!-- Start Time -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Start Time</span>
+                      <c-tesseract-apps-time-picker
+                      data-timetype="startTime"
+                      selected-hour={startTimeSelectedHour}
+                      selected-minute={startTimeSelectedMinute}
+                      is-am={startTimeAMPM}
+                      displayed-time={uistarttime}
+                      disable-time-button={disableTimeButton}
+                      onsavetimefromchild={handleAddShiftTimeData}
+                    ></c-tesseract-apps-time-picker>
+                        </div>
+                    </div>
+
+                    <!-- End Time -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                        <div class="floating-label">
+                            <span class="label-text-drop">End Time</span>
+                     <c-tesseract-apps-time-picker
+                        data-timetype="endTime"
+                        selected-hour={endTimeSelectedHour}
+                        selected-minute={endTimeSelectedMinute}
+                        is-am={endTimeAMPM}
+                        displayed-time={uiendtime}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}>
+                    </c-tesseract-apps-time-picker>
+                        </div>
+                    </div>
+
+                </template>
+
+              
+                <template if:true={isTransportExpense}>
+
+                  <!-- Add Expense Button -->
+                  <div class=" slds-text-align_right Button" >
+                      <lightning-button
+                          label="Add Expense"
+                          icon-name="utility:add"
+                          onclick={addExpenseRow}>
+                      </lightning-button>
+                  </div>
+
+                  <!-- Expense Rows -->
+                  <template for:each={expenseRows} for:item="row" for:index="index">
+                    <div key={row.id} class="slds-box slds-m-bottom_small slds-size_1-of-1">
+
+                        <div class="slds-grid slds-gutters slds-wrap ">
+
+                          <div class="slds-col slds-size_1-of-2">
+                              <div class="floating-label">
+                                  <span class="label-text-drop">Expense Type</span>
+                                  <lightning-combobox
+                                    label="Expense Type"
+                                    name="expenseType"
+                                    data-index={index}
+                                    value={row.expenseType}
+                                    options={expenseTypeOptions}
+                                    onchange={handleExpenseChange} variant="label-hidden">
+                                </lightning-combobox>
+                              </div>
+                            </div>
+
+                          <div class="slds-col slds-size_1-of-2">
+                              <div class="floating-label">
+                                  <span class="label-text-drop">Cost</span>
+                                  <lightning-input
+                                      type="number"
+                                      label="Amount"
+                                      name="amount"
+                                      data-index={index}
+                                      value={row.amount}
+                                      onchange={handleExpenseChange} variant="label-hidden">
+                                  </lightning-input>
+                              </div>
+                            </div>
+
+                          <!-- 🔥 Upload Section -->
+                          <div class="slds-col slds-size_1-of-2">
+
+                              <div class="floating-label">
+
+                                  <!-- Hidden File Input -->
+                                  <input
+                                      type="file"
+                                      class="file-input"
+                                      data-index={index}
+                                      data-id={row.id}
+                                      onchange={handleFileUploadInputChange}
+                                      
+                                      style="display:none;" />
+
+                                  <!-- Upload Button -->
+                                  <button
+                                      type="button"
+                                      data-id={row.id}
+                                      data-index={index}
+                                      onclick={triggerFileInput2}
+                                      class="file-upload-button">
+                                      &#8684; Upload File
+                                  </button>
+
+                                  <!-- File Name -->
+                                  <div class="slds-text-body_small slds-truncate" title={row.fileName}>
+                                      {row.fileName}
+                                  </div>
+
+                                  <!-- Spinner -->
+                                  <template if:true={row.showSpinner}>
+                                      <lightning-spinner size="small"></lightning-spinner>
+                                  </template>
+
+                                  <!-- Error -->
+                                  <template if:true={row.isattachError}>
+                                      <p style="color:red">File size cannot exceed limit</p>
+                                  </template>
+
+                                  <!-- 🔥 CHILD COMPONENT (EXPAND PER ROW) -->
+                                  <template if:true={row.isFileExpand}>
+                                      <c-document-office-service
+                                          record-id={recordId}
+                                          data-index={index}
+                                          data-id={row.id}
+                                          module-path-from-parent="ticket"
+                                          onuploadcomplete={handleAwsUploadComplete}
+                                          onfiledeleted={handleFileDeleted}
+                                          oncancel={handlefilecancel}>
+                                      </c-document-office-service>
+                                  </template>
+
+                              </div>
+                          </div>
+
+                          <!-- Delete Row -->
+                          <div class="slds-col slds-size_1-of-2" style="margin-top: 4.5%;">
+                              <lightning-button-icon
+                                  icon-name="utility:delete"
+                                  data-index={index}
+                                  onclick={removeExpenseRow}>
+                              </lightning-button-icon>
+                          </div>
+
+                        </div>
+                    </div>
+                  </template>
+
+                 
+
+              </template>
+
+              <template if:true={isActivityPublicVehicle}>
+                 <!-- Amount -->
+                 <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Amount</span
+                    >
+                    <lightning-input
+                      type="number"
+                      step=".01"
+                      value={amount}
+                      name="Amount"
+                      variant="label-hidden"
+                      onchange={handleChange}
+                      max="999999.99"
+                      message-when-range-overflow="Amount cannot exceed 999999.99"
+                      required
+                    >
+                    </lightning-input>
+                  </div>
+                </div> 
+                               
+              </template>
+                            
+              <template if:false={isTransportExpense}>
+                <!-- File Upload -->
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                >
+                  <div class="floating-label">
+                    <input
+                      type="file"
+                      id="fileInput"
+                      onchange={onFileUpload}
+                      
+                      name="file"
+                      style="display: none"
+                    />
+                    <button
+                      type="button"
+                      onclick={triggerFileInput}
+                      class="file-upload-button"
+                    >
+                      &#8684; Upload File
+                    </button>
+                    <div class="slds-text-body_small slds-truncate" title={fileName}>
+                      {fileName}
+                      <template if:true={showSpinner}>
+                        <lightning-spinner
+                          alternative-text="Uploading the file..."
+                          size="medium"
+                        >
+                        </lightning-spinner>
+                      </template>
+                    </div>
+                    <template if:true={isattachError}>
+                      <p style="color: red">File size cannot exceed 512MB</p>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Comment -->
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_12-of-12"
+                >
+                  <div class="floating-label-comment">
+                    <span class="label-text-drop"
+                      ><span style="color: red">*</span>Comment</span
+                    >
+                    <lightning-textarea
+                      name="comment"
+                      value={comments}
+                      variant="label-hidden"
+                      onchange={handleChange}
+                      required
+                    >
+                    </lightning-textarea>
+                  </div>
+                </div>
+                </template>
+              </div>
+            </div>
+            <!-- Submit Button (Sticky Footer) -->
+            <div class="slds-m-top_medium slds-text-align_right" style="flex-shrink: 0;">
+              <lightning-button
+                variant="brand"
+                label="Send for Approval"
+                onclick={onSubmitForApproval}
+                disabled={attachDisable}
+              >
+              </lightning-button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- Modal for File Preview -->
+   <!--  <template if:true={isModalOpen}>
+      <div class="slds-p-around_medium">
+        <lightning-button
+          class="slds-m-left_medium"
+          slot="footer"
+          label="Back"
+          variant="brand"
+          onclick={closeModal}
+          style="float: right; margin-bottom: 5px"
+        ></lightning-button>
+
+        <iframe src={currentUrl} width="100%" height="750px"></iframe>
+      </div>
+    </template> -->
+
+    <template if:true={isModalOpen}>
+    <div class="slds-p-around_medium" style="display:flex;flex-direction: column;height: 100%;">
+      <div>
+        <lightning-button
+            class="slds-m-left_medium"
+            slot="footer"
+            label="Back"
+            variant="brand"
+            onclick={closeModal}
+            style="float: right; margin-bottom: 5px">
+        </lightning-button>
+      </div>
+
+        <!-- ✅ IMAGE VIEW -->
+        <template if:true={isImage}>
+            <div class="image-container">
+                <img src={currentUrl} class="preview-image"/>
+            </div>
+        </template>
+
+        <!-- ✅ PDF VIEW -->
+        <template if:true={isPdf}>
+            <iframe src={currentUrl} width="100%" height="750px"></iframe>
+        </template>
+
+    </div>
+</template>
+
+    <template if:true={showSpinner}>
+      <lightning-spinner
+        alternative-text="Processing..."
+        size="large"
+      ></lightning-spinner>
+    </template>
+  </div>
+
+  
+
+ 
+
+
+  
+
+</template>

@@ -1,0 +1,1529 @@
+<!--
+@description       : 
+@author            : Raja Sekhar Reddy
+@group             : 
+@last modified on  : 06-17-2023
+@last modified by  : Raja Sekhar Reddy
+-->
+<template>
+  <template if:true={isHome}>
+    <div class="main-container">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        "
+      >
+        <!-- Right side: Back button and image icon -->
+        <div style="display: flex; align-items: center; gap: 10px">
+          <!-- <span><button class="button" onclick={handleclonealert} >Clone</button></span> -->
+          <template if:true={cloneflag}>
+            <section
+              aria-describedby="modal-content-id-1"
+              aria-labelledby="modal-heading-01"
+              aria-modal="true"
+              class="slds-modal slds-fade-in-open"
+              role="dialog"
+              tabindex="-1"
+            >
+              <div class="slds-modal__container" style="width: 10%">
+                <header
+                  class="slds-modal__header"
+                  style="background: #124795; border-radius: 15px 15px 0 0"
+                >
+                  <h2
+                    id="modal-heading-01"
+                    class="slds-text-heading_medium slds-hyphenate"
+                    style="color: white; font-weight: bold; text-align: left"
+                  >
+                    Please Confirm
+                  </h2>
+                </header>
+                <div
+                  class="slds-modal__content slds-p-around_medium"
+                  id="modal-content-id-1"
+                  style="border-radius: 0 0 15px 15px"
+                >
+                  <div class="slds-m-around_small">
+                    <div>
+                      <h1>
+                        Are you sure you would like to clone from previous week
+                      </h1>
+                    </div>
+                    <div style="margin-top: 10px; align-items: center">
+                      <lightning-button
+                        label="Yes"
+                        variant="brand"
+                        onclick={handleClone}
+                        class="slds-m-around_small"
+                        style="margin-left: 4rem"
+                      ></lightning-button>
+                      <lightning-button
+                        label="No"
+                        variant="brand"
+                        onclick={handlecloneclose}
+                        class="slds-m-around_small"
+                      ></lightning-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+          </template>
+        </div>
+      </div>
+      <header class="header">
+        <div class="search-section">
+          <div
+            class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4"
+          >
+            <div class="floating-label">
+              <span class="label-text-drop">Select Facility</span>
+              <lightning-combobox
+                name="Facility"
+                label=""
+                value={selectedValue}
+                placeholder={faclitylabel}
+                variant="label-hidden"
+                options={facilityOptions}
+                onchange={handleFacilityChange}
+              ></lightning-combobox>
+            </div>
+          </div>
+        </div>
+        <div class="action-section">
+          <div>
+            <span class="Arrow">
+              <lightning-button-icon
+                icon-name="utility:left"
+                class="slds-m-top_xx-small"
+                onclick={navigateToPrevious}
+              ></lightning-button-icon>
+            </span>
+            <span class="today">
+              <lightning-button
+                label="Today"
+                onclick={navigateToToday}
+              ></lightning-button>
+            </span>
+            <span class="Arrow">
+              <lightning-button-icon
+                icon-name="utility:right"
+                class="slds-m-top_xx-small"
+                onclick={navigateToNext}
+              ></lightning-button-icon>
+            </span>
+          </div>
+          <lightning-input
+            label="Date"
+            type="date"
+            name="select-date"
+            variant="label-hidden"
+            class="lwc-datepicker"
+            value={datePickerString}
+            onchange={navigateToDay}
+          ></lightning-input>
+          <button
+            class="slds-button slds-button_icon slds-button_icon-border"
+            title="Refresh"
+            onclick={handleVisbility}
+          >
+            <svg class="slds-button__icon" aria-hidden="true">
+              <use
+                xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg?cache=9.28.0#refresh"
+              ></use>
+            </svg>
+          </button>
+        </div>
+      </header>
+ 
+
+      <div if:true={isDesktop}>
+         
+
+        <div>
+          <div if:true={facilityValFalg} class="slds-m-around_large">
+            <div
+              class="slds-grid slds-grid_align-spread slds-m-left_large"
+              style="padding-top: 0.5em; font-size: 15px"
+            >
+              <b style="color: #4caf50">Please Select Facility</b>
+            </div>
+          </div>
+
+          <div>
+            <div if:true={facilityVal}>
+              <div if:true={isDesktop}>
+                <table
+                  class="slds-table_fixed-layout slds-table_resizable-cols table1"
+                >
+                  <thead>
+                    <tr>
+                      <!-- <td style="width:10%; padding-left:10px;font-size:13px;color: #000;font-weight:bold" class="finalHourstext" >Staff</td>  -->
+                      <td class="firstcellwidth">
+                        <div
+                          class="staff-member"
+                          style="padding-left: 4%; padding-right: 3%"
+                        >
+                          <div class="floating-label-new">
+                            <span class="label-text-drop">Search by Name</span>
+                            <lightning-input
+                              type="search"
+                              variant="label-hidden"
+                              value={searchName}
+                              onchange={handleSearchName}
+                            ></lightning-input>
+                          </div>
+                        </div>
+                      </td>
+                      <template for:each={dates} for:item="date">
+                        <template for:each={date.days} for:item="day">
+                          <td key={day} class={day.bgColor}>
+                            <div class="day-content-wrapper">
+                              <div class="day-left">
+                                <div if:true={day.dayName} class="day-name">
+                                  {day.dayName}
+                                </div>
+                                <div class="day-date">{day.label1}</div>
+                              </div>
+                              <div class="holiday-label">{day.holidayName}</div>
+                            </div>
+                          </td>
+                        </template>
+                      </template>
+                      <td
+                        style="
+                          font-weight: bold;
+                          width: 10%;
+                          text-align: center;
+                        "
+                        class="summary"
+                      >
+                        Summary
+                      </td>
+                    </tr>
+                  </thead>
+                </table>
+
+                <div class="calendar-part custom-scroll">
+                  <template if:false={noRecordsFlag}>
+                    <table
+                      class="slds-table_fixed-layout slds-table_resizable-cols table1"
+                    >
+                      <tbody>
+                        <template if:true={records}>
+                          <template for:each={finalStaffData} for:item="staff">
+                            <tr key={staff.Id}>
+                              <!--  class="ictSheetRow" -->
+                              <td class="resourseName">
+                                <template if:true={editICTInvoice}>
+                                  <div class="description">
+                                    <a
+                                      href="javascript:void(0)"
+                                      data-invrate={staff.hoursRate}
+                                      data-staffid={staff.Id}
+                                      data-firstname={staff.Name}
+                                      data-description={staff.description}
+                                      data-lastname={staff.Last_Name__c}
+                                      data-role={staff.role}
+                                      data-invoiceto={staff.invoiceTo}
+                                      onclick={generateICTInvoice}
+                                      title="Generate Invoice"
+                                      >{staff.Name} {staff.Last_Name__c}</a
+                                    >
+                                  </div>
+                                </template>
+                                <template if:false={editICTInvoice}>
+                                  <div class="description">
+                                    {staff.Name} {staff.Last_Name__c}
+                                  </div>
+                                </template>
+                              </td>
+
+                              <template if:true={staff.alocId1}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId1}
+                                  data-staff={staff.Id}
+                                  data-name={staff.Day0}
+                                  data-status={staff.ictStatus}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime1}</span
+                                  >
+                                  <br />
+                                  <span
+                                    class="duraionClass"
+                                    style="margin-top: 2rem"
+                                    >Duration:{staff.hours1}</span
+                                  >
+
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <!--Column wise showing Plus symbol-->
+                              <template if:false={staff.alocId1}>
+                                <!--  <div class="slds-align_absolute-center" style="z-index:0">{staff.holiday1}</div> -->
+                                <td class="bgcolour1">
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-status={staff.ictStatus}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day0}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                    class="my-button-text"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+
+                              <template if:true={staff.alocId2}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId2}
+                                  data-name={staff.Day1}
+                                  data-staff={staff.Id}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime2}</span
+                                  >
+                                  <br />
+                                  <span class="duraionClass"
+                                    >Duration:{staff.hours2}</span
+                                  >
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <template if:false={staff.alocId2}>
+                                <td class="bgcolour1">
+                                  <!--  <div class="slds-align_absolute-center" style="z-index:0">{staff.holiday2}</div> -->
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-status={staff.ictStatus}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day1}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                    class="my-button-text"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+
+                              <template if:true={staff.alocId3}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId3}
+                                  data-name={staff.Day2}
+                                  data-staff={staff.Id}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime3}</span
+                                  >
+                                  <br />
+                                  <span class="duraionClass"
+                                    >Duration:{staff.hours3}</span
+                                  >
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <template if:false={staff.alocId3}>
+                                <!-- <div class="slds-align_absolute-center" style="z-index:0">{staff.holiday3}</div> -->
+                                <td class="bgcolour1">
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-status={staff.ictStatus}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day2}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                    class="my-button-text"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+
+                              <template if:true={staff.alocId4}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId4}
+                                  data-name={staff.Day3}
+                                  data-staff={staff.Id}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime4}</span
+                                  >
+                                  <br />
+                                  <span class="duraionClass"
+                                    >Duration:{staff.hours4}</span
+                                  >
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <template if:false={staff.alocId4}>
+                                <td class="bgcolour1">
+                                  <!--  <div class="slds-align_absolute-center" style="z-index:0">{staff.holiday4}</div> -->
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-status={staff.ictStatus}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day3}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                    class="my-button-text"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+
+                              <template if:true={staff.alocId5}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId5}
+                                  data-name={staff.Day4}
+                                  data-staff={staff.Id}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime5}</span
+                                  >
+                                  <br />
+                                  <span class="duraionClass"
+                                    >Duration:{staff.hours5}</span
+                                  >
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <template if:false={staff.alocId5}>
+                                <td class="bgcolour1">
+                                  <!--  <div class="slds-align_absolute-center" style="z-index:0">{staff.holiday5}</div> -->
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-status={staff.ictStatus}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day4}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                    class="my-button-text"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+
+                              <template if:true={staff.alocId6}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId6}
+                                  data-name={staff.Day5}
+                                  data-staff={staff.Id}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime6}</span
+                                  >
+                                  <br />
+                                  <span class="duraionClass"
+                                    >Duration:{staff.hours6}</span
+                                  >
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <template if:false={staff.alocId6}>
+                                <td class="bgcolour1">
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day5}
+                                    data-status={staff.ictStatus}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+
+                              <template if:true={staff.alocId7}>
+                                <td
+                                  onclick={handleEdit1}
+                                  data-id={staff.alocId7}
+                                  data-name={staff.Day6}
+                                  data-staff={staff.Id}
+                                  style="cursor: pointer"
+                                  class="boxTextInfo"
+                                >
+                                  <span class="textfontsize"
+                                    >{staff.startTime7}</span
+                                  >
+                                  <br />
+                                  <span class="duraionClass"
+                                    >Duration:{staff.hours7}</span
+                                  >
+                                  <span class="deleteClass">
+                                    <template if:true={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                    <template if:false={staff.isSubmitButton}>
+                                      <lightning-icon
+                                        name="delete"
+                                        icon-name="utility:delete"
+                                        size="x-small"
+                                      >
+                                      </lightning-icon>
+                                    </template>
+                                  </span>
+                                </td>
+                              </template>
+                              <template if:false={staff.alocId7}>
+                                <td class="bgcolour1">
+                                  <lightning-icon
+                                    onclick={handleSave}
+                                    data-id={staff.Id}
+                                    data-name={staff.Day6}
+                                    data-status={staff.ictStatus}
+                                    icon-name="utility:add"
+                                    size="xx-small"
+                                    title="New shift"
+                                  >
+                                  </lightning-icon>
+                                </td>
+                              </template>
+                              <td style="width: 10%; text-align: center">
+<span class="finalHours">
+    {staff.totalHOurs}
+    <span class="finalHourstext"> Hours</span>
+</span>
+                                <div class="finalStatus">
+                                  <template if:false={staff.openComments}>
+                                    <template if:true={staff.ictStatus}>
+                                      <div
+                                        style="
+                                          display: flex;
+                                          justify-content: center;
+                                        "
+                                      >
+                                        <h1>{staff.ictStatus}</h1>
+                                        <template if:true={editICTInvoice}
+                                          ><template if:true={staff.isediticon}
+                                            ><lightning-icon
+                                              name="delete"
+                                              icon-name="utility:edit"
+                                              size="x-small"
+                                              data-staffid={staff.Id}
+                                              onclick={handleStatusChange}
+                                            >
+                                            </lightning-icon
+                                          ></template>
+                                        </template>
+                                      </div>
+                                    </template>
+                                    <template if:false={staff.ictStatus}>
+                                      <h1>Draft</h1>
+                                    </template>
+                                  </template>
+                                  <template if:true={staff.openComments}>
+                                    <a
+                                      href="javascript:void(0)"
+                                      onclick={hanldeOpenComment}
+                                      title="View comments"
+                                      data-comments={staff.comments}
+                                      >{staff.ictStatus}</a
+                                    ><br />
+                                  </template>
+                                  <div class="finalSubmit">
+                                    <lightning-button
+                                      label="Submit"
+                                      variant="brand"
+                                      data-allocid={staff.StaffAllocJson}
+                                      data-totalhours={staff.totalHOurs}
+                                      data-staffid={staff.Id}
+                                      onclick={handleSubmission}
+                                      disabled={staff.isSubmitButton}
+                                    ></lightning-button>
+                                  </div>
+                                </div>
+                              </td>
+                              <!-- <td  style=" padding-left:40px;padding-bottom:10px;width:10%">
+                               
+                             </td> -->
+                            </tr>
+                          </template>
+                        </template>
+                      </tbody>
+                    </table>
+                  </template>
+                </div>
+                <template if:true={noRecordsFlag}>
+                  <div class="no-data">
+                    <p>No records found</p>
+                  </div>
+                </template>
+                <template if:false={noRecordsFlag}>
+                  <div
+                    class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-left_xx-large fixed-pagination"
+                    style="padding-top: 0.5em"
+                  >
+                    <!--RECORDS PER PAGE-->
+                    <div class="slds-col">
+                      <div
+                        class="slds-list_inline slds-p-bottom_xx-small"
+                        style="margin-left: -35%"
+                      >
+                        <label
+                          class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center"
+                          for="recordsPerPage"
+                          >Page Size:</label
+                        >
+                        <div class="slds-select_container">
+                          <select
+                            class="slds-select"
+                            id="recordsPerPage"
+                            onchange={handleRecordsPerPage}
+                          >
+                            <template
+                              for:each={pageSizeOptions}
+                              for:item="option"
+                            >
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            </template>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!--PAGE NAVIGATION-->
+                    <div
+                      class="slds-align_absolute-center"
+                      style="height: 5rem"
+                    >
+                      <lightning-button
+                        disabled={bDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        class="slds-p-horizontal_x-small"
+                        alternative-text="first page"
+                        onclick={firstPage}
+                      ></lightning-button>
+                      <lightning-button
+                        disabled={bDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        alternative-text="Previous"
+                        onclick={previousPage}
+                      ></lightning-button>
+                      &nbsp;
+                      <span class="slds-badge"
+                        >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+                        &nbsp;&nbsp;Page(s)</span
+                      >
+                      &nbsp;
+                      <lightning-button
+                        disabled={bDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        alternative-text="Next"
+                        onclick={nextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right"
+                      ></lightning-button>
+                      <lightning-button
+                        disabled={bDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        alternative-text="last page"
+                        onclick={lastPage}
+                        icon-position="right"
+                      ></lightning-button>
+                    </div>
+                    <!--TOTAL RECORDS-->
+                    <div class="slds-clearfix slds-m-right_xx-large">
+                      <div class="slds-float_right" style="margin-right: -25%">
+                        <span class="slds-badge">
+                          Total Records: {totalRecords}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <template if:true={showSpinner}>
+              <lightning-spinner
+                alternative-text="Uploading the file......"
+                size="medium"
+              >
+                Your Documnets are being uploaded</lightning-spinner
+              >
+            </template>
+            <template if:true={showCommentPopUp}>
+              <section
+                role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                aria-labelledby="modal-heading-01"
+                class="slds-modal slds-fade-in-open"
+              >
+                <div class="slds-modal__container">
+                  <div class="slds-modal__header">
+                    <h1 class="slds-modal__title slds-hyphenate" tabindex="-1">
+                      Comments
+                    </h1>
+                  </div>
+                  <div class="slds-modal__content slds-p-around_medium">
+                    <p>{ictComments}</p>
+                  </div>
+                  <div class="slds-modal__footer">
+                    <button
+                      class="slds-button slds-button_neutral"
+                      aria-label="Cancel and close"
+                      onclick={handlecloseComments}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </section>
+              <div
+                class="slds-backdrop slds-backdrop_open"
+                role="presentation"
+              ></div>
+            </template>
+          </div>
+        </div>
+        <template if:true={editflag}>
+          <div class="blur-overlay"></div>
+          <div class="right-align" style="width: 50%">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+              "
+            >
+              <h3
+                style="
+                  font-weight: bold;
+                  font-size: 150%;
+                  margin: 0;
+                  padding: 3% 0 0 2%;
+                "
+              >
+                {AllocationHeading}
+              </h3>
+
+              <!-- <lightning-button class="slds-m-left_small" label="Back" onclick={handleeditClose} variant="brand" style="padding-right: 2.5%;padding-top:2%;"></lightning-button> -->
+            </div>
+
+            <lightning-record-edit-form
+              object-api-name="Allocation__c"
+              record-id={allocationId}
+              onsuccess={handleeditAllocation}
+              onsubmit={handleSubmit}
+            >
+              <lightning-messages></lightning-messages>
+              <div class="seperator">
+                <div class="slds-grid slds-wrap">
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Staff</span>
+                      <lightning-input-field
+                        field-name="Staff__c"
+                        value={staffData}
+                        disabled="true"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Date</span>
+                      <lightning-input-field
+                        field-name="Start_Date__c"
+                        value={sDate}
+                        disabled="true"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+                  <div class="slds-p-around_small" style="width: 10%"></div>
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        ><span style="color: red">*</span>Start Time</span
+                      >
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="IctStartTime"
+                        selected-hour={startTimeSelectedHour}
+                        selected-minute={startTimeSelectedMinute}
+                        is-am={startTimeAMPM}
+                        displayed-time={uistarttime}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        ><span style="color: red">*</span>End Time</span
+                      >
+  
+                      <c-tesseract-apps-time-picker
+                        data-timetype="IctEndTime"
+                        selected-hour={endTimeSelectedHour}
+                        selected-minute={endTimeSelectedMinute}
+                        is-am={endTimeAMPM}
+                        displayed-time={uiendTime}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+                  <div class="slds-p-around_small" style="width: 10%"></div>
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Break Start Time</span>
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="BreakStartTime"
+                        selected-hour={breakStartHour}
+                        selected-minute={breakStartMinute}
+                        is-am={breakStartAMPM}
+                        displayed-time={uibreakStartTime}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Break End Time</span>
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="BreakEndTime"
+                        selected-hour={breakEndHour}
+                        selected-minute={breakEndMinute}
+                        is-am={breakEndAMPM}
+                        displayed-time={uibreakEndTime}
+                        disable-time-button={disableTimeButton}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+                  <div class="slds-p-around_small" style="width: 10%">
+                    <template if:false={breaksdisable}>
+                      <template if:true={showAddIcon}>
+                        <lightning-icon
+                          icon-name="action:new"
+                          alternative-text="Add"
+                          size="xx-small"
+                          class="add-icon"
+                          onclick={handleAddDescription}
+                        ></lightning-icon>
+                      </template>
+                    </template>
+                  </div>
+                  <template if:true={showbreak2}>
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break Start Time 2</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="BreakStartTime2"
+                          selected-hour={breakStartHour2}
+                          selected-minute={breakStartMinute2}
+                          is-am={breakStartAMPM2}
+                          displayed-time={uibreakStartTime2}
+                          disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break End Time 2</span>
+    
+                        <c-tesseract-apps-time-picker
+                          data-timetype="BreakEndTime2"
+                          selected-hour={breakEndHour2}
+                          selected-minute={breakEndMinute2}
+                          is-am={breakEndAMPM2}
+                          displayed-time={uibreakEndTime2}
+                          disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+                    <div class="slds-p-around_small" style="width: 10%">
+                      <template if:false={breaksdisable}>
+                        <lightning-icon
+                          icon-name="action:delete"
+                          alternative-text="Delete"
+                          size="xx-small"
+                          class="delete-icon"
+                          onclick={handleDeleteDescription}
+                          data-index="2"
+                        ></lightning-icon>
+                      </template>
+                    </div>
+                  </template>
+                  <template if:true={showbreak3}>
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break Start Time 3</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="BreakStartTime3"
+                          selected-hour={breakStartHour3}
+                          selected-minute={breakStartMinute3}
+                          is-am={breakStartAMPM3}
+                          displayed-time={uibreakStartTime3}
+                          disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break End Time 3</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="BreakEndTime3"
+                          selected-hour={breakEndHour3}
+                          selected-minute={breakEndMinute3}
+                          is-am={breakEndAMPM3}
+                          displayed-time={uibreakEndTime3}
+                          disable-time-button={disableTimeButton}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+                    <div class="slds-p-around_small" style="width: 10%">
+                      <template if:false={breaksdisable}>
+                        <lightning-icon
+                          icon-name="action:delete"
+                          alternative-text="Delete"
+                          size="xx-small"
+                          class="delete-icon"
+                          onclick={handleDeleteDescription}
+                          data-index="3"
+                        ></lightning-icon>
+                      </template>
+                    </div>
+                  </template>
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Break (mins)</span>
+                      <lightning-input-field
+                        field-name="Break__c"
+                        value={breakTime}
+                        name="breaktime"
+                        onchange={handlecBreakhange}
+                        variant="label-hidden"
+                        disabled
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Working Hours</span>
+                      <lightning-input-field
+                        field-name="Working_Hours__c"
+                        value={whours}
+                        disabled="true"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div>
+                      <span style="display: flex; gap: 2%">
+                        <lightning-input
+                          type="checkbox"
+                          label="Clone"
+                          onchange={handleCloneCheckbox}
+                          variant="label-hidden"
+                          disabled={breaksdisable}
+                        ></lightning-input>
+                        <span>Clone Previous day</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div if:true={errorMessageFlag} class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium slds-m-left_medium">
+                      <p style="color: red">{errorMessage}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="slds-p-around_small" style="width: 10%"></div>
+              </div>
+              <div class="slds-align_absolute-center slds-m-around_small">
+                <lightning-button
+                  label="Cancel"
+                  variant="brand-outline"
+                  onclick={handleeditClose}
+                  class="slds-m-around_small"
+                ></lightning-button>
+                <lightning-button
+                  label={submitlabel}
+                  variant="brand"
+                  type="submit"
+                  disabled={disableSaveButton}
+                  class="slds-m-around_small"
+                  data-id={allocationId}
+                  onclick={handleManualSaveClick}
+                ></lightning-button>
+                <!-- onclick={handleUpdate} -->
+              </div>
+            </lightning-record-edit-form>
+          </div>
+        </template>
+
+        <template if:true={editflag1}>
+          <div class="blur-overlay"></div>
+          <div class="right-align" style="width: 50%">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+              "
+            >
+              <h3
+                style="
+                  font-weight: bold;
+                  font-size: 150%;
+                  margin: 0;
+                  padding: 3% 0 0 2%;
+                "
+              >
+                Edit Timesheet Details
+              </h3>
+
+             </div>
+
+            <div class="seperator">
+              <lightning-record-edit-form
+                data-recid="ICTEditForm"
+                object-api-name="Allocation__c"
+                record-id={allocationId1}
+                onsuccess={handleeditAllocation}
+                onsubmit={handleSubmit1}
+              >
+                <lightning-messages></lightning-messages>
+                <div class="slds-grid slds-wrap">
+                  <!-- Staff -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Staff</span>
+                      <lightning-input-field
+                        field-name="Staff__c"
+                        value={staffData}
+                        disabled="true"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <!-- Date -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Date</span>
+                      <lightning-input-field
+                        field-name="Start_Date__c"
+                        value={sDate}
+                        disabled="true"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <!-- Start Time -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        ><span style="color: red">*</span> Start Time</span
+                      >
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="eStartTime"
+                        displayed-time={Uistarttime}
+                        selected-hour={starttimeSelectedHour}
+                        selected-minute={starttimeSelectedMinute}
+                        is-am={starttimeAMPM}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+
+                  <!-- End Time -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop"
+                        ><span style="color: red">*</span> End Time</span
+                      >
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="eEndTime"
+                        displayed-time={UiEndTime}
+                        data-ampm="AddShiftStartTimeAMPM"
+                        selected-hour={EndtimeSelectedHour}
+                        selected-minute={EndtimeSelectedMinute}
+                        is-am={EndtimeAMPM}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+
+                  <!-- Break Start Time -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Break Start Time</span>
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="ebreakstartTimevalue"
+                        displayed-time={UibreakstartTimevalue}
+                        selected-hour={breakstartTimeSelectedHour}
+                        selected-minute={breakstartTimeSelectedMinute}
+                        is-am={breakstartTimeAMPM}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+
+                  <!-- Break End Time -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Break End Time</span>
+ 
+                      <c-tesseract-apps-time-picker
+                        data-timetype="ebreakendTimevalue"
+                        displayed-time={UibreakendTimevalue}
+                        selected-hour={breakendTimeSelectedHour}
+                        selected-minute={breakendTimeSelectedMinute}
+                        is-am={breakendTimeAMPM}
+                        onsavetimefromchild={handleAddShiftTimeData}
+                      ></c-tesseract-apps-time-picker>
+                    </div>
+                  </div>
+
+                  <!-- Add Break Button -->
+                  <div class="slds-p-around_small" style="width: 10%">
+                    <template if:true={showAddIcon1}>
+                      <lightning-icon
+                        icon-name="action:new"
+                        alternative-text="Add"
+                        size="xx-small"
+                        class="add-icon"
+                        onclick={handleAddDescription1}
+                      ></lightning-icon>
+                    </template>
+                  </div>
+
+                  <!-- Additional Break 2 -->
+                  <template if:true={showbreak2Edit}>
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break Start Time 2</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="ebreakstartTime2value"
+                          displayed-time={UibreakstartTime2value}
+                          selected-hour={breakstartTime2SelectedHour}
+                          selected-minute={breakstartTime2SelectedMinute}
+                          is-am={breakstartTime2AMPM}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break End Time 2</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="ebreakendTime2value"
+                          displayed-time={UibreakendTime2value}
+                          selected-hour={breakendTime2SelectedHour}
+                          selected-minute={breakendTime2SelectedMinute}
+                          is-am={breakendTime2AMPM}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <div class="slds-p-around_small" style="width: 10%">
+                      <lightning-icon
+                        icon-name="action:delete"
+                        alternative-text="Delete"
+                        size="xx-small"
+                        class="delete-icon"
+                        onclick={handleDeleteDescription1}
+                        data-index="2"
+                      ></lightning-icon>
+                    </div>
+                  </template>
+
+                  <!-- Additional Break 3 -->
+                  <template if:true={showbreak3Edit}>
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break Start Time 3</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="ebreakstartTime3value"
+                          displayed-time={UibreakstartTime3value}
+                          selected-hour={breakstartTime3SelectedHour}
+                          selected-minute={breakstartTime3SelectedMinute}
+                          is-am={breakstartTime3AMPM}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <div class="slds-p-around_small" style="width: 45%">
+                      <div class="floating-label">
+                        <span class="label-text-drop">Break End Time 3</span>
+ 
+                        <c-tesseract-apps-time-picker
+                          data-timetype="ebreakendTime3value"
+                          displayed-time={UibreakendTime3value}
+                          selected-hour={breakendTime3SelectedHour}
+                          selected-minute={breakendTime3SelectedMinute}
+                          is-am={breakendTime3AMPM}
+                          onsavetimefromchild={handleAddShiftTimeData}
+                        ></c-tesseract-apps-time-picker>
+                      </div>
+                    </div>
+
+                    <div class="slds-p-around_small" style="width: 10%">
+                      <lightning-icon
+                        icon-name="action:delete"
+                        alternative-text="Delete"
+                        size="xx-small"
+                        class="delete-icon"
+                        onclick={handleDeleteDescription1}
+                        data-index="3"
+                      ></lightning-icon>
+                    </div>
+                  </template>
+
+                  <!-- Break Time -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Break (mins)</span>
+                      <lightning-input-field
+                        field-name="Break__c"
+                        value={breakTime}
+                        name="breakTimeEdit"
+                        disabled
+                        onchange={handlecBreakhange}
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <!-- Working Hours -->
+                  <div class="slds-p-around_small" style="width: 45%">
+                    <div class="floating-label">
+                      <span class="label-text-drop">Working Hours</span>
+                      <lightning-input-field
+                        field-name="Working_Hours__c"
+                        value={whours}
+                        disabled="true"
+                        variant="label-hidden"
+                      ></lightning-input-field>
+                    </div>
+                  </div>
+
+                  <!-- Error Message -->
+                  <div if:true={errorMessageFlag} class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium slds-m-left_medium">
+                      <p style="color: red">{errorMessage}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="slds-align_absolute-center slds-m-around_small">
+                  <lightning-button
+                    label="Cancel"
+                    variant="brand-outline"
+                    onclick={handleeditClose1}
+                    class="slds-m-around_small"
+                  ></lightning-button>
+                  <lightning-button
+                    label="Update"
+                    variant="brand"
+                    type="submit"
+                    disabled={disableSaveButton}
+                    onclick={handleManualSaveClick1}
+                    class="slds-m-around_small"
+                  ></lightning-button>
+                </div>
+              </lightning-record-edit-form>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+  <template if:true={isModalOpen}>
+    <div
+      class="slds-p-around_medium"
+      style="background-color: white; width: 100%; height: auto"
+    >
+      <lightning-button
+        class="slds-m-left_medium"
+        slot="footer"
+        label="Back"
+        variant="brand"
+        onclick={closeviewfile}
+        style="float: right; margin-bottom: 5px"
+      ></lightning-button>
+      <iframe src={currentUrl} width="100%" height="1300px"></iframe>
+    </div>
+  </template>
+  <template if:true={invoiceDeleteFlag}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container" style="width: 10%">
+        <header
+          class="slds-modal__header"
+          style="background: #124795; border-radius: 15px 15px 0 0"
+        >
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: left"
+          >
+            Please Confirm
+          </h2>
+        </header>
+        <div
+          class="slds-modal__content slds-p-around_medium"
+          style="border-radius: 0 0 15px 15px"
+        >
+          <div class="slds-m-around_small">
+            <div><h1>Are you sure you want to delete the invoice ?</h1></div>
+            <div style="margin-top: 10px; align-items: center">
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handledelete}
+                class="slds-m-around_small"
+                style="margin-left: 4rem"
+              ></lightning-button>
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={handledeleteclose}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={submissionFlag}>
+    <section
+      aria-describedby="modal-content-id-1"
+      aria-labelledby="modal-heading-01"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open"
+      role="dialog"
+      tabindex="-1"
+    >
+      <div class="slds-modal__container modal-container" style="max-width: 25%">
+        <header class="slds-modal__header" style="background: #002a52">
+          <h2
+            class="slds-text-heading_medium slds-hyphenate"
+            style="color: white; font-weight: bold; text-align: center"
+          >
+            Please Confirm
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium modal-content">
+          <div class="slds-m-around_small" style="text-align: center">
+            <div>
+              <p style="text-align: center">
+                Are you sure you want to submit your timesheet
+                for&nbsp;{confirmationData.totalhours}&nbsp;hours
+              </p>
+            </div>
+            <div style="margin-top: 10px; align-items: center">
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={handlesubmissionclose}
+                class="slds-m-around_small"
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={handletimesheetsubmit}
+                class="slds-m-around_small"
+              ></lightning-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <template if:true={ictInvoiceFlag}>
+    <c-tesseract-apps-accounting-ict-timesheet-invoice
+      ictstaffid={ictStaffID}
+      invoicerate={invoiceRate}
+      description={description}
+      oninvoiceevent={childevent}
+      onhidefacilityevent={hideFacilityForInvoice}
+      stafffullname={staffFullname}
+      staffrole={staffRole}
+      orgid={orgId}
+      selectedfacility={facilityVal}
+    ></c-tesseract-apps-accounting-ict-timesheet-invoice>
+  </template>
+</template>

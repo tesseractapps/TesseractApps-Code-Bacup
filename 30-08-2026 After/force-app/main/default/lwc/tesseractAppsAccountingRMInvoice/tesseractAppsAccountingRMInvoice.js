@@ -1,0 +1,1243 @@
+import {LightningElement, wire, api, track } from 'lwc';
+import getCompany from '@salesforce/apex/CreateCompanyController.getCompany';
+import { loadScript } from "lightning/platformResourceLoader";
+import jsPDF from '@salesforce/resourceUrl/jspdf';
+import autoTable from '@salesforce/resourceUrl/autotable'
+import robotoFont from '@salesforce/resourceUrl/Roboto';
+import My_Resource from "@salesforce/resourceUrl/myResource";
+import FORM_FACTOR from '@salesforce/client/formFactor';
+import {ShowToastEvent} from 'lightning/platformShowToastEvent';
+import { refreshApex } from '@salesforce/apex';
+import getLedgerItems from '@salesforce/apex/AccountingModuleController.getLedgerItems';
+import getEntityProfiles from '@salesforce/apex/TesseractAppsAccountingLedgerEntry.getEntityProfiles';
+import getEntityProfileTax from '@salesforce/apex/AccountingModuleController.getEntityProfileTax';
+import getRMInvoice from '@salesforce/apex/TesseractAppsAccountingExpensesInvoices.getRMInvoice';
+import saveRMInvoiceData from '@salesforce/apex/TesseractAppsAccountingExpensesInvoices.saveRMInvoiceData';
+import getRosterAllocationInvoiceData from '@salesforce/apex/RoasterManagementHandler.getRosterAllocationInvoiceData';
+import organizationDetails from '@salesforce/apex/InvoiceHandler.organizationDetails';
+import getAccountingInvoiceById from '@salesforce/apex/InvoiceHandler.getAccountingInvoiceById';
+import uploadFile from '@salesforce/apex/AWSS3FileUploadController.uploadFile';
+import { deleteRecord } from 'lightning/uiRecordApi';
+
+export default class TesseractAppsAccountingRMInvoice extends LightningElement {
+
+
+    @api ictstaffid;
+    @api orgid;
+    @api invoicerate;
+    @api description;
+    @api stafffullname;
+    @api staffrole;
+    @track showICtinvoice=true;
+    @track invoiceRowList = [];
+    @track rmTimesheet=false;
+    @track companyOptions = [];
+    @track companyId;
+    @track entryNameOptions=[];
+    @track selectedEntityName;
+    @track invoiceDate;
+    @track staffFullname;
+    @track staffRole;
+    @track ictApprovedHours=0;
+    @track invoiceRate;
+    @track invoiceStartDate;
+    @track invoiceEndDate;
+    @track  dateIssued;
+   // @track invoiceNo;
+    @track ledgerItems = []; 
+    @track invoiceTo;
+    @track entryType = 'Sales'; 
+    @track selectedGSTValue='Yes';
+    @track selectedOptionAL;
+    @track selectedOptionTax;
+    @track invoiceTableFlag=true;
+    @track invoiceTable = []; 
+    @track showtable = false;  
+    @track showtableTax = false;  
+    @track selectedRowId;
+    @track subTotal;
+    @track taxAmount;
+    @track totalAmount;
+    @track comments;
+    @track rmInvoiceEntry=true;
+    @track invRecords=[];
+    @track accountNo;
+    @track bsb;
+    @track bank;
+    @track accountName;
+    @track base64string;
+    @track isModalOpen;
+    invoiceIdToDelete;
+    @track invoiceDeleteFlag=false;
+    wireInvoiceData;
+    wiredCompanyList;
+    wiredEntityProfilesResult;
+    @track options=[
+        { label: 'Yes', value: 'Yes' },
+        { label: 'No', value: 'No' }
+        ] 
+    @track taxCodes = [
+        {id:1, code: 'GST', description: 'Goods & Service Tax',rate: '10%', label: 'GST,  Goods & Service Tax, 10%' },
+        {id:2, code: 'FRE', description: 'GST Free',rate: '0%', label: 'FRE, GST Free, 0%' },
+        {id:3, code: 'CAP', description: 'Capital Acquisitions',rate: '10%', label: 'CAP, Capital Acquisitions, 10%' },
+        {id:2, code: 'N-T', description: 'Not Reportable', rate: '0%',label:'N-T,  Not Reportable, 0%' },
+        {id:3, code: 'LCT', description: 'Luxury Car Tax', rate: '33%',label:'LCT,  Luxury Car Tax, 33%'},
+        {id:4, code: 'WET', description: 'Wine Equalisation Tax', rate: '29%',label:'WET, Wine Equalisation Tax, 29%' } 
+    ];
+    connectedCallback() {
+        console.log('orgid in connected callback : '+this.orgid);
+        console.log('Invoice Rate:', this.invoicerate);
+        console.log('Description:', this.description);
+        console.log('Staff Name:', this.stafffullname);
+        console.log('staffrole:', this.staffrole);
+        this.invoiceRate=this.invoicerate;
+        this.staffFullname=this.stafffullname;
+        this.staffRole=this.staffrole;
+        this.ictStaffID= this.ictstaffid;
+        this.salesEntry = { 
+            ...this.salesEntry, 
+            ictstaffid:this.ictstaffid,
+            staffFullName: this.staffFullname,  
+            staffRole:  this.staffRole,
+            InvoiceRate: this.invoiceRate,
+            description: this.description
+        };
+        this.addNewInvoiceRow();
+        if(this.selectedGSTValue=='Yes'){
+            this.invoiceRowList = this.invoiceRowList.map(row => ({
+                ...row,
+                selectedOptionTax: '10%' // Only update Quantity__c
+            }));
+        }
+        this.handleInvoiceData();
+    }
+    renderedCallback() {
+        if (this.jsPDFInitialized) {
+         return; // Prevent reloading scripts multiple times
+     } 
+       Promise.all([
+         // loadScript(this, Dompurify),
+         
+           loadScript(this, jsPDF),
+          loadScript(this, autoTable),
+          //this line of code is for using custom font in jspdf because jspdf supports only few fonts like courier,times-roman and helvitica.
+          //to use custom font we have downloaded the font from google which is .ttf converted ttf to js and upload in static resource.
+          loadScript(this, robotoFont)
+         
+           ]).then(() => {   
+              //this.jsPDFInitialized = true;
+             console.log('✅ jsPDF and ROBOTO font loaded');
+  
+             // ✅ Register the Roboto font manually
+             if (window.jspdf && window.callAddFont) {
+                 window.jspdf.jsPDF.API.events.push(['addFonts', window.callAddFont]);
+                 console.log('✅ Roboto font registered via callAddFont');
+             } else {
+                 console.warn('⚠️ callAddFont or jsPDF not available in window scope');
+             }
+  
+             // Verify if font is registered
+             const { jsPDF } = window.jspdf;
+             const doc = new jsPDF();
+             console.log('🧾 Available fonts:', doc.getFontList());  
+            // console.log("JS loaded jsPDF");
+           }).catch(error => {
+            // console.error("Error " + error);
+           });;
+   }
+    @track salesEntry = {
+        company: '',
+        entryType: 'Sales',
+        entityName: '',
+        InvoiceDate: '',
+        StaffFullName: '',
+        staffRole:  '',
+        StartDate:'',
+        EndDate: '',
+        dateIssued:'',
+        InvoiceRate: '',
+        //InvoiceNo: '',
+        AprovedHours:'',
+        selectOption: 'Yes',
+        description: '',
+        comments:''
+        
+    };
+    @track amountarrey = {
+        subTotal: '',
+        taxAmount: '',
+        totalAmount: ''
+    };
+    @wire(getCompany, {orgid:'$orgid'})
+    wiredCompanies(result) {
+        this.wiredCompanyList = result; // Store the wired result for refreshing
+        const { data, error } = result;
+        if (data) {
+            console.log('company options '+JSON.stringify(data));
+            this.companyOptions = data.map(company => ({
+                label: company.Company_Name__c,
+                value: company.Id
+            }));
+        } else if (error) {
+            console.error('Error fetching companies:', error);
+        }
+    }
+
+    handleInvoiceData() {
+        // console.log('calling response raja');
+         organizationDetails().then(response => {
+            // console.log('calling response raja', JSON.stringify(response));
+             this.invoiceData = response.listofPriceBook;
+             this.bank = response.listofPriceBook.Bank__c;
+             this.accountNo = response.listofPriceBook.Account_Number__c;
+             this.accountName = response.listofPriceBook.Account_Name__c;
+             this.bsb = response.listofPriceBook.BSB__c;
+             /* this.desc = response.listofPriceBook.Description__c; */
+            
+         });
+     }
+    @wire(getEntityProfiles, {companyId: '$companyId' })
+    wiredEntityProfiles(result) {
+        this.wiredEntityProfilesResult = result; // Store response for refreshApex
+        const { data, error } = result;
+
+        if (data) {
+            console.log('Filtered Company options: ', JSON.stringify(data));
+            this.entryNameOptions = data.map(entity => ({
+                label: entity.Name__c 
+                    ? entity.Name__c // Check if Name__c exists, use it
+                    : `${entity.First_Name__c} ${entity.Last_Name__c}`, // Else fallback to First and Last name
+                value: entity.Id
+            }));
+            this.error = undefined;
+            console.log('Filtered Company options: ', JSON.stringify( this.entryNameOptions));
+        } else if (error) {
+            this.error = error;
+            console.error('Error fetching entity profiles:', error);
+        }
+    }
+    @wire(getEntityProfileTax, { entityId: '$selectedEntityName' })
+    wiredTax({ error, data }) {
+        if (data) {
+            console.log('Selected Entity Name in getEntityProfileTax:', this.selectedEntityName);
+            // If the Apex call returns a tax value, assign it to selectedOptionTax
+            this.selectedOptionTax = this.appendPercentage(data);
+            
+            console.log('Tax Value:', this.selectedOptionTax); // Log the tax value for verification
+        } else if (error) {
+            // If there's an error, handle it (e.g., log to console)
+            console.error('Error fetching tax:', error);
+        }
+    }
+    appendPercentage(taxValue) {
+        // Assuming taxValue is already a number (like 10 for 10%)
+        if (taxValue != null) {
+            return `${taxValue}%`; // Append '%' to the number
+        }
+        return '0%'; // If no tax value, return '0%'
+    }
+    @wire(getRMInvoice, { sDate: '$invoiceStartDate', eDate: '$invoiceEndDate', companyId: '$companyId',rmInvoiceEntry:'$rmInvoiceEntry' ,staffId:'$ictstaffid'  })
+    wiredRmInvoiceData(result) {
+        console.error('invoiceStartDate in wiredInvoiceData :', this.invoiceStartDate);
+        console.error('invoiceEndDate in wiredInvoiceData :', this.invoiceEndDate);
+        console.error('companyId in wiredInvoiceData :', this.companyId);
+        this.wireInvoiceData = result;
+        const { data, error } = result;
+        
+        if (data) {
+            console.log('data in wiredInvoiceData'+JSON.stringify(data));
+            // If data is successfully fetched, store it in invoiceTable and update the table visibility flag
+            this.invoiceTable = data.map(list => {
+                //let entityName = '';
+        
+                    // if (list.Accounting_Journal_Entry__r && list.Accounting_Journal_Entry__r.length > 0) {
+                    //     const entityProfile = list.Accounting_Journal_Entry__r[0].Entity_Profile__r;
+                    //     if (entityProfile) {
+                    //         entityName = `${entityProfile.Last_Name__c || ''} ${entityProfile.First_Name__c || ''} ${entityProfile.Name__c || ''}`.trim();
+                    //     }
+                    // }
+        
+                    return {
+                        Id: list.Id,
+                        Name: list.Accounting_Invoices_Expenses__r.Name,
+                        Url: list.Accounting_Invoices_Expenses__r.Amazon_URL__c,
+                        // description:list.Description__c,
+                       // Status__c: list.Status__c,
+                        GST__c: list.Accounting_Invoices_Expenses__r.GST__c,
+                        Total_Amount__c: list.Accounting_Invoices_Expenses__r.Total_Amount__c,
+                        entityName:`${list.Entity_Profile__r.Last_Name__c || ''} ${list.Entity_Profile__r.First_Name__c || ''} ${list.Entity_Profile__r.Name__c || ''}`.trim(), // Assign 'N/A' if no company name is found
+                        ledgerItem:list.Accounting_Ledger_Items__r.Name,
+                        Issueddate: list.Accounting_Invoices_Expenses__r.Issued_Date__c ? new Date(list.Accounting_Invoices_Expenses__r.Issued_Date__c).toLocaleDateString('en-GB') : '',
+                         //date: list.Start_Date__c ? new Date(list.Start_Date__c).toLocaleDateString('en-GB') : '',
+                        // Invoice_Date__c:invoice.Invoice_Date__c ? new Date(invoice.Invoice_Date__c).toLocaleDateString('en-GB') : '',
+                        startdate: list.Accounting_Invoices_Expenses__r?.Start_Date__c,
+                        enddate: list.Accounting_Invoices_Expenses__r?.End_Date__c
+                    };
+                });
+         
+            //this.invoiceTableFlag = this.invoiceTable.length > 0; // Set flag based on data length
+            console.log('Invoice data successfully fetched:', JSON.stringify(this.invoiceTable));
+        } else if (error) {
+            // If there is an error fetching data, handle it by logging or showing an error message
+            console.error('Error fetching invoice data:', error);
+            this.invoiceTableFlag = false; // Hide the table if no data
+        }
+    }
+
+    // You can have a method to refresh the data using `refreshApex`
+    fetchInvoices() {
+        refreshApex(this.wireInvoiceData);
+    }
+    handlecloseInvoice(){
+        this.showICtinvoice= false;
+        //refreshApex(this.ictInvoiceList);
+        this.rmTimesheet=true;
+    } 
+    // handleChange(event) {
+    //     const fieldName = event.target.name;
+    //     const fieldValue = event.target.value;
+    
+    //     this.salesEntry = { ...this.salesEntry, [fieldName]: fieldValue };
+    //     console.log(`Updated Field - ${fieldName}:`, fieldValue);
+    //     console.log('this.salesEntry===>'+JSON.stringify(this.salesEntry));
+    
+    //     if( fieldName == 'company'){
+    //         this.companyId = event.target.value;
+    //         refreshApex(this.wiredEntityProfilesResult);
+    //     }
+    //   }    
+    
+    handleChange(event) {
+        const fieldName = event.target.name;
+        const fieldValue = event.target.value;
+        this.salesEntry = { ...this.salesEntry, [fieldName]: fieldValue };
+        console.log(`Updated Field - ${fieldName}:`, fieldValue);
+        console.log('this.salesEntry===>'+JSON.stringify(this.salesEntry));
+    
+        switch(fieldName) {
+            case 'company':
+                this.companyId = fieldValue;
+                console.log('Selected Company ID:', this.companyId);
+                refreshApex(this.wiredEntityProfilesResult);
+                break;
+            case 'entityName':
+                this.selectedEntityName = fieldValue;
+                console.log('Selected Entity Name:', this.selectedEntityName);
+                break;
+            case 'InvoiceDate':
+                this.invoiceDate = fieldValue;
+                console.log('Invoice Date:', this.invoiceDate);
+                break;
+            case 'StartDate':
+                this.invoiceStartDate = fieldValue;
+                console.log('Selected  this.invoiceStartDate:',  this.invoiceStartDate);
+                break;
+            case 'EndDate':
+                this.invoiceEndDate = fieldValue;
+                console.log('Selected invoiceEndDate:', this.invoiceEndDate);
+                refreshApex(this.wireInvoiceData); 
+                break;
+            case 'dateIssued':
+                this.dateIssued = fieldValue;
+                console.log('Selected dateIssued:', this.dateIssued);
+                break;
+            case 'comments':
+                this.comments = fieldValue;
+                console.log('Selected comments:', this.comments);
+                break;
+        
+
+            case 'selectOption':
+                this.selectedGSTValue = fieldValue;
+                console.log('selectedGSTValue:', this.selectedGSTValue);
+                if(this.selectedGSTValue=='Yes'){
+                    this.invoiceRowList = this.invoiceRowList.map(row => ({
+                        ...row,
+                        selectedOptionTax: '10%' // Only update Quantity__c
+                    }));
+                } else{
+                    console.log('selectedGSTValue in else:', this.selectedGSTValue);
+                    this.invoiceRowList = this.invoiceRowList.map(row => ({
+                        ...row,
+                        selectedOptionTax: 0 // Only update Quantity__c
+                    }));
+                    this.selectedOptionTax=0;
+                    this.taxAmount=0;
+                    
+                    console.log('subTotal in else:', this.subTotal);
+                    this.totalAmount= this.taxAmount+this.subTotal;
+                }
+                break;
+            default:
+                console.log('Unknown field:', fieldName);
+                break;
+        }
+        this.fetchQuantity();
+    }
+    
+    // fetchQuantity(){
+    //     if(this.invoiceStartDate != undefined &&  this.invoiceEndDate != undefined ){
+    //         console.log('start date before  getIctList'+this.invoiceStartDate);
+    //         console.log('end date  before  getIctList'+  this.invoiceEndDate );
+    //         console.log('staff id  before  getIctList'+  this.ictStaffID );
+    //         getRosterAllocationInvoiceData({staffId:this.ictStaffID,StartDate:this.invoiceStartDate,endDate:this.invoiceEndDate }).then(result=>{
+    //             // console.log('ict records list'+JSON.stringify(result));
+    //             // this.ictInvoiceList =result;
+    //             let approveHours=0;
+    //             result.forEach(rec=>{
+    //             approveHours +=rec.Working_Hours__c;
+    //             })
+    //             console.log('Approved hours'+approveHours);
+    //             this.ictApprovedHours=approveHours.toFixed(2);
+    //             this.quantityValue=approveHours;
+    //         });
+    //         this.salesEntry = { 
+    //                 ...this.salesEntry, 
+    //                 AprovedHours: this.quantityValue  
+    //             };
+    //                 console.log('quantityValue'+this.quantityValue);
+                    
+    //                 this.invoiceRowList = this.invoiceRowList.map(row => ({
+    //                     ...row,
+    //                     Quantity__c: this.quantityValue  // Only update Quantity__c
+    //                 }));
+    //                 console.log('Updated invoiceRowList after getIctList===>', JSON.stringify(this.invoiceRowList));
+    //                 if (this.invoiceRowList.length === 1) {
+    //                     // Assuming you have only one row in the list, assign selectedOptionTax to this.selectedOptionTax
+    //                     this.selectedOptionTax = this.invoiceRowList[0].selectedOptionTax;
+    //                 }
+    //                 console.log('this.selectedOptionTax after getIctList: ' + this.selectedOptionTax);
+    //                 if(this.selectedOptionTax ||this.selectedOptionTax===0){
+    //                 this.invoiceRowList = this.invoiceRowList.map(sales => {
+    //                     // No need to create a new updatedRecord, we directly update the existing row
+    //                     // sales.selectedOptionTax = `${this.selectedOptionTax}`; // Set the tax rate
+                
+    //                     console.log('quantity in updated row:', sales.Quantity__c);
+    //                     console.log('unitprice in updated row:', sales.UnitPrice__c);
+                        
+    //                     const quantity = parseFloat(sales.Quantity__c) || 0;
+    //                     const unitPrice = parseFloat(sales.UnitPrice__c) || 0;
+    //                     console.log(`Quantity: ${quantity}, Amount: ${unitPrice}`);
+                
+    //                     // Calculating the amount based on quantity and unit price
+    //                     this.subTotal= Math.round(quantity * unitPrice);
+    //                     console.log('Updated this.subTotal:', this.subTotal);
+                
+    //                     // ✅ Correcting SubTotal Calculation
+    //                     this.subTotal = parseFloat( this.subTotal.toFixed(2));
+    //                     console.log('subTotal in tax calculation (Sales):', this.subTotal);
+                        
+    //                     this.calculateTaxTotalAmount();
+    //                     // Return the updated row with tax calculations applied
+    //                     return sales;
+    //                 });
+                
+    //                 console.log('Updated Sales Entry List after tax calculation:', JSON.stringify(this.invoiceRowList));
+    //             }
+    //     //this.fetchInvoices();
+    //     }
+    // }
+    fetchQuantity() {
+        if (this.invoiceStartDate != undefined && this.invoiceEndDate != undefined) {
+            console.log('start date before getIctList: ' + this.invoiceStartDate);
+            console.log('end date before getIctList: ' + this.invoiceEndDate);
+            console.log('staff id before getIctList: ' + this.ictStaffID);
+            
+            // Fetching data asynchronously
+            getRosterAllocationInvoiceData({staffId: this.ictStaffID, StartDate: this.invoiceStartDate, endDate: this.invoiceEndDate })
+                .then(result => {
+                    // Log approved hours inside the promise result
+                    let approveHours = 0;
+                    result.forEach(rec => {
+                        approveHours += rec.Working_Hours__c;
+                    });
+                    console.log('Approved hours : '+approveHours);
+                    this.ictApprovedHours = approveHours.toFixed(2);
+                    this.quantityValue = approveHours.toFixed(2);
+    
+                    this.salesEntry = { 
+                        ...this.salesEntry, 
+                        AprovedHours: this.quantityValue  
+                    };
+                    console.log('quantityValue: ' + this.quantityValue);
+    
+                    this.invoiceRowList = this.invoiceRowList.map(row => ({
+                        ...row,
+                        Quantity__c: this.quantityValue  
+                    }));
+                    
+                    console.log('Updated invoiceRowList after getIctList: ', JSON.stringify(this.invoiceRowList));
+    
+                    if (this.invoiceRowList.length === 1) {
+                        this.selectedOptionTax = this.invoiceRowList[0].selectedOptionTax;
+                    }
+                    console.log('this.selectedOptionTax after getIctList: ' + this.selectedOptionTax);
+    
+                    if (this.selectedOptionTax || this.selectedOptionTax === 0) {
+                        this.invoiceRowList = this.invoiceRowList.map(sales => {
+                            // Log quantities and prices for each updated row
+                            console.log('quantity in updated row: ', sales.Quantity__c);
+                            console.log('unitprice in updated row: ', sales.UnitPrice__c);
+    
+                            const quantity = parseFloat(sales.Quantity__c) || 0;
+                            const unitPrice = parseFloat(sales.UnitPrice__c) || 0;
+                            console.log(`Quantity: ${quantity}, Amount: ${unitPrice}`);
+    
+                            this.subTotal = Math.round(quantity * unitPrice);
+                            console.log('Updated this.subTotal: ', this.subTotal);
+
+                            this.subTotal = parseFloat(this.subTotal.toFixed(2));
+                            console.log('subTotal in tax calculation (Sales): ', this.subTotal);
+    
+                            this.calculateTaxTotalAmount();
+                            return sales;
+                        });
+                        console.log('Updated Sales Entry List after tax calculation: ', JSON.stringify(this.invoiceRowList));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching roster allocation data:', error);
+                });
+        }
+    }
+
+    addNewInvoiceRow() {
+        const newRow = {
+            Id: Date.now().toString(),
+            Description__c:this.description ,
+            Quantity__c:  '',
+            UnitPrice__c: this.invoiceRate,
+            Tax__c: '',
+            selectedOptionAL: '',  // default text
+            selectedOptionTax: ''      // default text
+        };
+        this.invoiceRowList = [...this.invoiceRowList, newRow];
+        console.log('this.invoiceRowList===>'+JSON.stringify(this.invoiceRowList));
+    }
+
+    toggleDropdownAccountList(event) {
+        console.log('toggleDropdown');
+        //this.selectedRowId=event.currentTarget.dataset.id;
+    
+        //console.log('selectedRowId'+this.selectedRowId);
+        // Calculate the position of the dropdown button
+        console.log('entryType'+this.entryType);
+        if( this.entryType==='Sales'){
+            this.showtable = !this.showtable;
+            console.log('showtable after : '+this.showtable);
+            this.fetchLedgerItems(); 
+        }
+    
+        const rect = event.currentTarget.getBoundingClientRect();
+        const scrollY = window.scrollY || window.pageYOffset;
+        const scrollX = window.scrollX || window.pageXOffset;
+    
+        // Calculate position based on 10% X offset and 2% Y offset
+        const top = rect.top + scrollY + rect.height - (window.innerHeight * 0.04); // subtract 2% from Y
+        const left = rect.left + scrollX - (window.innerWidth * 0.165); // subtract 10% from X
+        console.log('top==>'+ top + 'left===>'+left);
+    
+        this.toggleDropdownAccount = `
+            position: absolute;
+            top: ${top}px;
+            left: ${left}px;
+            width: 23%;
+            max-height: 300px;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4%;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        `;
+        console.log('this.ledgerItems===>'+JSON.stringify(this.ledgerItems));
+    
+    }
+    toggleDropdownTax(event) {
+        console.log('toggleDropdown');
+        // Calculate the position of the dropdown button 
+        this.showtableTax = !this.showtableTax;
+        console.log('showtable after : '+this.showtableTax);
+        //this.fetchLedgerItems(); 
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const scrollY = window.scrollY || window.pageYOffset;
+        const scrollX = window.scrollX || window.pageXOffset;
+
+        // Calculate position based on 10% X offset and 2% Y offset
+        const top = rect.top + scrollY + rect.height - (window.innerHeight * 0.04); // subtract 2% from Y
+        const left = rect.left + scrollX - (window.innerWidth * 0.165); // subtract 10% from X
+
+        this.taxDropdownStyle = `
+            position: absolute;
+            top: ${top}px;
+            left: ${left}px;
+            width: 23%;
+            max-height: 300px;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4%;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        `;
+    }
+    // handleSelectionTax(event) {
+    //   const recordId = event.currentTarget.dataset.id;
+    //   const code = event.currentTarget.dataset.code;
+    //   const rate = event.currentTarget.dataset.rate;
+
+    //   console.log('Record ID:', recordId);
+    //   console.log('Selected Tax Code:', code);
+    //   console.log('Tax Rate:', rate);
+
+    //   // ✅ Update only the selected row in invoiceRowList
+    //   this.invoiceRowList = this.invoiceRowList.map(sales => {
+    //       if (String(sales.Id) === this.selectedRowId) {
+    //           let updatedRecord = { 
+    //               ...sales, 
+    //               tax: `${rate}`,
+    //               taxvalue: rate
+    //           };
+
+    //           const totalAmount = parseFloat(updatedRecord.Amount__c) || 0;
+    //           const taxRate = parseFloat(rate) / 100;
+
+    //           if (!isNaN(taxRate)) {
+    //               updatedRecord.taxAmount = parseFloat((totalAmount * taxRate).toFixed(2));
+    //               updatedRecord.totalAmount = parseFloat((totalAmount + updatedRecord.taxAmount).toFixed(2));
+    //           } else {
+    //               console.error('Invalid tax rate:', rate);
+    //           }
+
+    //           console.log('Updated Tax Amount:', updatedRecord.taxAmount);
+    //           console.log('Updated Total Amount:', updatedRecord.totalAmount);
+    //           return updatedRecord;
+    //       }
+    //       return sales;
+    //   });
+
+    //   this.selectedOptionTax = `${rate}`; // Update UI dropdown
+    //   this.showtableTax = false; // Hide dropdown
+    //   const newRow = {
+    // // default text
+    //         selectedOptionTax: this.selectedOptionTax     // default text
+    //     };
+    // this.invoiceRowList = [...this.invoiceRowList, newRow];
+    //   console.log('Updated Sales Entry List:', JSON.stringify(this.invoiceRowList));
+    // }        
+    handleSelectionTax(event) {
+        const selectedRowId = event.currentTarget.dataset.id;
+        const rate = event.currentTarget.dataset.rate;
+
+        console.log('Selected Tax Rate:', rate);
+
+        this.invoiceRowList = this.invoiceRowList.map(sales => {
+            let updatedRecord = {
+                ...sales,
+                selectedOptionTax: `${rate}` 
+            };
+            this.selectedOptionTax = `${rate}`;  
+            
+            console.log(' quantity in handleSelectionTax:', updatedRecord.Quantity__c);
+            console.log(' unitprice in handleSelectionTax:', updatedRecord.UnitPrice__c);
+            const quantity = parseFloat(updatedRecord.Quantity__c) || 0;
+            const unitPrice = parseFloat(updatedRecord.UnitPrice__c) || 0;
+            console.log(`Quantity: ${quantity}, Amount: ${unitPrice}`);
+            this.subTotal = Math.round(quantity * unitPrice);
+            console.log('Updated this.subTotal:', this.subTotal);
+    
+        
+                // ✅ Correcting SubTotal Calculation
+                this.subTotal = parseFloat(this.subTotal.toFixed(2));
+                console.log('subTotal in handleInputChange (Sales):', this.subTotal);
+                if(this.selectedOptionTax ||this.selectedOptionTax===0){  
+                    this.calculateTaxTotalAmount();
+                }
+            return updatedRecord;  
+        });
+
+    
+        this.showtableTax = false;  
+
+        console.log('Updated Sales Entry List:', JSON.stringify(this.invoiceRowList));
+    }
+    calculateTaxTotalAmount(){
+        // ✅ Extract numeric value from tax rate
+        let rateMatch = this.selectedOptionTax.match(/\d+(\.\d+)?/);
+        let newrate = rateMatch ? parseFloat(rateMatch[0]) : 0;
+
+        console.log('Extracted Rate:', newrate);
+
+        if (isNaN(newrate) || newrate === 0) {
+            console.error('Invalid tax rate:', newrate);
+            return;
+        }
+
+        // ✅ Convert to tax multiplier
+        const taxRate = (newrate / 100) + 1;
+        console.log('Converted Tax Rate (Sales):', taxRate);
+        const taxableAmount = this.subTotal / taxRate;
+        console.log('Taxable Amount (before tax):', taxableAmount);
+
+        // ✅ Calculate Tax Amount correctly
+        this.taxAmount = parseFloat((this.subTotal - taxableAmount).toFixed(2));
+        console.log('Tax Amount (Sales):', this.taxAmount);
+
+        /* // ✅ Fix NaN issue in subtotal calculation
+        this.subTotal = parseFloat((this.totalAmount / taxRate).toFixed(2));
+        console.log('SubTotal (Sales):', this.subTotal); */
+        this.totalAmount =  parseFloat((this.subTotal + this.taxAmount).toFixed(2));
+        console.log('Final Tax Amount (Sales):', this.totalAmount);
+        // console.log('this.amountarrey==>'+this.amountarrey);
+        // this.amountarrey = {
+        //     subTotal: totalSubTotal,
+        //     taxAmount: totalTaxAmount,
+        //     totalAmount: totalAmount
+        // };
+        // console.log('amountarrey : ' + JSON.stringify(this.amountarrey));
+    }
+
+
+    handleSelection(event) {
+        const recordId = event.currentTarget.dataset.id; // ID of the clicked row
+        const accountNumber = event.currentTarget.dataset.accno; // Account Number
+        const accountValue = event.currentTarget.dataset.value; // Account Name
+        //this.selectedRowId=event.currentTarget.dataset.id;
+
+        console.log('Record ID:', recordId);
+        console.log('Account Number:', accountNumber);
+        console.log('Account Value:', accountValue);
+        // console.log('this.selectedRowId'+ this.selectedRowId);
+        // ✅ Find the correct row in salesEntryList based on sales.Id
+        this.invoiceRowList = this.invoiceRowList.map(sales => {
+            console.log('sales.Id==>'+sales.Id);
+            console.log('this.recordId==>'+sales.Id);
+
+                console.log('Match found! Updating selectedOptionAL...');
+                console.log('Before:', sales.selectedOptionAL);
+                console.log('New Value:', `${accountNumber} - ${accountValue}`);
+                return { 
+                    ...sales, 
+                    selectedOptionAL: `${accountNumber} - ${accountValue}` ,
+                    accountItemId: recordId,
+                };
+            return sales;
+        });
+
+        this.selectedOptionAL = `${accountNumber} - ${accountValue}`; // Update UI dropdown
+        this.showtable = false; // Hide dropdown
+        // const newRow = {
+        //     // default text
+        //     selectedOptionAL: this.selectedOptionAL     // default text
+        //         };
+        //     this.invoiceRowList = [...this.invoiceRowList, newRow];
+        console.log('Updated invoiceRowList:', JSON.stringify(this.invoiceRowList));
+    }   
+        
+
+    handleInputChange(event) {
+    const fieldName = event.target.dataset.field;
+    const fieldValue = event.target.value;
+    const recordId = event.target.dataset.id;
+    this.selectedRowId=event.currentTarget.dataset.id;
+
+    console.log('Field Name:', fieldName);
+    console.log('Field Value:', fieldValue);
+    console.log('Record ID:', recordId);
+    console.log('this.selectedRowId'+ this.selectedRowId);
+
+    // ✅ Update the correct record without modifying other entries
+    this.invoiceRowList = this.invoiceRowList.map(sales => {
+    console.log('sales.Id'+ sales.Id);
+    if (this.selectedOptionTax  ||this.selectedOptionTax===0) {
+        let updatedRecord = { ...sales, 
+                                [fieldName]: fieldValue 
+        };
+
+        // ✅ Convert quantity & amount properly
+        const quantity = parseFloat(updatedRecord.Quantity__c) || 0;
+        const unitPrice = parseFloat(updatedRecord.UnitPrice__c) || 0;
+
+        console.log(`Quantity: ${quantity}, Amount: ${unitPrice}`);
+
+        // ✅ Correct Multiplication Calculation
+        this.subTotal = Math.round(quantity * unitPrice);
+        console.log('Updated this.subTotal:',  this.subTotal);
+    
+        
+            // ✅ Correcting SubTotal Calculation
+            this.subTotal = parseFloat( this.subTotal.toFixed(2));
+            console.log('subTotal in handleInputChange (Sales):', this.subTotal);
+
+                this.calculateTaxTotalAmount();
+            
+        return updatedRecord; 
+    }
+    return sales;
+    });
+
+    console.log('Updated Sales Entry List:', JSON.stringify(this.invoiceRowList));
+    }
+    fetchLedgerItems() {
+        console.log('Calling Apex Method: getLedgerItems...');
+        console.log('companyId in fetchLedgerItems: ' + this.companyId);
+
+        // Call the Apex method and pass companyId as parameter
+        getLedgerItems({ companyId: this.companyId })
+            .then(result => {
+                console.log('Ledger Items Fetched from Apex:', JSON.stringify(result));
+
+                // Process the data and map it to a proper format
+                this.ledgerItems = result.map(item => ({
+                    id: item.Id,
+                    accNo: item.Account_Number__c,
+                    itemName: item.Name,
+                    category: item.Category__r.Name,
+                }));
+
+                console.log('Processed Ledger Items:', JSON.stringify(this.ledgerItems));
+            })
+            .catch(error => {
+                console.error('Error fetching ledger items:', JSON.stringify(error));
+                this.errorMessage = 'Error fetching ledger items: ' + error.body.message; // Capture error message
+            });
+    }
+    saveMultipleAccounts(){
+        console.log('Sending to Apex:');
+        console.log('Sales Entry:', JSON.stringify(this.salesEntry));
+    
+        this.invoiceRowList = this.invoiceRowList.map(sales => {
+            // Assuming you want to update the current row with the new values
+            let updatedRecord = { 
+                ...sales, // Preserve existing fields in the row
+            };
+            // Return the updated record
+            return updatedRecord;
+        });
+        console.log('invoiceRowListJson:', JSON.stringify(this.invoiceRowList));
+        console.log('rmInvoiceEntry : '+this.rmInvoiceEntry);
+        this.amountarrey = {
+            subTotal: this.subTotal,
+            taxAmount: this.taxAmount,
+            totalAmount: this.totalAmount
+        };
+        console.log('amountarrey : ' + JSON.stringify(this.amountarrey));
+
+        if(this.dateIssued  && this.invoiceStartDate && this.invoiceEndDate && this.invoiceRowList[0].selectedOptionAL ){
+            let  staffWithDuplicate = [];
+            this.invoiceTable.forEach(rec=>{
+              staffWithDuplicate.push(rec.startdate+' to '+rec.enddate)
+              
+            });
+            console.log('DUPLICATE'+JSON.stringify(staffWithDuplicate));
+            let duplicateFound =false;
+            let datesstring=this.invoiceStartDate+' to '+this.invoiceEndDate;
+            console.log('DUPLICATE'+datesstring);
+            if(staffWithDuplicate.includes(datesstring)){
+              duplicateFound=true 
+            }
+            if( duplicateFound ==false){ 
+        saveRMInvoiceData({ 
+            salesEntryJson: JSON.stringify(this.salesEntry), 
+            invoiceRowListJson: JSON.stringify(this.invoiceRowList),
+            amountEntryJson: JSON.stringify(this.amountarrey),
+            rmInvoiceEntry: this.rmInvoiceEntry
+        })
+        .then(result => {
+            console.log('Journal Entries Created Successfully');
+            const tempInvoiceId = result.Id; 
+            getAccountingInvoiceById({ invoiceId: tempInvoiceId }).then(response => {
+                //console.log('data of ', JSON.stringify(response));
+                this.invRecords = response;
+                console.log('invoice data for pdf ', JSON.stringify(this.invRecords));
+                 this.generatePDF(); 
+            });
+            // Handle success, show success message or refresh UI
+            this.showToast('Success', 'Journal entries created successfully.', 'success');
+        })
+        .catch(error => {
+            console.error('Error creating journal entries:', error);
+            
+            // Check if the error has message and then log or show the message
+            if (error.body && error.body.message) {
+                this.showToast('Error', error.body.message, 'error');
+            } else {
+                this.showToast('Error', 'An unknown error occurred while creating journal entries.', 'error');
+            }
+        });
+        console.log('CONSOLE1');
+        // this.handleClear();
+        setTimeout(() => {
+            refreshApex(this.wireInvoiceData);  
+        }, 1000);
+        } else{
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: 'Error',
+            message: 'Invoice Already created ',
+            variant: 'Error'
+          })
+        );
+  }
+}else{
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: 'Error',
+        message: 'Please enter Start Date, End Date,Date Issued and  AccountList ',
+        variant: 'Error'
+      })
+    );
+    this.accountRecList=[];
+  }
+}
+       
+    
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title,
+            message,
+            variant,
+        });
+        this.dispatchEvent(event);
+        
+    }  
+
+    generatePDF() {
+        // console.log('document1 ', this.orgname);       
+         const { jsPDF } = window.jspdf;
+         var doc = new jsPDF();
+         const invoice = this.invRecords[0];
+        // var statePostalWithoutCommas = this.statePostal.replace(/,/g, " ");
+         doc.setFont("Roboto-Bold", "bold");
+         doc.setFontSize(12);
+         doc.setTextColor(0,102,255);
+         doc.text(invoice.Company__r.Company_Name__c.toUpperCase(), 10, 25);        
+         doc.setTextColor(0,0,0);
+         doc.setFont("Roboto-Bold", "bold");
+         
+         doc.setFontSize(12);
+         doc.text("ABN: "+invoice.Company__r.ABN__c, 10, 30);
+          doc.setFont("Roboto-Bold", "bold");
+         doc.setFontSize(12);
+         doc.text("TAX  INVOICE", 134, 25);//120,42
+    
+         doc.setFont("Roboto-Bold", "bold");
+         doc.setFontSize(12);
+         doc.text(invoice.Name, 134, 30);//120, 53
+         
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         doc.setFontSize(10);
+         doc.text(invoice.Company__r.Address_Latest__Street__s+",", 10, 35);
+         doc.text(`${invoice.Company__r.Address_Latest__City__s} ${invoice.Company__r.Address_Latest__StateCode__s} ${invoice.Company__r.Address_Latest__PostalCode__s},`, 10, 40);
+         doc.text("Contact: "+invoice.Company__r.Phone_Number__c, 10, 45);
+    
+     
+         // added for image and organization details
+         //doc.addImage(this.orgLogo, "PNG", 120, 25, 70, 18);
+         doc.setDrawColor(0, 0, 0); // Black color
+         doc.setLineWidth(0.5);
+         doc.setLineDash([1, 1]); // Dotted line pattern (2px dash, 2px gap)
+         doc.line(10, 222, 200, 222); // (startX, startY, endX, endY)
+         doc.setLineDash();
+         doc.setFontSize(10);
+         doc.setFont("Roboto-Bold", "bold");
+         doc.text("Payable to", 10, 226); // Text before the variable
+         
+         doc.setFont("Roboto-Bold", "bold");
+         doc.text("Bank", 10, 232); // Text before the variable
+         doc.text(":", 40, 232);
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal"); // Set font to bold for the variable
+         if(this.bank){
+           doc.text(this.bank, 42, 232);
+         }else{
+           doc.text(" ", 42, 232);
+         }
+         doc.setFont("Roboto-Bold", "bold");
+         doc.text("Account Name", 10, 236); 
+         doc.text(":", 40, 236);
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal"); 
+         if(this.accountName){
+           doc.text(this.accountName, 42, 236);
+         }else{
+           doc.text(" ", 42, 236);
+         }
+         doc.setFont("Roboto-Bold", "bold");
+         doc.text("BSB", 10, 240); 
+         doc.text(":", 40, 240);
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         if(this.bsb){
+           doc.text(this.bsb, 42, 240);
+         }else{
+           doc.text(" ", 42, 240);
+         }
+         doc.setFont("Roboto-Bold", "bold");
+         doc.text("Account Number", 10, 244);
+         doc.text(":", 40, 244);
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         if(this.accountNo){
+           doc.text(" "+this.accountNo, 41, 244);
+         }else{
+           doc.text(" ", 41, 244);
+         }
+         
+         
+         
+         
+         const oldDate = invoice.Invoice_Date__c;
+         const arr = oldDate.split('-');
+         const newDate = arr[2]+'/'+arr[1]+'/'+arr[0];
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         doc.setFontSize(10);
+         doc.text("Date Issued: "+newDate, 134, 35);
+         const oldsDate = invoice.Start_Date__c;
+         const sarr = oldsDate.split('-');
+         const newsDate = sarr[2]+'/'+sarr[1]+'/'+sarr[0];
+     
+         const oldeDate = invoice.End_Date__c;
+         const earr = oldeDate.split('-');
+         const neweDate = earr[2]+'/'+earr[1]+'/'+earr[0];
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         doc.setFontSize(10);
+         doc.text("Billing Period: "+newsDate+" to "+neweDate, 134, 40);
+
+         const dueDate = invoice.Issued_Date__c;
+         const darr = dueDate.split('-');
+         const DueDate = darr[2]+'/'+darr[1]+'/'+darr[0];
+       
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         doc.setFontSize(10);
+         doc.text("Due Date: "+DueDate, 134, 45);
+         doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+         doc.setFontSize(10);
+        doc.text("TAX INVOICE To: "+ invoice.Staff__r.Name, 10, 72); 
+        /*  doc.setFont("Times New Roman", "bold");
+         doc.setFontSize(12);
+         doc.text(this.invRecords[0].Invoice_Parent__r.Name, 130, 41); */
+        
+         doc.setFontSize(10);
+           doc.setFont("Roboto-Bold", "bold");
+           doc.text("Terms & Conditions:", 10, 260);
+           doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+           doc.setTextColor(169, 169, 169);
+           doc.text("All terms and conditions apply.", 10, 264);
+           
+           doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+           doc.setFontSize(10);
+    
+         function addFooter(doc) {
+          let pageHeight = doc.internal.pageSize.height; // Get page height
+          let footerY = pageHeight; // Footer position
+      
+          // Draw footer line
+          doc.setDrawColor(0, 0, 0);
+          doc.setLineWidth(0.2);
+          doc.line(0, footerY - 12, 210, footerY - 12);
+      
+          // Footer text
+          doc.setFontSize(10);
+          const logo = My_Resource + '/myResource/images/FooterLogo.jpg';
+          const img = new Image();
+          img.src = logo;
+          
+          doc.addImage(img, 'JPEG', 30, footerY - 11, 30, 10); 
+          doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+          doc.setTextColor(0, 0, 0);
+          doc.text("Powered by", 10, footerY-5);
+          
+          // Centered Footer Text
+          doc.setFontSize(10);
+          doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+          doc.setTextColor(0, 0, 0);
+          doc.text("Office Use Only", 90, footerY-5);
+      
+          // Page Number
+          doc.setFontSize(10);
+          doc.setFont("Roboto-VariableFont_wdth,wght", "normal");
+          doc.text(`${doc.internal.getNumberOfPages()}`, 200, footerY-5);
+      }
+        var result = [];
+        var subTotal = 0;
+        let tabledata = this.invRecords[0].Accounting_Journal_Entry__r;
+                    console.log('INVOICE'+JSON.stringify(tabledata));
+                    tabledata.forEach(record => {
+                        subTotal += record.Total_Amount__c;
+                    
+                        result.push([
+                            record.Description__c,
+                            record.Quantity__c.toFixed(2),
+                            record.Unit_Price__c.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+                            record.Tax__c+'%', // Tax column
+                            record.Total_Amount__c.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+                        ]);
+                    });
+        
+        
+        // Adding subtotal, GST, and total rows
+        result.push([{ content: "*Taxes are Exclusive", styles: { textColor: [128, 128, 128] } }, "", "","Sub Total:", '$' + subTotal.toFixed(2)]);
+        result.push(["", "", "", "Total GST:", '$' + invoice.GST__c.toFixed(2)]);
+        result.push(["", "", "", "Total:", '$' + invoice.Total_Amount__c.toFixed(2)]);
+       
+        // Generating table using autoTable
+        doc.autoTable({
+            startY: 88, // Starting Y position
+            head: [["Description", "Qty", "Rate", "Tax", "Amount"]],
+            body: result,
+            theme: "plain",
+            /* styles: { halign: "left" }, */
+            margin: { left: 10, right: 10 },
+            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], font: "Roboto-Bold", fontStyle: "bold", },
+            bodyStyles: { font: "Roboto-VariableFont_wdth,wght",  fontStyle: "normal", },
+            /* bodyStyles: { lineWidth: 0.5, lineColor: [0, 0, 0] }, */
+            columnStyles: {
+              0: { cellWidth: 80, halign: "left" },  // Description left-aligned
+              1: { cellWidth: 25, halign: "left" },  // Qty left-aligned
+              2: { cellWidth: 25, halign: "left" },  // Rate left-aligned
+              3: { cellWidth: 25, halign: "right" }, // Tax right-aligned
+              4: { cellWidth: 35, halign: "right" }  // Amount right-aligned
+            },
+            didParseCell: function (data) {
+              var columnText = data.row.raw[3]; // Get column text
+              if (data.row.index === 0) { 
+                if (data.column.index === 3 || data.column.index === 4) {
+                    data.cell.styles.halign = "right";
+                } else {
+                    data.cell.styles.halign = "left";
+                }
+            }
+              // Make Sub Total, Total GST, and Total bold
+              if ([ "Total:"].includes(columnText)) {
+               data.cell.styles.font = "Roboto-Bold"; 
+               data.cell.styles.fontStyle = "bold";
+              }
+          },
+            didDrawCell: function (data) {  
+              var doc = data.doc;
+              var cell = data.cell;
+              var rowIndex = data.row.index;
+              var totalRowsCount = result.length; // Total rows including subtotal, GST, and total
+              
+              // Get the text of the fourth column (index 3) to check row type
+              var columnText = data.row.raw[3]; 
+      
+              // Apply border only to normal rows & total row
+              if (!["Sub Total:", "Total GST:"].includes(columnText)) {
+                  doc.setDrawColor(0, 0, 0); // Black border
+                  doc.setLineWidth(0.2);
+      
+                  // Top border (for first row or total row)
+                  if (rowIndex === 0) { 
+                      doc.line(cell.x, cell.y, cell.x + cell.width, cell.y);
+                  }
+      
+                  // Bottom border (for normal rows and total row)
+                  if (rowIndex < totalRowsCount - 1 ) {
+                      doc.line(cell.x, cell.y + cell.height, cell.x + cell.width, cell.y + cell.height);
+                  }
+                  
+              }
+              if (columnText === "Total:") {
+                doc.setDrawColor(0, 0, 0); // Black border
+                doc.setLineWidth(0.2);
+                
+                if (data.column.index === 4 || data.column.index === 3 ) {
+                 
+                  // Top border
+                  doc.line(cell.x, cell.y, cell.x + cell.width, cell.y);
+      
+                  // Bottom border
+                  doc.line(cell.x, cell.y + cell.height, cell.x + cell.width, cell.y + cell.height);
+              }
+               
+                
+            }
+          },
+          didDrawPage: function (data) {
+                    
+            // Always add the footer on each page
+            addFooter(data.doc);
+        }
+        
+        });
+    
+    
+         this.base64string = btoa(doc.output());
+        // console.log('if this.message.allProducts type reddy table');
+         this.showSpinner = true;
+        
+        // console.log('docName>',docName);
+        uploadFile({base64:JSON.stringify( this.base64string), filename:this.invRecords[0].Name+'.pdf', recordId:this.invRecords[0].Id,obj:'AccountingInvoice'})
+         .then(result=>{
+            // console.log('data', result);                    
+            // console.log('Upload result = ' +result);
+            // this.fileName = this.fileName + ' - Uploaded Successfully'; 
+            console.log('INVOICE GENERATED');
+         })            
+         const evt = new ShowToastEvent({
+             title: 'Success',
+             message: 'Invoice Generated sucessfully ',
+             variant: 'success',
+             mode: 'dismissable'
+         });
+         //this.handlecloseInvoice();
+         this.dispatchEvent(evt);
+         setTimeout(() => {
+           this.fetchInvoices();
+          this.showSpinner = false;
+       }, 3000); 
+       this.accountRecList=[];
+         //refreshApex(this.invoiceTable);
+     }
+    handleRowAction(event) {
+        const actionName = event.target.name;
+        const row = event.currentTarget.dataset.id;
+        const url1 = event.currentTarget.dataset.url;
+             console.log('row id'+row.Id);
+             console.log('NAME'+actionName);
+             console.log('url'+url1);
+              switch (actionName) {
+                  case 'delete':
+                    this.invoiceDeleteFlag = true;
+                    this.invoiceIdToDelete = row; 
+                    console.log('row id'+this.invoiceIdToDelete);
+                      break;
+                   case 'view_details':
+                    event.preventDefault(); 
+                    this.invoiceDeleteFlag = false;
+                    const url = url1;
+                  this.currentUrl = url;
+                  this.isHome=false;
+                  this.showICtinvoice=false;
+                        console.log('file url  '+ this.currentUrl);  
+                   this.isModalOpen = true;
+                  
+                   break;
+              }    
+        }
+        handledelete(event){
+          
+            deleteRecord(this.invoiceIdToDelete).then(() => {
+              this.dispatchEvent(
+                new ShowToastEvent({
+                  title: 'Success',
+                  message: 'Invoice has been deleted',
+                  variant: 'success'
+                })
+              );
+              //this.fetchInvoices();
+              refreshApex(this.wireInvoiceData);  
+            }).catch(error => {
+             // console.log('error=>'+JSON.stringify(error));
+            });
+            this.invoiceDeleteFlag = false;
+      
+        }  
+        handledeleteclose(event){
+          this.invoiceDeleteFlag = false;
+        }     
+        closeaddPayrollinvoice(){
+            this.isModalOpen = false;
+            this.currentUrl = null;
+            this.showICtinvoice=true;
+        } 
+}
