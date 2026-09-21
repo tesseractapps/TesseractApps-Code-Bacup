@@ -1,0 +1,695 @@
+<template>
+    <div class="create-template-page">
+
+        <!-- HEADER -->
+<!--         <div class="create-template-header">
+            <div>
+                <h1>Create Template</h1>
+            </div>
+            <div class="header-actions">
+                <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}></lightning-button>
+                <template if:false={isEditMode}>
+                    <lightning-button label="Publish" variant="brand" onclick={publishTemplate}></lightning-button>
+                    <lightning-button label="Save Draft" variant="brand" onclick={saveDraft}></lightning-button>
+                </template>
+                <template if:true={isEditMode}>
+                    <lightning-button label="Update" variant="brand" onclick={updateTemplate}></lightning-button>
+                    <template if:true={isDraftTemplate}>
+                        <lightning-button label="Publish" variant="brand" onclick={publishTemplate}></lightning-button>
+                    </template>
+                </template>
+            </div>
+        </div> -->
+
+
+        <!-- MAIN 3 COLUMN AREA -->
+        <div class={templateLayoutClass}>
+
+            <!-- =================================================
+                 LEFT : TEMPLATE DETAILS (collapsible sidebar,
+                 look/behavior ported from tesseractappstemplatesLwc)
+            ================================================== -->
+            <div class={templateDetailsPanelClass}>
+
+                <div class="panel-title sidebar-header">
+                    <button class="sidebar-toggle" type="button" onclick={toggleSidebarTemplate} title="Toggle Sidebar"
+                        aria-label="Toggle Sidebar">
+                        ☰
+                    </button>
+
+                    <template if:false={isSidebarCollapsed}>
+                        <span>Template Details</span>
+                    </template>
+                </div>
+
+                <template if:false={isSidebarCollapsed}>
+                    <div class="panel-body sidebar-form">
+
+                        <div class="floating-label">
+                            <span class="label-text-drop">
+                                Template Name
+                            </span>
+
+                            <lightning-input variant="label-hidden" value={templateName} data-field="templateName"
+                                onchange={handleTemplateFieldChange}>
+                            </lightning-input>
+                        </div>
+
+
+                        <div class="floating-label-textarea">
+                            <span class="label-text-drop">
+                                Description
+                            </span>
+
+                            <lightning-textarea variant="label-hidden" value={description} data-field="description"
+                                onchange={handleTemplateFieldChange}>
+                            </lightning-textarea>
+                        </div>
+
+
+                        <div class="floating-label">
+                            <span class="label-text-drop">
+                                Type
+                            </span>
+
+                            <lightning-combobox variant="label-hidden" value={templateType} options={typeOptions}
+                                data-field="templateType" onchange={handleTemplateFieldChange}>
+                            </lightning-combobox>
+                        </div>
+
+                    </div>
+
+                    <!-- Pinned action bar : stays at the foot of the sidebar
+                         while the form above it scrolls -->
+                    <div class="template-details-footer">
+
+                        <button class="td-btn td-btn--neutral preview-btn" type="button" onclick={openPreview}>
+                            <span class="material-icons td-btn-icon">visibility</span>
+                            <span>Preview</span>
+                        </button>
+
+                        <template if:false={isEditMode}>
+                            <button class="td-btn td-btn--brand" type="button" onclick={publishTemplate}>
+                                Publish
+                            </button>
+                            <div class="template-action-row">
+                                <button class="td-btn td-btn--neutral" type="button" onclick={saveDraft}>
+                                    Save as Draft
+                                </button>
+                                <button class="td-btn td-btn--text" type="button" onclick={handleCancel}>
+                                    Cancel
+                                </button>
+                            </div>
+                        </template>
+
+                        <template if:true={isEditMode}>
+                            <template if:true={isDraftTemplate}>
+                                <button class="td-btn td-btn--brand" type="button" onclick={publishTemplate}>
+                                    Publish
+                                </button>
+                                <div class="template-action-row">
+                                    <button class="td-btn td-btn--neutral" type="button" onclick={updateTemplate}>
+                                        Update
+                                    </button>
+                                    <button class="td-btn td-btn--text" type="button" onclick={handleCancel}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </template>
+
+                            <template if:false={isDraftTemplate}>
+                                <button class="td-btn td-btn--brand" type="button" onclick={updateTemplate}>
+                                    Update
+                                </button>
+                                <div class="template-action-row">
+                                    <button class="td-btn td-btn--text td-btn--wide" type="button"
+                                        onclick={handleCancel}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </template>
+                        </template>
+
+                    </div>
+                </template>
+            </div>
+
+
+            <!-- =================================================
+                 MIDDLE : DESCRIPTIVE TEXT
+            ================================================== -->
+            <div class="template-content-panel">
+
+
+                <div class="panel-body rich-text-container custom-scroll" ondrop={handleDrop} ondragover={allowDrop}>
+
+                    <div class="rich-text-editor-wrapper" ondrop={handleDrop} ondragover={allowDrop}>
+                        <!-- Page Background Shadows -->
+                        <div class="page-shadows-container" aria-hidden="true">
+                            <template for:each={pages} for:item="page">
+                                <div key={page.id} class="page-shadow" style={page.style}></div>
+                            </template>
+                        </div>
+
+                        <div class="rich-text-editor custom-scroll" data-id="richTextEditor" ondrop={handleDrop}
+                            ondragover={allowDrop}>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 RIGHT : DEMOGRAPHIC + CUSTOM
+            ================================================== -->
+            <div class="fields-panel">
+
+                <!-- ================= DEMOGRAPHIC =================
+                     look ported from tesseractappstemplatesLwc's
+                     ph-section / placeholder styling -->
+
+                <div class="ph-section">
+
+                    <button class="ph-section-header" type="button" onclick={toggleSection} data-section="demographic">
+
+                        <i class="material-icons ph-section-icon">person</i>
+
+                        <span class="ph-section-title">
+                            Demographic Details
+                        </span>
+
+                        <i class="material-icons ph-section-chevron">{chevronIconDemographic}</i>
+
+                    </button>
+
+
+                    <template if:true={sectionDemographicOpen}>
+
+                        <div class="ph-section-body demographic-fields-scroll custom-scroll">
+                            <!-- Full Name -->
+                            <div class="placeholder" draggable="true" data-type="FullName" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Full Name"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">badge</i>
+                                Full Name
+                            </div>
+                            <!-- First Name -->
+                            <div class="placeholder" draggable="true" data-type="FirstName"
+                                ondragstart={handleDragStart} ondragend={handleDragEnd} data-label="First Name"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">person_outline</i>
+                                First Name
+                            </div>
+                            <!-- Last Name -->
+                            <div class="placeholder" draggable="true" data-type="LastName" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Last Name"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">person</i>
+                                Last Name
+                            </div>
+                            <!-- Email -->
+                            <div class="placeholder" draggable="true" data-type="Email" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Email"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">email</i>
+                                Email
+                            </div>
+
+                            <!-- Contact Number -->
+                            <div class="placeholder" draggable="true" data-type="ContactNumber"
+                                ondragstart={handleDragStart} ondragend={handleDragEnd} data-label="Contact Number"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">phone</i>
+                                Contact Number
+                            </div>
+
+                            <!-- Address -->
+                            <div class="placeholder" draggable="true" data-type="Address" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Address"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">home</i>
+                                Address
+                            </div>
+
+                            <!-- Date -->
+                            <div class="placeholder" draggable="true" data-type="Date" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Date"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">calendar_today</i>
+                                Date
+                            </div>
+
+                            <!-- Time -->
+                            <div class="placeholder" draggable="true" data-type="Time" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Time"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">schedule</i>
+                                Time
+                            </div>
+
+                            <!-- Date of Signing -->
+                            <div class="placeholder" draggable="true" data-type="DateOfSigning"
+                                ondragstart={handleDragStart} ondragend={handleDragEnd} data-label="Date of Signing"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">edit_calendar</i>
+                                Date of Signing
+                            </div>
+
+                            <!-- Initials -->
+                            <div class="placeholder" draggable="true" data-type="Initials" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="Initials"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">sort_by_alpha</i>
+                                Initials
+                            </div>
+
+                            <!-- ABN -->
+                            <div class="placeholder" draggable="true" data-type="ABN" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="ABN"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">business</i>
+                                ABN
+                            </div>
+
+                            <!-- TFN -->
+                            <div class="placeholder" draggable="true" data-type="TFN" ondragstart={handleDragStart}
+                                ondragend={handleDragEnd} data-label="TFN"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">fingerprint</i>
+                                TFN
+                            </div>
+                            <div class="placeholder" draggable="true" data-type="Signature"
+                                ondragstart={handleDragStart} ondragend={handleDragEnd} data-label="Signature"
+                                title="Drag & drop or click to insert into template">
+                                <i class="material-icons ph-drag-icon">draw</i>
+                                Signature
+                            </div>
+                            <!-- Page Break -->
+                           <!--  <div class="placeholder" draggable="true" data-type="PageBreak" data-label="Page Break"
+                                ondragstart={handleDragStart} ondragend={handleDragEnd}>
+                                <i class="material-icons ph-drag-icon">insert_page_break</i>
+                                Page Break
+                            </div> -->
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ================= CUSTOM =================
+                     look ported from tesseractappstemplatesLwc's
+                     ph-section / placeholder styling -->
+                <div class="ph-section">
+                    <button class="ph-section-header" type="button" onclick={toggleSection} data-section="custom">
+                        <i class="material-icons ph-section-icon">tune</i>
+                        <span class="ph-section-title">
+                            Custom Details
+                        </span>
+                        <i class="material-icons ph-section-chevron">{chevronIconCustom}</i>
+                    </button>
+
+                    <template if:true={sectionCustomOpen}>
+                        <div class="ph-section-body custom-fields-scroll custom-scroll">
+                            <template for:each={customFields} for:item="cf">
+
+                                <div key={cf.id} class="placeholder placeholder-custom" draggable="true"
+                                    data-type={cf.type} data-label={cf.label} ondragstart={handleDragStart}
+                                    ondragend={handleDragEnd} title="Drag & drop or click to insert into template">
+
+                                    <i class="material-icons ph-drag-icon">label</i>
+                                    <span class="ph-custom-label">{cf.label}</span>
+
+                                    <button class="ph-remove-btn" data-id={cf.id} onclick={removeCustomField}
+                                        title="Remove">
+                                        <i class="material-icons">close</i>
+                                    </button>
+
+                                </div>
+                            </template>
+                            <template if:true={noCustomFields}>
+                                <div class="ph-empty-state">
+                                    <i class="material-icons ph-empty-icon">inbox</i>
+                                    <p>No custom fields yet.</p>
+                                    <p>Add one below.</p>
+                                </div>
+                            </template>
+                            <button class="ph-add-btn" onclick={openCustomFieldModal}>
+                                <i class="material-icons">add</i>
+                                Add Custom Field
+                            </button>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <template if:true={showPreviewModal}>
+
+            <section role="dialog" tabindex="-1" class="custom-modal preview-modal">
+
+                <div class="custom-modal-header preview-modal-header">
+                    <h2>Template Preview</h2>
+                    <button class="preview-modal-close" type="button" onclick={closePreview} title="Close"
+                        aria-label="Close">&times;</button>
+                </div>
+
+               <!--  <div class="custom-modal-body preview-modal-body">
+                    <div class="preview-page">
+                        <div class="preview-content" lwc:dom="manual"></div>
+                    </div>
+                </div> -->
+                <div class="custom-modal-body preview-modal-body">
+                    <div class="preview-pages" lwc:dom="manual"></div>
+                </div>
+
+                <div class="custom-modal-footer">
+                    <lightning-button label="Close" variant="brand" onclick={closePreview}></lightning-button>
+                </div>
+
+            </section>
+
+            <div class="modal-backdrop"></div>
+
+        </template>
+
+        <template if:true={showCustomFieldModal}>
+
+            <section role="dialog" tabindex="-1" class="custom-modal">
+
+                <div class="custom-modal-header">
+                    <h2>Add Custom Field</h2>
+                </div>
+
+
+                <div class="custom-modal-body">
+
+                    <lightning-input label="Field Label" value={customFieldLabel}
+                        onchange={handleCustomFieldLabelChange}>
+                    </lightning-input>
+
+
+                    <lightning-combobox label="Field Type" value={customFieldType} options={customFieldTypeOptions}
+                        onchange={handleCustomFieldTypeChange}>
+                    </lightning-combobox>
+
+
+                    <lightning-input type="checkbox" label="Save this field for future use"
+                        checked={saveCustomFieldConfig} onchange={handleSaveConfigChange}>
+                    </lightning-input>
+
+                </div>
+
+
+                <div class="custom-modal-footer">
+
+                    <lightning-button label="Cancel" variant="neutral" onclick={closeCustomFieldModal}>
+                    </lightning-button>
+
+                    <lightning-button label="Add" variant="brand" onclick={confirmAddCustomField}>
+                    </lightning-button>
+
+                </div>
+
+            </section>
+
+            <div class="modal-backdrop"></div>
+
+        </template>
+
+        <template if:true={showSettingsModal}>
+            <section role="dialog" tabindex="-1" class="recipient-modal-container">
+                <div class="recipient-modal">
+
+                    <header class="recipient-modal-header">
+                        <h2 class="recipient-modal-title">Settings</h2>
+
+                        <button class="recipient-modal-close" onclick={cancelSettingsModal} aria-label="Close Modal">
+                            ✖
+                        </button>
+                    </header>
+
+                    <div class="recipient-modal-content">
+
+                        <!-- TEXT STYLE - SAME ORDER AS EXISTING TEMPLATES -->
+                        <template if:true={showTextStylePanel}>
+                            <div class="style-panel">
+
+                                <div class="style-panel-header">
+
+                                    <div class="style-panel-icon">
+                                        Aa
+                                    </div>
+
+                                    <div class="style-panel-header-text">
+
+                                        <h3 class="style-panel-title">
+                                            Text style
+                                        </h3>
+
+                                        <p class="style-panel-subtitle">
+                                            Customize how this field will look in the document.
+                                        </p>
+
+                                    </div>
+
+                                    <lightning-input type="toggle" class="style-panel-toggle"
+                                        checked={tempPlaceholder.customInlineStyle}
+                                        onchange={handleCustomInlineStyleToggle}>
+                                    </lightning-input>
+
+                                </div>
+
+                                <div class={stylePanelGridClass}>
+
+                                    <!-- LEFT: CONTROLS -->
+                                    <div class="style-panel-left">
+
+                                        <div class="slds-m-bottom_small">
+
+                                            <div class="floating-label">
+
+                                                <span class="label-text-drop">
+                                                    Font family
+                                                </span>
+
+                                                <lightning-combobox name="fontFamily" variant="label-hidden"
+                                                    value={tempPlaceholder.textStyle.fontFamily}
+                                                    options={fontFamilyOptions} onchange={handleStyleOptionChange}>
+                                                </lightning-combobox>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="slds-m-bottom_small">
+
+                                            <div class="floating-label">
+
+                                                <span class="label-text-drop">
+                                                    Font size
+                                                </span>
+
+                                                <lightning-combobox name="fontSize" variant="label-hidden"
+                                                    value={tempPlaceholder.textStyle.fontSize} options={fontSizeOptions}
+                                                    onchange={handleStyleOptionChange}>
+                                                </lightning-combobox>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="style-panel-toggle-row slds-m-bottom_small">
+
+                                            <button type="button" class={boldToggleClass} data-style-name="bold"
+                                                onclick={handleStyleToggleClick}>
+                                                B
+                                            </button>
+
+                                            <button type="button" class={italicToggleClass} data-style-name="italic"
+                                                onclick={handleStyleToggleClick}>
+                                                I
+                                            </button>
+
+                                            <button type="button" class={underlineToggleClass}
+                                                data-style-name="underline" onclick={handleStyleToggleClick}>
+                                                U
+                                            </button>
+
+                                        </div>
+
+
+                                        <div class="style-panel-color-row">
+
+                                            <lightning-input type="color" name="color" label="Text color"
+                                                value={tempPlaceholder.textStyle.color}
+                                                onchange={handleStyleOptionChange}>
+                                            </lightning-input>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- RIGHT: LIVE PREVIEW -->
+                                    <div class="style-panel-right">
+
+                                        <div class="style-preview-card">
+
+                                            <div class="style-preview-label">
+                                                Live preview
+                                            </div>
+
+                                            <div class="style-preview-body" style={stylePreviewCss}>
+                                                Example: This is how text in this field will appear to the recipient.
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </template>
+
+
+                        <!-- HOW SHOULD THIS FIELD BE FILLED -->
+                        <template if:true={showValueSourcePanel}>
+
+                            <div class="style-panel">
+
+                                <div class="style-panel slds-m-bottom_medium">
+
+                                    <div class="style-panel-header">
+
+                                        <div class="style-panel-icon">
+                                            ⚙
+                                        </div>
+
+                                        <div class="style-panel-header-text">
+
+                                            <h3 class="style-panel-title">
+                                                How should this field be filled?
+                                            </h3>
+
+                                        </div>
+
+                                    </div>
+
+                                    <lightning-radio-group name="demographicValueMode" variant="label-hidden"
+                                        options={demographicValueModeOptions}
+                                        value={tempPlaceholder.demographicValueMode} onchange={handleConfigFieldChange}>
+                                    </lightning-radio-group>
+
+                                </div>
+
+                            </div>
+
+                        </template>
+
+                    </div>
+
+
+                    <footer class="recipient-modal-footer">
+
+                        <button class="recipient-modal-cancel-btn" onclick={cancelSettingsModal}>
+                            Cancel
+                        </button>
+
+                        <button class="recipient-modal-confirm-btn" onclick={saveSettingsModal}>
+                            Confirm
+                        </button>
+
+                    </footer>
+
+                </div>
+
+                <div class="recipient-modal-backdrop"></div>
+
+            </section>
+        </template>
+
+        <!-- =================================================
+     SAVE / PUBLISH CONFIRMATION MODAL
+================================================== -->
+
+        <template if:true={showConfirmationModal}>
+
+            <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+
+                <div class="slds-modal__container" style="max-width: 25%;">
+
+                    <!-- Header -->
+                    <header class="slds-modal__header" style="background:#002A52;">
+
+                        <h2 class="slds-text-heading_medium slds-hyphenate"
+                            style="color:white;font-weight:bold;text-align:center;">
+
+                            {confirmationTitle}
+
+                        </h2>
+
+                    </header>
+
+                    <!-- Content -->
+                    <div class="slds-modal__content slds-p-around_medium">
+
+                        <div class="slds-m-around_small" style="text-align:center;">
+
+                            <p>
+                                {confirmationMessage}
+                            </p>
+
+                            <div class="slds-m-top_medium">
+
+                                <lightning-button label={confirmButtonLabel} variant="brand"
+                                    onclick={handleConfirmAction} class="slds-m-around_small">
+                                </lightning-button>
+
+                                <lightning-button label="Cancel" variant="brand-outline"
+                                    onclick={handleCancelConfirmation} class="slds-m-around_small">
+                                </lightning-button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+
+        </template>
+        <c-aws-batch-lwc lwc:ref="awsUploader" module-name="CreateTemplate" organisation-id={orgid}>
+        </c-aws-batch-lwc>
+
+        <!-- =================================================
+             LOADING OVERLAY (same treatment as documentPageEditor)
+             Covers the AWS document fetch on open and the
+             AWS upload + Apex save on commit.
+        ================================================== -->
+        <template if:true={isLoading}>
+            <div class="overlay-logo"></div>
+
+            <div class="spinner-wrapper">
+                <div class="loader-container">
+                    <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                    <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                </div>
+
+                <p class="progress-text">{loadingMessage}</p>
+            </div>
+        </template>
+    </div>
+</template>
