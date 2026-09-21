@@ -1,0 +1,543 @@
+<template>
+    <div class="Adminlayout">
+    <template if:false={isViewingLayouts}>
+        <!-- Heading section with icon and title, similar to Staff tab -->
+        
+            <!-- Left-aligned heading with icon -->
+            <div slot="title" style="font-weight:bold; align-items: left; margin-bottom: 2%;font-size:140%;">
+                Form Request
+            </div>
+             
+            <!-- <div  slot="title" style="font-weight:bold;">
+                <img src={employee} alt="employee" width="45px" height="45px" style="margin-right:0.1%;">
+                Staff Details
+            </div> -->
+       
+
+        <div class="form-row">
+            <div class="form-title-container">
+                <!-- <label for="formTitle" class="form-label">Title of the Form:
+                    <span class="mandatory-symbol">*</span>
+                </label> -->
+                <div class="floating-label-custom">
+                    <span class="label-text-drop"><span class="mandatory-symbol">*</span>Title of the Form</span>
+                <input
+                    type="text"
+                    id="formTitle"
+                    class="form-input"
+                    placeholder="Enter Title"
+                    value={formTitle}
+                    onchange={handleFormTitleChange}
+                />
+                </div>
+            </div>
+
+            <div class="dropdown-container">
+                <div class="floating-label-custom form-label">
+                    <span class="label-text-drop"><span class="mandatory-symbol" for="categoryDropdown">*</span>Form</span>
+                <!-- <label for="categoryDropdown" class="form-label">Form:
+                    <span class="mandatory-symbol">*</span>
+                </label> -->
+                <select id="categoryDropdown" value={selectedFormType} onchange={handleFormTypeChange} class="form-dropdown">
+                    <option value="">Select a Form Type</option>
+                    <option value="Behavioral">Behavioral</option>
+                    <option value="Medication">Medication</option>
+                    <option value="PRN Medication">PRN Medication</option>
+                    <option value="Fluid Intake">Fluid Intake</option>
+                    <option value="Sleep and Selfcare">Sleep and Selfcare</option>
+                    <option value="Weekly Blood Glucose">Weekly Blood Glucose</option>
+                    <option value="Bowel Movement">Bowel Movement</option>
+                    <option value="General Weekly">General Weekly</option>
+                    <option value="Activity Chart">Activity Chart</option>
+                    <option value="Shift Report">Shift Report</option>
+                </select>
+            </div>
+            </div>
+
+            <div class="existing-forms-button-container">
+                <lightning-button 
+                    variant="brand" 
+                    label="Existing Forms" 
+                    onclick={handleExistingFormsClick}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Available Fields -->
+            <div class="available-fields-container">
+                <h3>Available Fields</h3>
+                <div class="field-list">
+                    <template for:each={dataTypes} for:item="dataType">
+                        <div
+                            key={dataType.id}
+                            class="field-item available"
+                            draggable={isDragEnabled}
+                            ondragstart={handleDragStart}
+                            data-type={dataType.label}
+                        >
+                            {dataType.label}
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+
+            <!-- Excel Table -->
+            <div class="excel-table-container">
+                <h3>Drop Your Fields Here</h3>
+                <table class="excel-table" data-id="table">
+                    <tbody>
+                        <template for:each={tableRows} for:item="row">
+                            <tr key={row.id}>
+                                <template for:each={row.cells} for:item="cell">
+                                    <td key={cell.id}
+                                        class="table-cell"
+                                        data-id={cell.id}
+                                        data-row={cell.row}
+                                        data-col={cell.col}
+                                        colspan={cell.colspan}
+                                        rowspan={cell.rowspan}
+                                        onclick={handleCellClick}
+                                        ondragover={handleDragOver}
+                                        ondrop={handleDrop}
+                                        style={cell.style}>
+                                        <template if:true={cell.field}>
+                                            <div class="field-item dropped" draggable="true" ondragstart={handleDragStartDropped} data-id={cell.field.id}>
+                                                <strong>{cell.field.dataType}</strong>: {cell.field.label}
+                                                <template if:true={cell.field.isRequired}>
+                                                    <span class="mandatory-asterisk"> *</span>
+                                                </template>
+
+                                                <div class="menu-container">
+                                                    <!-- More Actions Icon (Replaces Pencil) -->
+                                                    <lightning-icon 
+                                                        icon-name="utility:threedots_vertical"
+                                                        alternative-text="More Options" 
+                                                        class="menu-icon"
+                                                        data-id={cell.id} 
+                                                        onclick={toggleMenu} 
+                                                        size="xx-small"
+                                                        style=" cursor: pointer;">
+                                                    </lightning-icon>
+
+                                                
+                                                    <!-- Dropdown menu with Edit and Delete -->
+                                                    <template if:true={cell.showMenu}>
+                                                        <ul class="menu-dropdown open">
+                                                            <li key={cell.editKey} onclick={handleEdit} data-id={cell.id}>
+                                                                <lightning-icon 
+                                                                    icon-name="action:edit" 
+                                                                    alternative-text="Edit" 
+                                                                    size="xx-small"
+                                                                    style="border-radius: 50%;background-color:#0099DE;"
+                                                                    key={cell.editKey} onclick={handleEdit} data-id={cell.id}>
+                                                                </lightning-icon>
+                                                                
+                                                            </li>
+                                                            <li key={cell.deleteKey} onclick={handleDelete} data-id={cell.id}>
+                                                                <lightning-icon 
+                                                                    icon-name="action:delete" 
+                                                                    alternative-text="Delete" 
+                                                                    size="xx-small"
+                                                                    style="border-radius: 50%;"
+                                                                    key={cell.deleteKey} onclick={handleDelete} data-id={cell.id}>
+                                                                </lightning-icon>
+                                                                
+                                                            </li>
+                                                        </ul>
+                                                    </template>
+                                                </div>
+                                                
+                                            </div>
+                                        </template>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <!-- Action Buttons -->
+                <div class="center-action-buttons">
+                    <button class="lightning-button" onclick={handleMerge}>Merge Cells</button>
+                    <button class="lightning-button" onclick={handleUndo}>Undo</button>
+                    <button class="lightning-button" onclick={handleAddRow}>Add Row</button>
+                    <button class="lightning-button" onclick={handleReset}>Reset</button>
+                </div>
+            </div>
+        </div>
+        <!-- Toggle Switch for Preview -->
+        <div class="toggle-container">
+            <label class="switch">
+                <input type="checkbox" onchange={togglePreview}>
+                <span class="slider"></span>
+            </label>
+            <label class="toggle-label">Preview</label>
+        </div>
+
+        
+        <!-- Right-aligned Save and Cancel buttons -->
+        <div class="right-save-cancel-buttons">
+            <!-- <lightning-button variant="brand" label="Send Email" onclick={handleSend} disabled={isSendDisabled}>
+            </lightning-button> -->
+            <button class="lightning-button" onclick={handleSaveHeaderLayout}>Generate Header</button>
+            <button class="lightning-button" onclick={handleCancelLayout}>Cancel</button>
+        </div>
+
+        <!-- Display selected header fields below Save and Cancel buttons -->
+        <template if:true={selectedHeaderFields}>
+            <table class="header-table">
+                <thead>
+                    <tr>
+                        <template for:each={selectedHeaderFields} for:item="field">
+                            <th key={field.id}>{field.label}</th>
+                        </template>
+                    </tr>
+                </thead>
+            </table>
+        </template>
+
+        <!-- Control Buttons for Capture and Send, visible and styled appropriately -->
+        <div class="center-capture-send-save-buttons">
+            
+            <lightning-button variant="brand" label="Send Email" onclick={handleSend} disabled={isSendDisabled}>
+            </lightning-button>
+            <lightning-button variant="brand" label="Save" onclick={handleSaveLayout}>
+            </lightning-button>
+
+            <!-- <button class={sendButtonClass} onclick={handleSend} disabled={isSendDisabled}>Send Email</button>
+            <button class="save-button" onclick={handleSaveLayout}>Save</button> -->
+        </div>
+
+        
+
+        <!-- Popup Modal for entering Field Label, Mandatory Checkbox, and Comments -->
+        <template if:true={showPopup}>
+            <div class="popup-background">
+                <div class="popup-content">
+                    <h3>{currentFieldType} Settings</h3>
+                    
+                    <div class="floating-label">
+                        <span class="label-text-drop"><span style="color:red">*</span>Field Label</span>
+                    <lightning-input  variant="label-hidden" value={fieldLabel} onchange={handleFieldLabelChange}></lightning-input></div>
+        
+                    <!-- Mandatory Checkbox (already present) -->
+                    <lightning-input type="checkbox" label="Mandatory" checked={isMandatory} onchange={handleMandatoryChange}></lightning-input>
+        
+                    <!-- Conditional Content Based on Field Type -->
+                    <template if:true={isTextField}>
+                        <h3>Field Type</h3>
+                    
+                        <!-- Alpha Numeric Radio Button and Conditional Text Field -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Alpha Numeric" 
+                                value="alphaNumeric" 
+                                checked={isAlphaNumericSelected} 
+                                onchange={handleRadioSelection}>
+                            </lightning-input>
+                            
+                            <template if:true={isAlphaNumericSelected}>
+                                <lightning-input 
+                                    class="text-field"
+                                    label="Enter Length" 
+                                    value={alphaNumericLength} 
+                                    onchange={handleAlphaNumericLengthChange}>
+                                </lightning-input>
+                            </template>
+                        </div>
+                    
+                        <!-- Only Alphabets Radio Button and Conditional Text Field -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Only Alphabets" 
+                                value="onlyAlphabets" 
+                                checked={isOnlyAlphabetsSelected} 
+                                onchange={handleRadioSelection}>
+                            </lightning-input>
+                            
+                            <template if:true={isOnlyAlphabetsSelected}>
+                                <lightning-input 
+                                    class="text-field"
+                                    label="Enter Length" 
+                                    value={onlyAlphabetsLength} 
+                                    onchange={handleOnlyAlphabetsLengthChange}>
+                                </lightning-input>
+                            </template>
+                        </div>
+                    
+                        <!-- Text Area Radio Button (with note if selected) -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Text Area (Max 255 Characters)" 
+                                value="textArea" 
+                                checked={isTextAreaSelected} 
+                                onchange={handleRadioSelection}>
+                            </lightning-input>
+                    
+                            <!-- Display note if Text Area is selected -->
+                            <template if:true={isTextAreaSelected}>
+                                <p>Note: Max 255 Characters</p>
+                            </template>
+                        </div>
+                    </template>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    <template if:true={isNumberField}>
+                        <h3>Field Type</h3>
+                        
+                        <!-- Currency Option with Conditional Input Field -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Currency" 
+                                value="currency" 
+                                checked={isCurrencySelected} 
+                                onchange={handleNumberFieldRadioSelection}>
+                            </lightning-input>
+                            
+                            <template if:true={isCurrencySelected}>
+                                <lightning-combobox 
+                                    class="text-field"
+                                    label="Enter Decimals" 
+                                    options={decimalOptions} 
+                                    value={decimalValue} 
+                                    onchange={handleDecimalChange}>
+                                </lightning-combobox>
+                            </template>
+                        </div>
+                    
+                        <!-- Contact Number Option with Conditional Input Field -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Contact Number" 
+                                value="contactNumber" 
+                                checked={isContactNumberSelected} 
+                                onchange={handleNumberFieldRadioSelection}>
+                            </lightning-input>
+                            
+                            <template if:true={isContactNumberSelected}>
+                                <lightning-input 
+                                    class="text-field"
+                                    label="Enter Digits" 
+                                    value={contactNumberDigits} 
+                                    onchange={handleContactNumberDigitsChange}>
+                                </lightning-input>
+                            </template>
+                        </div>
+                    
+                        <!-- Default Number Option (no additional input needed) -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Default Number" 
+                                value="defaultNumber" 
+                                checked={isDefaultNumberSelected} 
+                                onchange={handleNumberFieldRadioSelection}>
+                            </lightning-input>
+                        </div>
+                    </template>
+                    
+                    <template if:true={isDateField}>
+                        <h3>Field Type</h3>
+                    
+                        <!-- Date View Option with Conditional Format Dropdown -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Date View" 
+                                value="dateView" 
+                                checked={isDateViewSelected} 
+                                onchange={handleDateFieldRadioSelection}>
+                            </lightning-input>
+                            
+                            <template if:true={isDateViewSelected}>
+                                <lightning-combobox 
+                                    class="text-field"
+                                    label="Select Format" 
+                                    options={dateFormatOptions} 
+                                    value={selectedDateFormat} 
+                                    onchange={handleDateFormatChange}>
+                                </lightning-combobox>
+                            </template>
+                        </div>
+                    </template>
+                    
+                    
+                    <template if:true={isDropDownField}>
+                        <h3>Field Type</h3>
+                        
+                        <!-- Multi-Select Picklist Option with Conditional Text Area -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Multi-Select Picklist" 
+                                value="multiSelect" 
+                                checked={isMultiSelectSelected} 
+                                onchange={handleDropdownRadioSelection}>
+                            </lightning-input>
+                            <template if:true={isMultiSelectSelected}>
+                                <lightning-textarea 
+                                    class="text-field"
+                                    label="Enter Values (Separate each value by a new line)" 
+                                    value={multiSelectValues} 
+                                    onchange={handleMultiSelectValuesChange}>
+                                </lightning-textarea>
+                            </template>
+                        </div>
+                        
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="Single-Select Picklist" 
+                                value="singleSelect" 
+                                checked={isSingleSelectSelected} 
+                                onchange={handleDropdownRadioSelection}>
+                            </lightning-input>
+                            <template if:true={isSingleSelectSelected}>
+                                <lightning-textarea 
+                                    class="text-field"
+                                    label="Enter Values (Separate each value by a new line)" 
+                                    value={singleSelectValues} 
+                                    onchange={handleSingleSelectValuesChange}>
+                                </lightning-textarea>
+                            </template>
+                        </div>
+                        
+                    </template>
+                    
+                    
+                    <template if:true={isTimeField}>
+                        <h3>Field Type</h3>
+                        
+                        <!-- Time Format Radio Buttons (12 Hour or 24 Hour) -->
+                        <div class="radio-group-container">
+                            <lightning-input 
+                                type="radio" 
+                                label="12 Hour" 
+                                name="timeFormat"          
+                                value="12" 
+                                checked={is12HourSelected} 
+                                onchange={handleTimeFormatChange}>
+                            </lightning-input>
+                            <lightning-input 
+                                type="radio" 
+                                label="24 Hour" 
+                                name="timeFormat"          
+                                value="24" 
+                                checked={is24HourSelected} 
+                                onchange={handleTimeFormatChange}>
+                            </lightning-input>
+                        </div>
+                    
+                        <!-- Time Display Format Selection -->
+                        <div class="floating-label">
+                            <span class="label-text-drop">Select Time Display Format</span>
+                        <lightning-combobox 
+                            variant="label-hidden"
+                            options={timeDisplayFormatOptions} 
+                            value={timeDisplayFormat} 
+                            onchange={handleTimeDisplayFormatChange}>
+                        </lightning-combobox></div>
+                    </template>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    <!-- Comments Field -->
+                </br><div class="floating-label-comments">
+                        <span class="label-text-drop">Comments</span>
+                    <lightning-textarea variant="label-hidden" value={comments} onchange={handleCommentsChange}></lightning-textarea></div>
+        
+                    <!-- Popup Actions -->
+                    <div class="popup-actions">
+                        <lightning-button label="Save" variant="brand" onclick={handleSave}></lightning-button>
+                        <lightning-button label="Cancel" variant="brand-outline" onclick={handleCancel}></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        <!-- Popup Modal for selecting fields to display as header -->
+        <template if:true={showHeaderPopup}>
+            <div class="popup-background">
+                <div class="popup-content">
+                    <h3>Select Fields to Display in Table</h3>
+                    <h6>(Select Upto 7 headers)</h6>
+                    <div class="field-selection">
+                        <template for:each={layoutFields} for:item="field">
+                            <lightning-input 
+    key={field.id}
+    type="checkbox"
+    label={field.label}
+    data-id={field.id}
+    checked={field.checked}
+    disabled={field.disabled}
+    onchange={handleFieldSelection}>
+</lightning-input>
+
+                        </template>
+                    </div>
+                    <div class="popup-actions">
+                        <lightning-button label="Save" onclick={handleSaveHeader}></lightning-button>
+                        <lightning-button label="Cancel" onclick={handleCancelHeader}></lightning-button>
+                        
+                    </div>
+                </div>
+            </div>
+        </template>
+    
+</template>
+<template if:true={isViewingLayouts}>
+    <c-layout-list-component 
+    oneditlayout={handleEditLayout} 
+    onbacktoform={handleBackToForm}
+    orgid={orgid}>
+</c-layout-list-component>
+</template>
+
+<!-- Confirmation Popup -->
+<template if:true={showConfirmationPopup}>
+    <div class="slds-modal slds-fade-in-open custom-popup">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <!-- Close icon to dismiss the popup -->
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                        title="Close" 
+                        onclick={handleCancelPopup}>
+                    <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                </button>
+                <h2 class="slds-text-heading_medium">Unsaved Changes</h2>
+            </header>
+            <div class="slds-modal__content">
+                <p class="custom-popup-text">You have unsaved changes. Do you want to save them or navigate to Existing Forms?</p>
+            </div>
+            <footer class="slds-modal__footer">
+                <lightning-button label="Save" variant="brand" onclick={handleSaveAndNavigate} class="custom-save-button"></lightning-button>
+                <lightning-button label="Continue to Existing Forms" variant="neutral" onclick={handleDiscardAndNavigate} class="custom-continue-button"></lightning-button>
+            </footer>
+        </div>
+    </div>
+    <div class="slds-backdrop slds-backdrop_open custom-backdrop"></div>
+</template>
+
+
+</div>
+</template>
