@@ -1,0 +1,521 @@
+<template>
+  <div class="main-container slds-p-top_small">
+    <div class="slds-grow slds-scrollable_y custom-scroll" style="min-height:0;">
+
+    <!-- HEADER / TITLE -->
+    <div class="page-header">
+      <div class="title-block">
+        <h1>Identity Verification (100-Point Check)</h1>
+        <p class="sub">Australian identity verification for all staff</p>
+      </div>
+
+      <div class="actions">
+        <lightning-button variant="brand" label="+ Add Custom Identity Document"
+                          onclick={openAddModal}></lightning-button>
+      </div>
+    </div>
+
+    <!-- METRIC TILES -->
+    <div class="metrics-grid tiles">
+      <div class="metric-card highlight-blue">
+        <div class="metric-title">Total Documents</div>
+        <div class="metric-value">{totalDocuments}</div>
+      </div>
+      <div class="metric-card highlight-green">
+        <div class="metric-title">Mandatory</div>
+        <div class="metric-value">{mandatoryCount}</div>
+      </div>
+      <div class="metric-card highlight-orange">
+        <div class="metric-title">Visible to Staff</div>
+        <div class="metric-value">{visibleCount}</div>
+      </div>
+      <div class="metric-card highlight-purple">
+        <div class="metric-title">Total Points</div>
+        <div class="metric-value">{totalPoints}</div>
+      </div>
+    </div>
+
+    <div class="table-container" style="min-height:0; display:flex; flex-direction:column; flex:1 1 auto;">
+      <div class="header-wrapper">
+        <table class="staff-table" role="table">
+          <thead>
+            <tr>
+<!--               <th class="table-th" title="Document Name">Document Name</th>
+              <th class="table-th" title="Category">Category</th>
+              <th class="table-th" title="Points">Points</th>
+              <th class="table-th" title="Roles Applicable">Roles Applicable</th> -->
+              <th class="table-th sortable-header"
+                  title="Document Name"
+                  data-field="name"
+                  onclick={handleSort}>
+                  <div class="sort-header-inner">
+                      <span class="sort-label">Document Name</span>
+                      <span class="sort-arrow" data-arrow={sortIcons.name}></span>
+                  </div>
+              </th>
+
+              <th class="table-th sortable-header"
+                  title="Category"
+                  data-field="category"
+                  onclick={handleSort}>
+                  <div class="sort-header-inner">
+                      <span class="sort-label">Category</span>
+                      <span class="sort-arrow" data-arrow={sortIcons.category}></span>
+                  </div>
+              </th>
+
+              <th class="table-th sortable-header"
+                  title="Points"
+                  data-field="points"
+                  onclick={handleSort}>
+                  <div class="sort-header-inner">
+                      <span class="sort-label">Points</span>
+                      <span class="sort-arrow" data-arrow={sortIcons.points}></span>
+                  </div>
+              </th>
+              <th class="table-th" title="Roles Applicable">Roles Applicable</th>              
+              <th class="table-th" title="Mandatory">Mandatory</th>
+              <th class="table-th" title="Visible to Staff">Visible to Staff</th>
+              <th class="table-th" title="Expiry Required">Expiry Required</th>
+              <th class="table-th" title="1st Reminder">1st Reminder</th>
+              <th class="table-th" title="2nd Reminder">2nd Reminder</th>
+              <th class="table-th" title="Actions">Actions</th>
+            </tr>
+          </thead>
+        </table>
+    </div>
+    <!-- SCROLL ONLY TBODY -->
+    <div class="body-scroll custom-scroll custom-scroll1">
+        <table class="staff-table">
+          <tbody>
+            <template for:each={pagedList} for:item="doc">
+              <tr key={doc.id} class="table-row">
+                
+                <!-- <td class="table-td clickable-name" title={doc.name}>{doc.name}</td> -->
+                 <td class="table-td clickable-name" title={doc.name}>
+                    <span class="doc-name-ellipsis" title={doc.name}>
+                        {doc.name}
+                    </span>
+                </td>
+
+                 <td class="table-td" title={doc.category}>
+                    <span class={doc.categoryClass} title={doc.category}>
+                        {doc.category}
+                    </span>
+                </td>
+                <td class="table-td" title={doc.points}>
+                    <span class="points-pill" title={doc.points}>
+                        {doc.points}
+                    </span>
+                </td>
+                <td class="table-td" title={doc.roles}>
+                  <div class="roles-cell" title={doc.roles}>
+                      <template for:each={doc.roles} for:item="r">
+                          <span key={r} class="role-pill">{r}</span>
+                      </template>
+                  </div>
+                </td>
+
+                <td class="table-td" title="Mandatory">
+                  <lightning-input type="toggle"
+                    message-toggle-active=""
+                    message-toggle-inactive=""
+                    class="small-toggle"
+                    checked={doc.mandatory}
+                    data-id={doc.id}
+                    onchange={toggleField}
+                    data-field="mandatory">
+                  </lightning-input>
+                </td>
+
+                <td class="table-td" title="Visible to Staff">
+                  <lightning-input type="toggle"
+                    message-toggle-active=""
+                    message-toggle-inactive=""
+                    class="small-toggle"
+                    checked={doc.visibleToStaff}
+                    data-id={doc.id}
+                    onchange={toggleField}
+                    data-field="visibleToStaff">
+                  </lightning-input>
+                </td>
+
+                <td class="table-td" title="Expiry Required">
+                  <lightning-input type="toggle"
+                    message-toggle-active=""
+                    message-toggle-inactive=""
+                    class="small-toggle"
+                    checked={doc.expiryRequired}
+                    data-id={doc.id}
+                    onchange={toggleField}
+                    data-field="expiryRequired">
+                  </lightning-input>
+                </td>
+
+                <td class="table-td" title={doc.reminder1}>{doc.reminder1}</td>
+                <td class="table-td" title={doc.reminder2}>{doc.reminder2}</td>
+
+                <td class="table-td actions-col action-column" title="Actions">
+                    <a
+                      href="javascript:void(0)"
+                      class="action-icon"
+                      title="Edit"
+                      data-id={doc.id}
+                      onclick={handleEdit}
+                    >
+                      <i class="material-icons edit-icon">edit</i>
+                    </a>
+
+                    <a
+                      href="javascript:void(0)"
+                      class="action-icon"
+                      title="Delete"
+                      data-id={doc.id}
+                      onclick={handleDeleteConfirm}
+                    >
+                      <i class="material-icons delete-icon">delete</i>
+                    </a>
+                </td>
+              
+              </tr>
+            </template>
+
+            <template if:true={isEmpty}>
+              <tr><td colspan="10" class="table-td no-data">No records found</td></tr>
+            </template>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+    <!-- PAGINATION & PAGE SIZE -->
+    <div class="pagination-row fixed-pagination">
+
+          <!--RECORDS PER PAGE-->
+
+          <div class="slds-list_inline slds-p-bottom_xx-small">
+            <label
+              class="slds-text-color_weak slds-p-horizontal_x-small"
+              for="recordsPerPage"
+              style="padding-top: 4%"
+              >Page Size:</label
+            >
+            <div
+              class="slds-select_container slds-align_absolute-center"
+            >
+              <select
+                class="slds-select"
+                id="recordsPerPage"
+                onchange={handlePageSizeChange}
+              >
+                <template for:each={pageSizeOptions} for:item="option">
+                  <option key={option} value={option}>{option}</option>
+                </template>
+              </select>
+            </div>
+          </div>
+
+
+        <!--PAGE NAVIGATION-->
+        <div class="slds-align_absolute-center">
+          <lightning-button
+            disabled={bDisableFirst}
+            icon-name="utility:jump_to_left"
+            label="First"
+            class="slds-p-horizontal_x-small"
+            alternative-text="first page"
+            onclick={firstPage}
+          ></lightning-button>
+          <lightning-button
+            disabled={bDisableFirst}
+            icon-name="utility:chevronleft"
+            label="Previous"
+            alternative-text="Previous"
+            onclick={previousPage}
+          ></lightning-button>
+          &nbsp;
+          <span class="slds-badge"
+            >Showing {pageNumber} &nbsp;of&nbsp; {totalPages}
+            &nbsp;&nbsp;Page(s)</span
+          >
+          &nbsp;
+          <lightning-button
+            disabled={bDisableLast}
+            icon-name="utility:chevronright"
+            label="Next"
+            alternative-text="Next"
+            onclick={nextPage}
+            class="slds-p-horizontal_x-small"
+            icon-position="right"
+          ></lightning-button>
+          <lightning-button
+            disabled={bDisableLast}
+            icon-name="utility:jump_to_right"
+            label="Last"
+            alternative-text="last page"
+            onclick={lastPage}
+            icon-position="right"
+          ></lightning-button>
+        </div>
+        <!--TOTAL RECORDS-->
+        <div class="slds-clearfix">
+          <div class="slds-float_right">
+            <span class="slds-badge">
+              Total Records: {totalDocuments}</span
+            >
+          </div>
+        </div>
+    </div>
+
+    <!-- ADD / EDIT MODAL -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modal-custom">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header headercustom">
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">{modalTitle}</h2>
+
+                    <!-- <button class="slds-button slds-button_icon slds-modal__close" onclick={closeModal} title="Close">
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button> -->
+                </header>
+
+                <!-- BODY CONTENT -->
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+
+                    <!-- ---------------- ROW 1 ---------------- -->
+                    <div>
+                        <lightning-input 
+                            label="Document Name"
+                            value={editingDoc.name}
+                            data-field="name"
+                            required
+                            onchange={handleModalChange}>
+                        </lightning-input>
+
+                        <lightning-combobox
+                            label="Category"
+                            value={editingDoc.category}
+                            data-field="category"
+                            required
+                            options={categoryOptions}
+                            onchange={handleModalChange}>
+                        </lightning-combobox>
+
+                        <lightning-input 
+                            label="Points Value"
+                            type="number"
+                            value={editingDoc.points}
+                            data-field="points"
+                            required
+                            onchange={handleModalChange}>
+                        </lightning-input>
+                    </div>
+
+                    <!-- ---------------- ROW 2: ROLES ---------------- -->
+                    <div class="form-row">
+                        <span class="label-text-drop">
+                            <span style="color:red">*</span>Roles
+                        </span>
+
+                        <div class="dropdown-container" lwc:ref="dropdownContainer">
+                            
+                            <!-- Dropdown Button -->
+                            <button 
+                                type="button"
+                                class="dropdown-button1"
+                                onclick={toggleRolesDropdown}
+                                data-inside-dropdown="true"
+                                aria-expanded={isRolesOpen}
+                                aria-haspopup="listbox">
+                                
+                                <span class="slds-truncate" title={displayText}>{displayText}</span>
+
+                                <lightning-icon 
+                                    icon-name={chevronIcon}
+                                    size="x-small" 
+                                    class="chevron-icon">
+                                </lightning-icon>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div if:true={isRolesOpen} class="dropdown-menu custom-scroll">
+                                <!-- LIST OF ROLES -->
+                                <div class="options-list ">
+
+                                    <template for:each={options} for:item="option">
+                                        <div key={option.id} class="option-item">
+
+                                            <!-- <button 
+                                                type="button"
+                                                class={option.buttonClass}
+                                                data-option-id={option.id}
+                                                onclick={handleSelectRole}>
+                                                {option.label}
+                                            </button> -->
+                                            <div class="option-label" title={option.label}>{option.label}</div>
+                                            <div class="option-controls">
+
+
+                                                <div class="toggle-switch-container">
+                                                    <lightning-input
+                                                        type="toggle"
+                                                        message-toggle-active=""
+                                                        message-toggle-inactive=""
+                                                        checked={option.checked}
+                                                        data-option-id={option.id}
+                                                        onchange={handleToggleRole}
+                                                        onclick={handleToggleClick}
+                                                        variant="label-hidden"
+                                                        class="toggle_bar_right">
+                                                    </lightning-input>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ---------------- ROW 3: TOGGLES ---------------- -->
+                    <div class="toggles">
+                      <div class="toggle-row">
+                      <label class="slds-form-element__label">Mandatory</label>
+                      <lightning-input
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            variant="label-hidden"
+                            checked={editingDoc.mandatory}
+                            data-field="mandatory" 
+                            class="toggle_bar_right"                           
+                            onchange={handleModalChange}>
+                        </lightning-input>
+                      </div> 
+                      <div class="toggle-row">
+                        <label class="slds-form-element__label">Visible to Staff</label>                        
+                        <lightning-input
+                              type="toggle"
+                              message-toggle-active=""
+                              message-toggle-inactive=""
+                              variant="label-hidden"
+                              class="toggle_bar_right"
+                              checked={editingDoc.visibleToStaff}
+                              data-field="visibleToStaff"
+                              onchange={handleModalChange}>
+                        </lightning-input>
+                      </div>
+                      <div class="toggle-row">
+                        <label class="slds-form-element__label">Expiry Required</label>   
+                        <lightning-input
+                            type="toggle"
+                            message-toggle-active=""
+                            message-toggle-inactive=""
+                            variant="label-hidden"
+                            class="toggle_bar_right"
+                            checked={editingDoc.expiryRequired}
+                            data-field="expiryRequired"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+                      </div>
+
+                    </div>
+
+                    <!-- ---------------- ROW 4: REMINDERS ---------------- -->
+                    <div>
+
+                        <lightning-input
+                            type="number"
+                            label="1st Reminder Day"
+                            value={editingDoc.reminder1}
+                            data-field="reminder1"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+
+                        <lightning-input
+                            type="number"
+                            label="2nd Reminder Day"
+                            value={editingDoc.reminder2}
+                            data-field="reminder2"
+                            onchange={handleModalChange}>
+                        </lightning-input>
+
+                    </div>
+
+                    <!-- ---------------- ROW 5: NOTES ---------------- -->
+                    <div>
+                        <lightning-textarea
+                            label="Notes"
+                            value={editingDoc.notes}
+                            data-field="notes"
+                            maxlength="1000"
+                            onchange={handleModalChange}>
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button
+                        variant="neutral"
+                        label="Cancel"
+                        onclick={closeModal}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        variant="brand"
+                        label="Save"
+                        onclick={saveDocument}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+
+    <!-- CONFIRM DELETE DIALOG -->
+    <template if:true={showDeleteConfirm}>
+      <section role="dialog" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container modal-custom">
+          <header class="slds-modal__header slds-hyphenate headercustom">
+            <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">Confirm Delete</h2>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium modal-content">
+            <p style="text-align: center">Are you sure you want to delete <b>{docToDeleteName}</b>?</p>
+            <div class="button-container slds-m-top_medium">
+              <lightning-button
+                label="No"
+                variant="brand"
+                onclick={cancelDelete}
+              ></lightning-button>
+              <lightning-button
+                label="Yes"
+                variant="brand"
+                onclick={confirmDelete}
+              ></lightning-button>
+            </div>
+          </div>
+          <!-- <footer class="slds-modal__footer">
+            <lightning-button variant="neutral" label="Cancel" onclick={cancelDelete}></lightning-button>
+            <lightning-button variant="destructive" label="Delete" onclick={confirmDelete}></lightning-button>
+          </footer> -->
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+  </div>
+</template>
