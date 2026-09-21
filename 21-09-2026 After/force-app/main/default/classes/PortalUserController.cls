@@ -1,0 +1,1770 @@
+public with sharing class PortalUserController {
+    
+    @AuraEnabled
+    public static Map<String, Object> createPortalUser(Map<String, Object> userDetails) {
+        System.debug('userDetails====>' + userDetails);
+        
+        // Extract user details from the map
+        String firstName = (String) userDetails.get('firstName');
+        String lastName = (String) userDetails.get('lastName');
+        String email = (String) userDetails.get('email');
+        //String role = (String) userDetails.get('role');
+        String userType = (String) userDetails.get('userType');
+        String role = '';
+        if (userType == 'NDIS Org Admin' || userType == 'ICT Admin' || userType == 'Facility Admin') {
+            role = 'Portal Account Partner Executive';  // Org Admin
+        } else if (userType == 'Roster Manager' || userType == 'HR Admin' || 
+                userType == 'Payroll Admin' || userType == 'NDIS Participants' ||
+                userType == 'Payroll Accountant for Multiple' || userType == 'Accountant for Organisation' ||
+                userType == 'SC with NDIS Org Admin' || userType == 'SC with Roster Manager') {
+            role = 'Portal Account Partner Manager';   // Roster Admin
+        } else if (userType == 'NDIS Staff' || userType == 'ICT Staff') {
+            role = 'Portal Account Partner User';      // Staff
+        }
+        Boolean isActive = (Boolean) userDetails.get('isActive');
+        String dateOfBirthString = (String) userDetails.get('dateOfBirth');
+        Date dateOfBirth = Date.valueOf(dateOfBirthString);
+        String phoneNumberString = (String) userDetails.get('phoneNumber');
+        String numericPhoneNumber = phoneNumberString.replaceAll('[^0-9]', '');
+        String hourlyRateString = (String) userDetails.get('hourlyRate');
+        Decimal hourlyRate;
+        if (!String.isBlank(hourlyRateString)) {
+            try {
+                hourlyRate = Decimal.valueOf(hourlyRateString);
+            } catch (Exception e) {
+                System.debug('❌ Invalid hourlyRate value: ' + hourlyRateString);
+            }
+        } else {
+            hourlyRate = null; // or your default logic
+        }
+        String startDateString = (String) userDetails.get('startDate');
+        Date startDate = Date.valueOf(startDateString);
+        String abnValueString = (String) userDetails.get('abn');
+        String taxFileNumberString = (String) userDetails.get('taxFileNumber');
+        Id currentUserId = (Id) userDetails.get('currentuserId');
+        String selectedTaxFree = (String) userDetails.get('selectedTaxFree');
+        String street = (String) userDetails.get('street');
+        String city = (String) userDetails.get('City');
+        String state = (String) userDetails.get('State');
+        String country = (String) userDetails.get('Country');
+        String postalCode = (String) userDetails.get('PostalCode');
+        String selectedGender = (String) userDetails.get('selectedGender');
+        String ManagementFee = (String) userDetails.get('managementFee');
+        String EmploymentType= (String) userDetails.get('frequencyValue');
+        String participantType= (String) userDetails.get('participantType');
+        Boolean isChildParticipant = (participantType != null && participantType.equalsIgnoreCase('Child'));
+        String accountNameField = (String) userDetails.get('accountName');
+        String bsbField = (String) userDetails.get('bsb');
+        String accountNumberField = (String) userDetails.get('accountNumber');
+        String moduleAccessString = (String) userDetails.get('moduleAccess');
+        System.debug('📌 Module Access String: ' + moduleAccessString);
+        //String Languages = (String) userDetails.get('selectedLanguagesString');
+        /* String Languages = '';
+        if (userDetails.containsKey('selectedLanguagesString') && userDetails.get('selectedLanguagesString') != null) {
+            languages = (String) userDetails.get('selectedLanguagesString');
+        }
+        
+        //String Nationality = (String) userDetails.get('nationalitiesValues');
+        String Nationality = '';
+        if (userDetails.containsKey('nationalitiesValues') && userDetails.get('nationalitiesValues') != null) {
+            nationality = (String) userDetails.get('nationalitiesValues');
+        } */
+
+        List<String> facilityIds = new List<String>();
+
+        Object facilityRaw = userDetails.get('facility');
+
+        if (facilityRaw instanceof List<Object>) {
+            // ✅ Multiple facilities
+            for (Object obj : (List<Object>) facilityRaw) {
+                facilityIds.add((String) obj);
+            }
+
+        } else if (facilityRaw instanceof String) {
+            // ✅ Single facility
+            facilityIds.add((String) facilityRaw);
+        }
+
+        System.debug('Resolved Facility IDs => ' + facilityIds);
+
+
+        
+        // Retrieve the Organization Name from the current User
+        List<User> userOrgName = [SELECT Id, Organization_Name__c, TimeZoneSidKey, LocaleSidKey, EmailEncodingKey, LanguageLocaleKey 
+                                  FROM User WHERE Id = :currentUserId LIMIT 1];
+        system.debug('userOrgName===>'+userOrgName);
+        
+        List<Organisation__c> organisationList = [SELECT Id, Name, Type_of_User__c FROM Organisation__c WHERE Name = :userOrgName[0].Organization_Name__c];
+        system.debug('organisationList===>'+organisationList);
+        
+        List<Contact> contEmail = [SELECT Id, Email FROM Contact WHERE Email = :email LIMIT 1];
+        system.debug('contEmail===>'+contEmail);
+        
+        List<Account> accId = [SELECT Id, Name From Account Where Name ='Portal Account'];
+        
+        // Return a map with relevant data for JavaScript
+        Map<String, Object> result = new Map<String, Object>();
+        
+        Staff__c newStaff = null; // Declare the Staff record here to make it accessible after the block
+        
+        if (contEmail.isEmpty()) {
+            system.debug(contEmail.isEmpty());
+            
+            // Create the Contact linked to the Account
+
+                Contact contact = new Contact(
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    AccountId = accId[0].Id,
+                    MailingStreet = street,
+                    MailingCity  = city,
+                    MailingState = state,
+                    MailingPostalCode = postalCode,
+                    MailingCountry  = country,
+                    Portal_User_Created__c = true
+                );
+                insert contact;
+                system.debug('contact===>'+contact.Id);
+
+            Id primaryFacilityId = null;
+            system.debug('facilityIds===>'+facilityIds);
+            if (!facilityIds.isEmpty()) {
+                primaryFacilityId = (Id) facilityIds[0]; // now safe
+                System.debug('✅ Primary Facility Id => ' + primaryFacilityId);
+            }            
+            
+            // Create Staff record
+            newStaff = new Staff__c(
+                Name = firstName,
+                Last_Name__c = lastName,
+                Gender__c = selectedGender,
+                Contact_Number__c = numericPhoneNumber,
+                Date_Of_Birth__c = dateOfBirth,
+                Email_Address__c = email,
+                Facility__c = primaryFacilityId,
+                Address__City__s = city,
+                Address__StateCode__s = state,
+                Address__Street__s = street,
+                Address__PostalCode__s = postalCode,
+                Address__CountryCode__s = 'AU',
+                Working_Hours_Rate__c = hourlyRate,
+                Emp_Start_Date__c = startDate,
+                Type_of_User__c = organisationList[0].Type_of_User__c,
+                Status__c = isActive,
+                TimeZoneSidKey__c = userOrgName[0].TimeZoneSidKey,
+                LocaleSidKey__c = userOrgName[0].LocaleSidKey,
+                EmailEncodingKey__c = userOrgName[0].EmailEncodingKey,
+                LanguageLocaleKey__c = userOrgName[0].LanguageLocaleKey,
+                User_Role__c = role,
+                User_Type__c = userType,
+                //Languages__c = Languages,
+                Employment_type__c = EmploymentType,
+                //Nationality__c = Nationality,
+                ABN_Number__c = abnValueString,
+                TFN_number__c = taxFileNumberString,
+                Participant_Type__c  = participantType,
+                Tax_free_threshold__c = selectedTaxFree,
+                Account_Name__c = accountNameField,
+                BSB__c = bsbField,
+                Account_Number__c = accountNumberField,
+                Module_Names__c = moduleAccessString
+            );
+            insert newStaff;
+            system.debug('newStaff====>' + newStaff);
+            
+            result.put('StaffId', newStaff.Id);
+            result.put('userRole', newStaff.User_Role__c);
+            result.put('userType', newStaff.User_Type__c);
+            result.put('StaffStatus', newStaff.Status__c);
+
+            List<Staff_Facility__c> staffFacilityList = new List<Staff_Facility__c>();
+
+            if (facilityIds != null && !facilityIds.isEmpty()) {
+                for (String facilityId : facilityIds) {
+                    staffFacilityList.add(new Staff_Facility__c(
+                        Staff__c    = newStaff.Id,
+                        Facility__c = facilityId,
+                        Active__c   = true
+                    ));
+                }
+
+                insert staffFacilityList;
+                System.debug('✅ Staff_Facility__c records inserted: ' + staffFacilityList.size());
+            }
+
+
+            if (!Test.isRunningTest()) {
+                CreateUsersBatch createUser = new CreateUsersBatch();
+                Database.executeBatch(createUser, 1);
+            }
+
+            
+        } else{
+            throw new AuraHandledException('Duplicate Email');
+        }
+        return result;
+    }
+
+    @AuraEnabled
+    public static Map<String, Object> createAccountsContactsAndStaff(List<Map<String, String>> records) {
+        Map<String, Object> response = new Map<String, Object>();
+        List<Map<String, String>> successRecords = new List<Map<String, String>>();
+        List<Map<String, String>> failedRecords = new List<Map<String, String>>();
+
+        if (records.isEmpty()) return response;
+
+        // Collect unique emails and facility names
+        Set<String> emailSet = new Set<String>();
+        Set<String> facilityNames = new Set<String>();
+        for (Map<String, String> rec : records) {
+            emailSet.add(rec.get('emailaddress'));
+            if (rec.containsKey('facility')) facilityNames.add(rec.get('facility'));
+        }
+
+        // Query existing Contacts
+        Map<String, Contact> existingContactsMap = new Map<String, Contact>();
+        for (Contact c : [SELECT Id, Email FROM Contact WHERE Email IN :emailSet]) {
+            existingContactsMap.put(c.Email.toLowerCase(), c);
+        }
+
+        // Get current user and portal account
+        User currentUser = [SELECT Id, Organization_Name__c, TimeZoneSidKey, LocaleSidKey, EmailEncodingKey, LanguageLocaleKey 
+                            FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+
+        Organisation__c org = [SELECT Id,Type_of_User__c FROM Organisation__c WHERE Name = :currentUser.Organization_Name__c LIMIT 1];
+
+        Account portalAccount = [SELECT Id, Name FROM Account WHERE Name = 'Portal Account' LIMIT 1];
+
+        // Query Facilities
+        Map<String, Facility__c> facilityMap = new Map<String, Facility__c>();
+        for (Facility__c f : [SELECT Id, Name,Organisation__c FROM Facility__c WHERE Name IN :facilityNames AND Organisation__c =: org.Id]) {
+            facilityMap.put(f.Name, f);
+        }
+
+        // Track contacts and staff
+        List<Contact> contactsToInsert = new List<Contact>();
+        Map<String, Integer> emailToIndexMap = new Map<String, Integer>();
+
+        // First pass: validate and create Contact objects
+        for (Integer i = 0; i < records.size(); i++) {
+            Map<String, String> record = records[i];
+            String email = record.get('emailaddress');
+            String facilityName = record.get('facility');
+
+            try {
+                if (existingContactsMap.containsKey(email.toLowerCase())) {
+                    record.put('ErrorMessage', 'Duplicate email found: ' + email);
+                    failedRecords.add(record);
+                    continue;
+                }
+
+                if (facilityName == null || !facilityMap.containsKey(facilityName)) {
+                    record.put('ErrorMessage', 'Facility not available: ' + facilityName);
+                    failedRecords.add(record);
+                    continue;
+                }
+
+                Contact contact = new Contact();
+                contact.FirstName = record.get('firstname');
+                contact.LastName = record.get('lastname');
+                contact.Email = email;
+                contact.AccountId = portalAccount.Id;
+                contact.MailingStreet = record.get('addressstreet');
+                contact.MailingCity = record.get('addresscity');
+                contact.MailingState = record.get('addressstate');
+                contact.MailingPostalCode = record.get('adresspostcode');
+                contact.MailingCountry = record.get('addresscountry');
+                contact.Portal_User_Created__c = true;
+
+                contactsToInsert.add(contact);
+                emailToIndexMap.put(email, i);
+
+            } catch (Exception e) {
+                record.put('ErrorMessage', 'Contact creation failed: ' + e.getMessage());
+                failedRecords.add(record);
+            }
+        }
+
+        // Insert Contacts in bulk
+        if (!contactsToInsert.isEmpty()) {
+            try {
+                insert contactsToInsert;
+            } catch (DmlException de) {
+                // Handle contact insert failure
+                for (Integer i = 0; i < contactsToInsert.size(); i++) {
+                    Map<String, String> record = records[emailToIndexMap.get(contactsToInsert[i].Email)];
+                    record.put('ErrorMessage', 'Contact insert failed: ' + de.getMessage());
+                    failedRecords.add(record);
+                }
+                return response; // Abort as all contacts failed
+            }
+        }
+
+        // Second pass: create Staff, delete Contacts if Staff fails
+        List<Staff__c> staffToInsert = new List<Staff__c>();
+        List<Contact> contactsToDelete = new List<Contact>();
+
+        for (Contact insertedContact : contactsToInsert) {
+            Map<String, String> record = records[emailToIndexMap.get(insertedContact.Email)];
+            String facilityName = record.get('facility');
+
+            try {
+                Facility__c facility = facilityMap.get(facilityName);
+                if (facility == null) {
+                    // Facility missing, mark failed and delete Contact
+                    record.put('ErrorMessage', 'Facility not available: ' + facilityName);
+                    contactsToDelete.add(insertedContact);
+                    failedRecords.add(record);
+                    continue;
+                }
+
+                Staff__c staff = new Staff__c();
+                staff.Name = insertedContact.FirstName;
+                staff.Last_Name__c = insertedContact.LastName;
+                staff.Gender__c = record.get('gender');
+                staff.Email_Address__c = insertedContact.Email;
+                staff.Status__c = (record.get('status') == 'Active' || record.get('status') == 'true' || record.get('status') == 'Yes');
+                staff.Contact_Number__c = record.get('phonenumber');
+
+                // Map role
+                switch on record.get('role') {
+                    when 'Org Admin' { staff.User_Role__c = 'Portal Account Partner Executive'; }
+                    when 'Roster Admin' { staff.User_Role__c = 'Portal Account Partner Manager'; }
+                    when 'Staff' { staff.User_Role__c = 'Portal Account Partner User'; }
+                }
+
+                String inputState = record.get('addressstate');
+                String stateCode;
+                if (inputState != null) {
+                    inputState = inputState.toLowerCase();
+                }
+
+                if (String.isNotBlank(inputState)) {
+                        if (inputState.contains('new south wales') || inputState.contains('nsw')) {
+                            stateCode = 'NSW';
+                        } else if (inputState.contains('victoria') || inputState.contains('vic')) {
+                            stateCode = 'VIC';
+                        } else if (inputState.contains('queensland') || inputState.contains('qld')) {
+                            stateCode = 'QLD';
+                        } else if (inputState.contains('western') || inputState.contains('wa')) {
+                            stateCode = 'WA';
+                        } else if (inputState.contains('south australia') || inputState.contains('sa')) {
+                            stateCode = 'SA';
+                        } else if (inputState.contains('tasmania') || inputState.contains('tas')) {
+                            stateCode = 'TAS';
+                        } else if (inputState.contains('australian capital') || inputState.contains('act')) {
+                            stateCode = 'ACT';
+                        } else if (inputState.contains('northern') || inputState.contains('nt')) {
+                            stateCode = 'NT';
+                        } else {
+                            stateCode = inputState; // fallback to raw input if no match
+                        }
+                       // System.debug('inputState111 >>'+ inputState);
+                    }
+
+                String participantType = (String) record.get('whoisreceivingthendisservices');
+                String userType = record.get('usertype');
+                if (userType != null && userType == 'NDIS Participant') {
+                    userType = 'NDIS Participants';
+                }
+
+                // Normalize + Map label → value
+                if (String.isBlank(participantType)) {
+                    participantType = null;
+                } else {
+                    participantType = participantType.trim();
+
+                    if (participantType == 'Parent / Guardian') {
+                        participantType = 'Parent';
+                    } 
+                    else if (participantType == 'Child (NDIS Participant)') {
+                        participantType = 'Child';
+                    } 
+                    else if (participantType == 'Both Parent and Child') {
+                        participantType = 'Both';
+                    } 
+                    else {
+                        // Optional safety: unknown value
+                        participantType = null;
+                    }
+                }
+
+                // Assign to picklist field
+                staff.Participant_Type__c = participantType;
+                String abn = (String)record.get('australianbusinessnumber');
+                String tfn = (String)record.get('taxfilenumber');
+                staff.User_Type__c = userType;
+                staff.Facility__c = facility.Id;
+                staff.Working_Hours_Rate__c = parseDecimal(record.get('hourlyrate'));
+                staff.Tax_free_threshold__c = record.get('taxfreethreshold');
+                staff.Emp_Start_Date__c = parseDDMMYYYY(record.get('StartDate'));
+                staff.Date_Of_Birth__c = parseDDMMYYYY(record.get('DateofBirth'));
+                staff.Address__Street__s = record.get('addressstreet');
+                staff.Address__City__s = record.get('addresscity');
+                staff.Address__StateCode__s = stateCode;
+                staff.Address__PostalCode__s = '3066';
+                staff.Address__CountryCode__s = 'AU';
+                staff.TimeZoneSidKey__c = currentUser.TimeZoneSidKey;
+                staff.LocaleSidKey__c = currentUser.LocaleSidKey;
+                staff.EmailEncodingKey__c = currentUser.EmailEncodingKey;
+                staff.LanguageLocaleKey__c = currentUser.LanguageLocaleKey;
+                staff.Employment_type__c = record.get('frequency');/* 
+                staff.Management_Fee__c = parseDecimal(record.get('managementfee')); */
+                staff.Account_Name__c = record.get('accountname');
+                staff.BSB__c = record.get('bsb');
+                staff.Account_Number__c = record.get('accountnumber');
+                staff.Type_of_User__c = org.Type_of_User__c;
+                staff.ABN_Number__c = (abn != null && abn.trim() != '') ? abn : null;
+                staff.TFN_number__c = (tfn != null && tfn.trim() != '') ? tfn : null;   
+                // staff.Module_Names__c = record.get('moduleAccess');
+
+                String moduleAccess =
+                    record.get('moduleaccess');
+
+                try {
+                    moduleAccess = validateAndNormalizeModuleAccess(
+                        userType,
+                        moduleAccess
+                    );
+
+                } catch (Exception moduleException) {
+
+                    String errorMessage = moduleException.getMessage();
+
+                    // =========================================================
+                    // PRESERVE MODULE ACCESS VALIDATION ERRORS
+                    // =========================================================
+
+                    if (String.isBlank(moduleAccess)) {
+
+                        errorMessage = 'Module Access is required.';
+
+                    } else if (moduleAccess.contains(',') ||
+                            moduleAccess.contains('.') ||
+                            moduleAccess.contains('|') ||
+                            moduleAccess.contains('/') ||
+                            moduleAccess.contains('\\')) {
+
+                        errorMessage =
+                            'Invalid Module Access separator. Please separate multiple modules using ";" only.';
+
+                    } else if (String.isBlank(errorMessage) ||
+                            errorMessage == 'Script-thrown exception') {
+
+                        errorMessage =
+                            'Invalid Module Access for User Type "' +
+                            userType +
+                            '".';
+                    }
+
+                    System.debug('❌ FINAL MODULE ACCESS ERROR: ' + errorMessage);
+
+                    record.put('ErrorMessage', errorMessage);
+
+                    contactsToDelete.add(insertedContact);
+                    failedRecords.add(record);
+
+                    continue;
+                }
+
+                staff.Module_Names__c = moduleAccess;
+
+                staffToInsert.add(staff);
+
+            } catch (Exception e) {
+                record.put('ErrorMessage', 'Staff creation failed: ' + e.getMessage());
+                contactsToDelete.add(insertedContact);
+                failedRecords.add(record);
+            }
+        }
+
+        // Insert Staff in bulk
+        if (!staffToInsert.isEmpty()) {
+            try {
+                insert staffToInsert;
+                
+                // NEW: Create Staff_Facility__c records after successful Staff insertion
+                List<Staff_Facility__c> staffFacilitiesToInsert = new List<Staff_Facility__c>();
+                
+                for (Staff__c newStaff : staffToInsert) {
+                    // Get the facility ID from the Staff record
+                    Id facilityId = newStaff.Facility__c;
+                    
+                    if (facilityId != null) {
+                        staffFacilitiesToInsert.add(new Staff_Facility__c(
+                            Staff__c    = newStaff.Id,
+                            Facility__c = facilityId,
+                            Active__c   = true
+                        ));
+                    }
+                }
+                
+                // Insert Staff_Facility__c records
+                if (!staffFacilitiesToInsert.isEmpty()) {
+                    insert staffFacilitiesToInsert;
+                }
+                
+            } catch (DmlException de) {
+                // On failure, delete corresponding Contacts
+                for (Staff__c s : staffToInsert) {
+                    Map<String, String> record = records[emailToIndexMap.get(s.Email_Address__c)];
+                    record.put('ErrorMessage', 'Staff insert failed: ' + de.getMessage());
+                    Contact c = contactsToInsert[emailToIndexMap.get(s.Email_Address__c)];
+                    contactsToDelete.add(c);
+                    failedRecords.add(record);
+                }
+            }
+        }
+
+        // Delete Contacts that failed Staff creation
+        if (!Test.isRunningTest()) {
+            if (!contactsToDelete.isEmpty()) {
+                delete contactsToDelete;
+            }
+        }
+
+        // Mark remaining records as success
+        for (Map<String, String> record : records) {
+            if (!record.containsKey('ErrorMessage')) {
+                successRecords.add(record);
+            }
+        }
+
+        response.put('successRecords', successRecords);
+        response.put('failedRecords', failedRecords);
+        if (!Test.isRunningTest() && !successRecords.isEmpty()) {
+            try {
+                CreateUsersBatch createUser = new CreateUsersBatch();
+                Database.executeBatch(createUser, 1);
+            } catch (Exception e) {
+                System.debug('Batch execution failed: ' + e.getMessage());
+                // Optionally, add an error to the response if batch fails
+                response.put('batchError', e.getMessage());
+            }
+        }
+        return response;
+    }
+
+    
+    public static Date parseDDMMYYYY(String input) {
+        List<String> parts = input.split('/');
+        if (parts.size() != 3) return null;
+        return Date.newInstance(
+            Integer.valueOf(parts[2]), // year
+            Integer.valueOf(parts[1]), // month
+            Integer.valueOf(parts[0])  // day
+        );
+    }   
+    
+    private static Decimal parseDecimal(String val) {
+        if (String.isBlank(val)) return null;
+        try {
+            val = val.replace(',', '');
+            return Decimal.valueOf(val);
+        } catch (Exception e) {
+            System.debug('⚠️ Invalid decimal: ' + val);
+            return null;
+        }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<String> getUserTypeValues(string selectedroleValue, Id userId) {
+        
+        system.debug('selectedroleValue=====>'+selectedroleValue);
+        
+        User userRecord = [SELECT Id, Organization_Name__c, User_Type__c FROM User WHERE Id = :userId LIMIT 1];
+        
+        List<String> multiPicklistValues = new List<String>();
+        
+        Organisation__c parentRecord = [
+            SELECT Id, User_Type__c 
+            FROM Organisation__c 
+            WHERE Name = :userRecord.Organization_Name__c 
+            LIMIT 1
+        ];
+        
+        
+        if (parentRecord != null && parentRecord.User_Type__c != null) {
+            multiPicklistValues = parentRecord.User_Type__c.split(';');
+        }
+        system.debug('multiPicklistValues====>'+multiPicklistValues);
+        
+        
+        if (selectedroleValue == 'Portal account partner executive') {
+            List<String> allowedValues;
+
+            // Check if the current user's User_Type__c is 'Facility Admin'
+            if (userRecord.User_Type__c == 'Facility Admin') {
+                allowedValues = new List<String>{ 'Facility Admin' };
+            } else {
+                allowedValues = new List<String>{ 'NDIS Org Admin', 'ICT Admin', 'Facility Admin', 'SC with NDIS Org Admin' };
+            }
+                List<String> filteredValues = new List<String>();
+            
+            for (String value : multiPicklistValues) {
+                system.debug('value====>'+value);
+                if (allowedValues.contains(value)) {
+                    filteredValues.add(value);
+                }
+            }
+            multiPicklistValues = filteredValues;       
+        } 
+        else if (selectedroleValue == 'Portal account partner manager') {
+            List<String> allowedValues = new List<String>{
+                'Roster Manager', 'Payroll Admin', 'HR Admin', 'NDIS Participant',
+                    'Payroll Accountant for Multiple', 'Accountant for Organisation', 'ICT Admin', 'SC with Roster Manager'
+                    };
+                        
+                        Map<String, String> normalizedLabels = new Map<String, String>{
+                            'ndis participants' => 'NDIS Participant',
+                                'ndis participant' => 'NDIS Participant'
+                                };
+                                    
+                                    List<String> filteredValues = new List<String>();
+            
+            for (String value : multiPicklistValues) {
+                String cleanedValue = value.trim().toLowerCase();
+                for (String allowed : allowedValues) {
+                    if (allowed.trim().toLowerCase() == cleanedValue || normalizedLabels.containsKey(cleanedValue)) {
+                        filteredValues.add(normalizedLabels.containsKey(cleanedValue) ? normalizedLabels.get(cleanedValue) : allowed);
+                        break;
+                    }
+                }
+            }
+            
+            multiPicklistValues = filteredValues;
+        }    
+        else if (selectedroleValue == 'Portal account partner User') {
+            List<String> allowedValues = new List<String>{ 'ICT Staff', 'NDIS Staff' };
+            List<String> filteredValues = new List<String>();
+            
+            for (String value : multiPicklistValues) {
+                if (allowedValues.contains(value)) {
+                    filteredValues.add(value);
+                }
+            }
+            multiPicklistValues = filteredValues; 
+        }
+        else if (selectedroleValue == 'Participant') {
+
+            List<String> allowedValues = new List<String>{ 'ndis participant' };
+            List<String> filteredValues = new List<String>();
+
+            for (String value : multiPicklistValues) {
+                String cleanedValue = value.trim().toLowerCase();
+
+                // Handle plural + singular
+                if (cleanedValue == 'ndis participant' || cleanedValue == 'ndis participants') {
+                    filteredValues.add('NDIS Participant');
+                }
+            }
+
+            multiPicklistValues = filteredValues;
+        }
+
+        system.debug('multiPicklistValues >>'+ multiPicklistValues);
+        return multiPicklistValues;
+    } 
+    
+    @AuraEnabled
+    public static String createPortalUserStaff(String StaffId, String selectedRole, String selectedUserType, String moduleAccess) {
+        try {
+            system.debug('StaffId===>'+StaffId);
+            system.debug('selectedRole===>'+selectedRole);
+            system.debug('selectedUserType===>'+selectedUserType);
+            system.debug('moduleAccess===>'+moduleAccess);
+            
+            // ✅ Validate Module Access
+            if (String.isBlank(moduleAccess)) {
+                return 'Module Access is required. Please select at least one module.';
+            }
+            
+            // Fetch the Staff record
+            List<Staff__c> staffList = [SELECT Status__c, Id, Name, Last_Name__c, Address__Street__s, Address__City__s, 
+                                        Address__PostalCode__s, Address__StateCode__s, Address__CountryCode__s, 
+                                        Address__Latitude__s, Address__Longitude__s, Address__GeocodeAccuracy__s, 
+                                        Email_Address__c, Module_Names__c  // ✅ Added Module_Names__c
+                                        FROM Staff__c 
+                                        WHERE Id = :StaffId 
+                                        LIMIT 1];
+            
+            if (staffList.isEmpty()) {
+                return 'Staff record not found.';
+            }
+            
+            List<User> userOrgName = [SELECT Id, Organization_Name__c, TimeZoneSidKey, LocaleSidKey, EmailEncodingKey, LanguageLocaleKey 
+                                    FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+            
+            Staff__c STF = new Staff__c(id=StaffId);
+            STF.TimeZoneSidKey__c = userOrgName[0].TimeZoneSidKey;
+            STF.LocaleSidKey__c = userOrgName[0].LocaleSidKey;
+            STF.EmailEncodingKey__c = userOrgName[0].EmailEncodingKey;
+            STF.LanguageLocaleKey__c = userOrgName[0].LanguageLocaleKey;
+            STF.User_Type__c = selectedUserType;
+            STF.User_Role__c = selectedRole;
+            STF.Module_Names__c = moduleAccess;  // ✅ NEW: Save Module Access
+            update STF;
+            
+            Staff__c staff = staffList[0];
+            
+            // Fetch the Portal Account
+            List<Account> accList = [SELECT Id, Name FROM Account WHERE Name = 'Portal Account' LIMIT 1];
+            
+            if (accList.isEmpty()) {
+                return 'No Portal Account found.';
+            }
+            
+            Account portalAccount = accList[0];
+            
+            // Validate Email
+            if (String.isEmpty(staff.Email_Address__c)) {
+                return 'Staff Email is missing, cannot create Contact.';
+            }
+            
+            // Check if Contact already exists with this email
+            List<Contact> existingContact = [SELECT Id FROM Contact WHERE Email = :staff.Email_Address__c LIMIT 1];
+            
+            Contact contact;
+            if (existingContact.isEmpty()) {
+                // Create new Contact
+                contact = new Contact(
+                    FirstName = staff.Name, 
+                    LastName = staff.Last_Name__c,
+                    Email = staff.Email_Address__c,
+                    AccountId = portalAccount.Id,
+                    MailingStreet = staff.Address__Street__s,
+                    MailingCity = staff.Address__City__s,
+                    MailingState = staff.Address__StateCode__s,
+                    MailingPostalCode = staff.Address__PostalCode__s,
+                    MailingCountry = staff.Address__CountryCode__s,
+                    Portal_User_Created__c = true
+                );
+                insert contact;
+            } else {
+                // Update existing Contact
+                contact = existingContact[0];
+                contact.Portal_User_Created__c = true;
+                update contact;
+            }
+            
+            if (!Test.isRunningTest()) {
+                CreateUsersBatch createUser = new CreateUsersBatch();
+                Database.executeBatch(createUser, 1);
+            }
+
+            return 'Contact Created/Updated Successfully: ' + contact.Id;
+            
+        } catch (Exception e) {
+            return 'Error: ' + e.getMessage();
+        }
+    }
+    
+    @AuraEnabled
+    public static String createstafffromstaffDataCommunity(Id StaffId) {
+        try {
+            Staff__c staff = [SELECT Id, Name, Email_Address__c,User_Not_Created__c FROM Staff__c WHERE Id = :StaffId LIMIT 1];
+            
+            staff.User_Not_Created__c = true;
+            
+            update staff;
+            return 'Staff Created Successfully';
+            
+        }
+        catch (Exception e) {
+            return 'Error while Creating Staff';
+        }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static String getUserRole() {
+        Id userId = UserInfo.getUserId();
+        User u = [SELECT Id, User_Type__c FROM User WHERE Id = :userId LIMIT 1];
+        return u.User_Type__c != null ? u.User_Type__c : 'No Role Assigned';
+    }
+
+    @AuraEnabled
+    public static list<Facility_Association__c> getFacilityCurrentUser(){
+        Id userId = UserInfo.getUserId();
+        system.debug('userId '+userId);
+        list<Facility_Association__c> facAssociation= new list<Facility_Association__c>();
+        facAssociation=[select Id,Facility__c,Facility__r.Name,Staff__c,User__c,Facility__r.Facility_Preferred_Name_Formula__c,Facility__r.Type_of_Service__c,Facility__r.Status__c,Facility__r.Participant_Preferred_Name_Formla__c,Facility__r.Shift_Penalty_Mode__c,Facility__r.Shift_Cancellation_Period__c,Facility__r.EnableSIL__c from Facility_Association__c where User__c=:userId
+                       and Active__c =true AND Facility__r.Status__c = true];
+        system.debug('facAssociation  '+facAssociation);
+        return facAssociation;        
+        
+    }
+
+    @AuraEnabled
+    public static list<Facility_Association__c> getFacilityUserWise(string UserId,string accessUserType){
+        system.debug(' UserId '+UserId);
+        system.debug(' accessUserType '+accessUserType);
+        list<Facility_Association__c> facAssociation= new list<Facility_Association__c>();
+        facAssociation=[select Id,Facility__c,Facility__r.Name,Staff__c,User__c from Facility_Association__c where User__c=:UserId AND User_Type__c=: accessUserType
+                        and Active__c =true];
+        system.debug('facAssociation  '+facAssociation);
+        return facAssociation;        
+        
+    }
+
+    @AuraEnabled
+    public static void insertFacicilityAssociation(List<String> FacilityIdList,String UserId, List<String> updatedFacilityId,String userType) {
+        List<Facility_Association__c> facToInsert = new List<Facility_Association__c>();
+        List<Facility_Association__c> facToUpdateInactive = new List<Facility_Association__c>();
+        
+        Set<String> selectedSet = new Set<String>(FacilityIdList);
+        Set<String> oldSet = new Set<String>(updatedFacilityId);
+        
+        Set<String> toDeactivate = new Set<String>(oldSet);
+        toDeactivate.removeAll(selectedSet); // deselected
+        
+        Set<String> toInsert = new Set<String>(selectedSet);
+        toInsert.removeAll(oldSet); // newly selected
+        
+        // 🔁 Reactivate if inactive records exist
+        if (!toInsert.isEmpty()) {
+            List<Facility_Association__c> existingInactive = [
+                SELECT Id, Facility__c, Active__c
+                FROM Facility_Association__c
+                WHERE User__c = :UserId AND Facility__c IN :toInsert AND Active__c = false
+            ];
+            
+            Set<String> reactivatedFacilityIds = new Set<String>();
+            
+            for (Facility_Association__c fa : existingInactive) {
+                fa.Active__c = true;
+                facToUpdateInactive.add(fa);
+                reactivatedFacilityIds.add(fa.Facility__c); // So we don’t create duplicate
+            }
+            
+            // Insert new records only for those not reactivated
+            for (String fac : toInsert) {
+                if (!reactivatedFacilityIds.contains(fac)) {
+                    Facility_Association__c fsa = new Facility_Association__c();
+                    fsa.Facility__c = fac;
+                    fsa.User__c = UserId;
+                    fsa.User_Type__c = userType;
+                    fsa.Active__c = true;
+                    facToInsert.add(fsa);
+                }
+            }
+            
+            if (!facToUpdateInactive.isEmpty()) {
+                update facToUpdateInactive;
+            }
+            if (!facToInsert.isEmpty()) {
+                insert facToInsert;
+            }
+        }
+        
+        // 🧯 Deactivate logic (as before)
+        if (!toDeactivate.isEmpty()) {
+            List<Facility_Association__c> toUpdate = [
+                SELECT Id
+                FROM Facility_Association__c
+                WHERE User__c = :UserId AND Facility__c IN :toDeactivate AND Active__c = true
+            ];
+            
+            for (Facility_Association__c fa : toUpdate) {
+                fa.Active__c = false;
+                facToUpdateInactive.add(fa);
+            }
+            
+            if (!facToUpdateInactive.isEmpty()) {
+                update facToUpdateInactive;
+            }
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<String> getUserTypeValues1(String selectedroleValue, Id userId) {
+
+        Id userId123 = UserInfo.getUserId();
+        User u1 = [SELECT Id, User_Type__c FROM User WHERE Id = :userId123 LIMIT 1];
+
+        System.debug('selectedroleValue=====>' + selectedroleValue);
+        System.debug('UserId =====>' + userId);
+
+        // Fetch Staff record
+        Staff__c staffRecord = [
+            SELECT Id, Email_Address__c 
+            FROM Staff__c 
+            WHERE Id = :userId 
+            LIMIT 1
+        ];
+        System.debug('staffRecord =====>' + staffRecord);
+
+        User userRecord;
+        if (staffRecord.Email_Address__c != null) {
+            // Fetch users with the same email
+            List<User> users = [
+                SELECT Id, Organization_Name__c, Email, User_Type__c, IsActive 
+                FROM User 
+                WHERE Email = :staffRecord.Email_Address__c
+            ];
+            System.debug('Users returned =====>' + users);
+
+            // If only one user is found → take it
+            if (users.size() == 1) {
+                userRecord = users[0];
+            }
+            // If more than one → take the active one
+            else if (users.size() > 1) {
+                for (User u : users) {
+                    if (u.IsActive) {
+                        userRecord = u;
+                        break;
+                    }
+                }
+            }
+
+            if (userRecord == null) {
+                System.debug('No active user found. Setting userRecord to null.');
+            } else {
+                System.debug('Selected userRecord =====>' + userRecord);
+            }
+        }
+
+        List<String> multiPicklistValues = new List<String>();
+
+        // Fetch Organisation and split User Type picklist values
+        if (userRecord != null) {
+            System.debug('Organization_Name =====>' + userRecord.Organization_Name__c);
+
+            Organisation__c parentRecord = [
+                SELECT Id, User_Type__c 
+                FROM Organisation__c 
+                WHERE Name = :userRecord.Organization_Name__c 
+                LIMIT 1
+            ];
+
+            if (parentRecord != null && parentRecord.User_Type__c != null) {
+                multiPicklistValues = parentRecord.User_Type__c.split(';');
+            }
+        }
+
+        System.debug('multiPicklistValues before filtering====>' + multiPicklistValues);
+
+        // Role-wise filtering logic
+        if (selectedroleValue == 'Portal account partner executive') {
+            List<String> allowedValues;
+
+            // If current user is a Facility Admin → restrict options
+            if (u1 != null && u1.User_Type__c == 'Facility Admin') {
+                allowedValues = new List<String>{ 'Facility Admin' };
+            } else {
+                allowedValues = new List<String>{ 'NDIS Org Admin', 'ICT Admin', 'Facility Admin' };
+            }
+
+            List<String> filteredValues = new List<String>();
+            for (String value : multiPicklistValues) {
+                if (allowedValues.contains(value)) {
+                    filteredValues.add(value);
+                }
+            }
+            multiPicklistValues = filteredValues;
+        }
+        else if (selectedroleValue == 'Portal account partner manager') {
+            List<String> allowedValues = new List<String>{
+                'Roster Manager', 'Payroll Admin', 'HR Admin', 'NDIS Participant',
+                'Payroll Accountant for Multiple', 'Accountant for Organisation', 'ICT Admin'
+            };
+
+            Map<String, String> normalizedLabels = new Map<String, String>{
+                'ndis participants' => 'NDIS Participant',
+                'ndis participant' => 'NDIS Participant'
+            };
+
+            List<String> filteredValues = new List<String>();
+            for (String value : multiPicklistValues) {
+                String cleanedValue = value.trim().toLowerCase();
+                for (String allowed : allowedValues) {
+                    if (allowed.trim().toLowerCase() == cleanedValue || normalizedLabels.containsKey(cleanedValue)) {
+                        filteredValues.add(normalizedLabels.containsKey(cleanedValue) ? normalizedLabels.get(cleanedValue) : allowed);
+                        break;
+                    }
+                }
+            }
+            multiPicklistValues = filteredValues;
+        }
+        else if (selectedroleValue == 'Portal account partner User') {
+            List<String> allowedValues = new List<String>{ 'ICT Staff', 'NDIS Staff' };
+            List<String> filteredValues = new List<String>();
+            for (String value : multiPicklistValues) {
+                if (allowedValues.contains(value)) {
+                    filteredValues.add(value);
+                }
+            }
+            multiPicklistValues = filteredValues;
+        }
+
+        System.debug('Filtered multiPicklistValues >>' + multiPicklistValues);
+        return multiPicklistValues;
+    }
+
+    @AuraEnabled
+    public static List<String> getUserTypeValuesBasedOnUser() {
+        
+        system.debug('=== START: getUserTypeValuesBasedOnUser ===');
+        system.debug('Getting User Type values for current user');
+        
+        try {
+            // Get current user record
+            Id userId = UserInfo.getUserId();
+            system.debug('Current User ID: ' + userId);
+            
+            User userRecord = [SELECT Id, Organization_Name__c, User_Type__c 
+                            FROM User WHERE Id = :userId LIMIT 1];
+            system.debug('User Record Found:');
+            system.debug('  - User ID: ' + userRecord.Id);
+            system.debug('  - Organization Name: ' + userRecord.Organization_Name__c);
+            system.debug('  - User Type: ' + userRecord.User_Type__c);
+            
+            List<String> multiPicklistValues = new List<String>();
+            
+            // Get parent organisation's User_Type__c values
+            system.debug('Fetching Organisation record for: ' + userRecord.Organization_Name__c);
+            Organisation__c parentRecord = [
+                SELECT Id, User_Type__c 
+                FROM Organisation__c 
+                WHERE Name = :userRecord.Organization_Name__c 
+                LIMIT 1
+            ];
+            
+            if (parentRecord != null) {
+                system.debug('Organisation Record Found:');
+                system.debug('  - Organisation ID: ' + parentRecord.Id);
+                system.debug('  - Organisation User_Type__c: ' + parentRecord.User_Type__c);
+                
+                if (parentRecord.User_Type__c != null) {
+                    multiPicklistValues = parentRecord.User_Type__c.split(';');
+                    system.debug('Split multiPicklistValues into ' + multiPicklistValues.size() + ' values:');
+                    for (Integer i = 0; i < multiPicklistValues.size(); i++) {
+                        system.debug('  [' + i + '] ' + multiPicklistValues[i]);
+                    }
+                } else {
+                    system.debug('Organisation User_Type__c is null - no values to process');
+                }
+            } else {
+                system.debug('No Organisation record found for: ' + userRecord.Organization_Name__c);
+            }
+            
+            system.debug('Original multiPicklistValues====>'+multiPicklistValues);
+            
+            // Determine which role filter to apply based on user's User_Type__c
+            String userType = userRecord.User_Type__c;
+            List<String> filteredValues = new List<String>();
+            system.debug('Determining filter based on User Type: ' + userType);
+            
+            // Apply filters based on the user's User_Type__c
+            if (String.isNotEmpty(userType)) {
+                // Trim and normalize the user type for exact comparison
+                String normalizedUserType = userType.trim();
+                system.debug('Normalized User Type: ' + normalizedUserType);
+                
+                // For NDIS Org Admin - All User Types
+                if (normalizedUserType == 'NDIS Org Admin') {
+                    system.debug('=== NDIS ORG ADMIN PATH - All User Types ===');
+                    filteredValues = multiPicklistValues;
+                    system.debug('Returning all ' + filteredValues.size() + ' values without filtering');
+                }
+                // For Roster Manager - Exclude NDIS Org Admin & Facility Admin
+                else if (normalizedUserType == 'Roster Manager') {
+                    system.debug('=== ROSTER MANAGER PATH ===');
+                    system.debug('Excluding: NDIS Org Admin, Facility Admin');
+                    
+                    List<String> excludedValues = new List<String>{'NDIS Org Admin', 'Facility Admin'};
+                    system.debug('Excluded values: ' + excludedValues);
+                    
+                    for (String value : multiPicklistValues) {
+                        system.debug('  Checking value: "' + value + '"');
+                        if (!excludedValues.contains(value)) {
+                            filteredValues.add(value);
+                            system.debug('    ✓ INCLUDED - added to filtered list');
+                        } else {
+                            system.debug('    ✗ EXCLUDED - skipped');
+                        }
+                    }
+                    system.debug('Filtered values count: ' + filteredValues.size());
+                }
+                // For Facility Admin - Exclude NDIS Org Admin
+                else if (normalizedUserType == 'Facility Admin') {
+                    system.debug('=== FACILITY ADMIN PATH ===');
+                    system.debug('Excluding: NDIS Org Admin');
+                    
+                    List<String> excludedValues = new List<String>{'NDIS Org Admin'};
+                    system.debug('Excluded values: ' + excludedValues);
+                    
+                    for (String value : multiPicklistValues) {
+                        system.debug('  Checking value: "' + value + '"');
+                        if (!excludedValues.contains(value)) {
+                            filteredValues.add(value);
+                            system.debug('    ✓ INCLUDED - added to filtered list');
+                        } else {
+                            system.debug('    ✗ EXCLUDED - skipped');
+                        }
+                    }
+                    system.debug('Filtered values count: ' + filteredValues.size());
+                }
+                // For HR Admin - Exclude NDIS Org Admin, Roster Manager, Facility Admin, ICT Admin, NDIS Participants
+                else if (normalizedUserType == 'HR Admin') {
+                    system.debug('=== HR ADMIN PATH ===');
+                    system.debug('Excluding: NDIS Org Admin, Roster Manager, Facility Admin, ICT Admin, NDIS Participants');
+                    
+                    List<String> excludedValues = new List<String>{
+                        'NDIS Org Admin', 'Roster Manager', 'Facility Admin', 
+                        'ICT Admin', 'NDIS Participants'
+                    };
+                    system.debug('Excluded values: ' + excludedValues);
+                    
+                    for (String value : multiPicklistValues) {
+                        system.debug('  Checking value: "' + value + '"');
+                        if (!excludedValues.contains(value)) {
+                            filteredValues.add(value);
+                            system.debug('    ✓ INCLUDED - added to filtered list');
+                        } else {
+                            system.debug('    ✗ EXCLUDED - skipped');
+                        }
+                    }
+                    system.debug('Filtered values count: ' + filteredValues.size());
+                }
+                // For ICT Admin - All User Types
+                else if (normalizedUserType == 'ICT Admin') {
+                    system.debug('=== ICT ADMIN PATH - All User Types ===');
+                    filteredValues = multiPicklistValues;
+                    system.debug('Returning all ' + filteredValues.size() + ' values without filtering');
+                }
+                // Default: return all values
+                else {
+                    system.debug('=== DEFAULT PATH (no specific user type matched) ===');
+                    system.debug('User Type "' + userType + '" did not match any specific role');
+                    filteredValues = multiPicklistValues;
+                    system.debug('Returning all ' + filteredValues.size() + ' values without filtering');
+                }
+            } else {
+                // If user has no User_Type__c, return all values
+                system.debug('=== USER HAS NO USER_TYPE__C ===');
+                system.debug('User_Type__c field is null or empty');
+                filteredValues = multiPicklistValues;
+                system.debug('Returning all ' + filteredValues.size() + ' values without filtering');
+            }
+            
+            system.debug('=== FINAL FILTERED VALUES ===');
+            system.debug('Total filtered values: ' + filteredValues.size());
+            for (Integer i = 0; i < filteredValues.size(); i++) {
+                system.debug('  [' + i + '] ' + filteredValues[i]);
+            }
+            system.debug('=== END: getUserTypeValuesBasedOnUser ===');
+            
+            return filteredValues;
+            
+        } catch (Exception e) {
+            system.debug('=== ERROR in getUserTypeValuesBasedOnUser ===');
+            system.debug('Error Message: ' + e.getMessage());
+            system.debug('Error Type: ' + e.getTypeName());
+            system.debug('Stack Trace: ' + e.getStackTraceString());
+            system.debug('=== END ERROR ===');
+            throw e;
+        }
+    }
+
+    Public static Map<String, Set<String>> getAllowedModuleMap() {
+
+    Map<String, Set<String>> moduleMap = new Map<String, Set<String>>();
+
+    moduleMap.put('NDIS Org Admin', new Set<String>{
+        'Admin',
+        'Human Resources',
+        'Incident Register',
+        'Participants',
+        'Repository',
+        'Roster Manager',
+        'Sign In',
+        'My Profile',
+        'Templates',
+        'Accounting',
+        'Access Manager',
+        'T sign',
+        'Forms',
+        'Reports'
+    });
+
+    moduleMap.put('SC with NDIS Org Admin', new Set<String>{
+        'Admin',
+        'Human Resources',
+        'Incident Register',
+        'Participants',
+        'Repository',
+        'Roster Manager',
+        'Sign In',
+        'My Profile',
+        'Accounting',
+        'Access Manager',
+        'T sign',
+        'Forms',
+        'Reports',
+        'Support Coordinator'
+    });
+
+    moduleMap.put('HR Admin', new Set<String>{
+        'Human Resources',
+        'T sign',
+        'Incident Register',
+        'Repository',
+        'Access Manager',
+        'My Profile',
+        'Templates',
+        'Reports'
+    });
+
+    moduleMap.put('Payroll Admin', new Set<String>{
+        'Accounting',
+        'Incident Register',
+        'Repository',
+        'Reports'
+    });
+
+    moduleMap.put('Roster Manager', new Set<String>{
+        'Roster Manager',
+        'Human Resources',
+        'Sign In',
+        'Participants',
+        'Accounting',
+        'T sign',
+        'Access Manager',
+        'Incident Register',
+        'Repository',
+        'My Profile',
+        'Templates',
+        'Forms',
+        'Reports'
+    });
+
+    moduleMap.put('SC with Roster Manager', new Set<String>{
+        'Roster Manager',
+        'Human Resources',
+        'Sign In',
+        'Participants',
+        'Accounting',
+        'T sign',
+        'Access Manager',
+        'Incident Register',
+        'Repository',
+        'My Profile',
+        'Forms',
+        'Reports',
+        'Support Coordinator'
+    });
+
+    moduleMap.put('Facility Admin', new Set<String>{
+        'Admin',
+        'Roster Manager',
+        'Human Resources',
+        'Sign In',
+        'Participants',
+        'Accounting',
+        'T sign',
+        'Access Manager',
+        'Incident Register',
+        'Repository',
+        'My Profile',
+        'Templates',
+        'Forms',
+        'Reports'
+    });
+
+    moduleMap.put('ICT Admin', new Set<String>{
+        'Admin',
+        'Human Resources',
+        'ICT Timesheets',
+        'T sign',
+        'Incident Register',
+        'My Profile',
+        'Accounting',
+        'Repository',
+        'Access Manager'
+    });
+
+    moduleMap.put('NDIS Staff', new Set<String>{
+        'Roster Manager',
+        'Participants',
+        'Sign In',
+        'Incident Register',
+        'Repository',
+        'My Profile'
+    });
+
+    moduleMap.put('ICT Staff', new Set<String>{
+        'My Profile',
+        'Repository',
+        'ICT Timesheets'
+    });
+
+    moduleMap.put('NDIS Participants', new Set<String>{
+        'Participants'
+    });
+
+    moduleMap.put('Payroll Accountant for Multiple', new Set<String>{
+        'Accounting'
+    });
+
+    moduleMap.put('Accountant for Organisation', new Set<String>{
+        'Admin',
+        'Accounting'
+    });
+
+    return moduleMap;
+}
+
+    Public static String validateAndNormalizeModuleAccess(
+        String userType,
+        String moduleAccess
+    ) {
+        System.debug('========== MODULE ACCESS VALIDATION START ==========');
+        System.debug('🔍 User Type: [' + userType + ']');
+        System.debug('🔍 Raw Module Access: [' + moduleAccess + ']');
+    
+        // Log the exact length and characters received
+        if (moduleAccess != null) {
+            System.debug('🔍 Module Access Length: ' + moduleAccess.length());
+            System.debug('🔍 Module Access contains ";": ' + moduleAccess.contains(';'));
+            System.debug('🔍 Module Access contains ",": ' + moduleAccess.contains(','));
+            System.debug('🔍 Module Access contains ".": ' + moduleAccess.contains('.'));
+            System.debug('🔍 Module Access contains "|": ' + moduleAccess.contains('|'));
+            System.debug('🔍 Module Access contains "/": ' + moduleAccess.contains('/'));
+            System.debug('🔍 Module Access contains "\\": ' + moduleAccess.contains('\\'));
+        }
+    
+        // =========================================================
+        // 1. REQUIRED VALIDATION
+        // =========================================================
+        if (String.isBlank(moduleAccess)) {
+            System.debug('❌ Module Access is NULL / BLANK');
+    
+            throw new AuraHandledException(
+                'Module Access is required.'
+            );
+        }
+    
+        System.debug('✅ Module Access is not blank');
+    
+    
+        // =========================================================
+        // 2. GET ALLOWED MODULES
+        // =========================================================
+        Map<String, Set<String>> allowedModuleMap =
+            getAllowedModuleMap();
+    
+        System.debug(
+            '📋 Allowed Module Map: ' +
+            JSON.serialize(allowedModuleMap)
+        );
+    
+        if (!allowedModuleMap.containsKey(userType)) {
+            System.debug(
+                '❌ No Module Access configuration found for User Type: ' +
+                userType
+            );
+    
+            throw new AuraHandledException(
+                'No Module Access configuration found for User Type: ' +
+                userType
+            );
+        }
+    
+        Set<String> allowedModules =
+            allowedModuleMap.get(userType);
+    
+        System.debug(
+            '✅ Allowed Modules for [' + userType + ']: ' +
+            JSON.serialize(allowedModules)
+        );
+    
+    
+        // =========================================================
+        // 3. BUILD CANONICAL MODULE MAP
+        // =========================================================
+        Map<String, String> canonicalModules =
+            new Map<String, String>();
+    
+        for (String allowedModule : allowedModules) {
+    
+            if (String.isNotBlank(allowedModule)) {
+    
+                String cleanedAllowedModule =
+                    allowedModule.trim();
+    
+                String normalizedAllowedModule =
+                    cleanedAllowedModule.toLowerCase();
+    
+                canonicalModules.put(
+                    normalizedAllowedModule,
+                    cleanedAllowedModule
+                );
+    
+                System.debug(
+                    '📌 Canonical Module Mapping: [' +
+                    normalizedAllowedModule +
+                    '] => [' +
+                    cleanedAllowedModule +
+                    ']'
+                );
+            }
+        }
+    
+        System.debug(
+            '📋 Final Canonical Modules: ' +
+            JSON.serialize(canonicalModules)
+        );
+    
+    
+        // =========================================================
+        // 4. MODULE ALIASES
+        // =========================================================
+        Map<String, String> moduleAliases =
+            new Map<String, String>();
+    
+        moduleAliases.put('documents', 'Repository');
+        moduleAliases.put('document', 'Repository');
+        moduleAliases.put('participants', 'Participants');
+    
+        System.debug(
+            '📋 Module Aliases: ' +
+            JSON.serialize(moduleAliases)
+        );
+    
+    
+        // =========================================================
+        // 5. SEPARATOR VALIDATION
+        // =========================================================
+        System.debug('========== SEPARATOR VALIDATION ==========');
+    
+        if (moduleAccess.contains(',')) {
+    
+            System.debug(
+                '❌ INVALID SEPARATOR DETECTED: COMMA (,)' 
+            );
+    
+            System.debug(
+                '❌ Raw value received: [' +
+                moduleAccess +
+                ']'
+            );
+    
+            throw new AuraHandledException(
+                'Invalid Module Access separator. Please separate multiple modules using ";" only.'
+            );
+        }
+    
+        if (moduleAccess.contains('.')) {
+    
+            System.debug(
+                '❌ INVALID SEPARATOR DETECTED: DOT (.)'
+            );
+    
+            System.debug(
+                '❌ Raw value received: [' +
+                moduleAccess +
+                ']'
+            );
+    
+            throw new AuraHandledException(
+                'Invalid Module Access separator. Please separate multiple modules using ";" only.'
+            );
+        }
+    
+        if (moduleAccess.contains('|')) {
+    
+            System.debug(
+                '❌ INVALID SEPARATOR DETECTED: PIPE (|)'
+            );
+    
+            System.debug(
+                '❌ Raw value received: [' +
+                moduleAccess +
+                ']'
+            );
+    
+            throw new AuraHandledException(
+                'Invalid Module Access separator. Please separate multiple modules using ";" only.'
+            );
+        }
+    
+        if (moduleAccess.contains('/')) {
+    
+            System.debug(
+                '❌ INVALID SEPARATOR DETECTED: SLASH (/)'
+            );
+    
+            System.debug(
+                '❌ Raw value received: [' +
+                moduleAccess +
+                ']'
+            );
+    
+            throw new AuraHandledException(
+                'Invalid Module Access separator. Please separate multiple modules using ";" only.'
+            );
+        }
+    
+        if (moduleAccess.contains('\\')) {
+    
+            System.debug(
+                '❌ INVALID SEPARATOR DETECTED: BACKSLASH (\\)'
+            );
+    
+            System.debug(
+                '❌ Raw value received: [' +
+                moduleAccess +
+                ']'
+            );
+    
+            throw new AuraHandledException(
+                'Invalid Module Access separator. Please separate multiple modules using ";" only.'
+            );
+        }
+    
+        System.debug(
+            '✅ Separator validation passed'
+        );
+    
+    
+        // =========================================================
+        // 6. SPLIT MODULE ACCESS
+        // =========================================================
+        List<String> requestedModules =
+            moduleAccess.split(';');
+    
+        System.debug(
+            '📦 Requested Modules After Split: ' +
+            JSON.serialize(requestedModules)
+        );
+    
+        System.debug(
+            '📦 Requested Module Count: ' +
+            requestedModules.size()
+        );
+    
+    
+        List<String> normalizedModules =
+            new List<String>();
+    
+        Set<String> seenModules =
+            new Set<String>();
+    
+    
+        // =========================================================
+        // 7. VALIDATE EACH MODULE
+        // =========================================================
+        for (String moduleName : requestedModules) {
+    
+            System.debug(
+                '---------------------------------------------'
+            );
+    
+            System.debug(
+                '🔎 Processing Raw Module: [' +
+                moduleName +
+                ']'
+            );
+    
+            String cleanedModule =
+                moduleName == null
+                    ? ''
+                    : moduleName.trim();
+    
+            System.debug(
+                '🧹 Cleaned Module: [' +
+                cleanedModule +
+                ']'
+            );
+    
+            if (String.isBlank(cleanedModule)) {
+    
+                System.debug(
+                    '⚠️ Empty module found - skipping'
+                );
+    
+                continue;
+            }
+    
+            String normalizedKey =
+                cleanedModule.toLowerCase();
+    
+            System.debug(
+                '🔤 Normalized Module Key: [' +
+                normalizedKey +
+                ']'
+            );
+    
+    
+            // =====================================================
+            // MODULE ALIAS
+            // =====================================================
+            if (moduleAliases.containsKey(normalizedKey)) {
+    
+                String canonicalValue =
+                    moduleAliases.get(normalizedKey);
+    
+                System.debug(
+                    '🔄 Alias detected: [' +
+                    cleanedModule +
+                    '] => [' +
+                    canonicalValue +
+                    ']'
+                );
+    
+                normalizedKey =
+                    canonicalValue.toLowerCase();
+    
+                System.debug(
+                    '🔄 Normalized Alias Key: [' +
+                    normalizedKey +
+                    ']'
+                );
+            }
+    
+    
+            // =====================================================
+            // DUPLICATE CHECK
+            // =====================================================
+            if (seenModules.contains(normalizedKey)) {
+    
+                System.debug(
+                    '❌ DUPLICATE MODULE DETECTED: [' +
+                    cleanedModule +
+                    ']'
+                );
+    
+                throw new AuraHandledException(
+                    'Duplicate Module Access "' +
+                    cleanedModule +
+                    '" for User Type "' +
+                    userType +
+                    '".'
+                );
+            }
+    
+            // =====================================================
+            // ALLOWED MODULE CHECK
+            // =====================================================
+            System.debug(
+                '🔍 Checking whether module [' +
+                normalizedKey +
+                '] is allowed...'
+            );
+    
+            System.debug(
+                '📋 Allowed Module Keys: ' +
+                JSON.serialize(canonicalModules.keySet())
+            );
+    
+            if (!canonicalModules.containsKey(normalizedKey)) {
+    
+                System.debug(
+                    '❌ INVALID MODULE DETECTED'
+                );
+    
+                System.debug(
+                    '❌ User Type: [' +
+                    userType +
+                    ']'
+                );
+    
+                System.debug(
+                    '❌ Raw Module: [' +
+                    cleanedModule +
+                    ']'
+                );
+    
+                System.debug(
+                    '❌ Normalized Module: [' +
+                    normalizedKey +
+                    ']'
+                );
+    
+                String invalidModuleMessage =
+                    'Invalid Module Access "' +
+                    cleanedModule +
+                    '" for User Type "' +
+                    userType +
+                    '".';
+    
+                System.debug(
+                    '❌ FINAL ERROR MESSAGE: ' +
+                    invalidModuleMessage
+                );
+    
+                AuraHandledException ex =
+                    new AuraHandledException(invalidModuleMessage);
+    
+                ex.setMessage(invalidModuleMessage);
+    
+                throw ex;
+            }
+            System.debug(
+                '✅ Module is allowed: [' +
+                cleanedModule +
+                ']'
+            );
+    
+            seenModules.add(normalizedKey);
+    
+            String canonicalModule =
+                canonicalModules.get(normalizedKey);
+    
+            System.debug(
+                '✅ Canonical Module Value: [' +
+                canonicalModule +
+                ']'
+            );
+    
+            normalizedModules.add(canonicalModule);
+        }
+    
+    
+        // =========================================================
+        // 8. EMPTY RESULT VALIDATION
+        // =========================================================
+        System.debug(
+            '📋 Final Normalized Modules: ' +
+            JSON.serialize(normalizedModules)
+        );
+    
+        System.debug(
+            '📋 Final Normalized Module Count: ' +
+            normalizedModules.size()
+        );
+    
+        if (normalizedModules.isEmpty()) {
+    
+            System.debug(
+                '❌ No valid modules found after normalization'
+            );
+    
+            throw new AuraHandledException(
+                'At least one Module Access must be selected.'
+            );
+        }
+    
+    
+        // =========================================================
+        // 9. FINAL VALUE
+        // =========================================================
+        String finalModuleAccess =
+            String.join(normalizedModules, ';');
+    
+        System.debug(
+            '✅ FINAL MODULE ACCESS: [' +
+            finalModuleAccess +
+            ']'
+        );
+    
+        System.debug(
+            '========== MODULE ACCESS VALIDATION END =========='
+        );
+    
+        return finalModuleAccess;
+    }
+ 
+}
