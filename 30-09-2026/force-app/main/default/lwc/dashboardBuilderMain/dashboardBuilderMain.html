@@ -1,0 +1,134 @@
+<template>
+    <div class="app-container">
+
+        <!-- Main Workspace Shell -->
+        <main class="dashboard-workspace">
+            <!-- Grid preview list (Phase 1 layout preview container) -->
+            <div class="dashboard-grid-preview">
+                <template if:true={hasWidgets}>
+                    <c-dashboard-builder-grid
+                        widgets={widgets}
+                        is-edit-mode={isEditMode}
+                        facility-id={facilityValue}
+                        date-range={dateRange}
+                        onlayoutchange={handleLayoutChange}
+                        onwidgetpropertychange={handleWidgetPropertyChangeEvent}
+                        ondeletewidget={handleDeleteWidgetEvent}
+                        onduplicatewidget={handleDuplicateWidgetEvent}
+                        onwidgetselect={handleWidgetSelect}
+                    ></c-dashboard-builder-grid>
+                </template>
+
+                <template if:true={showEmptyState}>
+                    <!-- Empty dashboard state -->
+                    <div class="empty-dashboard-state">
+                        <!-- <lightning-icon icon-name="utility:dashboard" size="large" class="empty-icon"></lightning-icon> -->
+                        <h2>No widgets active</h2>
+                        <p>To populate your dashboard analytics workspace, click edit dashboard and configure widget types.</p>
+                        <template if:true={isEditMode}>
+                            <button class="action-button secondary-action slds-m-top_medium" onclick={openAddWidget}>
+                                Add your first widget
+                            </button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </main>
+
+        <!-- Searchable Widget Library Modal -->
+        <c-dashboard-builder-library
+            is-open={showAddWidgetModal}
+            available-widget-types={availableWidgetTypes}
+            onselect={handleAddWidgetEvent}
+            onaddselected={handleWidgetsAddedEvent}
+            onclose={closeAddWidget}>
+        </c-dashboard-builder-library>
+
+        <!-- Live Widget Settings Drawer -->
+        <c-dashboard-builder-property-panel
+            widget={activeWidget}
+            is-open={isPropertyPanelOpen}
+            onpropertychange={handleWidgetPropertyChange}
+            onclose={closePropertyPanel}>
+        </c-dashboard-builder-property-panel>
+        <!-- Floating Action Button (FAB) (Edit Mode controls) -->
+        <div class="fab-container" style={fabContainerStyle}>
+            <!-- Sub-buttons (slide up) -->
+            <div class="fab-actions" style={fabActionsStyle}>
+                <button class="fab-sub success-fab" onclick={handleSave} title="Save Layout">
+                    <lightning-icon icon-name="utility:save" size="xx-small" class="fab-icon-fill"></lightning-icon>
+                </button>
+                <button class="fab-sub" onclick={openAddWidget} title="Add Widget">
+                    <lightning-icon icon-name="utility:add" size="xx-small" class="fab-icon-fill"></lightning-icon>
+                </button>
+                <button class="fab-sub" onclick={handleReset} title="Reset Layout">
+                    <lightning-icon icon-name="utility:refresh" size="xx-small" class="fab-icon-fill"></lightning-icon>
+                </button>
+                <button class={undoClass} onclick={handleUndo} title="Undo" disabled={undoDisabled}>
+                    <lightning-icon icon-name="utility:undo" size="xx-small" class="fab-icon-fill"></lightning-icon>
+                </button>
+                <button class={redoClass} onclick={handleRedo} title="Redo" disabled={redoDisabled}>
+                    <lightning-icon icon-name="utility:redo" size="xx-small" class="fab-icon-fill"></lightning-icon>
+                </button>
+            </div>
+
+            <!-- Main FAB button (stays fixed) -->
+            <button class={fabMainClass} onclick={toggleEditMode} title={fabTitle}>
+                <lightning-icon icon-name={fabIcon} size="x-small" variant="inverse" class="fab-icon-fill"></lightning-icon>
+            </button>
+        </div>
+
+        <!-- NDIS Tools FAB (Matches draggable dashboard) -->
+        <template if:true={showToolsFab}>
+            <div class="tools-fab-container">
+                <!-- Sub-buttons (slide LEFT) -->
+                <div class="tools-fab-actions" style={toolsFabActionsStyle}>
+                    <button class="tools-fab-sub" onclick={handleNdisQuoteTool} title="NDIS Quote Tool">
+                        <i class="material-icons whiteicon">request_quote</i>
+                    </button>
+                </div>
+
+                <!-- Main Tools FAB button -->
+                <button class={toolsFabMainClass} onclick={toggleToolsFab} title={toolsFabTitle}>
+                    <i class="material-icons whiteicon">control_camera</i>
+                </button>
+            </div>
+        </template>
+
+        <!-- Reset Confirmation Modal -->
+        <template if:true={showResetModal}>
+            <section class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="reset-heading">
+                <div class="slds-modal__container modal-container" style="max-width: 25%">
+                    <header class="slds-modal__header" style="background: #002a52">
+                        <h2 class="slds-text-heading_medium slds-hyphenate" style="color: white; font-weight: bold; text-align: center">
+                            Reset Dashboard
+                        </h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium modal-content">
+                        <div class="slds-m-around_small" style="text-align: center">
+                            <p style="font-size: 13px; font-weight: 500">
+                                Are you sure you want to remove all widgets and reset the dashboard?
+                                <br />This action cannot be undone.
+                            </p>
+                        </div>
+                        <div class="slds-m-top_medium" style="text-align: center">
+                            <lightning-button
+                                label="Cancel"
+                                variant="neutral"
+                                onclick={cancelReset}
+                                class="slds-m-around_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="Reset"
+                                variant="brand"
+                                onclick={confirmReset}
+                                class="slds-m-around_small">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>
