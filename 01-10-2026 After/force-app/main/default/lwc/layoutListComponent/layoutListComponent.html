@@ -1,0 +1,1911 @@
+<template>
+
+<div class="page-container">
+<div class="forms-toolbar">
+
+  <!-- ================= LEFT SIDE (SEARCH) ================= -->
+  <div class="forms-search-box">
+    <lightning-input
+      type="search"
+      variant="label-hidden"
+      placeholder="Search by form name..."
+      onchange={handleSearchChange}>
+    </lightning-input>
+  </div>
+
+  <!-- ================= RIGHT SIDE ================= -->
+  <div class="forms-toolbar-right">
+
+    <!-- BULK BUTTON -->
+    <template if:true={isBulkSelection}>
+      <button
+        class="slds-button slds-button_brand bulk-grant-btn"
+        onclick={handleBulkGrantClick}>
+        Bulk Grant Access ({selectedPublishedCount})
+      </button>
+    </template>
+
+    <!-- LIBRARY BUTTON -->
+
+    <lightning-button
+            label="Library"
+            variant="neutral"
+            icon-name="utility:collection"
+            onclick={handleOpenLibraryModal}
+            class="slds-m-right_x-small">
+        </lightning-button>
+
+    <!-- AUDIENCE TOGGLE -->
+    <div class="audience-toggle">
+
+      <label class="btn-audience-switch">
+
+        <input
+          type="checkbox"
+          checked={isParticipantAudience}
+          onchange={handleAudienceToggle}
+        />
+
+        <span
+          class="btn-audience-switch-inner"
+          data-on="Participants"
+          data-off="Staff">
+        </span>
+
+      </label>
+
+    </div>
+
+  </div>
+
+</div>
+
+<template if:true={isCardView}>
+<div class="ND-forms-grid custom-scroll">
+  <template for:each={paginatedLayouts} for:item="layout">
+    <article key={layout.layoutName} class="ND-form-card">
+      <!-- Header -->
+      <header class="ND-form-card__header">
+         <div class="ND-form-card__headings">
+        <div class="ND-form-card__subtitle">Form Name</div>
+          <div class="ND-form-card__title">{layout.title}</div>
+
+         </div>
+        <div class="ND-form-card__icons">
+          <button class="ND-icon-btn ND-icon-btn--danger"
+                  title="Delete"
+                  data-id={layout.layoutName}
+                  onclick={handleDeleteLayout}>
+            <i class="material-icons">delete</i>
+          </button>
+          <!-- <button class="ND-icon-btn"
+                  title="More"
+                  data-id={layout.layoutName}
+                  onclick={toggleCardMenu}>
+            <i class="material-icons">more_vert</i>
+          </button> -->
+        </div>
+      </header>
+
+      <!-- Title -->
+  <div class="ND-form-card__meta">
+  <div class="ND-form-card__meta-item ND-form-card__meta-item--display">
+    <i class="material-icons ND-form-card__meta-icon" aria-hidden="true">sell</i>
+    <span class="ND-form-card__meta-text">{layout.displayName}</span>
+  </div>
+  <div class="ND-form-card__meta-item ND-form-card__meta-item--time">
+    <i class="material-icons ND-form-card__meta-icon" aria-hidden="true">schedule</i>
+    <span class="ND-form-card__meta-text">{layout.dateTimeString}</span>
+  </div>
+</div>
+
+
+
+      <!-- Footer -->
+      <footer class="ND-form-card__footer">
+       <div class="ND-user">
+  <span class="ND-avatar" aria-hidden="true">{layout.createdByInitials}</span>
+  <span class="ND-user__name" title={layout.createdByName}>{layout.createdByName}</span>
+</div>
+
+        <div class="ND-form-card__actions">
+  <a href="javascript:void(0)"
+     class="ND-link ND-link--icon"
+     data-id={layout.layoutName}
+     onclick={handleEditLayout}>
+    <span class="ND-link__label">Edit</span>
+    <i class="material-icons ND-link__icon" aria-hidden="true">edit_document</i>
+  </a>
+</div>
+
+      </footer>
+    </article>
+  </template>
+</div>
+</template>
+
+<template if:true={isTableView}>
+  <div class="publishtable-wrapper custom-scroll">
+    <table class="publishtable-table">
+      <thead>
+        <tr class="custom-table-header">
+          <th class="table-th tableCheckbox" style="width: 40px; text-align: center;" title="Select All">
+            <div class="slds-truncate">
+
+              <input
+                type="checkbox"
+                checked={selectAllPublishedChecked}
+                onclick={stopClickPropagation}
+                onchange={handleSelectAllPublished}/>
+
+            </div>
+          </th>
+
+          <th class="table-th" scope="col" title="Form Name"><div class="slds-truncate" title="Form Name">Form Name</div></th>
+          
+          <th class="table-th" scope="col" title="Created"><div class="slds-truncate" title="Created">Created</div></th>
+          <th class="table-th" scope="col" title="Created By"><div class="slds-truncate" title="Created By">Created By</div></th>
+          <th class="table-th" scope="col" title="Version"> <div class="slds-truncate" title="Version">Version</div></th>
+         <template if:true={isStaffAudience}>
+            <th class="table-th" scope="col" title="Staff">
+              <div class="slds-truncate" title="Staff">Staff</div>
+            </th>
+          </template>
+
+          <template if:true={isParticipantAudience}>
+            <th class="table-th" scope="col" title="Participants">
+              <div class="slds-truncate" title="Participants">Participants</div>
+            </th>
+          </template>
+
+          <th class="table-th action-column" scope="col" title="Actions"><div class="slds-truncate" title="Actions">Actions</div></th>
+        </tr>
+      </thead>
+
+<tbody>
+
+  <template for:each={paginatedLayouts} for:item="group">
+
+    <!-- ========================= -->
+    <!-- 🔵 GROUP ROW -->
+    <!-- ========================= -->
+    <tr key={group.groupId} class="table-row">
+
+      <!-- EMPTY CHECKBOX -->
+      <td class="publishtable-cell publishtable-checkbox table-td tableCheckbox" title="Select"></td>
+
+      <!-- FORM NAME -->
+      <td class="publishtable-cell publishtable-name table-td" title={group.formName}>
+        <i class="material-icons publishtable-docicon">description</i>
+        <span class="publishtable-ellipsis">{group.formName}</span>
+      </td>
+
+      <!-- CREATED -->
+      <td class="publishtable-cell table-td" title={group.latest.dateTimeString}>
+        {group.latest.dateTimeString}
+      </td>
+
+      <!-- CREATED BY -->
+      <td class="publishtable-cell table-td" title={group.latest.createdByName}>
+        <div class="publishtable-userline">
+          <!-- <span class="publishtable-avatar">
+            {group.latest.createdByInitials}
+          </span> -->
+          <span class="publishtable-usertext publishtable-ellipsis">
+            {group.latest.createdByName}
+          </span>
+        </div>
+      </td>
+
+      <!-- VERSION COUNT -->
+      <td class="publishtable-cell table-td" title={group.versionCount}>
+        <span class="nd-pill nd-pill--published">
+          {group.versionCount} Variants
+        </span>
+      </td>
+
+      <!-- EMPTY STAFF -->
+      <td class="publishtable-cell table-td" title="Staff">—</td>
+
+      <!-- VIEW BUTTON -->
+      <td class="publishtable-cell publishtable-actions table-td action-column" title="Actions">
+        <button
+          class="ND-icon-btn ND-link--icon"
+          data-id={group.groupId}
+          onclick={toggleGroup}
+          title="View Versions">
+
+          <i class="material-icons">
+            {group.iconName}
+          </i>
+        </button>
+      </td>
+
+    </tr>
+
+    <!-- ========================= -->
+    <!-- 🔽 VERSION ROWS -->
+    <!-- ========================= -->
+    <template if:true={group.isExpanded}>
+      <template for:each={group.versions} for:item="layout">
+
+        <tr key={layout.layoutName} class="table-row">
+
+          <!-- ✅ CHECKBOX BACK -->
+          <td class="publishtable-cell publishtable-checkbox table-td tableCheckbox" title="Select">
+            <input
+              type="checkbox"
+              data-id={layout.layoutName}
+              checked={layout.isSelected}
+              onclick={stopClickPropagation}
+              onchange={handlePublishedRowToggle}/>
+          </td>
+
+          <!-- NAME -->
+          <td class="publishtable-cell publishtable-name table-td" title={layout.title}>
+
+            <i class="material-icons publishtable-docicon" style="font-size:16px; margin-right:4px;">
+              subdirectory_arrow_right
+            </i>
+
+            <span class="publishtable-ellipsis">{layout.title}</span>
+
+          </td>
+
+          <!-- DATE -->
+          <td class="publishtable-cell table-td" title={layout.dateTimeString}>{layout.dateTimeString}</td>
+
+          <!-- CREATED BY -->
+          <td class="publishtable-cell table-td" title={layout.createdByName}>
+            <div class="publishtable-userline">
+              <!-- <span class="publishtable-avatar">
+                {layout.createdByInitials}
+              </span> -->
+              <span class="publishtable-usertext publishtable-ellipsis">
+                {layout.createdByName}
+              </span>
+            </div>
+          </td>
+
+          <!-- VERSION -->
+          <td class="publishtable-cell table-td" title={layout.version}>
+            <span class="nd-pill nd-pill--published">
+              {layout.version}
+            </span>
+          </td>
+
+         <template if:true={isStaffAudience}>
+  <td class="publishtable-cell">
+
+    <div class="nd-form-card__avatars">
+
+      <template if:true={layout.staffUsers.length}>
+        <div class="form-access-img-group">
+
+          <!-- 🔥 SHOW ONLY FIRST 5 -->
+          <template for:each={layout.visibleStaff} for:item="p">
+              <div
+                key={p.id}
+                class="form-access-tooltip-container form-access-avatar-wrapper">
+
+                <template if:true={p.pictureUrl}>
+                  <img src={p.pictureUrl} class="form-access-avatar"/>
+                </template>
+
+                <template if:false={p.pictureUrl}>
+                  <div class="form-access-avatar fallback-avatar">
+                    {p.initials}
+                  </div>
+                </template>
+
+                <!-- 🔥 TOOLTIP -->
+                <span class="form-access-tooltip-text">
+                  {p.name}
+                </span>
+
+              </div>
+            </template>
+
+          <!-- 🔥 +N REMAINING -->
+          <template if:true={layout.hasExtraStaff}>
+            <div
+              class="form-access-avatar-wrapper form-access-extra-count"
+              title={layout.extraStaffNames}>
+              +{layout.extraStaffCount}
+            </div>
+          </template>
+
+        </div>
+      </template>
+
+      <template if:false={layout.staffUsers.length}>
+        <span class="nd-form-card__no-access">
+          <i class="material-icons">group_off</i>
+        </span>
+      </template>
+
+    </div>
+
+  </td>
+</template>
+
+<template if:true={isParticipantAudience}>
+  <td class="publishtable-cell">
+
+    <div class="nd-form-card__avatars">
+
+      <template if:true={layout.participantUsers.length}>
+        <div class="form-access-img-group">
+
+          <!-- 🔥 SHOW ONLY FIRST 5 -->
+          <template for:each={layout.visibleParticipants} for:item="p">
+            <div
+              key={p.id}
+              class="form-access-tooltip-container form-access-avatar-wrapper">
+
+              <template if:true={p.pictureUrl}>
+                <img src={p.pictureUrl} class="form-access-avatar"/>
+              </template>
+
+              <template if:false={p.pictureUrl}>
+                <div class="form-access-avatar fallback-avatar">
+                  {p.initials}
+                </div>
+              </template>
+
+              <span class="form-access-tooltip-text">
+                {p.name}
+              </span>
+
+            </div>
+          </template>
+
+          <!-- 🔥 +N REMAINING -->
+          <template if:true={layout.hasExtraParticipants}>
+            <div class="form-access-avatar-wrapper form-access-extra-count">
+              +{layout.extraParticipantCount}
+            </div>
+          </template>
+
+        </div>
+      </template>
+
+      <template if:false={layout.participantUsers.length}>
+        <span class="nd-form-card__no-access">
+          <i class="material-icons">group_off</i>
+        </span>
+      </template>
+
+    </div>
+
+  </td>
+</template>
+
+          <!-- ACTIONS -->
+          <td class="publishtable-cell publishtable-actions">
+
+            <button
+              class="ND-icon-btn ND-link--icon"
+              data-id={layout.layoutName}
+              onclick={handleAssignClick}
+              title="Assign to Users">
+              <i class="material-icons">person_add</i>
+            </button>
+
+            <!-- ASSIGN TO ORGANISATION BUTTON -->
+            <template if:true={canAssignToOrg}>
+              <button
+                class="ND-icon-btn ND-link--icon assign-org-btn"
+                data-id={layout.layoutName}
+                data-title={layout.title}
+                data-group-id={layout.formGroupId}
+                onclick={handleOpenAssignToOrgModal}
+                title="Assign to Organisation">
+                <i class="material-icons">family_group</i>
+              </button>
+            </template>
+
+            <button
+              class="ND-icon-btn ND-link--icon"
+              data-id={layout.layoutName}
+              onclick={handleEditPublishedForm}>
+              <i class="material-icons edit-icon">edit_document</i>
+            </button>
+
+            <template if:false={layout.isAssigned}>
+              <button
+                class="ND-icon-btn ND-icon-btn--danger"
+                data-id={layout.layoutName}
+                onclick={handleDeletePublishedForm}>
+                <i class="material-icons delete-icon">delete</i>
+              </button>
+            </template>
+
+          </td>
+
+        </tr>
+
+      </template>
+    </template>
+
+  </template>
+
+</tbody>
+    </table>
+  </div>
+</template>
+
+
+<template if:true={totalRecords}>
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination pagination-container">
+        <!-- RECORDS PER PAGE -->
+        <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+                <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">Page Size:</label>
+                <div class="slds-select_container">
+                    <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE NAVIGATION -->
+        <div class="slds-align_absolute-center">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstPage}></lightning-button>
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+        </div>
+
+        <!-- TOTAL RECORDS -->
+        <div class="slds-clearfix">
+            <div class="slds-float_right">
+                <span class="slds-badge">Total Records: {totalRecords}</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+</div>
+
+
+    <!-- <div class="back-button-container">
+        <lightning-button 
+            variant="brand" 
+            label="Back" 
+            onclick={handleBackToForm}>
+        </lightning-button>
+    </div>
+
+    
+    <h3 class="saved-layouts-heading">Your Forms</h3> -->
+    <!-- Your Form Layouts Table (Remaining layouts) -->
+    <!-- Custom Layouts Table -->
+<!-- <table class="saved-layouts-table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Layout Name</th>
+            <th>Created Date & Time</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={customLayouts} for:item="layout">
+            <tr key={layout.layoutName}>
+                <td>{layout.title}</td>
+                <td>{layout.displayName}</td>
+                <td>{layout.dateTimeString}</td>
+                <td>
+                    <lightning-icon 
+                        icon-name="action:edit" 
+                        alternative-text="Edit" 
+                        title="Edit"
+                        size="xx-small"
+                        data-id={layout.layoutName} 
+                        onclick={handleEditLayout}
+                        class="icon-button"
+                        style="cursor:pointer;color:white;background-color:#0099DE;">
+                    </lightning-icon>
+                    <span class="separator"></span>
+                    <lightning-icon 
+                        icon-name="action:delete" 
+                        alternative-text="Delete" 
+                        title="Delete"
+                        size="xx-small"
+                        data-id={layout.layoutName} 
+                        onclick={handleDeleteLayout}
+                        class="icon-button">
+                    </lightning-icon>
+                </td>
+                
+            </tr>
+        </template>
+    </tbody>
+</table> -->
+
+<!-- <h3 class="saved-layouts-heading">Default Forms</h3>
+
+<table class="saved-layouts-table">
+    <thead>
+        <tr>
+            <th>Layout Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <template for:each={defaultLayouts} for:item="layout">
+            <tr key={layout.layoutName}>
+                <td>{layout.displayName}</td>
+                <td>
+                    <lightning-button 
+                        variant="base" 
+                        label="Clone" 
+                        data-id={layout.layoutName} 
+                        onclick={handleCloneLayout}>
+                    </lightning-button>
+                </td>
+            </tr>
+        </template>
+    </tbody>
+</table> -->
+
+<template if:true={showAssignModal}>
+
+  <div class="assign-modal-backdrop">
+
+    <div class="assign-modal">
+
+      <!-- ================= HEADER ================= -->
+
+      <div class="assign-modal-header">
+        <span class="assign-title">
+          Form Access - {selectedFormTitle}
+        </span>
+
+        <button
+          class="assign-close-button"
+          onclick={closeAssignModal}>
+          ×
+        </button>
+      </div>
+
+      <!-- ================= BODY ================= -->
+
+      <div class="assign-modal-body">
+
+        <!-- ============ SEARCH + FILTERS ============ -->
+
+        <div class="assign-search-row">
+
+          <!-- SEARCH -->
+
+          <div class="floating-label-input">
+            <span class="label-text-drop">
+              Search {selectedAudience}
+            </span>
+
+            <lightning-input
+              type="search"
+              placeholder="Search"
+              onchange={handleAssignSearch}
+              value={assignSearchTerm}
+              variant="label-hidden">
+            </lightning-input>
+          </div>
+
+          <!-- ================= FACILITY MULTI ================= -->
+
+          <div class="floating-label-input">
+
+            <span class="label-text-drop">
+              Facility
+            </span>
+
+            <div
+              class="facility-multiselect"
+              onclick={showAssignFacilityDropdown}>
+
+              <div class="facility-bubble-container facility-scroll-horizontal">
+
+                <template
+                  for:each={assignSelectedFacilities}
+                  for:item="facility">
+
+                  <span
+                    key={facility.value}
+                    class="facility-bubble">
+
+                    {facility.label}
+
+                    <span
+                      class="facility-remove"
+                      data-id={facility.value}
+                      onclick={removeAssignFacility}>
+                      ×
+                    </span>
+
+                  </span>
+
+                </template>
+
+                <input
+                  type="text"
+                  class="facility-search-input"
+                  placeholder="Search"
+                  value={assignFacilitySearchTerm}
+                  oninput={handleAssignFacilitySearchChange}
+                  onfocus={showAssignFacilityDropdown}
+                  onclick={stopPropagation} />
+
+              </div>
+
+              <template if:true={showAssignFacilityOptions}>
+
+                <div
+                  class="facility-dropdown custom-scroll"
+                  onclick={stopPropagation}>
+
+                  <template
+                    for:each={assignFilteredFacilityOptions}
+                    for:item="facility">
+
+                    <label
+                      key={facility.value}
+                      class="facility-option">
+
+                      <input
+                        type="checkbox"
+                        value={facility.value}
+                        data-label={facility.label}
+                        checked={facility.checked}
+                        onchange={handleAssignFacilityCheckboxChange} />
+
+                      {facility.label}
+
+                    </label>
+
+                  </template>
+
+                </div>
+
+              </template>
+
+            </div>
+
+          </div>
+
+          <!-- ================= ROLE FILTER (STAFF ONLY) ================= -->
+
+          <template if:true={isStaffAudience}>
+
+            <div class="floating-label-input">
+
+              <span class="label-text-drop">
+                Role
+              </span>
+
+              <div
+                class="facility-multiselect"
+                onclick={showAssignRoleDropdown}>
+
+                <div class="facility-bubble-container facility-scroll-horizontal">
+
+                  <template
+                    for:each={assignSelectedRoles}
+                    for:item="role">
+
+                    <span
+                      key={role.value}
+                      class="facility-bubble">
+
+                      {role.label}
+
+                      <span
+                        class="facility-remove"
+                        data-id={role.value}
+                        onclick={removeAssignRole}>
+                        ×
+                      </span>
+
+                    </span>
+
+                  </template>
+
+                  <input
+                    type="text"
+                    class="facility-search-input"
+                    placeholder="Search"
+                    value={assignRoleSearchTerm}
+                    oninput={handleAssignRoleSearchChange}
+                    onfocus={showAssignRoleDropdown}
+                    onclick={stopPropagation} />
+
+                </div>
+
+                <template if:true={showAssignRoleOptions}>
+
+                  <div
+                    class="facility-dropdown custom-scroll facility-scroll-horizontal"
+                    onclick={stopPropagation}>
+
+                    <template
+                      for:each={assignFilteredRoleOptions}
+                      for:item="role">
+
+                      <label
+                        key={role.value}
+                        class="facility-option">
+
+                        <input
+                          type="checkbox"
+                          value={role.value}
+                          data-label={role.label}
+                          checked={role.checked}
+                          onchange={handleAssignRoleCheckboxChange} />
+
+                        {role.label}
+
+                      </label>
+
+                    </template>
+
+                  </div>
+
+                </template>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </div>
+
+        <!-- ================= PARTICIPANT TABLE ================= -->
+
+        <template if:true={isParticipantAudience}>
+
+          <template if:true={assignTotalRecords}>
+
+            <div class="assign-table-container custom-scroll">
+
+              <table class="assign-custom-table">
+
+                <thead>
+
+                  <tr class="custom-table-header">
+
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={assignSelectAllChecked}
+                        onchange={handleAssignSelectAll}/>
+                    </th>
+
+                    <th>Name</th>
+                    <th>Facility</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <template
+                    for:each={assignParticipantsPage}
+                    for:item="p">
+
+                    <tr key={p.Id}>
+
+                      <td class="publishtable-cell publishtable-checkbox">
+
+                        <input
+                          type="checkbox"
+                          data-id={p.Id}
+                          checked={p.isSelected}
+                          onchange={handleAssignParticipantToggle}/>
+
+                      </td>
+
+                      <td class="publishtable-cell">
+
+                        <div class="publishtable-userline">
+
+                          <!-- <template if:true={p.Picture}>
+                            <img
+                              src={p.Picture}
+                              class="publishtable-avatar-img"/>
+                          </template> -->
+
+                          <!-- <template if:false={p.Picture}>
+                            <span class="publishtable-avatar">
+                              {p.initials}
+                            </span>
+                          </template> -->
+
+                          <span class="publishtable-usertext">
+                            {p.Name}
+                          </span>
+
+                        </div>
+
+                      </td>
+
+                      <td class="publishtable-cell facility-cell">
+                       
+                          {p.FacilityName}
+                      
+                      </td>
+
+
+                    </tr>
+
+                  </template>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </template>
+
+            <template if:false={assignTotalRecords}>
+              <div class="assign-empty-state">
+                <i class="material-icons empty-icon">group_off</i>
+                <div class="empty-text">No Participants Found</div>
+              </div>
+            </template>
+
+        </template>
+
+        <!-- ================= STAFF TABLE ================= -->
+
+        <template if:true={isStaffAudience}>
+
+          <template if:true={assignStaffTotalRecords}>
+
+            <div class="assign-table-container custom-scroll">
+
+              <table class="assign-custom-table">
+
+                <thead>
+
+                  <tr class="custom-table-header">
+
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={assignStaffSelectAllChecked}
+                        onchange={handleAssignStaffSelectAll}/>
+                    </th>
+
+                    <th>Name</th>
+                    <th>Facility</th>
+                    <th>Role</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <template
+                    for:each={assignStaffPage}
+                    for:item="s">
+
+                    <tr key={s.Id}>
+
+                      <td class="publishtable-cell publishtable-checkbox">
+
+                        <input
+                          type="checkbox"
+                          data-id={s.Id}
+                          checked={s.isSelected}
+                          onchange={handleAssignStaffToggle}/>
+
+                      </td>
+
+                      <td class="publishtable-cell">
+
+                        <div class="publishtable-userline">
+
+                          <!-- <span class="publishtable-avatar">
+                            {s.initials}
+                          </span> -->
+
+                          <span class="publishtable-usertext">
+                            {s.Name}
+                          </span>
+
+                        </div>
+
+                      </td>
+
+                      <td class="publishtable-cell facility-cell">
+                        {s.FacilityName}
+                      </td>
+
+                      <td class="publishtable-cell">
+                        {s.Role}
+                      </td>
+
+                    </tr>
+
+                  </template>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </template>
+
+            <template if:false={assignStaffTotalRecords}>
+              <div class="assign-empty-state">
+                <i class="material-icons empty-icon">group_off</i>
+                <div class="empty-text">No Staff Found</div>
+              </div>
+            </template>
+
+        </template>
+
+        <!-- ================= STAFF PAGINATION ================= -->
+
+        <template if:true={isStaffAudience}>
+
+          <template if:true={assignStaffTotalRecords}>
+
+            <div class="fixed-pagination">
+
+              <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                <div class="slds-align_absolute-center">
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    onclick={firstPageAssignStaff}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    onclick={previousPageAssignStaff}>
+                  </lightning-button>
+
+                  &nbsp;
+
+                  <span class="slds-badge">
+                    Showing {assignStaffPageNumber}
+                    &nbsp;of&nbsp;
+                    {assignStaffTotalPages}
+                    Page(s)
+                  </span>
+
+                  &nbsp;
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    onclick={nextPageAssignStaff}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignStaffLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    onclick={lastPageAssignStaff}>
+                  </lightning-button>
+
+                </div>
+
+                <div class="slds-float_right slds-m-right_xx-large">
+
+                  <span class="slds-badge">
+                    Total Records: {assignStaffTotalRecords}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </template>
+
+        <!-- ================= PARTICIPANT PAGINATION ================= -->
+
+        <template if:true={isParticipantAudience}>
+
+          <template if:true={assignTotalRecords}>
+
+            <div class="fixed-pagination">
+
+              <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                <div class="slds-align_absolute-center">
+
+                  <lightning-button
+                    disabled={bDisableAssignFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    onclick={firstPageAssign}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    onclick={previousPageAssign}>
+                  </lightning-button>
+
+                  &nbsp;
+
+                  <span class="slds-badge">
+                    Showing {assignPageNumber}
+                    &nbsp;of&nbsp;
+                    {assignTotalPages}
+                    Page(s)
+                  </span>
+
+                  &nbsp;
+
+                  <lightning-button
+                    disabled={bDisableAssignLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    onclick={nextPageAssign}>
+                  </lightning-button>
+
+                  <lightning-button
+                    disabled={bDisableAssignLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    onclick={lastPageAssign}>
+                  </lightning-button>
+
+                </div>
+
+                <div class="slds-float_right slds-m-right_xx-large">
+
+                  <span class="slds-badge">
+                    Total Records: {assignTotalRecords}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </template>
+
+        </template>
+
+        <template if:true={showGrantAccessButton}>
+          <div class="assign-modal-footer">
+            <button
+              class="assign-primary slds-button slds-button_brand"
+              onclick={grantAccess}>
+              Grant Access
+            </button>
+          </div>
+        </template>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+</template>
+
+<!-- ============================================================== -->
+<!-- 📚 FORM LIBRARY MODAL -->
+<!-- ============================================================== -->
+<template if:true={showLibraryModal}>
+  <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" aria-modal="true">
+    <div class="slds-modal__container library-modal-container">
+      <!-- HEADER -->
+      <header class="slds-modal__header library-modal-header">
+        <h2 class="slds-text-heading_medium slds-hyphenate library-modal-title">
+          Forms Library
+        </h2>
+        <button class="send-doc-close" title="Close" onclick={handleCloseLibraryModal}>
+          <i class="material-icons">close</i>
+        </button>
+      </header>
+
+      <!-- BODY -->
+      <div class="slds-modal__content slds-p-around_medium library-modal-content custom-scroll">
+        <!-- TOOLBAR: SEARCH & AUDIENCE FILTER -->
+        <div class="library-toolbar">
+          <div class="library-search-box">
+            <lightning-input
+              type="search"
+              variant="label-hidden"
+              placeholder="Search forms by name..."
+              value={librarySearchKey}
+              onchange={handleLibrarySearch}>
+            </lightning-input>
+          </div>
+
+          <div class="library-filter-group">
+            <lightning-radio-group
+              name="libraryAudienceFilter"
+              variant="label-hidden"
+              options={libraryAudienceOptions}
+              value={libraryAudienceFilter}
+              type="button"
+              onchange={handleLibraryAudienceChange}>
+            </lightning-radio-group>
+          </div>
+        </div>
+
+        <!-- SPINNER -->
+        <template if:true={isLibraryLoading}>
+          <div class="library-spinner-wrap">
+            <lightning-spinner alternative-text="Loading templates" size="medium"></lightning-spinner>
+          </div>
+        </template>
+
+        <!-- EMPTY STATE -->
+        <template if:true={isLibraryEmpty}>
+          <div class="library-empty-state">
+            <i class="material-icons library-empty-icon">folder_off</i>
+            <p class="library-empty-title">No library forms found</p>
+            <p class="library-empty-desc">No active templates have been assigned to your organisation yet.</p>
+          </div>
+        </template>
+
+        <!-- TEMPLATES TABLE -->
+        <template if:false={isLibraryEmpty}>
+          <div class="library-table-wrapper custom-scroll">
+            <table class="publishtable-table library-table">
+              <thead>
+                <tr class="custom-table-header">
+                  <th class="table-th tableCheckbox" style="width: 44px; text-align: center;">
+                    <input
+                      type="checkbox"
+                      checked={selectAllLibraryChecked}
+                      onchange={handleSelectAllLibrary}
+                    />
+                  </th>
+                  <th class="table-th" scope="col">Form Name</th>
+                  <th class="table-th" scope="col" style="width: 130px;">Audience</th>
+                  <th class="table-th" scope="col" style="width: 130px;">Version</th>
+                  <th class="table-th" scope="col" style="width: 170px;">Created Date</th>
+                  <th class="table-th" scope="col" style="width: 100px; text-align: center;">Preview</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={pagedLibraryForms} for:item="form">
+                  <tr key={form.Id} class="table-row">
+                    <td class="publishtable-cell publishtable-checkbox table-td tableCheckbox">
+                      <input
+                        type="checkbox"
+                        data-id={form.Id}
+                        checked={form.isSelected}
+                        onchange={handleLibraryRowToggle}
+                      />
+                    </td>
+                    <td class="publishtable-cell publishtable-name table-td">
+                      <i class="material-icons publishtable-docicon">description</i>
+                      <span class="publishtable-ellipsis font-weight-bold">{form.Name__c}</span>
+                    </td>
+                    <td class="publishtable-cell table-td">
+                      <span class={form.audienceBadgeClass}>{form.Audience__c}</span>
+                    </td>
+                    <td class="publishtable-cell table-td">
+                      <span class="nd-pill nd-pill--published">{form.Version_Label__c}</span>
+                    </td>
+                    <td class="publishtable-cell table-td">
+                      {form.createdDateDisplay}
+                    </td>
+                    <td class="publishtable-cell table-td" style="text-align: center;">
+                      <button
+                        class="ND-icon-btn ND-link--icon preview-btn"
+                        data-id={form.Id}
+                        onclick={handleView}
+                        title="Preview Template">
+                        <i class="material-icons">visibility</i>
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+
+      <!-- PAGINATION -->
+      <template if:true={libraryTotalRecords}>
+        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread pagination-container popup-pagination">
+          <!-- RECORDS PER PAGE -->
+          <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+              <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="libraryRecordsPerPage">Page Size:</label>
+              <div class="slds-select_container">
+                <select class="slds-select" id="libraryRecordsPerPage" onchange={handleLibraryPageSize}>
+                  <template for:each={libraryPageSizeOptions} for:item="option">
+                    <option key={option} value={option}>{option}</option>
+                  </template>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE NAVIGATION -->
+          <div class="slds-align_absolute-center">
+            <lightning-button disabled={bDisableLibraryFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstLibraryPage}></lightning-button>
+            <lightning-button disabled={bDisableLibraryFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousLibraryPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {libraryPageNumber} &nbsp;of&nbsp; {libraryTotalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableLibraryLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextLibraryPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableLibraryLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastLibraryPage} icon-position="right"></lightning-button>
+          </div>
+
+          <!-- TOTAL RECORDS -->
+          <div class="slds-clearfix">
+            <div class="slds-float_right">
+              <span class="slds-badge">Total Records: {libraryTotalRecords}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- FOOTER -->
+      <footer class="slds-modal__footer library-modal-footer">
+        <div class="library-footer-selection">
+          <span class="library-selected-count">{selectedLibraryCount} template(s) selected</span>
+        </div>
+        <div class="library-footer-buttons">
+          <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCloseLibraryModal}>
+          </lightning-button>
+          <lightning-button
+            label="Clone Selected"
+            variant="brand"
+            icon-name="utility:copy"
+            disabled={isCloneDisabled}
+            onclick={handleCloneLibraryForms}>
+          </lightning-button>
+        </div>        
+      </footer>
+    </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<!-- ============================================================== -->
+<!-- 🏢 ASSIGN TO ORGANISATION MODAL -->
+<!-- ============================================================== -->
+<template if:true={showAssignToOrgModal}>
+  <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" aria-modal="true">
+    <div class="slds-modal__container -assign-container">
+      <!-- HEADER -->
+      <header class="slds-modal__header org-assign-header">
+        <h2 class="slds-text-heading_medium slds-hyphenate org-assign-title">
+          Assign Form to Organisations
+        </h2>
+        <template if:true={activeAssignFormTitle}>
+          <p class="org-assign-subtitle">
+            Form: <strong>{activeAssignFormTitle}</strong>
+          </p>
+        </template>
+        <button class="send-doc-close" title="Close" onclick={handleCloseAssignToOrgModal}>
+          <i class="material-icons">close</i>
+        </button>
+      </header>
+
+      <!-- BODY -->
+      <div class="slds-modal__content slds-p-around_medium org-assign-content custom-scroll">
+        <!-- SEARCH -->
+        <div class="org-assign-search-box slds-m-bottom_small">
+          <lightning-input
+            type="search"
+            variant="label-hidden"
+            placeholder="Search organisations by name..."
+            value={orgSearchKey}
+            onchange={handleOrgSearch}>
+          </lightning-input>
+        </div>
+
+        <!-- SPINNER -->
+        <template if:true={isOrgAssignLoading}>
+          <div class="library-spinner-wrap">
+            <lightning-spinner alternative-text="Loading organisations" size="medium"></lightning-spinner>
+          </div>
+        </template>
+
+        <!-- EMPTY STATE -->
+        <template if:true={isOrgEmpty}>
+          <div class="library-empty-state">
+            <i class="material-icons library-empty-icon">domain_disabled</i>
+            <p class="library-empty-title">No organisations found</p>
+            <p class="library-empty-desc">No organisations match your search query.</p>
+          </div>
+        </template>
+
+        <!-- ORGANISATIONS LIST -->
+        <template if:false={isOrgAssignLoading}>
+          <template if:false={isOrgEmpty}>
+            <div class="org-assign-table-wrapper custom-scroll">
+              <table class="publishtable-table org-table">
+                <thead>
+                  <tr class="custom-table-header">
+                    <th class="table-th tableCheckbox" style="width: 44px; text-align: center;">
+                      <input
+                        type="checkbox"
+                        checked={selectAllOrgsChecked}
+                        onchange={handleSelectAllOrgs}
+                      />
+                    </th>
+                    <th class="table-th" scope="col">Organisation Name</th>
+                    <th class="table-th" scope="col" style="width: 140px;">Current Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={pagedOrganisations} for:item="org">
+                    <tr key={org.Id} class="table-row">
+                      <td class="publishtable-cell publishtable-checkbox table-td tableCheckbox">
+                        <input
+                          type="checkbox"
+                          data-id={org.Id}
+                          checked={org.isSelected}
+                          onchange={handleOrgRowToggle}
+                        />
+                      </td>
+                      <td class="publishtable-cell table-td">
+                        <i class="material-icons publishtable-docicon">domain</i>
+                        <span class="publishtable-ellipsis font-weight-bold">{org.Name}</span>
+                      </td>
+                      <td class="publishtable-cell table-td">
+                        <span class={org.statusBadgeClass}>{org.statusLabel}</span>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </template>
+      </div>
+
+      <!-- PAGINATION -->
+      <template if:true={orgTotalRecords}>
+        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread pagination-container popup-pagination">
+          <!-- RECORDS PER PAGE -->
+          <div class="slds-col">
+            <div class="slds-list_inline slds-p-bottom_xx-small">
+              <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="orgRecordsPerPage">Page Size:</label>
+              <div class="slds-select_container">
+                <select class="slds-select" id="orgRecordsPerPage" onchange={handleOrgPageSize}>
+                  <template for:each={orgPageSizeOptions} for:item="option">
+                    <option key={option} value={option}>{option}</option>
+                  </template>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGE NAVIGATION -->
+          <div class="slds-align_absolute-center">
+            <lightning-button disabled={bDisableOrgFirst} icon-name="utility:jump_to_left" label="First" class="slds-p-horizontal_x-small" alternative-text="first page" onclick={firstOrgPage}></lightning-button>
+            <lightning-button disabled={bDisableOrgFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousOrgPage}></lightning-button>
+            &nbsp;
+            <span class="slds-badge">Showing {orgPageNumber} &nbsp;of&nbsp; {orgTotalPages} &nbsp;&nbsp;Page(s)</span>
+            &nbsp;
+            <lightning-button disabled={bDisableOrgLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextOrgPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+            <lightning-button disabled={bDisableOrgLast} icon-name="utility:jump_to_right" label="Last" alternative-text="last page" onclick={lastOrgPage} icon-position="right"></lightning-button>
+          </div>
+
+          <!-- TOTAL RECORDS -->
+          <div class="slds-clearfix">
+            <div class="slds-float_right">
+              <span class="slds-badge">Total Records: {orgTotalRecords}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- FOOTER -->
+      <footer class="slds-modal__footer org-assign-footer">
+        <div class="org-footer-selection">
+          <span>{selectedOrgCount} organisation(s) selected</span>
+        </div>
+        <div class="org-footer-buttons">
+          <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCloseAssignToOrgModal}>
+          </lightning-button>
+          <lightning-button
+            label="Save Assignments"
+            variant="brand"
+            disabled={isOrgAssignSaving}
+            onclick={handleSaveOrgAssignments}>
+          </lightning-button>
+        </div>
+      </footer>
+    </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<!-- ============================================================== -->
+<!-- 👁️ FORM PREVIEW / EDITOR FORMAT (MATCHING FORMRENDERSTAFF) -->
+<!-- ============================================================== -->
+<template if:true={isViewMode}>
+  <div class="view-popup-container">
+    <div class="view-popup-content">
+      <!-- ✅ Popup Header (Only Page Navigation & Close Icon) -->
+      <div class="view-popup-header">
+        <span class="view-popup-title">
+          Preview: {previewFormTitle}
+        </span>
+
+        <div class="view-popup-actions">
+          <template if:true={showStepProgressIndicator}>
+            <!-- PREVIOUS PAGE -->
+            <button
+              class="icon-btn"
+              type="button"
+              title="Previous Page"
+              aria-label="Previous Page"
+              onclick={goToPreviousStepPage}
+              disabled={isFirstStepPage}
+            >
+              <i class="material-icons chevron-icon">chevron_left</i>
+            </button>
+
+            <!-- PAGE INFO -->
+            <span class="page-indicator">
+              Page {stepCurrentPageDisplay} of {totalStepPages}
+            </span>
+
+            <!-- NEXT PAGE -->
+            <button
+              class="icon-btn"
+              type="button"
+              title="Next Page"
+              aria-label="Next Page"
+              onclick={goToNextStepPage}
+              disabled={isLastStepPage}
+            >
+              <i class="material-icons chevron-icon">chevron_right</i>
+            </button>
+          </template>
+
+          <!-- CLOSE ICON -->
+          <button
+            class="icon-btn"
+            type="button"
+            title="Close"
+            aria-label="Close"
+            onclick={handleClosePreviewModal}
+          >
+            <i class="material-icons close-icon">close</i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading Spinner -->
+      <template if:true={isPreviewLoading}>
+        <div style="position: relative; min-height: 250px;">
+          <lightning-spinner alternative-text="Loading preview" size="medium"></lightning-spinner>
+        </div>
+      </template>
+
+      <!-- ✅ Editor Format Content -->
+      <template if:false={isPreviewLoading}>
+        <div class="excel-table-container custom-scroll">
+          <template for:each={tableRows} for:item="row">
+            <div key={row.id} class="form-row">
+              <template for:each={row.cells} for:item="cell">
+                <template if:true={cell.isVisible}>
+                  <template if:true={cell.field}>
+                    <div
+                      key={cell.domKey}
+                      class="table-cell"
+                      data-colspan={cell.colspan}
+                      data-rowspan={cell.rowspan}
+                    >
+                      <template if:true={cell.hasContent}>
+                        <div
+                          class="floating-label"
+                          style={cell.floatingLabelStyle}
+                        >
+                          <span class="label-text-drop">
+                            <template if:true={cell.field.isRequired}>
+                              <span style="color: red">*</span>
+                            </template>
+                            {cell.field.label}
+                          </span>
+
+                          <template if:true={cell.hasComment}>
+                            <span class="tooltip-container">
+                              <lightning-icon
+                                icon-name="utility:info"
+                                size="xx-small"
+                                class="info-icon"
+                              ></lightning-icon>
+                              <span class="tooltip-text">{cell.field.comments}</span>
+                            </span>
+                          </template>
+
+                          <!-- HEADER -->
+                          <template if:true={cell.field.isHeader}>
+                            <div
+                              class="fc-header"
+                              style={cell.field.inlineStyle}
+                            >
+                              {cell.field.text}
+                            </div>
+                          </template>
+
+                          <!-- TEXT FIELD -->
+                          <template if:true={cell.isTextField}>
+                            <input
+                              type="text"
+                              data-id={cell.id}
+                              value={cell.field.value}
+                              class="input-field"
+                              placeholder={cell.placeholderText}
+                              readonly
+                            />
+                          </template>
+
+                          <!-- TEXT AREA -->
+                          <template if:true={cell.isTextArea}>
+                            <textarea
+                              key={cell.domKey}
+                              data-id={cell.id}
+                              class="input-textarea"
+                              maxlength="255"
+                              placeholder={cell.placeholderText}
+                              value={cell.field.value}
+                              readonly
+                            ></textarea>
+                          </template>
+
+                          <!-- ALPHANUMERIC -->
+                          <template if:true={cell.isAlphaNumeric}>
+                            <input
+                              type="text"
+                              data-id={cell.id}
+                              value={cell.field.value}
+                              maxlength={cell.maxLength}
+                              class="input-field"
+                              placeholder={cell.placeholderText}
+                              readonly
+                            />
+                          </template>
+
+                          <!-- ONLY ALPHABETS -->
+                          <template if:true={cell.isOnlyAlphabets}>
+                            <input
+                              type="text"
+                              data-id={cell.id}
+                              value={cell.field.value}
+                              maxlength={cell.maxLength}
+                              class="input-field"
+                              placeholder={cell.placeholderText}
+                              readonly
+                            />
+                          </template>
+
+                          <!-- RICH TEXT -->
+                          <template if:true={cell.isRichText}>
+                            <div
+                              class="rich-text-preview"
+                              data-id={cell.id}
+                              lwc:dom="manual"
+                            ></div>
+                          </template>
+
+                          <!-- NUMBER FIELD -->
+                          <template if:true={cell.isNumberField}>
+                            <template if:true={cell.isContactNumber}>
+                              <input
+                                type="text"
+                                data-id={cell.id}
+                                value={cell.field.value}
+                                class="input-field"
+                                placeholder={cell.placeholderText}
+                                readonly
+                              />
+                            </template>
+                            <template if:true={cell.isCurrency}>
+                              <input
+                                type="text"
+                                data-id={cell.id}
+                                value={cell.field.value}
+                                class="input-field"
+                                placeholder={cell.placeholderText}
+                                readonly
+                              />
+                            </template>
+                            <template if:true={cell.isDefaultNumber}>
+                              <input
+                                type="number"
+                                data-id={cell.id}
+                                value={cell.field.value}
+                                class="input-field"
+                                placeholder={cell.placeholderText}
+                                readonly
+                              />
+                            </template>
+                          </template>
+
+                          <!-- TIME FIELD -->
+                          <template if:true={cell.isTimeField}>
+                            <input
+                              type="time"
+                              data-id={cell.id}
+                              value={cell.field.value}
+                              class="input-field"
+                              placeholder={cell.placeholderText}
+                              readonly
+                            />
+                          </template>
+
+                          <!-- DATE FIELD -->
+                          <template if:true={cell.isDateField}>
+                            <input
+                              key={cell.domKey}
+                              type="date"
+                              data-id={cell.id}
+                              value={cell.field.value}
+                              class="input-field"
+                              placeholder={cell.placeholderText}
+                              readonly
+                            />
+                          </template>
+
+                          <!-- CHECKBOX FIELD -->
+                          <template if:true={cell.isCheckboxField}>
+                            <label class="checkbox-container">
+                              <input
+                                type="checkbox"
+                                data-id={cell.id}
+                                checked={cell.field.value}
+                                class="blue-checkbox"
+                                disabled
+                              />
+                              <span class="checkbox-label"></span>
+                            </label>
+                          </template>
+
+                          <!-- DROPDOWN FIELD -->
+                          <template if:true={cell.isDropdownField}>
+                            <template if:false={cell.isMultiSelect}>
+                              <select
+                                data-id={cell.id}
+                                value={cell.field.value}
+                                class="input-dropdown"
+                                disabled
+                              >
+                                <option value="" disabled class="dropdown-placeholder">
+                                  {cell.placeholderText}
+                                </option>
+                                <option value="None">None</option>
+                                <template for:each={cell.field.options} for:item="option">
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                    selected={option.isSelected}
+                                  >
+                                    {option.label}
+                                  </option>
+                                </template>
+                              </select>
+                            </template>
+
+                            <template if:true={cell.isMultiSelect}>
+                              <div class="multi-dropdown-container">
+                                <div class="multi-selected-values" data-id={cell.id}>
+                                  <template for:each={cell.field.options} for:item="option">
+                                    <template if:true={option.isSelected}>
+                                      <span key={option.label} class="selected-option">
+                                        {option.label}
+                                      </span>
+                                    </template>
+                                  </template>
+                                </div>
+                              </div>
+                            </template>
+                          </template>
+
+                          <!-- UPLOAD FIELD -->
+                          <template if:true={cell.isUploadField}>
+                            <div>
+                              <button type="button" class="file-upload-button" disabled>
+                                &#8684; Upload Image
+                              </button>
+                            </div>
+                          </template>
+
+                          <!-- RADIO BUTTON -->
+                          <template if:true={cell.isRadioButton}>
+                            <div class="incident-radio-group">
+                              <template for:each={cell.radioOptionsProcessed} for:item="option">
+                                <div key={option.optionLabel} class="incident-radio-option">
+                                  <input
+                                    type="radio"
+                                    class="incident-radio-input"
+                                    name={cell.id}
+                                    value={option.optionLabel}
+                                    checked={option.isSelected}
+                                    disabled
+                                  />
+                                  <label class="incident-radio-label">{option.optionLabel}</label>
+                                  <template if:true={option.isSelected}>
+                                    <template if:true={option.hasSubInput}>
+                                      <div class="incident-radio-sub-question">
+                                        <label class="incident-radio-sub-label">{option.subQuestion}</label>
+                                        <template if:true={option.isDropdown}>
+                                          <select class="incident-radio-sub-dropdown" disabled>
+                                            <option value="">-- Select --</option>
+                                            <template for:each={option.processedSubOptions} for:item="val">
+                                              <option key={val.value} value={val.value} selected={val.isSelected}>{val.label}</option>
+                                            </template>
+                                          </select>
+                                        </template>
+                                        <template if:true={option.isTextInput}>
+                                          <input type="text" class="incident-radio-sub-input" value={cell.subInputValue} placeholder="Enter here..." readonly/>
+                                        </template>
+                                        <template if:true={option.isRadioList}>
+                                          <div class="incident-radio-sub-radiolist">
+                                            <template for:each={option.processedSubOptions} for:item="val">
+                                              <label key={val.label} class="incident-radio-sub-option">
+                                                <input type="radio" name={cell.subRadioName} value={val.label} checked={val.isSelected} disabled/>
+                                                {val.label}
+                                              </label>
+                                            </template>
+                                          </div>
+                                        </template>
+                                      </div>
+                                    </template>
+                                  </template>
+                                </div>
+                              </template>
+                            </div>
+                          </template>
+
+                          <!-- SIGNATURE FIELD -->
+                          <template if:true={cell.isSignature}>
+                            <div class="signature-container">
+                              <template if:true={cell.field.value}>
+                                <div class="signature-preview-wrapper">
+                                  <img src={cell.field.value} class="signature-preview-img" alt="signature"/>
+                                </div>
+                              </template>
+                              <template if:false={cell.field.value}>
+                                <button type="button" class="file-upload-button signature-upload-btn" disabled>
+                                  &#9998; Add Signature
+                                </button>
+                              </template>
+                            </div>
+                          </template>
+
+                          <!-- TABLE BLOCK -->
+                          <template if:true={cell.isTableBlock}>
+                            <template if:true={cell.hasTableConfig}>
+                              <div class="ftable-wrapper">
+                                <template if:true={cell.showTableNameSafe}>
+                                  <div class="ftable-title">{cell.safeTableName}</div>
+                                </template>
+                                <table class="ftable-grid">
+                                  <thead if:true={cell.hasHeaderSafe}>
+                                    <tr>
+                                      <template for:each={cell.safeColumns} for:item="col">
+                                        <th key={col.key} class="ftable-head">{col.header}</th>
+                                      </template>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <template if:true={cell.hasRowsSafe}>
+                                      <template for:each={cell.safeRenderRows} for:item="r">
+                                        <tr key={r.value}>
+                                          <template for:each={r.renderCells} for:item="c">
+                                            <td key={c.id} class="ftable-cell">
+                                              <template if:true={c.isRowLabel}>
+                                                <span class="ftable-row-label">{r.value}</span>
+                                              </template>
+                                              <template if:false={c.isRowLabel}>
+                                                <template if:true={c.field}>
+                                                  <template if:true={c.field.isHeader}>
+                                                    <div class="fc-header" style={c.field.inlineStyle}>{c.field.text}</div>
+                                                  </template>
+                                                  <template if:true={c.isTextField}>
+                                                    <input type="text" value={c.field.value} class="input-field" placeholder={c.placeholderText} readonly/>
+                                                  </template>
+                                                  <template if:true={c.isTextArea}>
+                                                    <textarea class="input-textarea" value={c.field.value} placeholder={c.placeholderText} readonly></textarea>
+                                                  </template>
+                                                  <template if:true={c.isAlphaNumeric}>
+                                                    <input type="text" class="input-field" value={c.field.value} placeholder={c.placeholderText} readonly/>
+                                                  </template>
+                                                  <template if:true={c.isOnlyAlphabets}>
+                                                    <input type="text" class="input-field" value={c.field.value} placeholder={c.placeholderText} readonly/>
+                                                  </template>
+                                                  <template if:true={c.isNumberField}>
+                                                    <input type="text" class="input-field" value={c.field.value} placeholder={c.placeholderText} readonly/>
+                                                  </template>
+                                                  <template if:true={c.isDateField}>
+                                                    <input type="date" value={c.field.value} class="input-field" placeholder={c.placeholderText} readonly/>
+                                                  </template>
+                                                  <template if:true={c.isTimeField}>
+                                                    <input type="time" value={c.field.value} class="input-field" placeholder={c.placeholderText} readonly/>
+                                                  </template>
+                                                  <template if:true={c.isCheckboxField}>
+                                                    <label class="checkbox-container">
+                                                      <input type="checkbox" checked={c.field.value} class="blue-checkbox" disabled/>
+                                                      <span class="checkbox-label"></span>
+                                                    </label>
+                                                  </template>
+                                                  <template if:true={c.isDropdownField}>
+                                                    <select value={c.field.value} class="input-dropdown" disabled>
+                                                      <option value="" disabled class="dropdown-placeholder">{c.placeholderText}</option>
+                                                      <template for:each={c.field.options} for:item="opt">
+                                                        <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                                                      </template>
+                                                    </select>
+                                                  </template>
+                                                </template>
+                                              </template>
+                                            </td>
+                                          </template>
+                                        </tr>
+                                      </template>
+                                    </template>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </template>
+                          </template>
+
+                          <!-- Descriptive Text / Rich Text Display -->
+                          <template if:true={cell.field.isRichTextDisplay}>
+                            <div class="rich-text-preview-container">
+                              <div class="rich-text-preview" data-id={cell.id} lwc:dom="manual"></div>
+                            </div>
+                          </template>
+
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </template>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>
+
+</template>
