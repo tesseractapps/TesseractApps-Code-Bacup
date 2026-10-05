@@ -1,0 +1,1870 @@
+<template>
+    <div class="main-container">
+        <div class="menu-container">
+        <div
+            style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            "
+        >
+            <!-- Tabs -->
+            <div style="display: flex">
+            <div
+                class={payrollTabClass}
+                onclick={handleTabChange}
+                data-tab="payroll"
+            >
+                Employees
+            </div>
+            <div
+                class={invoicesTabClass}
+                onclick={handleTabChange}
+                data-tab="invoices"
+            >
+                Contacts
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <template if:true={showPayroll}>
+        <div style="padding: 1%">
+
+            <div class="metrics-grid">
+
+                <div
+                class="metric-card highlighted2"
+                onclick={handleAllStaff}
+                data-id="All"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">All</h3>
+                    <p class="metric-value">{totalCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Pending" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={allStaff}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+
+                <div
+                class="metric-card highlighted3"
+                onclick={handleMatchedStaff}
+                data-id="Sync"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">Sync</h3>
+                    <p class="metric-value">{matchedCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Pending" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={matchedStaff}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+
+                <div
+                class="metric-card highlighted1"
+                onclick={handleSystemStaff}
+                data-id="System Only"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">System Only</h3>
+                    <p class="metric-value">{onlyInSystemCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Generated" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={systemStaff}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+
+                <div
+                class="metric-card highlighted"
+                onclick={handleXeroStaff}
+                data-id="Xero Only"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">MYOB Only</h3>
+                    <p class="metric-value">{onlyInXeroCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Overdue" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={xeroStaff}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+            </div>
+
+            <!-- ✅ All Staff Table -->
+            <template if:true={allStaff}>
+            <div class="table-container custom-scroll">
+                <table class="staff-table" role="grid" style="table-layout: fixed">
+                    <thead>
+                    <tr>
+                        <th class="table-th" scope="col">
+                        <div title="Staff Member">Staff Member</div>
+                        </th>
+                        <th class="table-th" scope="col">
+                        <div  title="Email Address">Email Address</div>
+                        </th>
+                        <th class="table-th" scope="col" style="width:17%">
+                        <div  title="Date of Birth">Date of Birth</div>
+                        </th>
+                        <th class="table-th" scope="col" style="width:12%">
+                        <div title="Sync Status">Sync Status</div>
+                        </th>
+                        <th class="table-th" scope="col" style="width:12%">
+                        <div title="Actions">Actions</div>
+                        </th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <template if:true={hasNoStaff}>
+                        <tr class="tr1">
+                        <td colspan="5" class="slds-text-align_center slds-p-vertical_xx-large">
+                            <div class="no-data">
+                            <p>No records found</p>
+                            </div>
+                        </td>
+                        </tr>
+                    </template>
+
+                    <template if:false={hasNoStaff}>
+                        <template for:each={paginatedStaffList} for:item="staff">
+                        <tr key={staff.id} class="tr1 {staff.rowClass}">
+                            <!-- Staff Member -->
+                            <td data-label="Staff Member" class="table-td">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <lightning-avatar
+                                variant="circle"
+                                initials={staff.initials}
+                                fallback-icon-name="standard:user"
+                                size="medium"
+                                class="slds-m-right_small">
+                                </lightning-avatar>
+                                <span class="slds-text-body_regular staff-name description">{staff.name}</span>
+                            </div>
+                            </td>
+
+                            <!-- Email -->
+                            <td data-label="Email Address" class="table-td description">
+                            <span class="slds-text-body_regular">{staff.email}</span>
+                            </td>
+
+                            <!-- Date of Birth -->
+                            <td data-label="Date of Birth" class="table-td description" style="width:17%">
+                            <span class="slds-text-body_regular">{staff.dateOfBirth}</span>
+                            </td>
+
+                            <!-- Sync Status -->
+                            <td data-label="Sync Status" class="table-td" style="width:12%">
+                            <lightning-badge
+                                label={staff.statusLabel}
+                                class={staff.statusClass}>
+                            </lightning-badge>
+                            </td>
+
+                            <!-- Actions -->
+                            <td data-label="Actions" class="table-td" style="width:12%">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <template if:true={staff.showXeroButton}>
+                                <!-- <lightning-button
+                                    label="Add to Xero"
+                                    icon-name="utility:add"
+                                    variant="brand"
+                                    class="xero-button slds-m-right_x-small"
+                                    onclick={handleCreateInXero}
+                                    data-id={staff.id}>
+                                </lightning-button> -->
+                                    <span class="material-symbols-outlined xero-icon"
+                                            title="Add to MYOB"
+                                            onclick={handleCreateInXero}
+                                            data-id={staff.id}>
+                                        receipt_long
+                                    </span>
+                                </template>
+
+                                <template if:true={staff.showSystemButton}>
+                                <!-- <lightning-button
+                                    label="Add to System"
+                                    icon-name="utility:add"
+                                    variant="brand"
+                                    class="system-button"
+                                    onclick={handleCreateInSystem}
+                                    data-id={staff.id}
+                                    data-firstname={staff.firstName}
+                                    data-lastname={staff.lastName}
+                                    data-email={staff.email}
+                                    data-xero-id={staff.xeroId}>
+                                </lightning-button> -->
+                                <span class="material-symbols-outlined system-icon"
+                                            title="Add to System"
+                                            onclick={handleCreateInSystem}
+                                            data-id={staff.id}
+                                            data-firstname={staff.firstName}
+                                            data-lastname={staff.lastName}
+                                            data-email={staff.email}
+                                            data-xero-id={staff.xeroId}>
+                                        browser_updated
+                                    </span>
+                                </template>
+
+                                <template if:true={staff.showAllSet}>
+                                <div class="all-set-container">
+                                    <!-- <lightning-icon
+                                    icon-name="utility:check"
+                                    size="x-small"
+                                    class="slds-m-right_xx-small success-icon">
+                                    </lightning-icon>
+                                    <span class="slds-text-body_small success-text">All Set</span> -->
+                                    <lightning-badge
+                                    label="All Set"
+                                    class={staff.statusClass}>
+                                    </lightning-badge>
+                                </div>
+                                </template>
+                            </div>
+                            </td>
+                        </tr>
+                        </template>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ✅ Pagination for All Staff -->
+            <div
+                    class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                    style="padding-top: 0.5em"
+                >
+                    <!--RECORDS PER PAGE-->
+                    <div class="slds-col">
+                    <div class="slds-list_inline slds-p-bottom_xx-small">
+                        <label
+                        class="slds-text-color_weak slds-p-horizontal_x-small"
+                        for="recordsPerPage"
+                        style="padding-top: 4%"
+                        >Page Size:</label
+                        >
+                        <div
+                        class="slds-select_container slds-align_absolute-center"
+                        >
+                        <select
+                            class="slds-select"
+                            id="recordsPerPage"
+                            onchange={handleAllPageSizeChange}
+                        >
+                            <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                            </template>
+                        </select>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!--PAGE NAVIGATION-->
+                    <div class="slds-align_absolute-center">
+                    <lightning-button
+                        label="« First"
+                        onclick={handleAllFirstPage}
+                        disabled={allDisableFirstPrev}
+                        class="slds-p-horizontal_x-small">
+                    </lightning-button>
+
+                    <lightning-button
+                        label="‹ Prev"
+                        onclick={handleAllPrevPage}
+                        disabled={allDisableFirstPrev}
+                        class="slds-p-horizontal_x-small">
+                    </lightning-button>
+
+                    &nbsp;
+                    <span class="slds-badge">
+                        Showing {allCurrentPage} &nbsp;of&nbsp; {allTotalPages} &nbsp;&nbsp;Page(s)
+                    </span>
+                    &nbsp;
+
+                    <lightning-button
+                        label="Next ›"
+                        onclick={handleAllNextPage}
+                        disabled={allDisableNextLast}
+                        class="slds-p-horizontal_x-small">
+                    </lightning-button>
+
+                    <lightning-button
+                        label="Last »"
+                        onclick={handleAllLastPage}
+                        disabled={allDisableNextLast}
+                        class="slds-p-horizontal_x-small">
+                    </lightning-button>
+                    </div>
+
+                    <!--TOTAL RECORDS-->
+                    <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge">
+                        Total Records: {allTotalRecords}</span
+                        >
+                    </div>
+                    </div>
+            </div>
+            </template>
+
+            <!-- ✅ Sync Staff Table -->
+            <template if:true={matchedStaff}>
+            <div class="table-container custom-scroll">
+                <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                    <tr>
+                    <th class="table-th" scope="col">
+                        <div title="Staff Member">Staff Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                        <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:17%">
+                        <div title="Date of Birth">Date of Birth</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:12%">
+                        <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:12%">
+                        <div title="Actions">Actions</div>
+                    </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template if:true={hasNoMatchedStaff}>
+                    <tr class="tr1">
+                        <td colspan="5" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                            <p>No records found</p>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+
+                    <template if:false={hasNoMatchedStaff}>
+                    <template for:each={paginatedMatchedList} for:item="staff">
+                        <tr key={staff.id} class="tr1 {staff.rowClass}">
+                        <!-- Staff Member -->
+                        <td data-label="Staff Member" class="table-td">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                                variant="circle"
+                                initials={staff.initials}
+                                fallback-icon-name="standard:user"
+                                size="medium"
+                                class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">{staff.name}</span>
+                            </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                            <span class="slds-text-body_regular">{staff.email}</span>
+                        </td>
+
+                        <!-- Date of Birth -->
+                        <td data-label="Date of Birth" class="table-td description" style="width:17%">
+                            <span class="slds-text-body_regular">{staff.dateOfBirth}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td" style="width:12%">
+                            <lightning-badge
+                            label={staff.statusLabel}
+                            class={staff.statusClass}>
+                            </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td" style="width:12%">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={staff.showXeroButton}>
+                                <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXero}
+                                data-id={staff.id}>
+                                </lightning-button> -->
+                                <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                        title="Add to MYOB"
+                                        onclick={handleCreateInXero}
+                                        data-id={staff.id}>
+                                    receipt_long
+                                </span>
+                            </template>
+
+                            <template if:true={staff.showSystemButton}>
+                                <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystem}
+                                data-id={staff.id}
+                                data-firstname={staff.firstName}
+                                data-lastname={staff.lastName}
+                                data-email={staff.email}
+                                data-xero-id={staff.xeroId}>
+                                </lightning-button> -->
+                                <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystem}
+                                    data-id={staff.id}
+                                    data-firstname={staff.firstName}
+                                    data-lastname={staff.lastName}
+                                    data-email={staff.email}
+                                    data-xero-id={staff.xeroId}>
+                                browser_updated
+                                </span>
+                            </template>
+
+                            <template if:true={staff.showAllSet}>
+                                <div class="all-set-container">
+                                <!-- <lightning-icon
+                                    icon-name="utility:check"
+                                    size="x-small"
+                                    class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span> -->
+                                <lightning-badge
+                                    label="All Set"
+                                    class={staff.statusClass}>
+                                </lightning-badge>
+                                </div>
+                            </template>
+                            </div>
+                        </td>
+                        </tr>
+                    </template>
+                    </template>
+                </tbody>
+                </table>
+
+            </div>
+
+            <!-- ✅ Pagination for Sync Staff -->
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                style="padding-top: 0.5em"
+                >
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                    <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                        class="slds-text-color_weak slds-p-horizontal_x-small"
+                        for="matchedRecordsPerPage"
+                        style="padding-top: 4%"
+                        >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                        <select
+                        class="slds-select"
+                        id="matchedRecordsPerPage"
+                        onchange={handleMatchedPageSizeChange}
+                        >
+                        <template for:each={pageSizeOptions} for:item="option">
+                            <option key={option} value={option}>{option}</option>
+                        </template>
+                        </select>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- PAGE NAVIGATION -->
+                <div class="slds-align_absolute-center">
+                    <lightning-button
+                    label="« First"
+                    onclick={handleMatchedFirstPage}
+                    disabled={matchedDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                    ></lightning-button>
+
+                    <lightning-button
+                    label="‹ Prev"
+                    onclick={handleMatchedPrevPage}
+                    disabled={matchedDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                    ></lightning-button>
+
+                    &nbsp;
+                    <span class="slds-badge">
+                    Showing {matchedCurrentPage} &nbsp;of&nbsp; {matchedTotalPages} &nbsp;&nbsp;Page(s)
+                    </span>
+                    &nbsp;
+
+                    <lightning-button
+                    label="Next ›"
+                    onclick={handleMatchedNextPage}
+                    disabled={matchedDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                    ></lightning-button>
+
+                    <lightning-button
+                    label="Last »"
+                    onclick={handleMatchedLastPage}
+                    disabled={matchedDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                    ></lightning-button>
+                </div>
+
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {matchedTotalRecords}</span>
+                    </div>
+                </div>
+                </div>
+
+
+
+            </template>
+
+            <!-- ✅ System Only Staff Table -->
+            <template if:true={systemStaff}>
+            <div class="table-container custom-scroll">
+            <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                <tr>
+                    <th class="table-th" scope="col">
+                    <div title="Staff Member">Staff Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:17%">
+                    <div title="Date of Birth">Date of Birth</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:12%">
+                    <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:12%">
+                    <div title="Actions">Actions</div>
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <template if:true={hasNoSystemStaff}>
+                    <tr class="tr1">
+                    <td colspan="5" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                        <p>No records found</p>
+                        </div>
+                    </td>
+                    </tr>
+                </template>
+
+                <template if:false={hasNoSystemStaff}>
+                    <template for:each={paginatedSystemList} for:item="staff">
+                    <tr key={staff.id} class="tr1 {staff.rowClass}">
+                        <!-- Staff Member -->
+                        <td data-label="Staff Member" class="table-td">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                            variant="circle"
+                            initials={staff.initials}
+                            fallback-icon-name="standard:user"
+                            size="medium"
+                            class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">
+                            {staff.name}
+                            </span>
+                        </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                        <span class="slds-text-body_regular">{staff.email}</span>
+                        </td>
+
+                        <!-- Date of Birth -->
+                        <td data-label="Date of Birth" class="table-td description" style="width:17%">
+                        <span class="slds-text-body_regular">{staff.dateOfBirth}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td" style="width:12%">
+                        <lightning-badge
+                            label={staff.statusLabel}
+                            class={staff.statusClass}>
+                        </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td" style="width:12%">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={staff.showXeroButton}>
+                            <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXero}
+                                data-id={staff.id}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                    title="Add to MYOB"
+                                    onclick={handleCreateInXero}
+                                    data-id={staff.id}>
+                                receipt_long
+                            </span>
+                            </template>
+
+                            <template if:true={staff.showSystemButton}>
+                            <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystem}
+                                data-id={staff.id}
+                                data-firstname={staff.firstName}
+                                data-lastname={staff.lastName}
+                                data-email={staff.email}
+                                data-xero-id={staff.xeroId}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystem}
+                                    data-id={staff.id}
+                                    data-firstname={staff.firstName}
+                                    data-lastname={staff.lastName}
+                                    data-email={staff.email}
+                                    data-xero-id={staff.xeroId}>
+                                browser_updated
+                                </span>
+                            </template>
+
+                            <template if:true={staff.showAllSet}>
+                            <div class="all-set-container">
+                                <lightning-icon
+                                icon-name="utility:check"
+                                size="x-small"
+                                class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span>
+                            </div>
+                            </template>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+                </template>
+                </tbody>
+            </table>
+
+            </div>
+
+            <!-- ✅ Pagination for System Only Staff -->
+            <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                style="padding-top: 0.5em"
+            >
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="systemRecordsPerPage"
+                    style="padding-top: 4%"
+                    >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                    <select
+                        class="slds-select"
+                        id="systemRecordsPerPage"
+                        onchange={handleSystemPageSizeChange}
+                    >
+                        <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                    </div>
+                </div>
+                </div>
+
+                <!-- PAGE NAVIGATION -->
+                <div class="slds-align_absolute-center">
+                <lightning-button
+                    label="« First"
+                    onclick={handleSystemFirstPage}
+                    disabled={systemDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="‹ Prev"
+                    onclick={handleSystemPrevPage}
+                    disabled={systemDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                    Showing {systemCurrentPage} &nbsp;of&nbsp; {systemTotalPages} &nbsp;&nbsp;Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                    label="Next ›"
+                    onclick={handleSystemNextPage}
+                    disabled={systemDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="Last »"
+                    onclick={handleSystemLastPage}
+                    disabled={systemDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+                </div>
+
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix">
+                <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {systemTotalRecords}</span>
+                </div>
+                </div>
+            </div>
+
+
+            </template>
+
+            <!-- ✅ Xero Only Staff Table -->
+            <template if:true={xeroStaff}>
+            <div class="table-container custom-scroll">
+            <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                <tr>
+                    <th class="table-th" scope="col">
+                    <div title="Staff Member">Staff Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:17%">
+                    <div title="Date of Birth">Date of Birth</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:12%">
+                    <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col" style="width:12%">
+                    <div title="Actions">Actions</div>
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <template if:true={hasNoXeroStaff}>
+                    <tr class="tr1">
+                    <td colspan="5" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                        <p>No records found</p>
+                        </div>
+                    </td>
+                    </tr>
+                </template>
+
+                <template if:false={hasNoXeroStaff}>
+                    <template for:each={paginatedXeroList} for:item="staff">
+                    <tr key={staff.id} class="tr1 {staff.rowClass}">
+                        <!-- Staff Member -->
+                        <td data-label="Staff Member" class="table-td">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                            variant="circle"
+                            initials={staff.initials}
+                            fallback-icon-name="standard:user"
+                            size="medium"
+                            class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">
+                            {staff.name}
+                            </span>
+                        </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                        <span class="slds-text-body_regular">{staff.email}</span>
+                        </td>
+
+                        <!-- Date of Birth -->
+                        <td data-label="Date of Birth" class="table-td description" style="width:17%">
+                        <span class="slds-text-body_regular">{staff.dateOfBirth}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td" style="width:12%">
+                        <lightning-badge
+                            label={staff.statusLabel}
+                            class={staff.statusClass}>
+                        </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td" style="width:12%">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={staff.showXeroButton}>
+                            <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXero}
+                                data-id={staff.id}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                    title="Add to MYOB"
+                                    onclick={handleCreateInXero}
+                                    data-id={staff.id}>
+                                receipt_long
+                            </span>
+                            </template>
+
+                            <template if:true={staff.showSystemButton}>
+                            <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystem}
+                                data-id={staff.id}
+                                data-firstname={staff.firstName}
+                                data-lastname={staff.lastName}
+                                data-email={staff.email}
+                                data-xero-id={staff.xeroId}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystem}
+                                    data-id={staff.id}
+                                    data-firstname={staff.firstName}
+                                    data-lastname={staff.lastName}
+                                    data-email={staff.email}
+                                    data-xero-id={staff.xeroId}>
+                                browser_updated
+                                </span>
+                            </template>
+
+                            <template if:true={staff.showAllSet}>
+                            <div class="all-set-container">
+                                <lightning-icon
+                                icon-name="utility:check"
+                                size="x-small"
+                                class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span>
+                            </div>
+                            </template>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+                </template>
+                </tbody>
+            </table>
+
+            </div>
+
+            <!-- ✅ Pagination for Xero Only Staff -->
+            <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                style="padding-top: 0.5em">
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="xeroRecordsPerPage"
+                    style="padding-top: 4%"
+                    >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                    <select
+                        class="slds-select"
+                        id="xeroRecordsPerPage"
+                        onchange={handleXeroPageSizeChange}
+                    >
+                        <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                    </div>
+                </div>
+                </div>
+
+                <!-- PAGE NAVIGATION -->
+                <div class="slds-align_absolute-center">
+                <lightning-button
+                    label="« First"
+                    onclick={handleXeroFirstPage}
+                    disabled={xeroDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="‹ Prev"
+                    onclick={handleXeroPrevPage}
+                    disabled={xeroDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                    Showing {xeroCurrentPage} &nbsp;of&nbsp; {xeroTotalPages} &nbsp;&nbsp;Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                    label="Next ›"
+                    onclick={handleXeroNextPage}
+                    disabled={xeroDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="Last »"
+                    onclick={handleXeroLastPage}
+                    disabled={xeroDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+                </div>
+
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix">
+                <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {xeroTotalRecords}</span>
+                </div>
+                </div>
+            </div>
+
+
+            </template>
+
+        </div>
+        </template>
+
+        <template if:true={showInvoices}>
+        <!-- <p>Invoices tab content here...</p> -->
+        
+        <div style="padding: 1%">
+
+            <div class="metrics-grid">
+
+                <div
+                class="metric-card highlighted2"
+                onclick={handleAllEntities}
+                data-id="All"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">All</h3>
+                    <p class="metric-value">{totalEntityCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Pending" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={allEntities}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+
+                <div
+                class="metric-card highlighted3"
+                onclick={handleMatchedEntities}
+                data-id="Sync"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">Sync</h3>
+                    <p class="metric-value">{matchedEntityCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Pending" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={matchedEntity}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+
+                <div
+                class="metric-card highlighted1"
+                onclick={handleSystemEntities}
+                data-id="System Only"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">System Only</h3>
+                    <p class="metric-value">{onlyInSystemEntityCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Generated" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={systemEntity}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+
+                <div
+                class="metric-card highlighted"
+                onclick={handleXeroEntities}
+                data-id="Xero Only"
+                >
+                <div class="invoiceTiles">
+                    <div>
+                    <h3 class="metric-title">MYOB Only</h3>
+                    <p class="metric-value">{onlyInMyobEntityCount}</p>
+                    </div>
+                    <!-- <template if:true="{selectedMetricId" ="" ="" ="Overdue" }>
+                    <i class="material-icons metric-icon">task_alt</i>
+                    </template> -->
+                    <template if:true={xeroEntity}>
+                    <i class="material-iconsInvoice">task_alt</i>
+                    </template>
+                </div>
+                </div>
+            </div>
+
+            <!-- ✅ All Staff Table -->
+            <template if:true={allEntities}>
+            <div class="table-container custom-scroll">
+            <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                <tr>
+                    <th class="table-th" scope="col">
+                    <div title="Entity Member">Entity Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Actions">Actions</div>
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <template if:true={hasNoEntity}>
+                    <tr class="tr1">
+                    <td colspan="4" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                        <p>No records found</p>
+                        </div>
+                    </td>
+                    </tr>
+                </template>
+
+                <template if:false={hasNoEntity}>
+                    <template for:each={paginatedEntityList} for:item="entity">
+                    <tr key={entity.id} class="tr1 {entity.rowClass}">
+                        <!-- Entity Member -->
+                        <td data-label="Entity Member" class="table-td">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                            variant="circle"
+                            initials={entity.initials}
+                            fallback-icon-name="standard:user"
+                            size="medium"
+                            class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">
+                            {entity.name}
+                            </span>
+                        </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                        <span class="slds-text-body_regular">{entity.email}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td description">
+                        <lightning-badge
+                            label={entity.statusLabel}
+                            class={entity.statusClass}>
+                        </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td description">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={entity.showXeroButton}>
+                            <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXeroForEntity}
+                                data-id={entity.id}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                    title="Add to MYOB"
+                                    onclick={handleCreateInXeroForEntity}
+                                    data-id={entity.id}>
+                                receipt_long
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showSystemButton}>
+                            <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystemEntity}
+                                data-id={entity.id}
+                                data-entitydata={entity.entityData}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystemEntity}
+                                    data-id={entity.id}
+                                    data-entitydata={entity.entityData}>
+                                    browser_updated
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showAllSet}>
+                            <div class="all-set-container">
+                                <!-- <lightning-icon
+                                icon-name="utility:check"
+                                size="x-small"
+                                class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span> -->
+
+                                <lightning-badge
+                                    label="All Set"
+                                    class={entity.statusClass}>
+                                </lightning-badge>
+                            </div>
+                            </template>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+                </template>
+                </tbody>
+            </table>
+
+            </div>
+
+            <!-- ✅ Pagination for All Entity -->
+            <div
+                class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                style="padding-top: 0.5em">
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="allEntitiesRecordsPerPage"
+                    style="padding-top: 4%"
+                    >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                    <select
+                        class="slds-select"
+                        id="allEntitiesRecordsPerPage"
+                        onchange={handleAllEntitiesPageSizeChange}
+                    >
+                        <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                    </div>
+                </div>
+                </div>
+
+                <!-- PAGE NAVIGATION -->
+                <div class="slds-align_absolute-center">
+                <lightning-button
+                    label="« First"
+                    onclick={handleAllEntitiesFirstPage}
+                    disabled={allEntitiesDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="‹ Prev"
+                    onclick={handleAllEntitiesPrevPage}
+                    disabled={allEntitiesDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                    Showing {allEntitiesCurrentPage} &nbsp;of&nbsp; {allEntitiesTotalPages} &nbsp;&nbsp;Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                    label="Next ›"
+                    onclick={handleAllEntitiesNextPage}
+                    disabled={allEntitiesDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="Last »"
+                    onclick={handleAllEntitiesLastPage}
+                    disabled={allEntitiesDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+                </div>
+
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix">
+                <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {allEntitiesTotalRecords}</span>
+                </div>
+                </div>
+            </div>
+
+
+            </template>
+
+            <!-- ✅ Sync Staff Table -->
+            <template if:true={matchedEntity}>
+            <div class="table-container custom-scroll">
+            <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                <tr>
+                    <th class="table-th" scope="col">
+                    <div title="Entity Member">Entity Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Actions">Actions</div>
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <template if:true={hasNoMatchedEntity}>
+                    <tr class="tr1">
+                    <td colspan="4" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                        <p>No records found</p>
+                        </div>
+                    </td>
+                    </tr>
+                </template>
+
+                <template if:false={hasNoMatchedEntity}>
+                    <template for:each={paginatedMatchedEntityList} for:item="entity">
+                    <tr key={entity.id} class="tr1 {entity.rowClass}">
+                        <!-- Entity Member -->
+                        <td data-label="Entity Member" class="table-td">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                            variant="circle"
+                            initials={entity.initials}
+                            fallback-icon-name="standard:user"
+                            size="medium"
+                            class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">
+                            {entity.name}
+                            </span>
+                        </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                        <span class="slds-text-body_regular">{entity.email}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td description">
+                        <lightning-badge
+                            label={entity.statusLabel}
+                            class={entity.statusClass}>
+                        </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td description">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={entity.showXeroButton}>
+                            <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXeroForEntity}
+                                data-id={entity.id}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                    title="Add to MYOB"
+                                    onclick={handleCreateInXeroForEntity}
+                                data-id={entity.id}>
+                                receipt_long
+                            </span>
+                            </template>
+
+                            <template if:true={entity.showSystemButton}>
+                            <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystemEntity}
+                                data-id={entity.id}
+                                data-entitydata={entity.entityData}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystemEntity}
+                                    data-id={entity.id}
+                                    data-entitydata={entity.entityData}>
+                                browser_updated
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showAllSet}>
+                            <div class="all-set-container">
+                                <!-- <lightning-icon
+                                icon-name="utility:check"
+                                size="x-small"
+                                class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span> -->
+                                <lightning-badge
+                                    label="All Set"
+                                    class={entity.statusClass}>
+                                </lightning-badge>
+                            </div>
+                            </template>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+                </template>
+                </tbody>
+            </table>
+
+            </div>
+
+            <!-- ✅ Pagination for Sync entity -->
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                style="padding-top: 0.5em">
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="matchedEntityRecordsPerPage"
+                    style="padding-top: 4%"
+                    >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                    <select
+                        class="slds-select"
+                        id="matchedEntityRecordsPerPage"
+                        onchange={handleMatchedEntityPageSizeChange}
+                    >
+                        <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                    </div>
+                </div>
+                </div>
+
+                <!-- PAGE NAVIGATION -->
+                <div class="slds-align_absolute-center">
+                <lightning-button
+                    label="« First"
+                    onclick={handleMatchedEntityFirstPage}
+                    disabled={matchedEntityDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="‹ Prev"
+                    onclick={handleMatchedEntityPrevPage}
+                    disabled={matchedEntityDisableFirstPrev}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                    Showing {matchedEntityCurrentPage} &nbsp;of&nbsp; {matchedEntityTotalPages} &nbsp;&nbsp;Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                    label="Next ›"
+                    onclick={handleMatchedEntityNextPage}
+                    disabled={matchedEntityDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+
+                <lightning-button
+                    label="Last »"
+                    onclick={handleMatchedEntityLastPage}
+                    disabled={matchedEntityDisableNextLast}
+                    class="slds-p-horizontal_x-small"
+                ></lightning-button>
+                </div>
+
+                <!-- TOTAL RECORDS -->
+                <div class="slds-clearfix">
+                <div class="slds-float_right">
+                    <span class="slds-badge">Total Records: {matchedEntityTotalRecords}</span>
+                </div>
+                </div>
+            </div>
+
+
+            </template>
+
+            <!-- ✅ System Only Entity Table -->
+            <template if:true={systemEntity}>
+            <div class="table-container custom-scroll">
+            <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                <tr>
+                    <th class="table-th" scope="col">
+                    <div title="Entity Member">Entity Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Actions">Actions</div>
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <template if:true={hasNoSystemEntity}>
+                    <tr class="tr1">
+                    <td colspan="4" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                        <p>No records found</p>
+                        </div>
+                    </td>
+                    </tr>
+                </template>
+
+                <template if:false={hasNoSystemEntity}>
+                    <template for:each={paginatedSystemEntityList} for:item="entity">
+                    <tr key={entity.id} class="tr1 {entity.rowClass}">
+                        <!-- Entity Member -->
+                        <td data-label="Entity Member" class="table-td">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                            variant="circle"
+                            initials={entity.initials}
+                            fallback-icon-name="standard:user"
+                            size="medium"
+                            class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">
+                            {entity.name}
+                            </span>
+                        </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                        <span class="slds-text-body_regular">{entity.email}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td description">
+                        <lightning-badge
+                            label={entity.statusLabel}
+                            class={entity.statusClass}>
+                        </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td description">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={entity.showXeroButton}>
+                            <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXeroForEntity}
+                                data-id={entity.id}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                    title="Add to MYOB"
+                                    onclick={handleCreateInXeroForEntity}
+                                data-id={entity.id}>
+                                receipt_long
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showSystemButton}>
+                            <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystemEntity}
+                                data-id={entity.id}
+                                data-entitydata={entity.entityData}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystemEntity}
+                                    data-id={entity.id}
+                                    data-entitydata={entity.entityData}>
+                                browser_updated
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showAllSet}>
+                            <div class="all-set-container">
+                                <lightning-icon
+                                icon-name="utility:check"
+                                size="x-small"
+                                class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span>
+                            </div>
+                            </template>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+                </template>
+                </tbody>
+            </table>
+
+            </div>
+
+            <!-- ✅ Pagination for System Only entity -->
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                        style="padding-top: 0.5em">
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="systemEntityRecordsPerPage"
+                    style="padding-top: 4%"
+                    >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                    <select
+                        class="slds-select"
+                        id="systemEntityRecordsPerPage"
+                        onchange={handleSystemEntityPageSizeChange}
+                    >
+                        <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                    </div>
+                </div>
+                </div>
+
+    <!-- PAGE NAVIGATION -->
+    <div class="slds-align_absolute-center">
+        <lightning-button
+        label="« First"
+        onclick={handleSystemEntityFirstPage}
+        disabled={systemEntityDisableFirstPrev}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+
+        <lightning-button
+        label="‹ Prev"
+        onclick={handleSystemEntityPrevPage}
+        disabled={systemEntityDisableFirstPrev}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+
+        &nbsp;
+        <span class="slds-badge">
+        Showing {systemEntityCurrentPage} &nbsp;of&nbsp; {systemEntityTotalPages} &nbsp;&nbsp;Page(s)
+        </span>
+        &nbsp;
+
+        <lightning-button
+        label="Next ›"
+        onclick={handleSystemEntityNextPage}
+        disabled={systemEntityDisableNextLast}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+
+        <lightning-button
+        label="Last »"
+        onclick={handleSystemEntityLastPage}
+        disabled={systemEntityDisableNextLast}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+    </div>
+
+    <!-- TOTAL RECORDS -->
+    <div class="slds-clearfix">
+        <div class="slds-float_right">
+        <span class="slds-badge">Total Records: {systemEntityTotalRecords}</span>
+        </div>
+    </div>
+    </div>
+
+
+            </template>
+
+            <!-- ✅ Xero Only Entity Table -->
+            <template if:true={xeroEntity}>
+            <div class="table-container custom-scroll">
+            <table class="staff-table" role="grid" style="table-layout: fixed">
+                <thead>
+                <tr>
+                    <th class="table-th" scope="col">
+                    <div title="Entity Member">Entity Member</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Email Address">Email Address</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Sync Status">Sync Status</div>
+                    </th>
+                    <th class="table-th" scope="col">
+                    <div title="Actions">Actions</div>
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <template if:true={hasNoXeroEntity}>
+                    <tr class="tr1">
+                    <td colspan="4" class="slds-text-align_center slds-p-vertical_xx-large">
+                        <div class="no-data">
+                        <p>No records found</p>
+                        </div>
+                    </td>
+                    </tr>
+                </template>
+
+                <template if:false={hasNoXeroEntity}>
+                    <template for:each={paginatedXeroEntityList} for:item="entity">
+                    <tr key={entity.id} class="tr1 {entity.rowClass}">
+                        <!-- Entity Member -->
+                        <td data-label="Entity Member" class="table-td">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <lightning-avatar
+                            variant="circle"
+                            initials={entity.initials}
+                            fallback-icon-name="standard:user"
+                            size="medium"
+                            class="slds-m-right_small">
+                            </lightning-avatar>
+                            <span class="slds-text-body_regular staff-name description">
+                            {entity.name}
+                            </span>
+                        </div>
+                        </td>
+
+                        <!-- Email -->
+                        <td data-label="Email Address" class="table-td description">
+                        <span class="slds-text-body_regular">{entity.email}</span>
+                        </td>
+
+                        <!-- Sync Status -->
+                        <td data-label="Sync Status" class="table-td description">
+                        <lightning-badge
+                            label={entity.statusLabel}
+                            class={entity.statusClass}>
+                        </lightning-badge>
+                        </td>
+
+                        <!-- Actions -->
+                        <td data-label="Actions" class="table-td description">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <template if:true={entity.showXeroButton}>
+                            <!-- <lightning-button
+                                label="Add to Xero"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="xero-button slds-m-right_x-small"
+                                onclick={handleCreateInXeroForEntity}
+                                data-id={entity.id}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined xero-icon slds-m-right_x-small"
+                                    title="Add to MYOB"
+                                    onclick={handleCreateInXeroForEntity}
+                                    data-id={entity.id}>
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showSystemButton}>
+                            <!-- <lightning-button
+                                label="Add to System"
+                                icon-name="utility:add"
+                                variant="brand"
+                                class="system-button"
+                                onclick={handleCreateInSystemEntity}
+                                data-id={entity.id}
+                                data-entitydata={entity.entityData}>
+                            </lightning-button> -->
+                            <span class="material-symbols-outlined system-icon"
+                                    title="Add to System"
+                                    onclick={handleCreateInSystemEntity}
+                                    data-id={entity.id}
+                                    data-entitydata={entity.entityData}> 
+                                    browser_updated       
+                                </span>
+                            </template>
+
+                            <template if:true={entity.showAllSet}>
+                            <div class="all-set-container">
+                                <lightning-icon
+                                icon-name="utility:check"
+                                size="x-small"
+                                class="slds-m-right_xx-small success-icon">
+                                </lightning-icon>
+                                <span class="slds-text-body_small success-text">All Set</span>
+                            </div>
+                            </template>
+                        </div>
+                        </td>
+                    </tr>
+                    </template>
+                </template>
+                </tbody>
+            </table>
+
+            </div>
+
+            <!-- ✅ Pagination for Xero Only Staff -->
+            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination"
+                style="padding-top: 0.5em">
+                <!-- RECORDS PER PAGE -->
+                <div class="slds-col">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label
+                    class="slds-text-color_weak slds-p-horizontal_x-small"
+                    for="xeroEntityRecordsPerPage"
+                    style="padding-top: 4%"
+                    >Page Size:</label
+                    >
+                    <div class="slds-select_container slds-align_absolute-center">
+                    <select
+                        class="slds-select"
+                        id="xeroEntityRecordsPerPage"
+                        onchange={handleXeroEntityPageSizeChange}
+                    >
+                        <template for:each={pageSizeOptions} for:item="option">
+                        <option key={option} value={option}>{option}</option>
+                        </template>
+                    </select>
+                    </div>
+                </div>
+                </div>
+
+    <!-- PAGE NAVIGATION -->
+    <div class="slds-align_absolute-center">
+        <lightning-button
+        label="« First"
+        onclick={handleXeroEntityFirstPage}
+        disabled={xeroEntityDisableFirstPrev}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+
+        <lightning-button
+        label="‹ Prev"
+        onclick={handleXeroEntityPrevPage}
+        disabled={xeroEntityDisableFirstPrev}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+
+        &nbsp;
+        <span class="slds-badge">
+        Showing {xeroEntityCurrentPage} &nbsp;of&nbsp; {xeroEntityTotalPages} &nbsp;&nbsp;Page(s)
+        </span>
+        &nbsp;
+
+        <lightning-button
+        label="Next ›"
+        onclick={handleXeroEntityNextPage}
+        disabled={xeroDisableNextLastEntity}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+
+        <lightning-button
+        label="Last »"
+        onclick={handleXeroEntityLastPage}
+        disabled={xeroDisableNextLastEntity}
+        class="slds-p-horizontal_x-small"
+        ></lightning-button>
+    </div>
+
+    <!-- TOTAL RECORDS -->
+    <div class="slds-clearfix">
+        <div class="slds-float_right">
+        <span class="slds-badge">Total Records: {xeroEntityTotalRecords}</span>
+        </div>
+    </div>
+    </div>
+
+
+            </template>
+
+        </div>
+        
+        </template>
+    </div>
+
+
+    <template if:true={createEntity}>
+        <c-tesseract-apps-entity-for-xero selected-name={orgid}  entity-data={entityData} create-entity-for-xero-only={createEntityForXeroOnly}  create-entity-for-xero-all={createEntityForXeroAll} onbacktoxero={handleBackToXero}></c-tesseract-apps-entity-for-xero>  
+    </template>
+    <template if:true={createStaff}>>
+        <c-staff-data-community selected-name={orgid} xero-staff-first-name={staffFirstName} xero-staff-last-name={staffLastName} xero-staff-email={staffEmail}  xero-id={staffXeroId}
+                create-staff-for-xero-only={createStaffForXeroOnly}  create-staff-for-xero-all={createStaffForXeroAll}  onbacktoxero={handleBackToXero}></c-staff-data-community>
+    </template>
+
+</template>
