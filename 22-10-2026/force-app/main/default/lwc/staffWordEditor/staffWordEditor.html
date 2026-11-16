@@ -1,0 +1,99 @@
+<template>
+    <div class="we-react-host" data-id="react-editor-root">
+        <!-- Loading Overlay -->
+        <template if:true={isLoading}>
+            <div class="we-loading-overlay">
+                <div class="we-loading-spinner">
+                    <lightning-spinner alternative-text="Loading document..." size="large"></lightning-spinner>
+                    <p class="we-loading-text">{loadingMessage}</p>
+                </div>
+            </div>
+        </template>
+
+        <!-- Main State 1: Dashboard (No Document Loaded) -->
+        <template if:false={isDocumentLoaded}>
+            <div class="we-dashboard">
+                <header class="we-dashboard-header">
+                    <div class="we-logo-container">
+                        <lightning-icon icon-name="doctype:word" size="medium" class="slds-m-right_small"></lightning-icon>
+                        <h1 class="slds-text-heading_medium slds-font-weight_bold">Microsoft Word Document Editor for Staff</h1>
+                    </div>
+                </header>
+
+                <div class="we-dashboard-content">
+                    <div class="we-card-grid">
+                        <!-- Create New Card -->
+                        <div class="we-card we-card--action" onclick={handleCreateBlank}>
+                            <div class="we-card-icon">
+                                <lightning-icon icon-name="utility:new" size="large" alternative-text="New Document"></lightning-icon>
+                            </div>
+                            <div class="we-card-body">
+                                <h3>New Blank Document</h3>
+                                <p>Start creating a new document from scratch inside Salesforce.</p>
+                            </div>
+                        </div>
+
+                        <!-- Upload Card -->
+                        <div class="we-card we-card--action we-file-upload-card">
+                            <div class="we-card-icon">
+                                <lightning-icon icon-name="utility:upload" size="large" alternative-text="Upload File"></lightning-icon>
+                            </div>
+                            <div class="we-card-body">
+                                <h3>Upload Word Document</h3>
+                                <p>Upload an existing .docx file from your local machine to edit.</p>
+                                <input 
+                                    type="file" 
+                                    accept=".docx" 
+                                    class="slds-file-selector__input slds-assistive-text" 
+                                    id="file-upload-input"
+                                    onchange={handleLocalFileUpload}
+                                />
+                                <label class="slds-button slds-button_neutral slds-m-top_small" for="file-upload-input">
+                                    Choose .docx File
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Main State 2: Editor (Document Loaded) -->
+        <template if:true={isDocumentLoaded}>
+            <div class="we-editor-container">
+                <!-- Editor Top Header Navigation -->
+                <div class="we-editor-header">
+                    <button class="slds-button slds-button_neutral slds-m-right_medium" onclick={handleCloseEditor}>
+                        <lightning-icon icon-name="utility:back" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        Back to List
+                    </button>
+                    <div class="we-editor-title-container">
+                        <lightning-icon icon-name="doctype:word" size="small" class="slds-m-right_small"></lightning-icon>
+                        <lightning-input 
+                            type="text" 
+                            value={loadedFileName} 
+                            onchange={handleFileNameChange} 
+                            variant="label-hidden" 
+                            class="we-title-input"
+                            style="width: 250px; display: inline-block;">
+                        </lightning-input>
+                    </div>
+                    <div class="we-editor-status">
+                        <span class="slds-badge slds-theme_success">Editing Mode</span>
+                    </div>
+                </div>
+
+                <!-- React Editor Page IFrame -->
+                <div class="iframe-container">
+                    <iframe 
+                        src={reactAppUrl}
+                        onload={handleIframeLoaded}
+                        style="width: 100%; height: 100%; border: none;">
+                    </iframe>
+                </div>
+                
+               
+            </div>
+        </template>
+    </div>
+</template>
