@@ -1,0 +1,774 @@
+<template>
+
+<div class="main-container">
+    <template if:true={isHome}>
+
+        <!-- TOP BAR -->
+        <div class="tkt-topbar slds-grid slds-grid_vertical-align-center">
+            <div class="tkt-tab-title">Contact Us</div>
+
+            <div class="slds-col_bump-left slds-m-right_small">
+                <lightning-button
+                    class="tkt-topbar-button"
+                    label="Create New Ticket"
+                    icon-name="utility:add"
+                    icon-position="right"
+                    onclick={handleNewTicketClick}>
+                </lightning-button>
+            </div>
+
+            <div class="slds-m-right_small">
+                <lightning-button
+                    class="tkt-topbar-button"
+                    label="Close"
+                    icon-name="utility:close"
+                    icon-position="right"
+                    onclick={closeTicketPanel}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="slds-grid slds-grid_vertical-align-center slds-p-horizontal_small slds-p-top_small">
+
+            <div class="slds-size_1-of-4 slds-m-right_small">
+                <div class="search-box">
+                    <lightning-input
+                        type="search"
+                        variant="label-hidden"
+                        placeholder="Search tickets"
+                        value={searchKey}
+                        onchange={handleSearchChange}>
+                    </lightning-input>
+                </div>
+            </div>
+
+            <div class="slds-size_1-of-5 slds-m-right_small">
+                <div class="floating-label">
+                    <span class="label-text-drop">Filter Tickets</span>
+                    <lightning-combobox
+                        variant="label-hidden"
+                        class="filter-combobox"
+                        value={selectedFilter}
+                        options={filterOptions}
+                        onchange={handleFilterChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+
+            <div class="slds-size_1-of-5">
+                <div class="floating-label">
+                    <span class="label-text-drop">Priority</span>
+                    <lightning-combobox
+                        variant="label-hidden"
+                        value={selectedPriority}
+                        options={priorityOptions}
+                        onchange={handlePriorityFilterChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="content-wrapper">
+            <div class={ticketTableClass}>
+
+                <div class="header-wrapper">
+                    <table class="staff-table">
+                        <thead>
+                            <tr>
+                                <th class="table-th" title="Ticket Number">Ticket Number</th>
+
+                                <template if:true={isTesseractOrg}>
+                                    <th class="table-th" title="Raised By">Raised By</th>
+                                </template>
+
+                                <th class="table-th" title="Subject">Subject</th>
+                                <th class="table-th" title="Username">Username</th>
+                                <th class="table-th" title="Date of Issue">Date of Issue</th>
+                                <th class="table-th center" title="Priority">Priority</th>
+                                <th class="table-th" title="Assigned To">Assigned to</th>
+                                <th class="table-th center" title="Status">Status</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                <div class="body-scroll custom-scroll table-size">
+                    <table class="staff-table">
+                        <tbody>
+                            <template for:each={paginatedTickets} for:item="t">
+                                <tr key={t.Id} class="table-row">
+
+                                    <td class="table-td">
+                                        <a href="javascript:void(0)"
+                                           data-id={t.Id}
+                                           onclick={handleTicketClick}
+                                           title={t.Ticket_Name__c}>
+                                            {t.Ticket_Name__c}
+                                        </a>
+                                    </td>
+
+                                    <template if:true={isTesseractOrg}>
+                                        <td class="table-td" title={t.fullOrganizationName}>
+                                            {t.organizationName}
+                                        </td>
+                                    </template>
+
+                                    <td class="table-td" title={t.Subject__c}>{t.Subject__c}</td>
+                                    <td class="table-td" title={t.User_Name__c}>{t.User_Name__c}</td>
+                                    <td class="table-td" title={t.formattedDateOfIssue}>{t.formattedDateOfIssue}</td>
+
+                                    <td class="table-td center">
+                                        <span class={t.priorityClass}>{t.Priority__c}</span>
+                                    </td>
+
+                                    <td class="table-td" title={t.assignedDisplay}>{t.assignedDisplay}</td>
+
+                                    <td class="table-td center">
+                                        <span class={t.statusClass}>{t.Status__c}</span>
+                                    </td>
+
+                                </tr>
+                            </template>
+
+                            <template if:true={showNoTicketsMessage}>
+                                <tr>
+                                    <td class="no-data">
+                                        <p>No tickets found</p>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread fixed-pagination" style="padding-top: 0.5em;">
+
+            <div class="slds-col" style="padding-left: 1%;">
+                <div class="slds-list_inline slds-p-bottom_xx-small">
+                    <label class="slds-text-color_weak slds-p-horizontal_x-small slds-grid_vertical-align-center" for="recordsPerPage">
+                        Page Size:
+                    </label>
+                    <div class="slds-select_container">
+                        <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPageTickets}>
+                            <template for:each={pageSizeOptions} for:item="option">
+                                <option key={option} value={option}>{option}</option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-align_absolute-center" style="height:5rem">
+                <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:jump_to_left"
+                    label="First"
+                    class="slds-p-horizontal_x-small"
+                    alternative-text="First Page"
+                    onclick={firstPageTickets}>
+                </lightning-button>
+
+                <lightning-button
+                    disabled={bDisableFirst}
+                    icon-name="utility:chevronleft"
+                    label="Previous"
+                    alternative-text="Previous Page"
+                    onclick={previousPageTickets}>
+                </lightning-button>
+
+                &nbsp;
+                <span class="slds-badge">
+                    Showing {pageNumber} &nbsp;of&nbsp; {totalPages} &nbsp;&nbsp;Page(s)
+                </span>
+                &nbsp;
+
+                <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:chevronright"
+                    label="Next"
+                    class="slds-p-horizontal_x-small"
+                    alternative-text="Next Page"
+                    icon-position="right"
+                    onclick={nextPageTickets}>
+                </lightning-button>
+
+                <lightning-button
+                    disabled={bDisableLast}
+                    icon-name="utility:jump_to_right"
+                    label="Last"
+                    alternative-text="Last Page"
+                    icon-position="right"
+                    onclick={lastPageTickets}>
+                </lightning-button>
+            </div>
+
+            <div class="slds-clearfix slds-m-right_xx-large">
+                <div class="slds-float_right">
+                    <span class="slds-badge">Total Tickets: {totalRecords}</span>
+                </div>
+            </div>
+        </div>
+
+    </template>
+</div>
+
+
+<!-- ===================== EDIT POPUP (Tesseract support only) ===================== -->
+<template if:true={showEditPopup}>
+    <div class="overview-modal-backdrop">
+        <div class="overview-modal-tabbed" style="max-width: 800px;">
+            <div class="overview-modal-header-tabbed">
+                <div class="overview-header-title">
+                    <h3>Edit Ticket:</h3>
+                    <h2>#{selectedTicket.Ticket_Name__c} — {selectedTicket.Subject__c}</h2>
+                </div>
+                <button class="overview-close-btn" onclick={closeEditPopup}>×</button>
+            </div>
+
+            <div class="overview-tab-content">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Assigned to</span>
+                            <lightning-combobox
+                                name="Assigned_To__c"
+                                variant="label-hidden"
+                                value={editTicket.Assigned_To__c}
+                                options={ticketingMembers}
+                                onchange={handleEditInputChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Status</span>
+                            <lightning-combobox
+                                name="Status__c"
+                                variant="label-hidden"
+                                value={editTicket.Status__c}
+                                options={statusOptions}
+                                onchange={handleEditInputChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+                        <div class="floating-label-textarea-comments">
+                            <span class="label-text-drop">Comments</span>
+                            <lightning-textarea
+                                name="commentText"
+                                variant="label-hidden"
+                                value={editTicket.commentText}
+                                onchange={handleEditInputChange}
+                                maxlength="1000">
+                            </lightning-textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overview-modal-footer">
+                <lightning-button variant="brand-outline" label="Cancel" onclick={closeEditPopup}></lightning-button>
+                <lightning-button variant="brand" label="Save" onclick={saveTicketEdits} class="slds-m-left_small"></lightning-button>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+<!-- ===================== CREATE TICKET POPUP (centered modal, same look as Add Attachment) ===================== -->
+<template if:true={showCreateTicketForm}>
+    <section class="slds-modal slds-fade-in-open" role="dialog" aria-modal="true" tabindex="-1">
+        <div class="slds-modal__container create-ticket-modal">
+
+            <header class="slds-modal__header create-ticket-header">
+                <h2 class="slds-text-heading_medium slds-hyphenate create-ticket-title">
+                    Create New Ticket
+                </h2>
+            </header>
+
+            <div class="slds-modal__content slds-p-around_medium custom-scroll create-ticket-body">
+                <div class="slds-grid slds-wrap">
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Organisation Name</span>
+                            <lightning-input
+                                variant="label-hidden"
+                                data-field="Organisation_Name__c"
+                                value={ticket.Organisation_Name__c}
+                                onchange={handleInputChange}
+                                disabled>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <template if:false={shouldHideSubmittedBy}>
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop">
+                                    <span style="color:red">*</span>Submitted by
+                                </span>
+
+                                <lightning-combobox
+                                    variant="label-hidden"
+                                    data-field="Submitted_By__c"
+                                    options={submittedByOptions}
+                                    value={ticket.Submitted_By__c}
+                                    disabled={isSubmittedByLocked}
+                                    onchange={handleInputChange}>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={showUserDetails}>
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>User Name</span>
+                                <lightning-combobox
+                                    variant="label-hidden"
+                                    value={selectedUserId}
+                                    options={orgUsers}
+                                    onchange={handleUserSelect}>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span style="color:red">*</span>Email-ID</span>
+                                <lightning-input
+                                    variant="label-hidden"
+                                    type="email"
+                                    data-field="Email_ID__c"
+                                    value={ticket.Email_ID__c}
+                                    onchange={handleInputChange}
+                                    disabled>
+                                </lightning-input>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Contact Number</span>
+                            <lightning-input
+                                variant="label-hidden"
+                                type="tel"
+                                data-field="Contact_Number__c"
+                                value={ticket.Contact_Number__c}
+                                onchange={handleInputChange}
+                                disabled>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Date of Issue</span>
+                            <lightning-input
+                                variant="label-hidden"
+                                type="date"
+                                data-field="Date_Of_Issue__c"
+                                value={ticket.Date_Of_Issue__c}
+                                onchange={handleInputChange}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Priority</span>
+                            <lightning-combobox
+                                variant="label-hidden"
+                                data-field="Priority__c"
+                                options={priorityOptions}
+                                value={ticket.Priority__c}
+                                onchange={handleInputChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Module</span>
+                            <lightning-combobox
+                                variant="label-hidden"
+                                data-field="Module__c"
+                                options={moduleOptions}
+                                value={ticket.Module__c}
+                                onchange={handleInputChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Category</span>
+                            <lightning-combobox
+                                variant="label-hidden"
+                                data-field="Category__c"
+                                options={categoryOptions}
+                                value={ticket.Category__c}
+                                onchange={handleInputChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Platform</span>
+                            <lightning-combobox
+                                variant="label-hidden"
+                                data-field="Platform__c"
+                                options={platformOptions}
+                                value={ticket.Platform__c}
+                                onchange={handleInputChange}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop">Status</span>
+                            <lightning-input
+                                variant="label-hidden"
+                                data-field="Status__c"
+                                value={ticket.Status__c}
+                                onchange={handleInputChange}
+                                disabled>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-p-around_small">
+                        <div class="floating-label">
+                            <span class="label-text-drop"><span style="color:red">*</span>Subject</span>
+                            <lightning-input
+                                variant="label-hidden"
+                                data-field="Subject__c"
+                                value={ticket.Subject__c}
+                                onchange={handleInputChange}
+                                maxlength="255">
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <div class="slds-size_1-of-1 slds-p-around_small">
+                        <div class="floating-label-textarea">
+                            <span class="label-text-drop"><span style="color:red">*</span>Description</span>
+                            <textarea
+                                class="create-ticket-textarea"
+                                data-field="Description__c"
+                                rows="3"
+                                onchange={handleInputChange}
+                                maxlength="1000">{ticket.Description__c}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Attachments (AWS config: TSign_Ticket) -->
+                    <div class="slds-size_1-of-1 slds-p-around_small slds-m-top_small">
+                        <c-t-signaws-batch-lwc
+                            module-name="TSignTicket"
+                            organisation-id={orgid}
+                            onuploadsuccess={handleAttachmentUpload}
+                            ondelete={handleAttachmentDelete}>
+                        </c-t-signaws-batch-lwc>
+                    </div>
+
+                </div>
+            </div>
+
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    label="Cancel"
+                    variant="brand-outline"
+                    onclick={handleCancelCreate}
+                    disabled={isSubmitting}>
+                </lightning-button>
+                <lightning-button
+                    class="slds-m-left_small"
+                    label="Submit"
+                    variant="brand"
+                    onclick={submitTicket}
+                    disabled={isSubmitting}>
+                </lightning-button>
+            </footer>
+
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+
+<!-- ===================== TICKET DETAIL POPUP ===================== -->
+<template if:true={showTicketPopup}>
+    <div class="overview-modal-backdrop">
+        <div class="overview-modal-tabbed1">
+
+            <div class="overview-modal-header-tabbed">
+                <div class="overview-header-title">
+                    <h2 title={selectedTicket.Subject__c}>#{selectedTicket.Ticket_Name__c} &mdash; {selectedTicket.Subject__c}</h2>
+                    <span class="overview-meta">
+                        {selectedTicket.User_Name__c} &bull;
+                        {selectedTicket.formattedDateOfIssue}
+                    </span>
+                </div>
+                <button class="overview-close-btn" onclick={closeTicketPopup}>×</button>
+            </div>
+
+            <div class="overview-tabs">
+                <div class={ticketTabClass} onclick={showTicketInfoTab}>Ticket Info</div>
+                <div class={conversationTabClass} onclick={showConversationTab}>Interactions</div>
+                <div class={resolutionTabClass} onclick={showResolutionTab}>Resolution</div>
+                <div class={attachmentTabClass} onclick={showAttachmentTab}>Attachment</div>
+                <div class={historyTabClass} onclick={showHistoryTab}>History</div>
+            </div>
+
+            <div class="overview-tab-content1 custom-scroll">
+
+                <!-- TICKET INFO -->
+                <template if:true={showTicketInfo}>
+                    <div class="overview-info-grid">
+                        <div><strong>Status:</strong> {selectedTicket.Status__c}</div>
+                        <div><strong>Submitted By:</strong> {selectedTicket.Submitted_By__c}</div>
+                        <div><strong>Email:</strong> {selectedTicket.Email_ID__c}</div>
+                        <div><strong>Phone:</strong> {selectedTicket.Contact_Number__c}</div>
+                        <div><strong>Priority:</strong> {selectedTicket.Priority__c}</div>
+                        <div><strong>Module:</strong> {selectedTicket.moduleDisplay}</div>
+                        <div><strong>Category:</strong> {selectedTicket.Category__c}</div>
+                        <div><strong>Platform:</strong> {selectedTicket.Platform__c}</div>
+                        <div><strong>Attachment:</strong>
+                            <template for:each={uploadedFileDetails} for:item="file">
+                                <div key={file.id} class="ticket-info-row">
+                                    <div class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <lightning-icon icon-name={file.iconName} alternative-text="File" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <a href={file.url} target="_blank" class="file-link">{file.filename}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <p style="margin-top:1rem;"><strong>Description:</strong></p>
+                    <p>{descriptionfromTicket}</p>
+                </template>
+
+                <!-- INTERACTIONS -->
+                <template if:true={showConversation}>
+                    <template if:true={noConversations}>
+                        <template if:false={showMessageInput}>
+                            <div class="start-conversation-wrapper">
+                                <button class="start-conversation-button" onclick={toggleMessageInput}>
+                                    💬 Start Conversation
+                                </button>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:false={noConversations}>
+                        <div class="reply-button-container">
+                            <template if:false={showMessageInput}>
+                                <button class="reply-icon-button" onclick={toggleMessageInput}>
+                                    💬 Reply
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <div class="conversation-thread">
+                        <div class="conversation-content" lwc:dom="manual"></div>
+
+                        <template if:true={showMessageInput}>
+                            <div class="new-message-container">
+                                <lightning-textarea
+                                    class="reply-textarea"
+                                    value={newMessage}
+                                    onchange={handleNewMessageInput}
+                                    placeholder="Type your reply...">
+                                </lightning-textarea>
+                                <lightning-button-icon
+                                    icon-name="utility:send"
+                                    variant="brand"
+                                    alternative-text="Send"
+                                    onclick={sendMessageToConversation}>
+                                </lightning-button-icon>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- RESOLUTION -->
+                <template if:true={showResolution}>
+                    <div class="resolution-container">
+
+                        <template if:true={resolutionInput}>
+                            <template if:false={showResolutionInput}>
+                                <div class="resolution-block"
+                                     onmouseover={showResolutionActions}
+                                     onmouseout={hideResolutionActions}>
+
+                                    <div class="resolution-header">
+                                        <div class="avatar-circle">{resolutionInitials}</div>
+                                        <strong>{resolutionSubmittedBy}</strong>
+                                        <div class="resolution-timestamp-wrapper">
+                                            <div class="resolution-date">{resolutionDate}</div>
+                                            <div class="resolution-time">{resolutionTime}</div>
+                                        </div>
+                                        <span class="resolution-actions" style="display:none">
+                                            <lightning-icon icon-name="utility:edit" size="xx-small" class="icon-action" onclick={editResolution}></lightning-icon>
+                                            <lightning-icon icon-name="utility:delete" size="xx-small" class="icon-action" onclick={deleteResolution}></lightning-icon>
+                                        </span>
+                                    </div>
+
+                                    <div class="resolution-message">{resolutionInput}</div>
+                                </div>
+                            </template>
+                        </template>
+
+                        <template if:true={showResolutionInput}>
+                            <div class="floating-label-textarea-resolution">
+                                <span class="label-text-drop"><span style="color:red">*</span>Add Resolution</span>
+                                <lightning-textarea
+                                    class="resolution-textarea"
+                                    value={resolutionInput}
+                                    variant="label-hidden"
+                                    placeholder="Write your resolution..."
+                                    onchange={handleResolutionChange}
+                                    maxlength="1000">
+                                </lightning-textarea>
+                            </div>
+
+                            <div class="save-resolution-wrapper">
+                                <lightning-button label="Save" variant="brand" onclick={saveResolution}></lightning-button>
+                                &nbsp;
+                                <lightning-button
+                                    variant="brand-outline"
+                                    label="Cancel"
+                                    onclick={cancelResolutionEdit}
+                                    class="slds-m-left_small">
+                                </lightning-button>
+                            </div>
+                        </template>
+
+                        <template if:true={showAddResolutionButton}>
+                            <div class="add-resolution-wrapper">
+                                <button class="add-resolution-btn" onclick={showResolutionInputField}>
+                                    ➕ Add Resolution
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- ATTACHMENTS -->
+                <template if:true={showAttachment}>
+
+                    <template if:false={uploadcontainer}>
+                        <div class="attachment-post-title">Post Attachments</div>
+
+                        <template for:each={postAttachments} for:item="att">
+                            <div key={att.id} class="slds-media slds-media_center attachment-post-preview" style="padding:1% 0 1% 0;">
+                                <div class="slds-media__figure">
+                                    <lightning-icon icon-name={att.iconName} size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <a href={att.url} target="_blank">{att.filename}</a>
+                                </div>
+                                <div class="attachment-post-actions slds-m-left_x-small">
+                                    <div onclick={handleEditPostAttachment} data-id={att.id} data-key={att.key} style="cursor:pointer;" title="Edit">
+                                        <lightning-icon
+                                            icon-name="action:edit"
+                                            size="x-small"
+                                            alternative-text="Edit"
+                                            class="slds-icon-text-default"
+                                            style="cursor:pointer;color:white;background:#0099DE;">
+                                        </lightning-icon>
+                                    </div>
+                                    &nbsp;
+                                    <div onclick={deletePostAttachment} data-key={att.key} data-filename={att.filename} data-id={att.id} style="cursor:pointer;" title="Delete">
+                                        <lightning-icon
+                                            icon-name="action:delete"
+                                            size="x-small"
+                                            alternative-text="Delete"
+                                            class="slds-icon-text-default">
+                                        </lightning-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- Upload box (AWS config: TSign_Ticket). Saves automatically after upload. -->
+                    <template if:true={uploadcontainer}>
+                        <c-t-signaws-batch-lwc
+                            module-name="TSignTicket"
+                            organisation-id={orgid}
+                            onuploadsuccess={handleAttachmentUpload}
+                            ondelete={handleAttachmentDelete}>
+                        </c-t-signaws-batch-lwc>
+
+                        <template if:true={hasPostAttachments}>
+                            <div class="slds-m-top_small">
+                                <lightning-button
+                                    variant="brand-outline"
+                                    label="Cancel"
+                                    onclick={cancelPostAttachmentEdit}>
+                                </lightning-button>
+                            </div>
+                        </template>
+                    </template>
+
+                </template>
+
+                <template if:true={showApproval}>
+                    <p><em>Approval tab content coming soon...</em></p>
+                </template>
+
+                <!-- HISTORY -->
+                <template if:true={showHistory}>
+                    <div class="history-timeline">
+                        <template for:each={groupedHistory} for:item="group">
+                            <div key={group.date} class="history-date-section">
+                                <div class="history-date-label">{group.date}</div>
+                                <template for:each={group.entries} for:item="entry">
+                                    <div key={entry.id} class="history-entry">
+                                        <div class="entry-time">{entry.time}</div>
+                                        <div class="entry-content">
+                                            <div class="entry-header">
+                                                <div class="avatar-circle">{entry.initials}</div>
+                                                <div class="entry-meta">
+                                                    <span class="entry-user">{entry.user}</span>
+                                                    <span class="entry-action">{entry.actionType}</span>
+                                                </div>
+                                            </div>
+                                            <div class="entry-body">{entry.content}</div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
+</template>
+
+<template if:true={showUpgradeModal}>
+    <c-upgrade-modal
+        is-open={showUpgradeModal}
+        onclose={closeUpgradeModal}>
+    </c-upgrade-modal>
+</template>
+
+</template>

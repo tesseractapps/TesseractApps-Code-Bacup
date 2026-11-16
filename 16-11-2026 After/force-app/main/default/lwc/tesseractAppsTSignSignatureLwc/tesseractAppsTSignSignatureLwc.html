@@ -1,0 +1,217 @@
+<template>
+    <div class="sig-wrapper">
+
+        <!-- Main Header -->
+        <header class="sig-header">
+            <div class="sig-header-left">
+                <div class="sig-icon-badge">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 17c3-1 5-6 7-9s4-1 3 3-2 6 0 6 4-3 6-3 2 1 2 2"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="sig-title">My Signatures</h2>
+                    <p class="sig-subtitle">{signatureCountLabel}</p>
+                </div>
+            </div>
+            <!-- <template if:false={showForm}>
+                <lightning-button variant="brand" label="Add Signature" onclick={openForm}></lightning-button>
+            </template> -->
+        </header>
+
+        <!-- ============ DOCUSIGN STYLE MODAL ============ -->
+        <dialog class="sig-modal" lwc:ref="sigModal" ontoggle={handleModalToggle}>
+            <div class={modalContentClass}>
+
+                <!-- Modal Header (Dynamic Title) -->
+                <div class="sig-form-title">
+                    <h3>{modalTitle}</h3>
+                    <button class="sig-close-btn" onclick={handleCancel} aria-label="Close">&times;</button>
+                </div>
+
+                <!-- Scrollable Body -->
+                <div class="sig-modal-body">
+                    <div class="sig-top-fields">
+                        <div class="sig-field-col">
+                            <label class="sig-label">Full Name <span class="req">*</span></label>
+                            <input type="text" class="sig-text-input" value={fullName} oninput={handleNameChange} placeholder="Full Name" />
+                        </div>
+                        <div class="sig-field-col">
+                            <label class="sig-label">Initials <span class="req">*</span></label>
+                            <input type="text" class="sig-text-input" value={initials} oninput={handleInitialsChange} placeholder="FN" maxlength="4" />
+                        </div>
+                    </div>
+
+                    <div class="sig-tabs-docusign">
+                        <button class={chooseTabClass} data-tab="Choose" onclick={handleTabClick}>Choose</button>
+                        <button class={drawTabClass} data-tab="Draw" onclick={handleTabClick}>Draw</button>
+                        <button class={uploadTabClass} data-tab="Upload" onclick={handleTabClick}>Upload</button>
+                    </div>
+
+                    <div class="sig-form-content">
+                        <template if:true={isChooseTab}>
+                            <div class="sig-styles-list">
+                                <template for:each={availableStyles} for:item="style">
+                                    <label key={style.id} class={style.cardClass}>
+                                        <div class="sig-radio-wrapper">
+                                            <input type="radio" name="sigStyle" value={style.id} checked={style.isSelected} onchange={handleStyleSelect} />
+                                        </div>
+
+                                        <div class="sig-preview-block">
+                                            <div class="sig-border-top-left"></div>
+                                            <span class="sig-preview-label">Signed by:</span>
+                                            <div class={style.sigImageClass} style={style.sigStyleInline}>
+                                                {style.displayCombined}
+                                            </div>
+                                            <div class="sig-border-bottom-left"></div>
+                                        </div>
+
+                                    </label>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:true={isDrawTab}>
+                            <div class="sig-tab-pad">
+                                <p class="sig-hint">Draw your signature below using your mouse or touch screen.</p>
+                                <div class="sig-canvas-container">
+                                    <canvas lwc:dom="manual" class="sig-canvas draw-canvas"></canvas>
+                                </div>
+                                <div class="sig-draw-actions">
+                                    <button type="button" class="sig-link-btn" onclick={handleClearDraw}>Clear</button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template if:true={isUploadTab}>
+                            <div class="sig-tab-pad">
+                                <p class="sig-hint">Upload a PNG or JPG image of your signature.</p>
+                                <div class="sig-upload-box">
+                                    <input type="file" accept="image/png,image/jpeg" onchange={handleFileUpload} class="sig-file-input" />
+                                </div>
+                                <template if:true={uploadedImageUrl}>
+                                    <div class="sig-upload-preview">
+                                        <img src={uploadedImageUrl} alt="Uploaded signature" />
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Uploading indicator -->
+                        <template if:true={isLogoLoading}>
+                            <div class="sig-upload-status">
+                                <lightning-spinner alternative-text="Uploading signature..." size="small"></lightning-spinner>
+                                <span>Uploading image…</span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="sig-footer-docusign">
+                    <p class="sig-legal-text">
+                        By clicking Create, I agree that the signature and initials will be the electronic representation of my signature and initials for all purposes when I (or my agent) use them on envelopes, including legally binding contracts.
+                    </p>
+                    <div class="sig-footer-actions">
+                        <!-- <button type="button" class="sig-cancel-btn" onclick={handleCancel} disabled={isLogoLoading}>Cancel</button> -->
+                        <lightning-button variant="brand-outline" label="Cancel" onclick={handleCancel} disabled={isLogoLoading}></lightning-button>
+                        <template if:true={isEditMode}>
+                            <!-- <button type="button" class="sig-primary-btn" onclick={handleSave} disabled={isSaveDisabled}>Update</button> -->
+                            <lightning-button variant="brand" label="Update" onclick={handleSave} disabled={isSaveDisabled}></lightning-button>
+                        </template>
+                        <template if:false={isEditMode}>
+                            <!-- <button type="button" class="sig-primary-btn" onclick={handleSave} disabled={isSaveDisabled}>Create</button> -->
+                            <lightning-button variant="brand" label="Create" onclick={handleSave} disabled={isSaveDisabled}></lightning-button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Replace confirm: shown INSTEAD of the form (form is hidden, state kept) -->
+            <template if:true={showReplaceConfirm}>
+                <div class="sig-confirm-card" role="alertdialog" aria-modal="true">
+                    <h3 class="sig-confirm-head">{replaceTitle}</h3>
+                    <p class="sig-confirm-body">{replaceMessage}</p>
+                    <div class="sig-confirm-foot">
+                        <lightning-button variant="brand-outline" label="Cancel" onclick={handleReplaceNo}></lightning-button>
+                        <lightning-button variant="brand" label="Replace" onclick={handleReplaceYes}></lightning-button>
+                    </div>
+                </div>
+            </template>
+        </dialog>
+
+        <!-- Hidden AWS uploader (same pipeline as the logo / stamp flow) -->
+       <!--  <template if:true={isFileExpand}>
+            <c-document-office-service
+                record-id={uploadRecordId}
+                module-path-from-parent="profile"
+                allow-multiple="false"
+                onuploadcomplete={handleAwsUploadComplete}
+                onfiledeleted={handleFileDeleted}>
+            </c-document-office-service>
+        </template>
+       -->
+       <template if:true={isFileExpand}>
+            <div style="display: none;">
+                <c-t-signaws-batch-lwc
+                    module-name="TsignSignature"
+                    organisation-id={currentUserOrgId}
+                      existing-files-json={tempNewJson} 
+                    onuploadsuccess={handleAwsUploadComplete}>
+                </c-t-signaws-batch-lwc>
+            </div>
+        </template>
+        <!-- ============ LIST & EMPTY STATE ============ -->
+        <template if:true={showListSection}>
+            <div class="sig-list">
+                <template for:each={signatures} for:item="sig">
+                    <article key={sig.id} class="sig-item">
+                        <div class="sig-item-thumb">
+                            <img src={sig.dataUrl} alt={sig.fullName} />
+                        </div>
+                        <div class="sig-item-info">
+                            <div class="sig-item-name-row">
+                                <span class="sig-item-name">{sig.fullName}</span>
+                                <template if:true={sig.isDefault}>
+                                    <span class="sig-default-pill">Default</span>
+                                </template>
+                            </div>
+                            <span class="sig-item-meta">
+                                {sig.method} · {sig.createdDate}
+                            </span>
+                        </div>
+                        <div class="sig-item-actions">
+                            <button type="button" class="sig-ghost-btn sig-small" data-id={sig.id} onclick={handleEdit}>
+                                Edit
+                            </button>
+                            <template if:false={sig.isDefault}>
+                                <button type="button" class="sig-ghost-btn sig-small" data-id={sig.id} onclick={handleSetDefault}>
+                                    Set Default
+                                </button>
+                            </template>
+                            <button type="button" class="sig-danger-btn sig-small" data-id={sig.id} onclick={handleDelete}>
+                                Delete
+                            </button>
+                        </div>
+                    </article>
+                </template>
+            </div>
+        </template>
+
+        <template if:true={showEmptyState}>
+            <div class="sig-empty">
+                <div class="sig-empty-icon">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>
+                    </svg>
+                </div>
+                <h3 class="sig-empty-title">No signatures yet</h3>
+                <p class="sig-empty-text">Add your first signature to speed up signing documents later.</p>
+                <!-- <button type="button" class="sig-primary-btn" onclick={openForm}>+ Create your first signature</button> -->
+
+                <lightning-button variant="brand" label="Create your first signature" onclick={openForm}></lightning-button>
+            </div>
+        </template>
+
+    </div>
+</template>

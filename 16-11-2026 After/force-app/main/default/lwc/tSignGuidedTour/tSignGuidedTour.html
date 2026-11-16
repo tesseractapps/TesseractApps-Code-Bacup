@@ -1,0 +1,147 @@
+<template>
+  <template lwc:if={isOpen}>
+    <div class={rootClass} onkeydown={handleKeydown}>
+
+      <!-- Welcome popup (first login) -->
+      <template lwc:if={isWelcome}>
+        <div class="tour-backdrop"></div>
+        <section class="tour-dialog tour-modal tour-modal-welcome" role="dialog" aria-modal="true"
+          aria-labelledby="tour-welcome-title">
+          <header class="tour-modal-head">
+            <div class="tour-logo-tile">
+              <img src={logoUrl} alt="T sign" class="tour-logo" />
+            </div>
+            <h2 id="tour-welcome-title" class="tour-modal-title">{welcomeTitle}</h2>
+            <p class="tour-modal-sub">
+              Send, sign and manage your documents securely in one place.<br />
+              Take a one-minute tour to find your way around.
+            </p>
+          </header>
+          <div class="tour-modal-body">
+            <p class="tour-eyebrow">The tour shows you</p>
+            <ol class="tour-topics">
+              <template for:each={tourTopics} for:item="topic">
+                <li key={topic.key} class="tour-topic">
+                  <span class="tour-topic-icon"><span class="ms" aria-hidden="true">{topic.icon}</span></span>
+                  <span class="tour-topic-label">{topic.label}</span>
+                  <span class="tour-topic-num">{topic.number}</span>
+                </li>
+              </template>
+            </ol>
+          </div>
+          <footer class="tour-modal-foot">
+            <button type="button" class="tour-link" onclick={handleSkipWelcome}>Skip for now</button>
+            <div class="tour-foot-actions">
+              <template lwc:if={hasUserGuide}>
+                <button type="button" class="tour-btn tour-btn-secondary" onclick={handleViewGettingStarted}>
+                  View getting started
+                </button>
+              </template>
+              <button type="button" class="tour-btn tour-btn-primary" data-focus="primary" onclick={handleStartTour}>
+                <span class="ms" aria-hidden="true">play_circle</span>
+                Start guided tour
+              </button>
+            </div>
+          </footer>
+        </section>
+      </template>
+
+      <!-- Spotlight steps -->
+      <template lwc:if={isStep}>
+        <svg class="tour-dim" aria-hidden="true">
+          <path d={dimPath} fill-rule="evenodd"></path>
+        </svg>
+        <template for:each={rings} for:item="ring">
+          <div key={ring.key} class="tour-ring" style={ring.style}></div>
+        </template>
+        <section class={cardClass} style={cardStyle} role="dialog" aria-modal="true"
+          aria-labelledby="tour-step-title">
+          <template lwc:if={showArrow}>
+            <span class={arrowClass} style={arrowStyle}></span>
+          </template>
+          <div class="tour-dialog tour-card-inner">
+            <div class="tour-card-top">
+              <span class="tour-step-label">{stepLabel}</span>
+              <button type="button" class="tour-skip" onclick={handleSkipTour}>Skip tour</button>
+            </div>
+            <div class="tour-progress" aria-hidden="true">
+              <template for:each={progress} for:item="seg">
+                <span key={seg.key} class={seg.cls}></span>
+              </template>
+            </div>
+            <h2 id="tour-step-title" class="tour-card-title">{currentStep.title}</h2>
+            <p class="tour-card-text">
+              <template for:each={currentBody} for:item="part">
+                <span key={part.key} class={part.cls}>{part.text}</span>
+              </template>
+            </p>
+            <div class="tour-card-actions">
+              <button type="button" class="tour-btn tour-btn-secondary tour-btn-back" disabled={isFirstStep}
+                onclick={handleBack}>
+                <span class="ms" aria-hidden="true">arrow_back</span>
+                Back
+              </button>
+              <button type="button" class="tour-btn tour-btn-primary" data-focus="primary" onclick={handleNext}>
+                {nextLabel}
+                <template lwc:if={showNextArrow}>
+                  <span class="ms" aria-hidden="true">arrow_forward</span>
+                </template>
+              </button>
+            </div>
+          </div>
+        </section>
+      </template>
+
+      <!-- Finished popup with the setup checklist -->
+      <template lwc:if={isDone}>
+        <div class="tour-backdrop"></div>
+        <section class="tour-dialog tour-modal tour-modal-done" role="dialog" aria-modal="true"
+          aria-labelledby="tour-done-title">
+          <header class="tour-modal-head">
+            <div class="tour-done-badge">
+              <span class="tour-done-check"><span class="ms" aria-hidden="true">check</span></span>
+            </div>
+            <h2 id="tour-done-title" class="tour-modal-title">{doneTitle}</h2>
+            <p class="tour-modal-sub">
+              You’ve finished the tour. Set up these next and you’re<br />
+              ready to send your first document.
+            </p>
+          </header>
+          <div class="tour-modal-body">
+            <p class="tour-eyebrow">Recommended next</p>
+            <ul class="tour-checklist">
+              <template for:each={checklist} for:item="item">
+                <li key={item.key}>
+                  <button type="button" class="tour-check-row" data-module={item.module} onclick={handleChecklistClick}>
+                    <span class="tour-check-icon"><span class="ms" aria-hidden="true">{item.icon}</span></span>
+                    <span class="tour-check-label">{item.label}</span>
+                    <span class="tour-check-where">{item.module}</span>
+                    <span class="ms tour-check-chevron" aria-hidden="true">chevron_right</span>
+                  </button>
+                </li>
+              </template>
+            </ul>
+          </div>
+          <footer class="tour-modal-foot">
+            <button type="button" class="tour-link tour-link-icon" onclick={handleRestart}>
+              <span class="ms" aria-hidden="true">refresh</span>
+              <span class="tour-link-text">Restart tour</span>
+            </button>
+            <div class="tour-foot-actions">
+              <template lwc:if={hasUserGuide}>
+                <button type="button" class="tour-btn tour-btn-secondary" onclick={handleOpenGuide}>
+                  <span class="ms" aria-hidden="true">menu_book</span>
+                  Open User Guide
+                </button>
+              </template>
+              <button type="button" class="tour-btn tour-btn-primary" data-focus="primary" onclick={handleGoToDashboard}>
+                Go to dashboard
+              </button>
+            </div>
+          </footer>
+        </section>
+      </template>
+
+    </div>
+  </template>
+</template>

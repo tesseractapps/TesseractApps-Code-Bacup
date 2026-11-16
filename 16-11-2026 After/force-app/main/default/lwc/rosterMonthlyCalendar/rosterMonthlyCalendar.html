@@ -1,0 +1,370 @@
+<template>
+  <div class="monthly-wrapper">
+
+    <!-- LEFT: STAFF LIST -->
+    <div class="staff-column custom-scroll">
+
+        <!-- 🔍 Search Box -->
+      <div class="staff-search-wrapper">
+          <lightning-input
+              type="search"
+              variant="label-hidden"
+              placeholder="Search staff..."
+              value={searchKey}
+              onchange={handleSearch}>
+          </lightning-input>
+      </div>
+    
+      <template if:true={staffList.length}>
+          <template for:each={staffList} for:item="staff">
+              <div key={staff.staffId}
+                  class={staff.rowClass}
+                  data-id={staff.staffId}
+                  onclick={handleStaffClick}>
+                  
+                  <!-- <lightning-avatar fallback-icon-name="standard:user" size="small"></lightning-avatar> -->
+                              <div
+                                  class="avatar"
+                                  if:true={staff.staffUrl}
+                                  draggable="false"
+                                >
+                                  <lightning-avatar
+                                    variant="circle"
+                                    src={staff.staffUrl}
+                                    class="avatar-small"
+                                    fallback-icon-name="standard:person_account"
+                                  >
+                                  </lightning-avatar>
+                                </div>
+                                <div
+                                  class="avatar"
+                                  if:false={staff.staffUrl}
+                                  draggable="false"
+                                >
+                                  <lightning-icon
+                                    icon-name="action:user"
+                                    variant="error"
+                                    size="small"
+                                    style="background: #02275b"
+                                    class="avatar-small fallback-icon"
+                                  ></lightning-icon>
+                                </div>
+                  <span class="staff-name">{staff.staffName}</span>
+
+              </div>
+          </template>
+      </template>
+
+      <template if:false={staffList.length}>
+          <div class="no-data">
+              No Staff Found
+          </div>
+      </template>    
+    
+    
+    </div>
+
+    <!-- RIGHT: CALENDAR -->
+    <div class="calendar-column custom-scroll">
+
+      <!-- HEADER -->
+      <div class="calendar-header">
+
+        <lightning-button-icon
+          icon-name="utility:chevronleft"
+          onclick={previousMonth}
+          disabled={isLoading}>
+        </lightning-button-icon>
+
+
+        <c-tesseract-apps-month-picker
+            value={currentDate}
+            onchange={handleMonthChange}>
+        </c-tesseract-apps-month-picker>
+
+        <lightning-button-icon
+          icon-name="utility:chevronright"
+          onclick={nextMonth}
+          disabled={isLoading}>
+        </lightning-button-icon>
+
+        <!-- BACK BUTTON -->
+        <lightning-button
+            label="Back"
+            icon-name="utility:back"
+            icon-position="left"
+            variant="neutral"
+            onclick={handleBack}>
+        </lightning-button>       
+      </div>
+
+
+      <!-- DAYS HEADER -->
+      <div class="days-header">
+        <template for:each={daysOfWeek} for:item="day">
+          <div key={day} class="day-header">{day}</div>
+        </template>
+      </div>
+
+      <!-- GRID -->
+      <!-- <div class="calendar-grid"> -->
+          <div class={calendarClass}>        
+                <template for:each={calendarDays} for:item="day">
+
+                    <!-- EMPTY CELL -->
+                    <template if:true={day.isEmpty}>
+                        <div key={day.key} class="day-cell empty"></div>
+                    </template>
+
+                    <!-- NORMAL DAY CELL -->
+                    <div key={day.key} class="day-cell" if:false={day.isEmpty}>
+
+                        <span class="date-label">{day.date}</span>
+
+                        <div class="shift-container icon-container" style={day.iconContainerStyle}>
+
+                            <template for:each={day.shifts} for:item="shift">
+
+                                <!-- FULL EXPANDED CARD (LEVEL 2 OR REGULAR EXPAND) -->
+
+                                <template if:true={shift.isFullExpanded}>
+
+                                    <div key={shift.id}
+                                        class="shift-pill expanded-card"
+                                        style={shift.color}>
+
+                            
+                                            <div class="expanded-header insideCard">
+
+                                                <!-- LEFT BLOCK -->
+                                                <div class="header-left">
+                                                    <template if:false={shift.hideNameAndStatus}>
+                                                        <strong>{shift.staffName}</strong>
+                                                    </template>
+                                                  <!-- RIGHT ICON -->
+                                                  
+                                                 
+                                                </div>
+                                                 <lightning-button-icon
+                                                      icon-name="utility:back"
+                                                      size="small"
+                                                      alternative-text="Back"
+                                                      class="back-icon"
+                                                      data-refid={shift.splitShiftrefId}
+                                                      data-date={day.key}
+                                                      onclick={handleBackToShift}>
+                                                  </lightning-button-icon>
+                                            </div>
+                                           <div class="time-text">{shift.time}</div>
+
+
+                                            <div class="expanded-body">
+
+
+                                              <template if:false={shift.hideStatus}>
+                                                <template if:false={shift.hideNameAndStatus}>
+                                                  <div class="statuspart">
+                                                    <div class="left-icons1">
+                                                      <template if:true={shift.isRecurring}>
+                                                        <i class="material-icons recurring-icon" title="Recurring">
+                                                          autorenew
+                                                        </i>
+                                                      </template>
+                                                    </div>
+
+                                                    <div class="center-status slds-grid slds-grid_align-end">
+                                                      <span class="status-gap">{shift.status}</span>
+                                                      <span class={shift.status}>
+                                                        <span class="status-dot"></span>
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </template>
+                                              </template>
+
+                                            </div>
+
+                                    </div>
+
+                                </template>
+
+
+                                <!-- GROUP EXPANDED (LEVEL 1 SPLIT / BROKEN) -->
+
+                                <template if:true={shift.isGroupExpanded}>
+
+                                    <div key={shift.id}
+                                        class="shift-pill insideCard"
+                                        style={shift.color}
+                                        data-refid={shift.splitShiftrefId}
+                                        data-date={day.key}
+                                        data-issplit={shift.isSplitShift}
+                                        data-id={shift.id} 
+                                        data-isbroken={shift.isBrokenShift}
+                                        onclick={handleShiftClick}>
+
+                                            <div class="expanded-header insideCard">
+
+                                                <!-- LEFT BLOCK -->
+                                                <div class="header-left">
+                                                    <template if:false={shift.hideNameAndStatus}>
+                                                        <strong>{shift.staffName}</strong>
+                                                    </template>
+                                                     <template if:true={shift.hideNameAndStatus}>
+                                                             <div class="time-text">{shift.time}</div>
+                                                     </template>
+                                                    
+                                                </div>
+                                                   
+                                             <template if:true={shift.showBackButton}>
+                                                 <!-- RIGHT ICON -->
+                                                <lightning-button-icon
+                                                    icon-name="utility:back"
+                                                    size="small"
+                                                    alternative-text="Back"
+                                                    class="back-icon"
+                                                    data-refid={shift.splitShiftrefId}
+                                                    data-date={day.key}
+                                                    onclick={handleBackToShift}>
+                                                </lightning-button-icon>
+
+                                             </template>
+
+                                               
+
+                                            </div>
+                                              <template if:false={shift.hideNameAndStatus}>
+                                                     <div class="time-text">{shift.time}</div>
+                                              </template>
+                                           
+                                  
+                                        <!-- <strong>{shift.time}</strong> -->
+
+                                    </div>
+
+                                </template>
+
+
+                              <!-- NORMAL COLLAPSED -->
+                              <template if:false={shift.isGroupExpanded}>
+                              <template if:false={shift.isFullExpanded}>
+                                  <div key={shift.id}
+                                      class="shift-pill"
+                                      style={shift.color}
+                                      data-refid={shift.splitShiftrefId}
+                                      data-date={day.key}
+                                      data-issplit={shift.isSplitShift}
+                                      data-isbroken={shift.isBrokenShift}
+                                      data-isgroup={shift.isGroupShift} 
+                                        data-id={shift.id} 
+                                      onclick={handleShiftClick}>
+                              <div class="nameAndTime">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                  <template if:true={shift.isSplitShift}>
+                                      <i class={getTypeIconClass} title="Split Shift">splitscreen_top</i>
+                                  </template>
+
+                                  <template if:true={shift.isBrokenShift}>
+                                      <i class={getTypeIconClass} title="Broken Shift">view_day</i>
+                                  </template>
+
+                                <template if:false={shift.hideNameAndStatus}>
+                                    <strong class="staff-name">{shift.staffName}</strong>
+                                </template>
+                                </div>
+                                  
+                                <div class="time-text">{shift.time}</div>
+                                </div>
+
+                                <!-- Group Shift Bar & Expanded Grid -->
+                                <template if:true={shift.isGroupShift}>
+                                  <div 
+                                    class="group-shift-bar" 
+                                    style={shift.groupShiftData.barStyle} 
+                                    data-shiftid={shift.id} 
+                                    onclick={handleGroupShiftBarToggle}
+                                  >
+                                    <div class="group-shift-bar-left">
+                                      <i class="material-icons group-bar-icon" style={shift.groupShiftData.textStyle}>group</i>
+                                      <span class="group-ratio" style={shift.groupShiftData.textStyle}>{shift.groupShiftRatio}</span>
+                                    </div>
+                                    <i class="material-icons group-chevron" style={shift.groupShiftData.textStyle}>{shift.groupShiftChevron}</i>
+                                  </div>
+                                  
+                                  <!-- Two-column grid when expanded -->
+                                  <template if:true={shift.isGroupShiftExpanded}>
+                                    <div class="group-shift-expanded-grid" onclick={handlePreventBubbling}>
+                                        
+                                      <!-- Staff Column -->
+                                      <div class="group-column staff-column1">
+                                        <div class="column-header">STAFF</div>
+                                        <template for:each={shift.groupShiftData.staffList} for:item="staff">
+                                          <div key={staff.Id} class="group-member-item">
+                                            <span class="avatar-badge staff-badge" style={staff.circleStaffStyle}>
+                                              {staff.displayNameLetter}
+                                            </span>
+                                            <span class="member-name">{staff.displayName}</span>
+                                          </div>
+                                        </template>
+                                      </div>
+
+                                      <!-- Participant Column -->
+                                      <div class="group-column participant-column">
+                                        <div class="column-header">PARTICIPANTS</div>
+                                        <template for:each={shift.groupShiftData.participantList} for:item="part">
+                                          <div key={part.Id} class="group-member-item">
+                                            <span class="avatar-badge participant-badge">
+                                              {part.participantNameLetter}
+                                            </span>
+                                            <span class="member-name" title={part.participantName}>{part.participantName}</span>
+                                          </div>
+                                        </template>
+                                      </div>
+                                    </div>
+                                  </template>
+                                </template>
+
+                                  <!-- {shift.time}<br/> -->
+                                <template if:false={shift.hideStatus}>
+                                  <div class="statuspart">
+                                    <div class="left-icons1">
+                                      <template if:true={shift.isRecurring}>
+                                        <i class="material-icons recurring-icon" title="Recurring">
+                                          autorenew
+                                        </i>
+                                      </template>
+                                    </div>
+
+                                    <div class="center-status slds-grid slds-grid_align-end">
+                                      <span class="status-gap">{shift.status}</span>
+                                      <span class={shift.status}>
+                                        <span class="status-dot"></span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                </template>
+
+                                  </div>
+                              </template>
+                              </template>
+
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                </template>
+            </div>
+     <!--  <template if:true={isLoading}>
+          <div class="calendar-skeleton">
+              <template for:each={calendarDays} for:item="day">
+                  <div key={day.key} class="skeleton-cell"></div>
+              </template>
+          </div>
+      </template>
+ -->
+    </div>
+  </div>
+</template>

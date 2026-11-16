@@ -1,0 +1,394 @@
+<template>
+  <div class="ug">
+    <!-- ==================== Guide home ==================== -->
+    <template lwc:if={isHome}>
+      <section class="ug-card ug-hero">
+        <div class="ug-hero-main">
+          <nav class="ug-crumbs" aria-label="Breadcrumb">
+            <span class="ug-crumb-current">User Guide</span>
+          </nav>
+          <h1 class="ug-title">T sign User Guide</h1>
+          <p class="ug-sub">Step-by-step help for sending, signing and managing your documents.</p>
+          <div class="ug-search ug-search-hero" role="search">
+            <span class="ms ug-search-icon" aria-hidden="true">search</span>
+            <input type="search" class="ug-search-input" aria-label="Search the guide"
+              placeholder="Search the guide, for example “add a recipient”"
+              value={searchInput} oninput={handleSearchInput} onkeydown={handleSearchKeydown} />
+          </div>        
+          <div class="ug-popular">
+            <span class="ug-popular-label">Popular:</span>
+            <template for:each={popular} for:item="p">
+              <button key={p.key} type="button" class="ug-pill" data-href={p.href} onclick={handleOpen}>{p.label}</button>
+            </template>
+          </div>
+        </div>
+        <div class="ug-hero-side">
+          <!-- <a class="ug-btn ug-btn-secondary" href={pdfUrl} download="T sign User Guide.pdf" target="_blank" rel="noopener">
+            <span class="ms" aria-hidden="true">download</span>
+            <span>Download PDF</span>
+          </a> -->
+          <!-- <p class="ug-updated">{updatedText}</p> -->
+        </div>
+      </section>
+
+      <div class="ug-row">
+        <section class="ug-card ug-stages-card" aria-labelledby="ug-stages-title">
+          <h2 class="ug-card-title" id="ug-stages-title">How signing works</h2>
+          <p class="ug-card-sub">Four stages, from upload to signed PDF.</p>
+          <ol class="ug-stages">
+            <template for:each={stages} for:item="s">
+              <li key={s.key} class="ug-stage">
+                <div class="ug-stage-head">
+                  <span class={s.numClass}>{s.num}</span>
+                  <span class={s.lineClass} aria-hidden="true"></span>
+                </div>
+                <p class="ug-stage-title">{s.title}</p>
+                <p class="ug-stage-who">{s.who}</p>
+                <p class="ug-stage-text">{s.text}</p>
+                <span class={s.badgeClass}>{s.status}</span>
+              </li>
+            </template>
+          </ol>
+        </section>
+
+        <section class="ug-card ug-checklist-card" aria-labelledby="ug-checklist-title">
+          <div class="ug-checklist-head">
+            <h2 class="ug-card-title" id="ug-checklist-title">Set up before you send</h2>
+            <span class="ug-checklist-count">{checklistSummary}</span>
+          </div>
+          <div class="ug-bar" aria-hidden="true"><span class="ug-bar-fill" style={checklistBarStyle}></span></div>
+          <ul class="ug-checklist">
+            <template for:each={checklist} for:item="c">
+              <li key={c.key} class={c.rowClass}>
+                <span class={c.iconClass} aria-hidden="true">{c.icon}</span>
+                <span class="ug-check-label">
+                  {c.label}
+                  <template lwc:if={c.done}><span class="ug-sr-only"> (done)</span></template>
+                </span>
+                <a href="#" class="ug-check-link" data-href={c.link} onclick={handleOpen}>
+                  Guide<span class="ug-sr-only">: {c.label}</span>
+                  <span class="ms" aria-hidden="true">chevron_right</span>
+                </a>
+              </li>
+            </template>
+          </ul>
+        </section>
+      </div>
+
+      <section class="ug-browse" aria-labelledby="ug-browse-title">
+        <h2 class="ug-h2" id="ug-browse-title">Browse by topic</h2>
+        <template for:each={homeGroups} for:item="g">
+          <div key={g.id} class="ug-group">
+            <h3 class="ug-eyebrow">{g.label}</h3>
+            <div class="ug-topic-grid">
+              <template for:each={g.topics} for:item="t">
+                <a key={t.key} href="#" class="ug-topic-card" data-href={t.id} onclick={handleOpen}>
+                  <span class="ug-topic-icon" aria-hidden="true"><span class="ms">{t.icon}</span></span>
+                  <span class="ug-topic-text">
+                    <span class="ug-topic-title">{t.title}</span>
+                    <span class="ug-topic-summary">{t.summary}</span>
+                    <span class="ug-topic-meta">{t.meta}</span>
+                  </span>
+                  <span class="ms ug-topic-chevron" aria-hidden="true">chevron_right</span>
+                </a>
+              </template>
+            </div>
+          </div>
+        </template>
+      </section>
+
+      <section class="ug-card ug-support">
+        <span class="ms ug-support-icon" aria-hidden="true">support_agent</span>
+        <div class="ug-support-text">
+          <p class="ug-support-title">Still need help?</p>
+          <p class="ug-support-sub">Our support team can help with your account, billing or a document. Email <a href={supportMailto} class="ug-link">{supportEmail}</a>.</p>
+        </div>
+        <button type="button" class="ug-btn ug-btn-secondary" onclick={handleContactSupport}>
+          <span class="ms" aria-hidden="true">mail</span>
+          <span>Contact support</span>
+        </button>
+      </section>
+    </template>
+
+    <!-- ==================== Topic page ==================== -->
+    <template lwc:elseif={isTopic}>
+       <div class="ug-article-layout">
+        <aside class="ug-card ug-nav" aria-label="User Guide contents">
+          <a href="#" class="ug-nav-home" onclick={handleHome}>
+            <span class="ms" aria-hidden="true">menu_book</span>
+            <span>User Guide</span>
+          </a>
+          <div class="ug-search ug-search-sm" role="search">
+            <span class="ms ug-search-icon" aria-hidden="true">search</span>
+            <input type="search" class="ug-search-input" aria-label="Search the guide" placeholder="Search the guide"
+              value={searchInput} oninput={handleSearchInput} onkeydown={handleSearchKeydown} />
+          </div>
+          <template for:each={navGroups} for:item="g">
+            <div key={g.id} class="ug-nav-group">
+              <p class="ug-nav-label">{g.label}</p>
+              <ul class="ug-nav-list">
+                <template for:each={g.topics} for:item="t">
+                  <li key={t.key}>
+                    <a href="#" class={t.linkClass} data-href={t.id} aria-current={t.ariaCurrent} onclick={handleOpen}>
+                      <template lwc:if={t.current}><span class="ms ug-nav-chevron" aria-hidden="true">expand_more</span></template>
+                      <span>{t.title}</span>
+                    </a>
+                    <template lwc:if={t.current}>
+                      <ul class="ug-nav-secs">
+                        <template for:each={t.sections} for:item="s">
+                          <li key={s.key}>
+                            <a href="#" class={s.linkClass} data-href={s.href} onclick={handleOpen}>{s.label}</a>
+                          </li>
+                        </template>
+                      </ul>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
+        </aside>
+
+        <article class="ug-card ug-article">
+          <nav class="ug-crumbs" aria-label="Breadcrumb">
+            <a href="#" class="ug-crumb-link" onclick={handleHome}>User Guide</a>
+            <span class="ms ug-crumb-sep" aria-hidden="true">chevron_right</span>
+            <span class="ug-crumb-group">{topic.groupLabel}</span>
+            <span class="ms ug-crumb-sep" aria-hidden="true">chevron_right</span>
+            <span class="ug-crumb-current">{topic.title}</span>
+          </nav>
+          <h1 class="ug-title ug-article-title">{topic.title}</h1>
+          <div class="ug-meta">
+            <span class="ug-audience">{topic.audience}</span>
+            <span class="ug-meta-text">{topic.meta}</span>
+          </div>
+
+          <template for:each={topic.parts} for:item="part">
+            <section key={part.key} class={part.partClass}>
+              <template lwc:if={part.hasHeader}>
+                <h2 class="ug-step-title" data-section={part.id}>
+                  <span class="ug-step-num" aria-hidden="true">{part.num}</span>
+                  <span>{part.title}</span>
+                </h2>
+              </template>
+              <div class="ug-step-body">
+                <template for:each={part.blocks} for:item="b">
+                  <template lwc:if={b.isP}>
+                    <p key={b.key} class="ug-p"><c-t-sign-user-guide-text segments={b.segments} onguidelink={handleGuideLink}></c-t-sign-user-guide-text></p>
+                  </template>
+                  <template lwc:elseif={b.isH}>
+                    <h3 key={b.key} class="ug-h3">{b.text}</h3>
+                  </template>
+                  <template lwc:elseif={b.isSteps}>
+                    <ol key={b.key} class="ug-steps">
+                      <template for:each={b.items} for:item="it">
+                        <li key={it.key} class="ug-li">
+                          <span class="ug-step-dot" aria-hidden="true">{it.num}</span>
+                          <span class="ug-li-text"><c-t-sign-user-guide-text segments={it.segments} onguidelink={handleGuideLink}></c-t-sign-user-guide-text></span>
+                        </li>
+                      </template>
+                    </ol>
+                  </template>
+                  <template lwc:elseif={b.isBullets}>
+                    <ul key={b.key} class="ug-bullets">
+                      <template for:each={b.items} for:item="it">
+                        <li key={it.key} class="ug-li">
+                          <span class="ug-bullet-dot" aria-hidden="true"></span>
+                          <span class="ug-li-text"><c-t-sign-user-guide-text segments={it.segments} onguidelink={handleGuideLink}></c-t-sign-user-guide-text></span>
+                        </li>
+                      </template>
+                    </ul>
+                  </template>
+                  <template lwc:elseif={b.isImg}>
+                    <figure key={b.key} class="ug-figure">
+                      <a href={b.src} target="_blank" rel="noopener" class="ug-figure-link" title="Open full size">
+                        <img src={b.src} alt={b.alt} loading="lazy" class="ug-img" />
+                      </a>
+                      <template lwc:if={b.caption}>
+                        <figcaption class="ug-caption">{b.caption}</figcaption>
+                      </template>
+                    </figure>
+                  </template>
+                  <template lwc:elseif={b.isTable}>
+                    <div key={b.key} class="ug-table-wrap">
+                      <table class="ug-table">
+                        <thead>
+                          <tr>
+                            <template for:each={b.head} for:item="h">
+                              <th key={h.key} scope="col">{h.text}</th>
+                            </template>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <template for:each={b.rows} for:item="r">
+                            <tr key={r.key}>
+                              <template for:each={r.cells} for:item="c">
+                                <td key={c.key}><c-t-sign-user-guide-text segments={c.segments} onguidelink={handleGuideLink}></c-t-sign-user-guide-text></td>
+                              </template>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </table>
+                    </div>
+                  </template>
+                  <template lwc:elseif={b.isChips}>
+                    <div key={b.key} class="ug-chips-block">
+                      <template lwc:if={b.label}><p class="ug-chips-label">{b.label}</p></template>
+                      <ul class="ug-chips">
+                        <template for:each={b.chips} for:item="c">
+                          <li key={c.key} class="ug-chip">{c.text}</li>
+                        </template>
+                      </ul>
+                    </div>
+                  </template>
+                  <template lwc:elseif={b.isCallout}>
+                    <div key={b.key} class={b.calloutClass} role="note">
+                      <span class="ms ug-callout-icon" aria-hidden="true">{b.icon}</span>
+                      <div class="ug-callout-body">
+                        <p class="ug-callout-title">{b.title}</p>
+                        <p class="ug-callout-text"><c-t-sign-user-guide-text segments={b.segments} onguidelink={handleGuideLink}></c-t-sign-user-guide-text></p>
+                      </div>
+                    </div>
+                  </template>
+                </template>
+              </div>
+            </section>
+          </template>
+
+          <div class={pagerClass}>
+            <template lwc:if={prevTopic}>
+              <a href="#" class="ug-pager-card" data-href={prevTopic.id} onclick={handleOpen}>
+                <span class="ms ug-pager-arrow" aria-hidden="true">arrow_back</span>
+                <span class="ug-pager-text">
+                  <span class="ug-pager-label">Previous</span>
+                  <span class="ug-pager-title">{prevTopic.title}</span>
+                </span>
+              </a>
+            </template>
+            <template lwc:if={nextTopic}>
+              <a href="#" class="ug-pager-card ug-pager-card-next" data-href={nextTopic.id} onclick={handleOpen}>
+                <span class="ug-pager-text">
+                  <span class="ug-pager-label">Next</span>
+                  <span class="ug-pager-title">{nextTopic.title}</span>
+                </span>
+                <span class="ms ug-pager-arrow" aria-hidden="true">arrow_forward</span>
+              </a>
+            </template>
+          </div>
+        </article>
+
+        <aside class="ug-rail" aria-label="On this page">
+          <template lwc:if={hasOnThisPage}>
+            <div class="ug-card ug-rail-card">
+              <p class="ug-rail-label">On this page</p>
+              <ul class="ug-toc">
+                <template for:each={onThisPage} for:item="s">
+                  <li key={s.key}><a href="#" class={s.linkClass} data-href={s.href} onclick={handleOpen}>{s.title}</a></li>
+                </template>
+              </ul>
+            </div>
+          </template>
+          <template lwc:if={hasRelated}>
+            <div class="ug-card ug-rail-card">
+              <p class="ug-rail-label">Related</p>
+              <ul class="ug-related">
+                <template for:each={topic.related} for:item="r">
+                  <li key={r.key}><a href="#" class="ug-link ug-related-link" data-href={r.id} onclick={handleOpen}>{r.title}</a></li>
+                </template>
+              </ul>
+            </div>
+          </template>
+          <div class="ug-card ug-rail-card ug-hand">
+            <span class="ms ug-hand-icon" aria-hidden="true">support_agent</span>
+            <p class="ug-hand-title">Need a hand?</p>
+            <p class="ug-hand-text">Email us at <a href={supportMailto} class="ug-link">{supportEmail}</a></p>
+            <button type="button" class="ug-link ug-hand-link ug-link-btn" onclick={handleContactSupport}>Contact support<span class="ug-hand-arrow" aria-hidden="true">→</span></button>
+          </div>
+        </aside>
+      </div>
+    </template>
+
+    <!-- ==================== Search results ==================== -->
+    <template lwc:elseif={isSearch}>
+      <section class="ug-card ug-search-head">
+        <nav class="ug-crumbs" aria-label="Breadcrumb">
+          <a href="#" class="ug-crumb-link" onclick={handleHome}>User Guide</a>
+          <span class="ms ug-crumb-sep" aria-hidden="true">chevron_right</span>
+          <span class="ug-crumb-current">Search</span>
+        </nav>
+        <div class="ug-search ug-search-page" role="search">
+          <span class="ms ug-search-icon" aria-hidden="true">search</span>
+          <input type="search" class="ug-search-input" aria-label="Search the guide" placeholder="Search the guide"
+            value={searchInput} oninput={handleSearchInput} onkeydown={handleSearchKeydown} />
+          <template lwc:if={searchInput}>
+            <button type="button" class="ug-clear" aria-label="Clear search" onclick={handleClearSearch}>
+              <span class="ms" aria-hidden="true">close</span>
+            </button>
+          </template>
+        </div>
+        <p class="ug-result-count" aria-live="polite">{resultSummary}</p>
+      </section>
+
+      <div class="ug-search-layout">
+        <aside class="ug-card ug-filters" aria-label="Filter results">
+          <p class="ug-filter-title">Topic</p>
+          <ul class="ug-filter-list">
+            <template for:each={topicFilters} for:item="f">
+              <li key={f.key}>
+                <button type="button" class={f.itemClass} data-id={f.id} aria-pressed={f.pressed} onclick={handleGroupFilter}>
+                  <span>{f.label}</span>
+                  <span class="ug-filter-count">{f.count}</span>
+                </button>
+              </li>
+            </template>
+          </ul>
+          <div class="ug-filter-divider"></div>
+          <p class="ug-filter-title">Who it’s for</p>
+          <template for:each={audienceOptions} for:item="a">
+            <label key={a.key} class="ug-check-option">
+              <input type="checkbox" value={a.label} checked={a.checked} onchange={handleAudience} />
+              <span>{a.label}</span>
+            </label>
+          </template>
+        </aside>
+
+        <div class="ug-card ug-results">
+          <template lwc:if={hasResults}>
+            <ul class="ug-result-list">
+              <template for:each={results} for:item="r">
+                <li key={r.key} class="ug-result">
+                  <span class="ug-result-icon" aria-hidden="true"><span class="ms">{r.icon}</span></span>
+                  <div class="ug-result-body">
+                    <a href="#" class="ug-result-title" data-href={r.href} onclick={handleOpen}>{r.title}</a>
+                    <p class="ug-result-path">User Guide<span class="ms ug-crumb-sep" aria-hidden="true">chevron_right</span>{r.topicTitle}</p>
+                    <p class="ug-result-snippet"><c-t-sign-user-guide-text segments={r.snippet}></c-t-sign-user-guide-text></p>
+                    <p class="ug-result-aud">{r.audience}</p>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </template>
+          <template lwc:else>
+            <div class="ug-empty">
+              <span class="ms ug-empty-icon" aria-hidden="true">search_off</span>
+              <p class="ug-empty-title">No results</p>
+              <p class="ug-empty-text">Try a different word, check the spelling, or clear the filters.</p>
+            </div>
+          </template>
+        </div>
+
+        <aside class="ug-card ug-cant-find">
+          <p class="ug-card-title">Can’t find it?</p>
+          <p class="ug-cant-text">Try a different word, or ask our support team.</p>
+          <p class="ug-rail-label">Try searching</p>
+          <div class="ug-try">
+            <template for:each={trySearching} for:item="t">
+              <button key={t.key} type="button" class="ug-pill ug-pill-sm" data-query={t.label} onclick={handleTrySearch}>{t.label}</button>
+            </template>
+          </div>
+          <button type="button" class="ug-btn ug-btn-secondary ug-btn-block" onclick={handleContactSupport}>Contact support</button>
+        </aside>
+      </div>
+    </template>
+  </div>
+</template>

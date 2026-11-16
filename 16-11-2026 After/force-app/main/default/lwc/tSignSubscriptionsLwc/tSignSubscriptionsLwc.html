@@ -1,0 +1,550 @@
+<template>
+    <!-- ================= OLD layout (before redesign 3 Nov 2026) - kept for reference =================
+         (inner comment markers changed to <!~~ ~~> so this whole block stays one comment)
+    <div class="slds-p-around_medium slds-is-relative">
+        <div class="slds-grid slds-grid_align-end slds-m-bottom_medium">
+            <lightning-button label="Back" variant="brand"
+                onclick={handleBack} disabled={isRedirecting}>
+            </lightning-button>
+        </div>
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </template>
+
+        <!~~ <template if:true={errorMessage}>
+            <div class="slds-text-color_error slds-m-bottom_medium">{errorMessage}</div>
+        </template> ~~>
+
+        <template if:true={statusMessage}>
+            <div class="slds-box slds-theme_shade slds-m-bottom_medium">{statusMessage}</div>
+        </template>
+
+        <!~~ Current plan ~~>
+        <template if:true={currentPlanInfo}>
+            <div class="slds-box slds-m-bottom_medium">
+                <p class="slds-text-title_caps">Your current plan</p>
+                <p class="slds-text-heading_small slds-m-top_xx-small">{currentPlanInfo.name}</p>
+                <p class="slds-m-top_xx-small">{currentPlanInfo.statusLine}</p>
+                <template if:true={currentPlanInfo.dateLine}>
+                    <p class="slds-text-color_weak slds-m-top_xx-small">{currentPlanInfo.dateLine}</p>
+                </template>
+                <template if:true={creditText}>
+                    <p class="slds-text-color_success slds-m-top_xx-small">{creditText}</p>
+                </template>
+                <template if:true={cancelError}>
+                    <p class="slds-text-color_error slds-m-top_x-small">{cancelError}</p>
+                </template>
+                <div class="slds-m-top_small">
+                    <template if:true={canCancel}>
+                        <lightning-button variant="destructive-text" label={cancelButtonLabel}
+                            onclick={handleCancelClick} disabled={cancelBusy}></lightning-button>
+                    </template>
+                    <template if:true={canResume}>
+                        <lightning-button variant="brand-outline" label="Continue subscription"
+                            onclick={handleResume} disabled={cancelBusy}></lightning-button>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+         <!~~ Last cancelled plan - Renew ~~>
+        <template if:true={lastPlanInfo}>
+            <div class="slds-box slds-m-bottom_medium">
+                <p class="slds-text-title_caps">Your last plan</p>
+                <p class="slds-text-heading_small slds-m-top_xx-small">{lastPlanInfo.name}</p>
+                <p class="slds-text-color_weak slds-m-top_xx-small">{lastPlanInfo.line}</p>
+                <lightning-button class="slds-m-top_small" variant="brand" label="Renew"
+                    onclick={handleRenew} disabled={renewDisabled}></lightning-button>
+                <template if:false={renewPriceId}>
+                    <p class="slds-text-color_weak slds-m-top_x-small">This plan is no longer available - please choose one below.</p>
+                </template>
+            </div>
+        </template>
+
+        <!~~ Plans ~~>
+        <template if:true={isReady}>
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-wrap slds-m-bottom_medium">
+                <p class="slds-m-bottom_x-small">{introText}</p>
+ 
+                <!~~ >>> CHANGED: pill toggle - Monthly | Yearly (Save X%) ~~>
+                <template if:false={isBusinessPlan}>
+                    <div class="interval-toggle" role="group" aria-label="Billing period">
+                        <button type="button" class={monthlyClass} data-interval="month"
+                            aria-pressed={isMonthly} onclick={handleIntervalChange}>
+                            Monthly
+                        </button>
+                        <button type="button" class={yearlyClass} data-interval="year"
+                            aria-pressed={isYearly} onclick={handleIntervalChange}>
+                            Yearly
+                            <template if:true={yearlySavingLabel}>
+                                <span class="save-badge">{yearlySavingLabel}</span>
+                            </template>
+                        </button>
+                    </div>
+                </template>
+            </div>
+            
+ 
+            <!~~ One card per product, side by side; price follows the toggle ~~>
+            <div class="slds-grid slds-wrap slds-gutters">
+                <!~~ <template for:each={planCards} for:item="plan">
+                    <div key={plan.productId} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
+                        <div class={plan.boxClass}>
+                            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                                <p class="slds-text-heading_small">{plan.productName}</p>
+                                <template if:true={plan.isCurrent}>
+                                    <lightning-badge label="Current"></lightning-badge>
+                                </template>
+                            </div>
+                            <p class="slds-m-top_xx-small">{plan.priceLabel}</p>
+                            <template if:true={plan.description}>
+                                <p class="slds-text-color_weak slds-m-top_xx-small">{plan.description}</p>
+                            </template>
+                            <template if:true={plan.showUpgrade}>
+                            
+                                <lightning-button class="slds-m-top_small" variant="brand" label={plan.buttonLabel} data-price={plan.priceId} data-product={plan.productName}
+                                    onclick={handleUpgrade} disabled={plan.upgradeDisabled}>
+                                </lightning-button>
+                            </template>
+                        </div>
+                    </div>
+                </template> ~~>
+                <template for:each={planCards} for:item="plan">
+                    <div key={plan.cardKey} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small plan-col">
+                        <div class={plan.boxClass}>
+                            <p class="slds-text-heading_small">{plan.productName}</p>
+                            <p class="slds-m-top_xx-small">{plan.priceLabel}</p>
+                            <template if:true={plan.description}>
+                                <p class="slds-text-color_weak slds-m-top_xx-small">{plan.description}</p>
+                            </template>
+
+                            <!~~ button area - always at the bottom, same place on every card ~~>
+                            <div class="plan-action">
+                                <template if:true={plan.isCurrent}>
+                                    <button type="button" class="slds-button current-plan-btn" aria-disabled="true" tabindex="-1">
+                                        Current plan
+                                    </button>
+                                </template>
+                                <template if:true={plan.showUpgrade}>
+                                    <lightning-button variant="brand" label={plan.buttonLabel}
+                                        data-price={plan.priceId} data-product={plan.productName}
+                                        onclick={handleUpgrade} disabled={plan.upgradeDisabled}>
+                                    </lightning-button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <template if:true={noPlans}>
+                <p class="slds-text-color_weak">No active plans found in Stripe.</p>
+            </template>
+        </template>
+    ================= END OLD layout ================= -->
+
+    <!-- ================= NEW layout (redesign 3 Nov 2026) ================= -->
+    <div class="sub-page slds-is-relative">
+        <!-- Header -->
+        <div class="sub-header">
+            <div>
+                <h1 class="sub-title">Subscription</h1>
+                <p class="sub-subtitle">Manage your T sign plan and billing.</p>
+            </div>
+            <lightning-button label="Back" variant="neutral" icon-name="utility:back"
+                onclick={handleBack} disabled={isRedirecting}>
+            </lightning-button>
+        </div>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </template>
+
+        <!-- errors are shown as toasts (showErrorToast) - no error box on the page -->
+
+        <!-- Info banner (back from Stripe, plan changed ...) -->
+        <template if:true={statusMessage}>
+            <div class="sub-banner sub-banner_info" role="status">
+                <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                <span class="sub-banner-text">{statusMessage}</span>
+                <lightning-button-icon icon-name="utility:close" variant="bare" size="small"
+                    alternative-text="Dismiss" onclick={handleDismissStatus}></lightning-button-icon>
+            </div>
+        </template>
+
+        <!-- Current plan -->
+        <template if:true={currentPlanInfo}>
+            <div class="sub-card">
+                <div class="sub-card-top">
+                    <div>
+                        <p class="sub-eyebrow">Your current plan</p>
+                        <div class="sub-name-row">
+                            <span class="sub-plan-name">{currentPlanInfo.name}</span>
+                            <span class={currentPlanInfo.statusClass}>{currentPlanInfo.statusLabel}</span>
+                        </div>
+                    </div>
+                    <template if:true={currentPlanInfo.priceAmount}>
+                        <div class="sub-price">
+                            <span class="sub-price-amount">{currentPlanInfo.priceAmount}</span>
+                            <span class="sub-price-per">{currentPlanInfo.pricePer}</span>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="sub-meta">
+                    <template for:each={currentPlanInfo.meta} for:item="item">
+                        <div key={item.key}>
+                            <p class="sub-meta-label">{item.label}</p>
+                            <p class="sub-meta-value">{item.value}</p>
+                        </div>
+                    </template>
+                </div>
+
+                <template if:true={currentPlanInfo.note}>
+                    <p class="sub-note">{currentPlanInfo.note}</p>
+                </template>
+                <template if:true={cancelError}>
+                    <p class="sub-error-text">{cancelError}</p>
+                </template>
+
+                <div class="sub-card-footer">
+                    <span class="sub-credit">{creditText}</span>
+                    <div>
+                        <template if:true={canCancel}>
+                            <lightning-button variant="destructive-text" label={cancelButtonLabel}
+                                onclick={handleCancelClick} disabled={cancelBusy}></lightning-button>
+                        </template>
+                        <template if:true={canResume}>
+                            <lightning-button variant="brand-outline" label="Continue subscription"
+                                onclick={handleResume} disabled={cancelBusy}></lightning-button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Last cancelled plan - Renew -->
+        <template if:true={lastPlanInfo}>
+            <div class="sub-card">
+                <div class="sub-card-top">
+                    <div>
+                        <p class="sub-eyebrow">Your last plan</p>
+                        <div class="sub-name-row">
+                            <span class="sub-plan-name">{lastPlanInfo.name}</span>
+                            <span class="sub-pill sub-pill_neutral">Cancelled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sub-meta">
+                    <template for:each={lastPlanInfo.meta} for:item="item">
+                        <div key={item.key}>
+                            <p class="sub-meta-label">{item.label}</p>
+                            <p class="sub-meta-value">{item.value}</p>
+                        </div>
+                    </template>
+                </div>
+
+                <template if:false={renewPriceId}>
+                    <p class="sub-hint">This plan is no longer available - please choose one below.</p>
+                </template>
+
+                <div class="sub-card-footer">
+                    <span></span>
+                    <lightning-button variant="brand" label="Renew"
+                        onclick={handleRenew} disabled={renewDisabled}></lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Plans -->
+        <template if:true={isReady}>
+            <div class="sub-section-head">
+                <div>
+                    <h2 class="sub-section-title">Change plan</h2>
+                    <p class="sub-subtitle">{introText}</p>
+                </div>
+
+                <!-- pill toggle - Monthly | Yearly (Save X%) - not shown on a Business plan (Monthly + Yearly cards instead) -->
+                <template if:true={showBillingIntervalToggle}>
+                    <div class="interval-toggle" role="group" aria-label="Billing period">
+                        <button type="button" class={monthlyClass} data-interval="month"
+                            aria-pressed={isMonthly} onclick={handleIntervalChange}>
+                            Monthly
+                        </button>
+                        <button type="button" class={yearlyClass} data-interval="year"
+                            aria-pressed={isYearly} onclick={handleIntervalChange}>
+                            Yearly
+                            <template if:true={yearlySavingLabel}>
+                                <span class="save-badge">{yearlySavingLabel}</span>
+                            </template>
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Business plan: Monthly + Yearly cards; otherwise one card per product (price follows the toggle) -->
+            <div class="plan-grid">
+                <template for:each={planCards} for:item="plan">
+                    <div key={plan.cardKey} class={plan.cardClass}>
+                        <div class="plan-head">
+                            <span class="plan-name">{plan.productName}</span>
+                            <template if:true={plan.isCurrent}>
+                                <span class="sub-pill sub-pill_success">Current</span>
+                            </template>
+                        </div>
+                        <template if:true={plan.description}>
+                            <p class="plan-desc">{plan.description}</p>
+                        </template>
+
+                        <div class="plan-price">
+                            <template if:true={plan.priceAmount}>
+                                <span class="plan-price-amount">{plan.priceAmount}</span>
+                                <span class="plan-price-per">{plan.pricePer}</span>
+                            </template>
+                            <template if:false={plan.priceAmount}>
+                                <span class="plan-price-none">{plan.priceLabel}</span>
+                            </template>
+                        </div>
+
+                        <!-- button area - always at the bottom, same place on every card -->
+                        <div class="plan-action">
+                            <template if:true={plan.isCurrent}>
+                                <button type="button" class="slds-button current-plan-btn" aria-disabled="true" tabindex="-1">
+                                    <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                                    Current plan
+                                </button>
+                            </template>
+                            <template if:true={plan.showUpgrade}>
+                                <lightning-button variant="brand" label={plan.buttonLabel} stretch
+                                    data-price={plan.priceId} data-product={plan.productName}
+                                    onclick={handleUpgrade} disabled={plan.upgradeDisabled}>
+                                </lightning-button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <template if:true={noPlans}>
+                <p class="sub-hint">No active plans found in Stripe.</p>
+            </template>
+        </template>
+         <!-- Business upgrade popup -->
+        <template if:true={showBusinessForm}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="biz-title" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container biz-modal">
+                    <div class="slds-modal__header biz-header">
+                        <lightning-button-icon class="biz-close" icon-name="utility:close" variant="bare"
+                            alternative-text="Close" onclick={handleBizCancel}></lightning-button-icon>
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <span class="biz-icon"><lightning-icon icon-name="utility:company" size="small"></lightning-icon></span>
+                            <h2 id="biz-title" class="biz-title">Business</h2>
+                        </div>
+                        <p class="biz-subtitle">{bizSubtitle}</p>
+                    </div>
+
+                    <div class="slds-modal__content biz-body slds-is-relative">
+                        <template if:true={bizLoading}>
+                            <lightning-spinner alternative-text="Loading your details" size="small"></lightning-spinner>
+                        </template>
+                        <!-- <template if:true={bizError}>
+                            <div class="slds-text-color_error slds-m-top_small">{bizError}</div>
+                        </template> -->
+
+                        <!-- TEAM -->
+                        <p class="biz-section">Team</p>
+                        <div class="slds-grid slds-wrap slds-gutters_small slds-grid_vertical-align-end">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input class="biz-field" type="number" label="Team size" min="1" step="1" required
+                                    data-field="teamSize" value={bizForm.teamSize} onchange={handleBizChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <p class="biz-hint">{teamPriceText}</p>
+                            </div>
+                        </div>
+                        <div class="biz-divider"></div>
+
+                        <!-- ORGANISATION -->
+                        <p class="biz-section">Organisation</p>
+                        <lightning-input class="biz-field slds-p-bottom_small" label="Legal name" required
+                            placeholder="Registered organisation name..."
+                            data-field="legalName" value={bizForm.legalName} onchange={handleBizChange}></lightning-input>
+                        <div class="slds-grid slds-wrap slds-gutters_small">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input class="biz-field" label="Trading name (optional)"
+                                    placeholder="If different from the legal name..."
+                                    data-field="tradingName" value={bizForm.tradingName} onchange={handleBizChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-combobox class="biz-field" label="Business type" required placeholder="Choose..."
+                                    options={businessTypeOptions} data-field="businessType" value={bizForm.businessType}
+                                    onchange={handleBizChange}></lightning-combobox>
+                            </div>
+                        </div>
+                        <div class="biz-divider"></div>
+
+                        <!-- PRIMARY CONTACT -->
+                        <p class="biz-section">Primary contact</p>
+                        <div class="slds-grid slds-wrap slds-gutters_small">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input class="biz-field" label="First name" required placeholder="First name..."
+                                    data-field="firstName" value={bizForm.firstName} onchange={handleBizChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input class="biz-field" label="Last name" required placeholder="Last name..."
+                                    data-field="lastName" value={bizForm.lastName} onchange={handleBizChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input class="biz-field" type="email" label="Work email" disabled
+                                    data-field="email" value={bizForm.email}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input class="biz-field" type="tel" label="Phone" required placeholder="+61 400 000 000"
+                                    data-field="phone" value={bizForm.phone} onchange={handleBizChange} onblur={handleBizBlur}></lightning-input>
+                            </div>
+                        </div>
+                        <div class="biz-divider"></div>
+
+                                                <!-- ORGANISATION ADDRESS - labels and states follow the country -->
+                        <p class="biz-section">Billing address</p>
+                        <lightning-combobox class="biz-field slds-p-bottom_small" label="Country" required placeholder="Choose..."
+                            options={countryOptions} data-field="country" value={bizForm.country}
+                            onchange={handleBizChange}></lightning-combobox>
+                        <lightning-input class="biz-field slds-p-bottom_small" label="Street address" required
+                            placeholder="Street and number..."
+                            data-field="street" value={bizForm.street} onchange={handleBizChange}></lightning-input>
+                        <lightning-input class="biz-field slds-p-bottom_small" label="Apartment, suite or floor (optional)"
+                            placeholder="Unit, level..."
+                            data-field="unit" value={bizForm.unit} onchange={handleBizChange}></lightning-input>
+                        <div class="slds-grid slds-wrap slds-gutters_small">
+                            <template if:true={showCityState}>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input class="biz-field" label={countryConfig.cityLabel} required
+                                        placeholder={countryConfig.cityPlaceholder}
+                                        data-field="suburb" value={bizForm.suburb} onchange={handleBizChange}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-combobox class="biz-field" label={countryConfig.stateLabel} required placeholder="Choose..."
+                                        options={stateOptions} data-field="state" value={bizForm.state}
+                                        onchange={handleBizChange}></lightning-combobox>
+                                </div>
+                            </template>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                <lightning-input class="biz-field" label={countryConfig.postcodeLabel} required
+                                    placeholder={countryConfig.postcodePlaceholder}
+                                    data-field="postcode" value={bizForm.postcode} onchange={handleBizChange} onblur={handleBizBlur}></lightning-input>
+                            </div>
+                        </div>
+                        <div class="biz-divider"></div>
+
+                        <!-- REGISTRATION AND TAX - fields follow the country -->
+                        <p class="biz-section">Registration and tax</p>
+                        <div class="slds-grid slds-wrap slds-gutters_small">
+                            <template for:each={taxFields} for:item="field">
+                                <div key={field.key} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input class="biz-field" label={field.label} required={field.required}
+                                        placeholder={field.placeholder}
+                                        data-field={field.key} value={field.value} onchange={handleBizChange} onblur={handleBizBlur}></lightning-input>
+                                </div>
+                            </template>
+                        </div>
+
+                        <lightning-input class="slds-m-top_small" type="checkbox"
+                            label="I confirm I'm authorised to act for this organisation, and I agree to the Terms of Service."
+                            data-field="agreed" checked={bizForm.agreed} onchange={handleBizChange}></lightning-input>
+                    </div>
+
+                    <div class="slds-modal__footer biz-footer">
+                        <lightning-button variant="base" label="Cancel" onclick={handleBizCancel}></lightning-button>
+                        <lightning-button class="biz-continue" variant="brand" label="Continue to payment"
+                            icon-name="utility:forward" icon-position="right" onclick={handleBizContinue}
+                            disabled={bizLoading}></lightning-button>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- ================= OLD cancel popup - kept for reference =================
+         <!~~ Stop trial / cancel confirmation ~~>
+               <!~~ Stop trial / cancel confirmation ~~>
+        <template if:true={showCancelConfirm}>
+            <section
+                aria-describedby="cancel-content"
+                aria-labelledby="cancel-title"
+                aria-modal="true"
+                class="slds-modal slds-fade-in-open"
+                role="dialog"
+                tabindex="-1"
+            >
+                <div class="slds-modal__container modal-container" style="max-width: 25%">
+                    <header class="slds-modal__header" style="background: #002a52">
+                        <h2 id="cancel-title"
+                            class="slds-text-heading_medium slds-hyphenate"
+                            style="color: white; font-weight: bold; text-align: center">
+                            {cancelButtonLabel}
+                        </h2>
+                    </header>
+                    <div id="cancel-content" class="slds-modal__content slds-p-around_medium modal-content slds-is-relative">
+                        <template if:true={cancelBusy}>
+                            <lightning-spinner alternative-text="Saving" size="small"></lightning-spinner>
+                        </template>
+                        <div class="slds-m-around_small" style="text-align: center">
+                            <div>
+                                <p style="text-align: center">{cancelConfirmQuestion}</p>
+                                <p class="slds-text-color_weak slds-m-top_x-small" style="text-align: center">{cancelConfirmText}</p>
+                            </div>
+                            <template if:true={cancelError}>
+                                <p class="slds-text-color_error slds-m-top_small" style="text-align: center">{cancelError}</p>
+                            </template>
+                            <div class="button-container slds-m-top_medium">
+                                <lightning-button
+                                    label="No"
+                                    variant="brand"
+                                    onclick={handleCancelClose}
+                                    disabled={cancelBusy}
+                                ></lightning-button>
+                                <lightning-button
+                                    label="Yes"
+                                    variant="brand"
+                                    onclick={handleCancelConfirm}
+                                    disabled={cancelBusy}
+                                ></lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        ================= END OLD cancel popup ================= -->
+
+        <!-- Stop trial / cancel confirmation (NEW) -->
+        <template if:true={showCancelConfirm}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="cancel-title"
+                aria-describedby="cancel-content" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container cancel-modal">
+                    <div id="cancel-content" class="slds-modal__content cancel-body slds-is-relative">
+                        <template if:true={cancelBusy}>
+                            <lightning-spinner alternative-text="Saving" size="small"></lightning-spinner>
+                        </template>
+                        <span class="cancel-icon">
+                            <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                        </span>
+                        <h2 id="cancel-title" class="cancel-title">{cancelConfirmTitle}</h2>
+                        <p class="cancel-text">{cancelConfirmText}</p>
+                        <template if:true={cancelError}>
+                            <p class="sub-error-text">{cancelError}</p>
+                        </template>
+                        <div class="cancel-actions">
+                            <lightning-button label="Keep my plan" variant="neutral"
+                                onclick={handleCancelClose} disabled={cancelBusy}></lightning-button>
+                            <lightning-button label={cancelButtonLabel} variant="destructive"
+                                onclick={handleCancelConfirm} disabled={cancelBusy}></lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>
