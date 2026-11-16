@@ -1,0 +1,168 @@
+<template>
+    <div class="container-box">
+          <div class="header1">
+              <div style="display: flex; gap: 8px;">
+                  <button class="custom-create-btn slds-m-right_small" onclick={handleInstructions} title="Instructions">
+                      Instructions
+                  </button>
+                  <button class="custom-create-btn slds-m-right_small" onclick={handleDownloadTemplate} title="Download Template">
+                      Download Template
+                  </button>
+                  <button class="custom-create-btn" onclick={handleSwitchToCreateStaff} title="Back(Ctrl + Shift + B)">
+                      Back
+                  </button>
+              </div>
+          </div>
+
+
+
+            <template if:false={tableData.length}>
+                  <!-- Upload Section -->
+                  <div class="upload-button-container">
+                      <label for="uploadPdf" class="upload-label">
+                          <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <p>Click here to upload a file</p>
+                      </label>
+                      <input type="file" id="uploadPdf" accept=".csv" onchange={handleUploadFinished} class="file-input">
+                  </div>
+            </template>
+
+                  <!-- Table Section -->
+                  <template if:true={tableData.length}>
+                    <div class="slds-p-around_medium table-container">
+                          <span style="font-size: 20px; font-weight: bold;">Staff List</span>
+                        <div class="table-scroll custom-scroll">
+                          <table class="slds-table slds-table_cell-buffer fixed-table">
+                              <thead>
+                                  <tr class="table-row">
+                                      <th class="slds-text-align_left table-th" title="Select All">
+                                          <lightning-input type="checkbox" onchange={handleSelectAll} checked={isAllSelected}></lightning-input>
+                                      </th>
+                                      <th class="slds-text-align_left table-th" title="First Name">First Name</th>
+                                      <th class="slds-text-align_left table-th" title="Last Name">Last Name</th>
+                                      <th class="slds-text-align_left table-th" title="Gender">Gender</th>
+                                      <th class="slds-text-align_left table-th" title="Contact Number">Contact Number</th>
+                                      <th class="slds-text-align_left table-th" title="Email ID">Email ID</th>
+                                      <th class="slds-text-align_left table-th" title="Date of Birth">Date of Birth</th>
+                                      <th class="slds-text-align_left table-th" title={facilityPreferredName}>{facilityPreferredName}</th>
+                                      <th class="slds-text-align_left table-th" title="Status">Status</th>
+                                      <template if:true={isProcessed}>
+                                          <th class="slds-text-align_left table-th" title="Processed Status">Processed Status</th>
+                                      </template>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <template for:each={paginatedData} for:item="user">
+                                      <tr key={user.id} data-id={user.id} class="tr1 table-row">
+                                          <td class="table-td" title="Select Row">
+                                              <lightning-input type="checkbox" name="userCheckbox" checked={user.isSelected}
+                                                  onchange={handleRowSelection} data-id={user.id}></lightning-input>
+                                          </td>
+                                          <td class="table-td" title={user.FirstName}>{user.FirstName}</td>
+                                          <td class="table-td" title={user.LastName}>{user.LastName}</td>
+                                          <td class="table-td" title={user.Gender}>{user.Gender}</td>
+                                          <td class="table-td" title={user.PhoneNumber}>{user.PhoneNumber}</td>
+                                          <td class="table-td" title={user.EmailAddress}>{user.EmailAddress}</td>
+                                          <td class="table-td" title={user.DateofBirth}>{user.DateofBirth}</td>
+                                          <td class="table-td" title={user.Facility}>{user.Facility}</td>
+                                          <td class="table-td" title={user.Status}>{user.Status}</td>
+                                          <template if:true={isProcessed}>
+                                              <td class="table-td" title={user.ProcessedStatus}>
+                                                  <a href="javascript:void(0);" onclick={handleErrorClick}>{user.ProcessedStatus}</a>
+                                              </td>
+                                          </template>
+                                      </tr>
+                                  </template>
+                              </tbody>
+                          </table>
+                          </div>
+                      </div>
+
+
+
+                <div class="footer-fixed">
+                <div class="actions-row">
+                <!-- Action Buttons -->
+                    <div class="slds-grid slds-align_absolute-center">
+                        <lightning-button label="Cancel" variant="Brand-Outline" onclick={handleCancel}
+                            class="slds-m-around_small"></lightning-button>
+                        <lightning-button label="Submit" variant="brand" onclick={handleFinalSubmit}
+                            disabled={enableddisabled}></lightning-button>
+                    </div>
+
+                      <!-- Pagination Section -->
+                        <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+
+                              <div class="slds-list_inline">
+                                  <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                                  <div class="slds-select_container">
+                                      <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                          <template for:each={pageSizeOptions} for:item="option">
+                                              <option key={option} value={option}>{option}</option>
+                                          </template>
+                                      </select>
+                                  </div>
+                              </div>
+
+
+                          <div class="slds-align_absolute-center">
+                              <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First"
+                                  alternative-text="first page" onclick={firstPage} style="margin-right: 10px;"></lightning-button>
+                              <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous"
+                                  alternative-text="Previous" onclick={previousPage} style="margin-right: 5px;"></lightning-button>
+
+                              <span class="slds-badge">Showing {pageNumber} &nbsp;of&nbsp; {totalPages} Page(s)</span>
+
+                              <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next"
+                                  alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small"
+                                  icon-position="right"></lightning-button>
+                              <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last"
+                                  alternative-text="last page" onclick={lastPage} icon-position="right"></lightning-button>
+                          </div>
+
+                          <div class="slds-clearfix">
+                              <div class="slds-float_right">
+                                  <span class="slds-badge">Total Records: {totalRecords}</span>
+                              </div>
+                          </div>
+                      </div>
+                      </div>
+                      </div>
+
+                      <!-- Error Popup -->
+                      <template if:true={isErrorPopupVisible}>
+                          <section class="slds-modal slds-fade-in-open" role="dialog" aria-modal="true" tabindex="-1">
+                              <div class="slds-modal__container modal-container" style="max-width: 25%;">
+                                  <header class="slds-modal__header" style="background: #002A52;">
+                                      <h2 class="slds-text-heading_medium slds-hyphenate"
+                                          style="color:white; font-weight:bold; text-align:center;">Error</h2>
+                                  </header>
+                                  <div class="slds-modal__content slds-p-around_medium modal-content">
+                                      <div class="slds-m-around_small" style="text-align: center;">
+                                          <p style="text-align: center;">{errorMessage}</p>
+                                          <div class="button-container slds-m-top_medium">
+                                              <lightning-button label="Cancel" variant="brand" onclick={handleClosePopup}
+                                                  class="slds-m-around_small"></lightning-button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </section>
+                          <div class="slds-backdrop slds-backdrop_open"></div>
+                      </template>
+                  </template>
+
+                  <!-- Action Buttons -->
+                  <!-- <div class="slds-grid slds-align_absolute-center slds-m-top_medium" style="padding-bottom: 1%;">
+                      <lightning-button label="Cancel" variant="Brand-Outline" onclick={handleSwitchToCreateStaff}
+                          class="slds-m-around_small"></lightning-button>
+                      <lightning-button label="Submit" variant="brand" onclick={handleFinalSubmit}
+                          disabled={enableddisabled}></lightning-button>
+                  </div> -->
+
+
+      </div>
+</template>

@@ -1,0 +1,2369 @@
+<template>
+  <!-- <template if:false={isFormSelected}> -->
+  <template if:true={showPublishedForms}>
+    <div class="blur-overlay">
+      <div class="right-align" style="width: 65%">
+        <div class="pf-bar">
+          <div class="pf-left">
+            <h3 class="pf-title">Published Forms</h3>
+          </div>
+
+          <div class="pf-center">
+            <div class="floating-label">
+              <span class="label-text-drop">Search Forms</span>
+              <lightning-input
+                type="search"
+                variant="label-hidden"
+                placeholder="Search by form name..."
+                onchange={handleSearchChange}
+              >
+              </lightning-input>
+            </div>
+          </div>
+
+          <div class="pf-right">
+            <lightning-button
+              variant="brand-outline"
+              label="Cancel"
+              title="Cancel"
+              onclick={togglePublishedForms}
+            >
+            </lightning-button>
+          </div>
+        </div>
+
+        <!-- PublishedForms.html -->
+        <div class="published-grid custom-scroll" role="list">
+
+          <table class="table">
+<!--             <thead>
+              <tr class="tr1">
+                <th class="table_th">Form Name</th>
+                <th class="table_th">Created By</th>
+                <th class="table_th">Created On</th>
+                <th class="table_th">Action</th>
+              </tr>
+            </thead> -->
+            <thead>
+                <tr class="tr1">
+
+                    <th class="table_th sortable-header"
+                        data-table="publishedForms"
+                        data-field="Name__c"
+                        onclick={handleSort}>
+                        <div class="sort-header-inner">
+                            <span class="sort-label">Form Name</span>
+                            <span class="sort-arrow"
+                                data-arrow={tableSortState.publishedForms.icons.Name__c}>
+                            </span>
+                        </div>
+                    </th>
+
+                    <th class="table_th sortable-header"
+                        data-table="publishedForms"
+                        data-field="CreatedByName"
+                        onclick={handleSort}>
+                        <div class="sort-header-inner">
+                            <span class="sort-label">Created By</span>
+                            <span class="sort-arrow"
+                                data-arrow={tableSortState.publishedForms.icons.CreatedByName}>
+                            </span>
+                        </div>
+                    </th>
+
+                    <th class="table_th sortable-header"
+                        data-table="publishedForms"
+                        data-field="FormattedCreatedDate"
+                        onclick={handleSort}>
+                        <div class="sort-header-inner">
+                            <span class="sort-label">Created On</span>
+                            <span class="sort-arrow"
+                                data-arrow={tableSortState.publishedForms.icons.FormattedCreatedDate}>
+                            </span>
+                        </div>
+                    </th>
+
+                    <th class="table_th">Action</th>
+
+                </tr>
+            </thead>
+
+            <tbody>
+              <template for:each={filteredForms} for:item="form">
+                <tr key={form.Id} class="tr1">
+                  <td class="table_td" title={form.Name__c}>{form.Name__c}</td>
+                  <td class="table_td">{form.CreatedByName}</td>
+                  <td class="table_td">{form.FormattedCreatedDate}</td>
+                  <td class="table_td">
+                    <button
+                      class="assign-close-button"
+                      data-id={form.Id}
+                      onclick={handleFormClick}
+                      title="Open form"
+                    >
+                      <i class="material-icons open-icon">file_open</i>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <template if:false={filteredForms.length}>
+            <div class="empty-state">
+              <span class="material-symbols-outlined empty-icon"
+                >description</span
+              >
+              <p class="empty-text">No published forms found</p>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+   <div class="main-container">
+    <template if:true={isHome}>
+  <!-- </template> -->
+<div style="padding:10px">
+  <!-- <h3 style="font-size:120%;font-weight:bold;margin-bottom:0.5%;margin-top:1%;margin-left:2%;">Submitted Forms</h3> -->
+  <div
+    style="display: flex; align-items: flex-start; justify-content: space-between;padding-bottom: 10px;"
+  >
+    <div class="search_role">
+      <div class="floating-label-input">
+        <span class="label-text-drop">Search Forms</span>
+        <lightning-input
+          type="search"
+          placeholder="Search by Form Name, Type, Participant, Date..."
+          onchange={handleSubmittedFormSearch}
+          value={searchSubmittedQuery}
+          variant="label-hidden"
+        >
+        </lightning-input>
+      </div>
+
+      <div class="role-tab-scroll-container">
+        <lightning-button-icon
+          icon-name="utility:chevronleft"
+          onclick={scrollTabsLeft}
+          alternative-text="Scroll Left"
+          variant="bare"
+          size="small"
+        >
+        </lightning-button-icon>
+
+        <div
+          class="role-tab-wrapper"
+          data-id="roleTabsContainer"
+          onscroll={handleScroll}
+        >
+          <template for:each={nameTabs} for:item="tab">
+            <button
+              key={tab.value}
+              class={tab.computedClass}
+              data-role={tab.value}
+              onclick={handleNameTabClick}
+            >
+              {tab.label}
+            </button>
+          </template>
+        </div>
+
+        <lightning-button-icon
+          icon-name="utility:chevronright"
+          onclick={scrollTabsRight}
+          alternative-text="Scroll Right"
+          variant="bare"
+          size="small"
+        >
+        </lightning-button-icon>
+      </div>
+    </div>
+
+    <div
+      style="display: flex; align-items: center; gap: 10px;"
+    >
+      <lightning-button
+        label="Add New Form"
+        variant="brand"
+        onclick={togglePublishedForms}
+      >
+      </lightning-button>
+    </div>
+  </div>
+
+  <div class="combine-show">
+    <template if:false={isExpandview}>
+      <div style="width: 35%">
+        <template if:true={hasResponses}>
+          <template if:true={paginatedFormResponses}>
+            <div class="default-forms-section">
+              <div class="table-container">
+                <div class="formsscroll custom-scroll">
+                  <template if:true={totalFormRecords}>
+    
+<div class="table-container formResponseTable">
+
+    <!-- ================= HEADER ================= -->
+    <div class="header-wrapper">
+        <table class="staff-table" role="table">
+<!--             <thead>
+                <tr>
+                    <th class="table-th">Form Name</th>
+                    <th class="table-th">Created By</th>
+                    <th class="table-th">Submitted On</th>
+                    <th class="table-th">Status</th>
+                    <th class="table-th">Actions</th>
+                </tr>
+            </thead> -->
+            <thead>
+    <tr>
+
+        <th class="table-th sortable-header"
+            data-table="formResponses"
+            data-field="Name__c"
+            onclick={handleSort}>
+            <div class="sort-header-inner">
+                <span class="sort-label">Form Name</span>
+                <span class="sort-arrow"
+                    data-arrow={tableSortState.formResponses.icons.Name__c}>
+                </span>
+            </div>
+        </th>
+
+        <th class="table-th sortable-header"
+            data-table="formResponses"
+            data-field="CreatedByName"
+            onclick={handleSort}>
+            <div class="sort-header-inner">
+                <span class="sort-label">Created By</span>
+                <span class="sort-arrow"
+                    data-arrow={tableSortState.formResponses.icons.CreatedByName}>
+                </span>
+            </div>
+        </th>
+
+        <th class="table-th sortable-header"
+            data-table="formResponses"
+            data-field="FormattedDate"
+            onclick={handleSort}>
+            <div class="sort-header-inner">
+                <span class="sort-label">Submitted On</span>
+                <span class="sort-arrow"
+                    data-arrow={tableSortState.formResponses.icons.FormattedDate}>
+                </span>
+            </div>
+        </th>
+
+        <th class="table-th sortable-header"
+            data-table="formResponses"
+            data-field="Status__c"
+            onclick={handleSort}>
+            <div class="sort-header-inner">
+                <span class="sort-label">Status</span>
+                <span class="sort-arrow"
+                    data-arrow={tableSortState.formResponses.icons.Status__c}>
+                </span>
+            </div>
+        </th>
+
+        <!-- Actions is not sortable -->
+        <th class="table-th">Actions</th>
+
+    </tr>
+</thead>
+        </table>
+    </div>
+
+    <!-- ================= BODY ================= -->
+    <div class="body-scroll custom-scroll tableHeight">
+        <table class="staff-table">
+            <tbody>
+
+                <template for:each={paginatedFormResponses} for:item="response">
+                    <tr key={response.Id} class="table-row">
+
+                        <!-- FORM NAME -->
+                        <td class="table-td">
+                            <div class="cell-text" title={response.Name__c}>
+                                {response.Name__c}
+                            </div>
+                        </td>
+
+                        <!-- CREATED BY -->
+                        <td class="table-td" title={response.CreatedByName}>
+                            {response.CreatedByName}
+                        </td>
+
+                        <!-- DATE -->
+                        <td class="table-td">
+                            {response.FormattedDate}
+                        </td>
+
+                        <!-- STATUS -->
+                        <td class="table-td">
+                            <span class={response.statusBadgeClass}>
+                                {response.Status__c}
+                            </span>
+                        </td>
+
+
+
+                        <!-- ACTIONS -->
+                        <td class="table-td actions-col">
+
+                            <!-- SIGNED -->
+                            <template if:true={response.isSigned}>
+
+                                <template if:true={response.canEditOrDelete}>
+                                    <i class="material-icons delete-icon"
+                                       data-id={response.Id}
+                                       onclick={handleDelete}>
+                                       delete
+                                    </i>
+                                </template>
+
+                                <lightning-button
+                                    label="Signed"
+                                    variant="success"
+                                    data-id={response.Id}
+                                    data-signature-url={response.signatureUrl}
+                                    onclick={handleTsignFromForms}>
+                                </lightning-button>
+
+                            </template>
+
+                            <!-- NOT SIGNED -->
+                            <template if:false={response.isSigned}>
+
+                                <i class="material-icons view-icon"
+                                   data-id={response.Id}
+                                   onclick={handleView}>
+                                   visibility
+                                </i>
+
+                                <template if:true={response.canEditOrDelete}>
+
+                                    <i class="material-icons edit-icon"
+                                       data-id={response.Id}
+                                       onclick={handleEdit}>
+                                       edit_document
+                                    </i>
+
+                                    <i class="material-icons delete-icon"
+                                       data-id={response.Id}
+                                       onclick={handleDelete}>
+                                       delete
+                                    </i>
+
+                                </template>
+
+                                <!-- <i class="material-icons tsign-icon"
+                                   data-id={response.Id}
+                                   data-url={response.AWS_Url__c}
+                                   onclick={handleTsignFromForms}>
+                                   stylus_note
+                                </i> -->
+
+                            </template>
+
+                        </td>
+
+                    </tr>
+                </template>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <template if:true={totalFormRecords}>
+              <div
+                class="slds-grid slds-p-around_medium slds-grid_vertical-align-center paginationcontrol"
+              >
+                <!-- Left spacer grows to push center into true middle -->
+                <div class="slds-col slds-grow"></div>
+
+                <!-- Center: Pagination Controls (no grow) -->
+                <div class="slds-col">
+                  <div
+                    class="slds-grid slds-gutters slds-align_absolute-center"
+                  >
+                    <lightning-button
+                      class="slds-m-horizontal_x-small"
+                      disabled={disableFirstFormPage}
+                      icon-name="utility:chevronleft"
+                      label="Previous"
+                      onclick={previousFormPage}
+                    >
+                    </lightning-button>
+
+                    <span class="slds-badge slds-m-horizontal_small">
+                      Showing {formPageNumber} of {totalFormPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                      class="slds-m-horizontal_x-small"
+                      disabled={disableLastFormPage}
+                      icon-name="utility:chevronright"
+                      label="Next"
+                      onclick={nextFormPage}
+                    >
+                    </lightning-button>
+                  </div>
+                </div>
+
+                <!-- Right: Total count grows and aligns to extreme right -->
+                <div class="slds-col slds-grow slds-text-align_right">
+                  <span class="slds-badge"
+                    >Total Submitted Forms: {totalFormRecords}</span
+                  >
+                </div>
+              </div>
+            </template>
+          </template>
+        </template>
+      </div>
+    </template>
+
+    <template if:true={hasResponses}>
+      <template if:true={isViewModeON}>
+        <template if:false={isViewMode}>
+          <div class="view-popup-content">
+            <div
+              class="empty-view slds-p-around_large slds-text-align_center"
+              role="region"
+              aria-label="No form selected"
+            >
+              <i class="material-icons empty-view__icon" aria-hidden="true"
+                >description</i
+              >
+              <p class="slds-text-heading_small slds-text-title_bold">
+                Select a form response to view details
+              </p>
+              <p class="slds-text-color_weak slds-m-top_x-small">
+                Tip: click the eye icon in the table to open a preview.
+              </p>
+            </div>
+          </div>
+        </template>
+
+        <!-- View Mode -->
+        <template if:true={isViewMode}>
+          <!-- <div class="view-popup-container"> -->
+          <div class={viewPopupContentClass}>
+            <div class="view-popup-header">
+              <span class="view-popup-title">
+                Preview: {selectedFormTitle} ({selectedFormType})
+              </span>
+
+              <div class="view-popup-actions">
+
+ <!-- PREVIOUS PAGE -->
+  <span
+    class="icon-btn"
+    role="button"
+    tabindex="0"
+    title="Previous Page"
+    onclick={goToPreviousViewPage}
+  >
+    <i class="material-icons chevron-icon">chevron_left</i>
+  </span>
+
+  <!-- PAGE INFO -->
+  <span class="page-indicator">
+    Page {currentViewPage} of {totalViewPages}
+  </span>
+
+  <!-- NEXT PAGE -->
+  <span
+    class="icon-btn"
+    role="button"
+    tabindex="0"
+    title="Next Page"
+    onclick={goToNextViewPage}
+  >
+    <i class="material-icons chevron-icon">chevron_right</i>
+  </span>
+
+
+                <span
+                  class="icon-btn"
+                  role="button"
+                  tabindex="0"
+                  title="Download PDF"
+                  aria-label="Download PDF"
+                  onclick={printViewPageWise}
+                  onkeydown={handleIconKeydown}
+                >
+                  <i class="material-icons download-icon">file_download</i>
+                </span>
+
+                <span
+                  class="icon-btn"
+                  role="button"
+                  tabindex="0"
+                  title={expandButtonTitle}
+                  aria-label={expandButtonTitle}
+                  onclick={expandview}
+                  onkeydown={handleIconKeydown}
+                >
+                  <i class="material-icons expand-icon">{expandIconName}</i>
+                </span>
+
+                <span
+                  class="icon-btn"
+                  role="button"
+                  tabindex="0"
+                  title="Close"
+                  aria-label="Close"
+                  onclick={closeView}
+                  onkeydown={handleIconKeydown}
+                >
+                  <i class="material-icons close-icon">close</i>
+                </span>
+              </div>
+            </div>
+
+            <!-- ✅ Table Container -->
+            <div class="view-popup-table-container custom-scroll">
+             <div class="view-grid-container">
+
+              <template for:each={viewTableData} for:item="row">
+
+
+                <!-- FORM ROW -->
+                <template if:false={row.isPageBreak}>
+                  <template if:true={row.isVisible}>
+
+                   <div key={row.id} data-row-id={row.id} class="form-row">
+
+                      <template for:each={row.cells} for:item="cell">
+
+                        <!-- EMPTY CELL (preserves grid spacing) -->
+                        <template if:true={cell.isEmpty}>
+                          <div key={cell.id} class="form-cell empty-cell"></div>
+                        </template>
+
+
+                        <!-- NON EMPTY CELL -->
+                        <template if:false={cell.isEmpty}>
+
+                          <!-- SECTION HEADER -->
+                          <template if:true={cell.isSectionHeader}>
+                            <div
+                              key={cell.id}
+                              class="section-header"
+                              style={cell.headerStyle}
+                              data-type="header"
+                            >
+                              {cell.title}
+                            </div>
+                          </template>
+
+
+                          <!-- NORMAL FIELD -->
+                          <template if:false={cell.isSectionHeader}>
+
+                            <div key={cell.id} class="form-field-card">
+
+                              <div class="field-label">
+                                  {cell.label}
+                              </div>
+
+                              <div class="field-value">
+
+                                  <!-- CHECKBOX -->
+                                  <template if:true={cell.isCheckbox}>
+                                    <span class="checkbox-icon">{cell.value}</span>
+                                  </template>
+
+                                  <!-- FILE -->
+                                  <template if:true={cell.isUploadFile}>
+                                      <template for:each={cell.files} for:item="f">
+                                          <img key={f.key} src={f.url} class="uploaded-image"/>
+                                      </template>
+                                  </template>
+
+                                  <!-- RICH TEXT -->
+                                  <template if:true={cell.isRichText}>
+                                      <div class="rich-text-view"
+                                          lwc:dom="manual"
+                                          data-id={cell.id}>
+                                      </div>
+                                  </template>
+
+                                  <!-- SIGNATURE -->
+                                  <template if:true={cell.isSignature}>
+                                      <img src={cell.value} class="signature-view-img"/>
+                                  </template>
+
+                                  <!-- RADIO BUTTON -->
+                                  <template if:true={cell.isRadioButton}>
+                                    <span class="value-text">{cell.value}</span>
+                                  </template>
+
+                                  <!-- TABLE BLOCK -->
+<template if:true={cell.isTableBlock}>
+
+  <div class="view-table-wrapper">
+
+    <table class={cell.tableClass}>
+
+      <!-- HEADER -->
+      <template if:true={cell.hasHeader}>
+        <thead>
+          <tr>
+            <template for:each={cell.headers} for:item="h">
+              <th key={h.key}>
+                {h.header}
+              </th>
+            </template>
+          </tr>
+        </thead>
+      </template>
+
+      <!-- BODY -->
+      <tbody>
+
+        <template for:each={cell.rows} for:item="r">
+
+          <tr key={r.key}>
+
+            <template for:each={r.cells} for:item="c">
+
+              <td key={c.key} class={c.cellClass}>
+
+  <!-- SECTION HEADER -->
+  <template if:true={c.isSectionHeader}>
+    <div
+      class="section-header"
+      style={c.headerStyle}
+    >
+      {c.title}
+    </div>
+  </template>
+
+  <!-- NON HEADER -->
+  <template if:false={c.isSectionHeader}>
+
+    <!-- CHECKBOX -->
+    <template if:true={c.isCheckbox}>
+  <span class="checkbox-icon">{c.checkboxIcon}</span>
+</template>
+
+    <!-- FILE -->
+    <template if:true={c.isUploadFile}>
+      <template for:each={c.files} for:item="f">
+        <img
+          key={f.key}
+          src={f.url}
+          class="uploaded-image"
+        />
+      </template>
+    </template>
+
+    <!-- RICH TEXT -->
+    <template if:true={c.isRichText}>
+      <div
+        class="rich-text-view"
+        lwc:dom="manual"
+        data-id={c.key}>
+      </div>
+    </template>
+
+    <!-- SIGNATURE -->
+    <template if:true={c.isSignature}>
+      <img
+        src={c.value}
+        class="signature-view-img"
+      />
+    </template>
+
+    <!-- RADIO -->
+    <template if:true={c.isRadioButton}>
+      <span class="value-text">
+        {c.value}
+      </span>
+    </template>
+
+    <!-- DEFAULT -->
+    <template if:true={c.isRegularField}>
+      <span class="value-text">
+        {c.value}
+      </span>
+    </template>
+
+  </template>
+
+</td>
+
+            </template>
+
+          </tr>
+
+        </template>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</template>
+
+                                  <!-- DEFAULT -->
+                                  <template if:true={cell.isRegularField}>
+                                    <span class="value-text">{cell.value}</span>
+                                  </template>
+
+                              </div>
+
+                          </div>
+
+                          </template>
+
+                        </template>
+
+                      </template>
+
+                    </div>
+
+                  </template>
+                </template>
+
+              </template>
+
+            </div>
+         
+            </div>
+          </div>
+        </template>
+      </template>
+    </template>
+
+    <template if:true={isFormSelected}>
+      <div class={unitedContentClass}>
+        <div class="title-step">
+          <div class="form-title-container">
+            <span class="form-title"
+              >{selectedFormTitle} - {selectedFormType}</span
+            >
+          </div>
+
+          <div class="form-navigation-buttons">
+            <template if:true={showStepProgressIndicator}>
+              <div class="pagination-bar">
+                <button
+                  class="icon-btn"
+                  aria-label="Previous page"
+                  onclick={goToPreviousStepPage}
+                  disabled={isFirstStepPage}
+                >
+                  <i class="material-icons material-icons-page">chevron_left</i>
+                </button>
+
+                <span class="page-info">
+                  Page <strong>{stepCurrentPageDisplay}</strong>
+                  <span class="page-of">of {totalStepPages}</span>
+                </span>
+
+                <button
+                  class="icon-btn"
+                  aria-label="Next page"
+                  onclick={goToNextStepPage}
+                  disabled={isLastStepPage}
+                >
+                  <i class="material-icons material-icons-page"
+                    >chevron_right</i
+                  >
+                </button>
+              </div>
+            </template>
+
+            <span
+              class="icon-btn"
+              role="button"
+              tabindex="0"
+              title={expandButtonTitle}
+              aria-label={expandButtonTitle}
+              onclick={expandview}
+              onkeydown={handleIconKeydown}
+            >
+              <i class="material-icons expand-icon">{expandIconName}</i>
+            </span>
+          </div>
+        </div>
+
+        <div class="excel-table-container custom-scroll">
+              <template for:each={tableRows} for:item="row">
+                <div key={row.id} class="form-row">
+    
+                  <template for:each={row.cells} for:item="cell">
+                    <template if:true={cell.isVisible}>
+                      <!-- Only render <td> if there is a valid field -->
+                      <template if:true={cell.field}>
+  
+                     <div
+                        key={cell.domKey}
+                        class="table-cell"
+                        data-colspan={cell.colspan}
+                        data-rowspan={cell.rowspan}
+                      >
+                          <template if:true={cell.hasContent}>
+                            <div
+                              class="floating-label"
+                              style={cell.floatingLabelStyle}
+                            >
+                              <span class="label-text-drop">
+                                <template if:true={cell.field.isRequired}>
+                                  <span style="color: red">*</span>
+                                </template>
+                                {cell.field.label}
+                              </span>
+
+                              <template if:true={cell.hasComment}>
+                                <span class="tooltip-container">
+                                  <lightning-icon
+                                    icon-name="utility:info"
+                                    size="xx-small"
+                                    class="info-icon"
+                                  ></lightning-icon>
+                                  <span class="tooltip-text"
+                                    >{cell.field.comments}</span
+                                  >
+                                </span>
+                              </template>
+
+                              <template if:true={cell.field.isHeader}>
+                                <div
+                                  class="fc-header"
+                                  style={cell.field.inlineStyle}
+                                >
+                                  {cell.field.text}
+                                </div>
+                              </template>
+
+                              <template if:true={cell.isTextField}>
+                                <input
+                                  type="text"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  oninput={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <template if:true={cell.isTextArea}>
+                                <textarea
+                                  key={cell.domKey}
+                                  data-id={cell.id}
+                                  class="input-textarea"
+                                  maxlength="255"
+                                  placeholder={cell.placeholderText}
+                                  value={cell.field.value}
+                                  oninput={handleTextAreaInput}
+                                ></textarea>
+                              </template>
+
+                              <!-- ✅ AlphaNumeric Text Field (Restricts special chars) -->
+                              <template if:true={cell.isAlphaNumeric}>
+                                <input
+                                  type="text"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  maxlength={cell.maxLength}
+                                  pattern="[A-Za-z0-9]*"
+                                  onkeypress={restrictAlphaNumeric}
+                                  oninput={validateAlphaNumeric}
+                                  onchange={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <!-- ✅ Only Alphabets Text Field (No numbers, no special chars) -->
+                              <template if:true={cell.isOnlyAlphabets}>
+                                <input
+                                  type="text"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  maxlength={cell.maxLength}
+                                  pattern="[A-Za-z]*"
+                                  onkeypress={restrictOnlyAlphabets}
+                                  oninput={validateOnlyAlphabets}
+                                  onchange={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <template if:true={cell.isRichText}>
+                                  <div
+                                      class="rich-text-editor"
+                                      data-id={cell.id}
+                                      data-placeholder={cell.placeholderText}
+                                      lwc:dom="manual">
+                                  </div>
+                              </template>
+
+                              <template if:true={cell.isNumberField}>
+                                <template if:true={cell.isContactNumber}>
+                                  <input
+                                    type="text"
+                                    data-id={cell.id}
+                                    value={cell.field.value}
+                                    maxlength={cell.maxLength}
+                                    pattern="[0-9]*"
+                                    onkeypress={restrictNumbersOnly}
+                                    oninput={validateNumbersOnly}
+                                    onchange={handleInputChange}
+                                    class="input-field"
+                                    placeholder={cell.placeholderText}
+                                  />
+                                </template>
+
+                                <template if:true={cell.isCurrency}>
+                                  <input
+                                    type="text"
+                                    data-id={cell.id}
+                                    data-decimals={cell.field.decimalValue}
+                                    value={cell.field.value}
+                                    onkeypress={restrictCurrencyInput}
+                                    oninput={validateCurrencyInput}
+                                    onchange={handleInputChange}
+                                    class="input-field"
+                                    placeholder={cell.placeholderText}
+                                  />
+                                </template>
+
+                                <template if:true={cell.isDefaultNumber}>
+                                  <input
+                                    type="number"
+                                    data-id={cell.id}
+                                    value={cell.field.value}
+                                    oninput={handleInputChange}
+                                    class="input-field"
+                                    placeholder={cell.placeholderText}
+                                  />
+                                </template>
+                              </template>
+
+                              <!-- ✅ Time Field (No Formatting) -->
+                              <template if:true={cell.isTimeField}>
+                                <input
+                                  type="time"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  oninput={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <!-- ✅ Date Field (No Formatting) -->
+                              <template if:true={cell.isDateField}>
+                                <input
+                                  key={cell.domKey}
+                                  type="date"
+                                  data-id={cell.id}
+                                  value={cell.field.value}
+                                  oninput={handleInputChange}
+                                  class="input-field"
+                                  placeholder={cell.placeholderText}
+                                />
+                              </template>
+
+                              <!-- ✅ Checkbox Field (Slider Toggle) -->
+
+                              <template if:true={cell.isCheckboxField}>
+                                <label class="checkbox-container">
+                                  <input
+                                    type="checkbox"
+                                    data-id={cell.id}
+                                    checked={cell.field.value}
+                                    oninput={handleInputChange}
+                                    class="blue-checkbox"
+                                  />
+                                  <span class="checkbox-label"></span>
+                                </label>
+                              </template>
+
+                              <template if:true={cell.isDropdownField}>
+                                <template if:false={cell.isMultiSelect}>
+                                  <template if:true={cell.field.isDisabled}>
+                                    <!-- Disabled Single Select Dropdown -->
+                                    <select
+                                      data-id={cell.id}
+                                      value={cell.field.value}
+                                      class="input-dropdown"
+                                      disabled
+                                    >
+                                      <option
+                                        value=""
+                                        disabled
+                                        class="dropdown-placeholder"
+                                      >
+                                        {cell.placeholderText}
+                                      </option>
+                                      <option value="None">None</option>
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                          selected={option.isSelected}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      </template>
+                                    </select>
+                                  </template>
+                                  <template if:false={cell.field.isDisabled}>
+                                    <!-- Enabled Single Select Dropdown -->
+                                    <select
+                                      data-id={cell.id}
+                                      value={cell.field.value}
+                                      onchange={handleInputChange}
+                                      class="input-dropdown"
+                                    >
+                                      <option
+                                        value=""
+                                        disabled
+                                        class="dropdown-placeholder"
+                                      >
+                                        {cell.placeholderText}
+                                      </option>
+                                      <option value="None">None</option>
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                          selected={option.isSelected}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      </template>
+                                    </select>
+                                  </template>
+                                </template>
+
+                                <template if:true={cell.isMultiSelect}>
+                                  <div class="multi-dropdown-container">
+                                    <!-- Selected Options Display -->
+                                    <div
+                                      class="multi-selected-values"
+                                      data-id={cell.id}
+                                      onclick={toggleDropdown}
+                                    >
+                                      <template
+                                        for:each={cell.field.options}
+                                        for:item="option"
+                                      >
+                                        <template if:true={option.isSelected}>
+                                          <span
+                                            key={option.label}
+                                            class="selected-option"
+                                          >
+                                            {option.label}
+                                            <span
+                                              class="remove-option"
+                                              data-id={cell.id}
+                                              data-value={option.label}
+                                              onclick={removeSelectedOption}
+                                              >&times;</span
+                                            >
+                                          </span>
+                                        </template>
+                                      </template>
+                                      <span
+                                        class="multi-select-icon"
+                                        title="Multi-select"
+                                        data-id={cell.id}
+                                        onclick={handleIconClick}
+                                        >&#10507;</span
+                                      >
+                                    </div>
+
+                                    <!-- Dropdown Options -->
+                                    <div
+                                      class="multi-dropdown-options"
+                                      if:true={cell.isDropdownOpen}
+                                    >
+                                      <!-- ✅ SCROLLABLE AREA -->
+                                      <div class="multi-dropdown-list">
+                                        <template
+                                          for:each={cell.field.options}
+                                          for:item="option"
+                                        >
+                                          <label
+                                            key={option.label}
+                                            class="multi-dropdown-item"
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              value={option.label}
+                                              data-id={cell.id}
+                                              checked={option.isSelected}
+                                              onchange={handleMultiSelectChange}
+                                            />
+                                            {option.label}
+                                          </label>
+                                        </template>
+                                      </div>
+
+                                      <!-- ✅ FIXED FOOTER -->
+                                      <div class="multi-dropdown-footer">
+                                        <button
+                                          class="multi-dropdown-save"
+                                          data-id={cell.id}
+                                          onclick={saveMultiSelect}
+                                        >
+                                          Save
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </template>
+                              </template>
+
+                              <template if:true={cell.isUploadField}>
+                                <div>
+                                  <!-- Hidden actual input -->
+                                  <input
+                                    type="file"
+                                    data-id={cell.id}
+                                    class="hidden-file-input"
+                                    onchange={handleFileUploadInputChange}
+                                    data-cell-id={cell.id}
+                                    accept="image/*"
+                                    multiple
+                                  />
+
+                                  <!-- Styled button -->
+                                  <button
+                                    type="button"
+                                    class="file-upload-button"
+                                    data-id={cell.id}
+                                    onclick={triggerFileInput}
+                                  >
+                                    &#8684; Upload Image
+                                  </button>
+
+                                </div>
+
+
+                                <c-document-office-service
+                                    data-cell-id={cell.id}
+                                    context-cell-id={cell.id}
+                                    record-id={recordId}
+                                    module-path-from-parent="ticket"
+                                    onuploadcomplete={handleAwsUploadComplete}
+                                  >
+                                  </c-document-office-service>
+
+                                  <!-- Existing uploaded files list -->
+<template if:true={cell.field.meta}>
+  <template if:true={cell.field.meta.uploadedFiles}>
+  <div class="Exupload-filesWrap">
+    <template for:each={cell.field.meta.uploadedFiles} for:item="file" for:index="idx">
+      <div key={file.fileId} class="Exupload-fileRow">
+        <a class="Exupload-fileLink" href={file.url} target="_blank" rel="noopener noreferrer">
+          <i class="material-icons Exupload-mi Exupload-miOpen" aria-hidden="true">file_open</i>
+          <span class="Exupload-fileName" title={file.originalName}>{file.originalName}</span>
+        </a>
+
+        <button
+          type="button"
+          class="Exupload-iconBtn Exupload-iconBtnDanger"
+          title="Delete file"
+          aria-label="Delete file"
+          data-cellid={cell.id}
+          data-index={idx}
+          data-key={file.key}       
+          data-url={file.url}        
+          data-fileid={file.fileId}  
+          onclick={handleDeleteUploadedFile}
+        >
+          <i class="material-icons Exupload-mi" aria-hidden="true">delete</i>
+        </button>
+      </div>
+    </template>
+  </div>
+</template>
+</template>
+
+                              </template>
+
+                              <template if:true={cell.isRadioButton}>
+                                <div class="incident-radio-group">
+                                  <template
+                                    for:each={cell.radioOptionsProcessed}
+                                    for:item="option"
+                                  >
+                                    <div
+                                      key={option.optionLabel}
+                                      class="incident-radio-option"
+                                    >
+                                      <input
+                                        type="radio"
+                                        class="incident-radio-input"
+                                        name={cell.id}
+                                        value={option.optionLabel}
+                                        data-id={cell.id}
+                                        data-subtype={option.subType}
+                                        onchange={handleRadioChange}
+                                        checked={option.isSelected}
+                                      />
+                                      <label class="incident-radio-label"
+                                        >{option.optionLabel}</label
+                                      >
+
+                                      <template if:true={option.isSelected}>
+                                        <template if:true={option.hasSubInput}>
+                                          <div
+                                            class="incident-radio-sub-question"
+                                          >
+                                            <label
+                                              class="incident-radio-sub-label"
+                                              >{option.subQuestion}</label
+                                            >
+
+                                            <template
+                                              if:true={option.isDropdown}
+                                            >
+                                              <select
+                                                class="incident-radio-sub-dropdown"
+                                                data-id={cell.id}
+                                                onchange={handleRadioSubInputChange}
+                                              >
+                                                <option value="">
+                                                  -- Select --
+                                                </option>
+                                                <template
+                                                  for:each={option.processedSubOptions}
+                                                  for:item="val"
+                                                >
+                                                  <option
+                                                      key={val.value}
+                                                      value={val.value}
+                                                      selected={val.isSelected}
+                                                    >
+                                                      {val.label}
+                                                    </option>
+                                                </template>
+                                              </select>
+                                            </template>
+
+                                            <template
+                                              if:true={option.isTextInput}
+                                            >
+                                              <input
+                                                type="text"
+                                                class="incident-radio-sub-input"
+                                                data-id={cell.id}
+                                                value={cell.subInputValue}
+                                                onchange={handleRadioSubInputChange}
+                                                placeholder="Enter here..."
+                                              />
+                                            </template>
+
+                                            <template
+                                              if:true={option.isRadioList}
+                                            >
+                                              <div
+                                                class="incident-radio-sub-radiolist"
+                                              >
+                                                <template
+                                                  for:each={option.processedSubOptions}
+                                                  for:item="val"
+                                                >
+                                                  <label
+                                                    key={val.label}
+                                                    class="incident-radio-sub-option"
+                                                  >
+                                                    <input
+                                                      type="radio"
+                                                      name={cell.subRadioName}
+                                                      value={val.label}
+                                                      data-id={cell.id}
+                                                      checked={val.isSelected}
+                                                      onchange={handleRadioSubInputChange}
+                                                    />
+                                                    {val.label}
+                                                  </label>
+                                                </template>
+                                              </div>
+                                            </template>
+                                          </div>
+                                        </template>
+                                      </template>
+                                    </div>
+                                  </template>
+                                </div>
+                              </template>
+
+
+                              <!-- ✍️ SIGNATURE FIELD -->
+                              <template if:true={cell.isSignature}>
+                                <div class="signature-container">
+
+                                  <!-- ✅ SHOW BUTTON ONLY WHEN NO SIGNATURE -->
+                                  <template if:false={cell.field.value}>
+                                    <button
+                                      type="button"
+                                      class="file-upload-button signature-upload-btn"
+                                      data-id={cell.id}
+                                      onclick={openSignatureModal}
+                                    >
+                                      &#9998; Add Signature
+                                    </button>
+
+                                  </template>
+
+                                  <!-- ✅ SHOW PREVIEW WHEN SIGNED -->
+                                  <template if:true={cell.field.value}>
+                                    <div class="signature-preview-wrapper">
+
+                                      <img
+                                        src={cell.field.value}
+                                        class="signature-preview-img"
+                                        alt="signature"
+                                      />
+
+
+                                      <!-- delete icon -->
+                                      <button
+                                        class="signature-delete-btn"
+                                        data-id={cell.id}
+                                        onclick={handleSignatureDelete}
+                                        title="Remove signature">
+                                        ✕
+                                      </button>
+
+                                    </div>
+                                  </template>
+
+                                </div>
+                              </template>
+
+
+
+
+                              <!-- 📊 TABLE BLOCK RENDER -->
+                  
+                           <template if:true={cell.isTableBlock}>
+                            <template if:true={cell.hasTableConfig}>
+                              <div class="ftable-wrapper">
+
+                                <template if:true={cell.showTableNameSafe}>
+                                  <div class="ftable-title">
+                                    {cell.safeTableName}
+                                  </div>
+                                </template>
+
+                                <table class="ftable-grid">
+
+                                  <!-- HEADER -->
+                                  <template if:true={cell.hasHeaderSafe}>
+                                    <thead>
+                                      <tr>
+                                        <template for:each={cell.safeColumns} for:item="col">
+                                          <th key={col.key} class="ftable-head">
+                                            {col.header}
+                                          </th>
+                                        </template>
+                                      </tr>
+                                    </thead>
+                                  </template>
+
+                                  <!-- BODY -->
+                                <tbody>
+                                  <template if:true={cell.hasRowsSafe}>
+                                  <template for:each={cell.safeRenderRows} for:item="row" for:index="rIndex">
+
+                                    <tr key={row.value}>
+
+                                      <template for:each={row.renderCells} for:item="col" for:index="cIndex">
+
+                                        <td key={col.id} class="ftable-cell">
+
+                                          <!-- ROW LABEL -->
+                                          <template if:true={col.isRowLabel}>
+                                            <span class="ftable-row-label">
+                                              {row.value}
+                                            </span>
+                                          </template>
+
+                                          <!-- EDITABLE CELL -->
+                                          <template if:false={col.isRowLabel}>
+
+                                            <template if:true={col.field}>
+
+                                              <!-- HEADER -->
+                                              <template if:true={col.field.isHeader}>
+                                                <div class="fc-header" style={col.field.inlineStyle}>
+                                                  {col.field.text}
+                                                </div>
+                                              </template>
+
+                                              <!-- TEXT FIELD -->
+                                              <template if:true={col.isTextField}>
+                                                <input
+                                              
+                                                  type="text"
+                                                  data-id={col.id}
+                                                  value={col.field.value}
+                                                  oninput={handleInputChange}
+                                                  class="input-field"
+                                                  placeholder={col.placeholderText}
+                                                />
+                                              </template>
+
+                                              <!-- TEXT AREA -->
+                                              <template if:true={col.isTextArea}>
+                                                <textarea
+                                                  data-id={col.id}
+                                                  class="input-textarea"
+                                                  maxlength="255"
+                                                  value={col.field.value}
+                                                  oninput={handleTextAreaInput}
+                                                  placeholder={col.placeholderText}
+                                                >
+                                                </textarea>
+                                              </template>
+
+                                              <!-- ALPHA NUMERIC -->
+                                              <template if:true={col.isAlphaNumeric}>
+                                                <input
+                                                  type="text"
+                                                  data-id={col.id}
+                                                  maxlength={col.field.alphaNumericLength}
+                                                  pattern="[A-Za-z0-9]*"
+                                                  onkeypress={restrictAlphaNumeric}
+                                                  oninput={validateAlphaNumeric}
+                                                  onchange={handleInputChange}
+                                                  class="input-field"
+                                                  value={col.field.value}
+                                                  placeholder={col.placeholderText}
+                                                />
+                                              </template>
+
+                                              <!-- ONLY ALPHABETS -->
+                                              <template if:true={col.isOnlyAlphabets}>
+                                                <input
+                                                  type="text"
+                                                  data-id={col.id}
+                                                  maxlength={col.field.onlyAlphabetsLength}
+                                                  pattern="[A-Za-z]*"
+                                                  onkeypress={restrictOnlyAlphabets}
+                                                  oninput={validateOnlyAlphabets}
+                                                  onchange={handleInputChange}
+                                                  class="input-field"
+                                                  value={col.field.value}
+                                                  placeholder={col.placeholderText}
+                                                />
+                                              </template>
+
+                                              <!-- RICH TEXT -->
+                                              <template if:true={col.isRichText}>
+                                                <div
+                                                  class="rich-text-editor"
+                                                  data-id={col.id}
+                                                  data-placeholder={col.placeholderText}
+                                                  lwc:dom="manual">
+                                                </div>
+                                              </template>
+
+                                              <!-- NUMBER FIELD -->
+                                              <template if:true={col.isNumberField}>
+
+                                                <!-- CONTACT NUMBER -->
+                                                <template if:true={col.isContactNumber}>
+                                                  <input
+                                                    type="text"
+                                                    data-id={col.id}
+                                                    maxlength={col.field.contactNumberDigits}
+                                                    pattern="[0-9]*"
+                                                    onkeypress={restrictNumbersOnly}
+                                                    oninput={validateNumbersOnly}
+                                                    onchange={handleInputChange}
+                                                    class="input-field"
+                                                    value={col.field.value}
+                                                    placeholder={col.placeholderText}
+                                                  />
+                                                </template>
+
+                                                <!-- CURRENCY -->
+                                                <template if:true={col.isCurrency}>
+                                                  <input
+                                                    type="text"
+                                                    data-id={col.id}
+                                                    data-decimals={col.field.decimalValue}
+                                                    value={col.field.value}
+                                                    onkeypress={restrictCurrencyInput}
+                                                    oninput={validateCurrencyInput}
+                                                    onchange={handleInputChange}
+                                                    class="input-field"
+                                                    placeholder={col.placeholderText}
+                                                  />
+                                                </template>
+
+                                                <!-- DEFAULT NUMBER -->
+                                                <template if:true={col.isDefaultNumber}>
+                                                  <input
+                                                    type="number"
+                                                    data-id={col.id}
+                                                    value={col.field.value}
+                                                    oninput={handleInputChange}
+                                                    class="input-field"
+                                                    placeholder={col.placeholderText}
+                                                  />
+                                                </template>
+
+                                              </template>
+
+                                              <!-- DATE FIELD -->
+                                              <template if:true={col.isDateField}>
+                                                <input
+                                                  type="date"
+                                                  data-id={col.id}
+                                                  value={col.field.value}
+                                                  oninput={handleInputChange}
+                                                  class="input-field"
+                                                  placeholder={col.placeholderText}
+                                                />
+                                              </template>
+
+                                              <!-- TIME FIELD -->
+                                              <template if:true={col.isTimeField}>
+                                                <input
+                                                  type="time"
+                                                  data-id={col.id}
+                                                  value={col.field.value}
+                                                  oninput={handleInputChange}
+                                                  class="input-field"
+                                                  placeholder={col.placeholderText}
+                                                />
+                                              </template>
+
+                                              <!-- CHECKBOX -->
+                                              <!-- <template if:true={col.isCheckboxField}>
+                                                <label class="switch">
+                                                  <input
+                                                    type="checkbox"
+                                                    data-id={col.id}
+                                                    checked={col.field.value}
+                                                    oninput={handleInputChange}
+                                                  />
+                                                  <span class="slider"></span>
+                                                </label>
+                                              </template> -->
+
+                                            <template if:true={col.isCheckboxField}>
+                                            <label class="checkbox-container">
+                                              <input
+                                                type="checkbox"
+                                                data-id={col.id}
+                                                checked={col.field.value}
+                                                oninput={handleInputChange}
+                                                class="blue-checkbox"
+                                              />
+                                              <span class="checkbox-label"></span>
+                                            </label>
+                                          </template>
+
+                                              <!-- DROPDOWN -->
+                                               <template if:true={col.isDropdownField}>
+                                <template if:false={col.isMultiSelect}>
+                                  <template if:true={col.field.isDisabled}>
+                                    <!-- Disabled Single Select Dropdown -->
+                                    <select
+                                      data-id={col.id}
+                                      value={col.field.value}
+                                      class="input-dropdown"
+                                      disabled
+                                    >
+                                      <option
+                                        value=""
+                                        disabled
+                                        class="dropdown-placeholder"
+                                      >
+                                        {col.placeholderText}
+                                      </option>
+                                      <option value="None">None</option>
+                                      <template
+                                        for:each={col.field.options}
+                                        for:item="option"
+                                      >
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                          selected={option.isSelected}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      </template>
+                                    </select>
+                                  </template>
+                                  <template if:false={col.field.isDisabled}>
+                                    <!-- Enabled Single Select Dropdown -->
+                                    <select
+                                      data-id={col.id}
+                                      value={col.field.value}
+                                      onchange={handleInputChange}
+                                      class="input-dropdown"
+                                    >
+                                      <option
+                                        value=""
+                                        disabled
+                                        class="dropdown-placeholder"
+                                      >
+                                        {col.placeholderText}
+                                      </option>
+                                      <option value="None">None</option>
+                                      <template
+                                        for:each={col.field.options}
+                                        for:item="option"
+                                      >
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                          selected={option.isSelected}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      </template>
+                                    </select>
+                                  </template>
+                                </template>
+
+                                <template if:true={col.isMultiSelect}>
+                                  <div class="multi-dropdown-container">
+                                    <!-- Selected Options Display -->
+                                    <div
+                                      class="multi-selected-values"
+                                      data-id={col.id}
+                                      onclick={toggleDropdown}
+                                    >
+                                      <template
+                                        for:each={col.field.options}
+                                        for:item="option"
+                                      >
+                                        <template if:true={option.isSelected}>
+                                          <span
+                                            key={option.label}
+                                            class="selected-option"
+                                          >
+                                            {option.label}
+                                            <span
+                                              class="remove-option"
+                                              data-id={col.id}
+                                              data-value={option.label}
+                                              onclick={removeSelectedOption}
+                                              >&times;</span
+                                            >
+                                          </span>
+                                        </template>
+                                      </template>
+                                      <span
+                                        class="multi-select-icon"
+                                        title="Multi-select"
+                                        data-id={col.id}
+                                        onclick={handleIconClick}
+                                        >&#10507;</span
+                                      >
+                                    </div>
+
+                                    <!-- Dropdown Options -->
+                                    <div
+                                      class="multi-dropdown-options"
+                                      if:true={col.isDropdownOpen}
+                                    >
+                                      <!-- ✅ SCROLLABLE OPTIONS -->
+                                      <div class="multi-dropdown-list">
+                                        <template
+                                          for:each={col.field.options}
+                                          for:item="option"
+                                        >
+                                          <label
+                                            key={option.label}
+                                            class="multi-dropdown-item"
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              value={option.label}
+                                              data-id={col.id}
+                                              checked={option.isSelected}
+                                              onchange={handleMultiSelectChange}
+                                            />
+                                            {option.label}
+                                          </label>
+                                        </template>
+                                      </div>
+
+                                      <!-- ✅ FIXED FOOTER -->
+                                      <div class="multi-dropdown-footer">
+                                        <button
+                                          class="multi-dropdown-save"
+                                          data-id={col.id}
+                                          onclick={saveMultiSelect}
+                                        >
+                                          Save
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </template>
+                              </template>
+
+                                              <!-- FILE UPLOAD -->
+                                 
+
+
+                                        <template if:true={col.isUploadField}>
+  <div>
+
+    <!-- Hidden actual input -->
+    <input
+      type="file"
+      data-id={col.id}
+      data-cell-id={col.id}
+      class="hidden-file-input"
+      onchange={handleFileUploadInputChange}
+      accept="image/*"
+      multiple
+    />
+
+    <!-- Styled button -->
+    <button
+      type="button"
+      class="file-upload-button"
+      data-id={col.id}
+      onclick={triggerFileInput}
+    >
+      &#8684; Upload Image
+    </button>
+
+  </div>
+
+  <!-- Upload Service -->
+  <c-document-office-service
+    data-cell-id={col.id}
+    context-cell-id={col.id}
+    record-id={recordId}
+    module-path-from-parent="ticket"
+    onuploadcomplete={handleAwsUploadComplete}
+  >
+  </c-document-office-service>
+
+  <!-- Existing uploaded files -->
+  <template if:true={col.field.meta.uploadedFiles}>
+    <div class="Exupload-filesWrap">
+
+      <template
+        for:each={col.field.meta.uploadedFiles}
+        for:item="file"
+        for:index="idx"
+      >
+
+        <div key={file.fileId} class="Exupload-fileRow">
+
+          <a
+            class="Exupload-fileLink"
+            href={file.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i class="material-icons Exupload-mi Exupload-miOpen">file_open</i>
+
+            <span
+              class="Exupload-fileName"
+              title={file.originalName}
+            >
+              {file.originalName}
+            </span>
+
+          </a>
+
+          <button
+            type="button"
+            class="Exupload-iconBtn Exupload-iconBtnDanger"
+            title="Delete file"
+            aria-label="Delete file"
+            data-cellid={col.id}
+            data-index={idx}
+            data-key={file.key}
+            data-url={file.url}
+            data-fileid={file.fileId}
+            onclick={handleDeleteUploadedFile}
+          >
+            <i class="material-icons Exupload-mi">delete</i>
+          </button>
+
+        </div>
+
+      </template>
+
+    </div>
+  </template>
+
+</template>
+
+                                              <!-- RADIO BUTTON -->
+                              
+
+                                              <template if:true={col.isRadioButton}>
+                                <div class="incident-radio-group">
+                                  <template
+                                    for:each={col.radioOptionsProcessed}
+                                    for:item="option"
+                                  >
+                                    <div
+                                      key={option.optionLabel}
+                                      class="incident-radio-option"
+                                    >
+                                      <input
+                                        type="radio"
+                                        class="incident-radio-input"
+                                        name={col.id}
+                                        value={option.optionLabel}
+                                        data-id={col.id}
+                                        data-subtype={option.subType}
+                                        onchange={handleRadioChange}
+                                        onclick={stopPropagation}
+                                        checked={option.isSelected}
+                                      />
+                                      <label class="incident-radio-label"
+                                        >{option.optionLabel}</label
+                                      >
+
+                                      <template if:true={option.isSelected}>
+                                        <template if:true={option.hasSubInput}>
+                                          <div
+                                            class="incident-radio-sub-question"
+                                          >
+                                            <label
+                                              class="incident-radio-sub-label"
+                                              >{option.subQuestion}</label
+                                            >
+
+                                            <template
+                                              if:true={option.isDropdown}
+                                            >
+                                              <select
+                                                class="incident-radio-sub-dropdown"
+                                                data-id={col.id}
+                                                onchange={handleRadioSubInputChange}
+                                              >
+                                                <option value="">
+                                                  -- Select --
+                                                </option>
+                                                <template
+                                                  for:each={option.processedSubOptions}
+                                                  for:item="val"
+                                                >
+                                                  <option
+                                                    key={val.value}
+                                                    value={val.value}
+                                                    selected={val.isSelected}
+                                                  >
+                                                    {val.label}
+                                                  </option>
+                                                </template>
+                                              </select>
+                                            </template>
+
+                                            <template
+                                              if:true={option.isTextInput}
+                                            >
+                                              <input
+                                                type="text"
+                                                class="incident-radio-sub-input"
+                                                data-id={col.id}
+                                                value={col.subInputValue}
+                                                onchange={handleRadioSubInputChange}
+                                                placeholder="Enter here..."
+                                              />
+                                            </template>
+
+                                            <template
+                                              if:true={option.isRadioList}
+                                            >
+                                              <div
+                                                class="incident-radio-sub-radiolist"
+                                              >
+                                                <template
+                                                  for:each={option.processedSubOptions}
+                                                  for:item="val"
+                                                >
+                                                  <label
+                                                    key={val.label}
+                                                    class="incident-radio-sub-option"
+                                                  >
+                                                    <input
+                                                      type="radio"
+                                                      name={col.subRadioName}
+                                                      value={val.label}
+                                                      data-id={col.id}
+                                                      checked={val.isSelected}
+                                                      onchange={handleRadioSubInputChange}
+                                                    />
+                                                    {val.label}
+                                                  </label>
+                                                </template>
+                                              </div>
+                                            </template>
+                                          </div>
+                                        </template>
+                                      </template>
+                                    </div>
+                                  </template>
+                                </div>
+                              </template>
+
+                                              <!-- SIGNATURE -->
+                                              <template if:true={col.isSignature}>
+
+                                                <div class="signature-container">
+
+                                                  <template if:false={col.field.value}>
+
+                                                    <button
+                                                      type="button"
+                                                      class="file-upload-button signature-upload-btn"
+                                                      data-id={col.id}
+                                                      onclick={openSignatureModal}
+                                                    >
+                                                      Add Signature
+                                                    </button>
+
+                                                  </template>
+
+                                                  <template if:true={col.field.value}>
+
+                                                    <div class="signature-preview-wrapper">
+
+                                                      <img
+                                                        src={col.field.value}
+                                                        class="signature-preview-img"
+                                                      />
+
+                                                      <button
+                                                        class="signature-delete-btn"
+                                                        data-id={col.id}
+                                                        onclick={handleSignatureDelete}
+                                                      >
+                                                        ✕
+                                                      </button>
+
+                                                    </div>
+
+                                                  </template>
+
+                                                </div>
+
+                                              </template>
+
+                                                <!-- Rich Text Field -->
+                                              <template if:true={col.field.isRichTextDisplay}>
+                                                  <div class="rich-text-preview-container">
+                                                      <div
+                                                          class="rich-text-preview"
+                                                          data-id={col.id}
+                                                          lwc:dom="manual">
+                                                      </div>
+                                                  </div>
+                                              </template>
+
+                                            </template>
+
+                                          </template>
+
+                                        </td>
+
+                                      </template>
+
+                                    </tr>
+
+                                  </template>
+                                  </template>
+                                </tbody>
+
+                                </table>
+
+                              </div>
+                              </template>
+                            </template>
+                        <!-- TABLE BLOCK complete -->
+
+                          <!-- Rich Text Field -->
+                                    <template if:true={cell.field.isRichTextDisplay}>
+                          <div class="rich-text-preview-container">
+                              <div
+                                  class="rich-text-preview"
+                                  data-id={cell.id}
+                                  lwc:dom="manual">
+                              </div>
+                          </div>
+                      </template>
+
+
+
+
+                            </div>
+                          </template>
+
+                        </div>
+                      </template>
+                    </template>
+                  </template>
+                 </div>
+              </template>
+        </div>
+
+        <div class="button-group-container">
+          <div class="custom-edit-btn" onclick={handleinputCancel}>Cancel</div>
+          <div class="custom-back-btn" onclick={openSubmitConfirmModal}>Submit</div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <template if:false={hasResponses}>
+    <div class="slds-p-around_medium slds-text-align_center empty-state">
+      <div class="slds-text-heading_small slds-m-bottom_x-small">
+        No records found
+      </div>
+    </div>
+  </template>
+
+  <template if:true={isTsignConfirmModalOpen}>
+  <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+    <div class="slds-modal__container modal-custom">
+
+      <!-- HEADER -->
+      <header class="slds-modal__header headercustom">
+        <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+          Send to TSign Confirmation
+        </h2>
+      </header>
+
+      <!-- BODY -->
+      <div class="slds-modal__content slds-p-around_medium custom-scroll">
+        <p class="slds-text-body_regular">
+          You’re about to send this form to TSign for signature.
+        </p>
+
+        <div class="slds-m-top_medium slds-box slds-theme_alert-texture">
+          <p class="slds-text-body_regular">
+            <b>Note:</b> After you send to TSign, the <b>View</b> and <b>Edit</b> actions will be disabled once the
+            participant completes the signature.
+          </p>
+        </div>      
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="slds-modal__footer footer-center">
+  <div class="footer-center-inner">
+    <lightning-button
+      variant="neutral"
+      label="Cancel"
+      onclick={closeTsignConfirmModal}
+    ></lightning-button>
+
+    <lightning-button
+      class="slds-m-left_small"
+      variant="brand"
+      label="Continue"
+      onclick={confirmAndLaunchTsign}
+    ></lightning-button>
+  </div>
+</footer>
+
+
+    </div>
+  </section>
+
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+
+
+</div>
+  <!-- NO RECORDS MESSAGE -->
+  <template if:true={noRecordsFlag}>
+    <div
+      class="slds-grid slds-grid_align-spread slds-m-left_large"
+      style="padding-top: 0.5em; font-size: 20px"
+    >
+      <b style="color: #4caf50"
+        >No Participants are registered for this organisation.</b
+      >
+    </div>
+  </template>
+    </template>
+</div>
+
+  <template if:true={isSubmitConfirmModalOpen}>
+  <section
+    role="dialog"
+    tabindex="-1"
+    aria-modal="true"
+    class="slds-modal slds-fade-in-open"
+  >
+    <div class="slds-modal__container modal-custom">
+
+      <!-- HEADER -->
+      <header class="slds-modal__header headercustom">
+          <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom">
+          Submit Form Confirmation
+        </h2>
+      </header>
+
+      <!-- BODY -->
+      <div class="slds-modal__content slds-p-around_medium custom-scroll">
+        <p>
+          You’re about to submit this form.
+        </p>
+
+        <div class="slds-m-top_medium slds-box slds-theme_alert-texture">
+          <p>
+            <b>Partial Submit</b> → You can still edit later.<br />
+            <b>Final Submit</b> → Editing and deleting will be disabled.
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="slds-modal__footer footer-center">
+        <div class="footer-center-inner">
+
+          <lightning-button
+            variant="neutral"
+            label="Cancel"
+            onclick={closeSubmitConfirmModal}
+          ></lightning-button>
+
+          <lightning-button
+            class="slds-m-left_small"
+            variant="neutral"
+            label="Partial Submit"
+            onclick={confirmPartialSubmit}
+          ></lightning-button>
+
+          <lightning-button
+            class="slds-m-left_small"
+            variant="brand"
+            label="Final Submit"
+            onclick={confirmFinalSubmit}
+          ></lightning-button>
+
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+  <template if:true={isLoading}>
+    <div class="overlay-logo"></div>
+
+    <div class="spinner-wrapper">
+      <div class="loader-container">
+        <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+      </div>
+
+      <!-- Progress text instead of progress bar -->
+      <p class="progress-text">Please wait...</p>
+    </div>
+  </template>
+
+
+
+
+
+<template if:true={showSignatureModal}>
+
+  <div class="assign-modal-backdrop">
+
+    <div class="assign-modal signature-modal">
+
+      <!-- ================= HEADER ================= -->
+      <div class="assign-modal-header">
+        <span class="assign-title">
+          Add Signature
+        </span>
+
+        <button
+          class="assign-close-button"
+          onclick={closeSignatureModal}>
+          ×
+        </button>
+      </div>
+
+      <!-- ================= BODY ================= -->
+      <div class="assign-modal-body signature-body">
+
+        <!-- ================= MODE TOGGLE (NEW) ================= -->
+        <div class="signature-toggle">
+
+          <!-- TYPE -->
+          <button
+            class={typeBtnClass}
+            data-mode="type"
+            onclick={selectSignatureMode}>
+            <i class="material-icons open-icon1">edit</i>
+            Type Signature
+          </button>
+
+          <!-- DRAW -->
+          <button
+            class={drawBtnClass}
+            data-mode="draw"
+            onclick={selectSignatureMode}>
+            <i class="material-icons open-icon1">gesture</i>
+            Draw Signature
+          </button>
+
+          <!-- UPLOAD -->
+          <button
+            class={uploadBtnClass}
+            data-mode="upload"
+            onclick={selectSignatureMode}>
+            <i class="material-icons open-icon1">file_open</i>
+            Upload Signature
+          </button>
+
+        </div>
+
+        <!-- ================= MODE CONTENT ================= -->
+
+        <!-- TYPE MODE -->
+        <template if:true={isTypeMode}>
+  <div class="signature-mode-panel">
+
+    <div class="signature-type-row">
+
+      <input
+        type="text"
+        class="signature-type-input"
+        placeholder="Enter your name here..."
+        value={signatureTypedText}
+        oninput={handleSignatureTyped}/>
+
+      <template if:true={signatureTypedText}>
+        <button
+          class="signature-clear-inline"
+          onclick={clearTypedSignature}
+          title="Clear">
+          ✕
+        </button>
+      </template>
+
+    </div>
+
+    <div class="signature-preview-basic">
+      {signatureTypedText}
+    </div>
+
+  </div>
+</template>
+
+
+        <!-- UPLOAD MODE -->
+       <template if:true={isUploadMode}>
+  <div class="signature-mode-panel">
+
+    <input
+      type="file"
+      class="hidden-file-input"
+      accept="image/*"
+      onchange={handleSignatureUpload}
+      data-role="signature-upload"
+    />
+
+    <button
+      type="button"
+      class="file-upload-button"
+      onclick={triggerSignatureFileInput}>
+      &#8684; Upload Image
+    </button>
+
+    <template if:true={pendingSignatureBase64}>
+      <div class="signature-upload-preview">
+
+        <img src={pendingSignatureBase64} class="signature-preview-img"/>
+
+        <button
+          class="signature-delete-btn"
+          onclick={clearUploadedSignature}>
+          ✕
+        </button>
+
+      </div>
+    </template>
+
+  </div>
+</template>
+
+
+
+        <!-- DRAW MODE -->
+        <template if:true={isDrawMode}>
+  <div class="signature-mode-panel">
+
+    <canvas class="signature-canvas"></canvas>
+
+    <div class="signature-draw-actions">
+      <button
+        class="signature-clear-canvas"
+        onclick={clearDrawSignature}>
+        Clear
+      </button>
+    </div>
+
+  </div>
+</template>
+
+
+      </div>
+
+      <!-- ================= FOOTER ================= -->
+      <div class="assign-modal-footer">
+        <button
+          class="assign-primary slds-button slds-button_brand"
+          onclick={saveSignature}>
+          Save Signature
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</template>
+
+  <template if:true={showUpgradeModal}>
+        <c-upgrade-modal 
+            is-open={showUpgradeModal} 
+            onclose={closeUpgradeModal}>
+        </c-upgrade-modal>
+    </template>
+
+
+</template>
