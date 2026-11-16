@@ -1,0 +1,75 @@
+<template>
+    <template if:true={isOpen}>
+        <section role="dialog" tabindex="-1" class={modalClass} aria-modal="true">
+            <div class="slds-modal__container library-modal-container">
+                <!-- Modal Header -->
+                <header class="slds-modal__header library-modal-header slds-grid slds-grid_vertical-align-center">
+                    <h2 class="slds-modal__title slds-hyphenate library-title">Widget Library</h2>
+                    <button class="modal-close-trigger" onclick={handleClose} title="Close Library">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_large library-modal-body">
+                    <!-- Search Input & Select All Row -->
+                    <div class="search-and-select-row slds-m-bottom_medium">
+                        <div class="search-input-wrapper">
+                            <lightning-input 
+                                type="search" 
+                                value={searchQuery}
+                                placeholder="Search widgets by name..."
+                                variant="label-hidden"
+                                onchange={handleSearchChange}>
+                            </lightning-input>
+                        </div>
+                        <button class="select-all-btn" onclick={handleToggleSelectAll}>
+                            {selectAllButtonLabel}
+                        </button>
+                    </div>
+
+                    <!-- Filtered Widgets Grid -->
+                    <template if:true={hasWidgets}>
+                        <div class="library-cards-grid">
+                            <template for:each={filteredWidgetTypes} for:item="widget">
+                                <div key={widget.value} 
+                                     class={widget.cardClass} 
+                                     data-type={widget.value}
+                                     onclick={handleToggleSelectWidget}>
+                                    <div class="library-card-checkbox">
+                                        <div class={widget.checkboxClass}>
+                                            <template if:true={widget.isSelected}>
+                                                <lightning-icon icon-name="utility:check" size="xx-small" variant="inverse" class="check-icon-fill"></lightning-icon>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="library-card-details">
+                                        <h3 class="library-card-title">{widget.label}</h3>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Empty Search State -->
+                    <template if:false={hasWidgets}>
+                        <div class="library-empty-state">
+                            <lightning-icon icon-name="utility:search" size="large" class="empty-lib-icon"></lightning-icon>
+                            <h3>No widgets found</h3>
+                            <p>No accessible widgets match your search term or category filter. Try clearing the search or choosing another tab.</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer library-modal-footer">
+                    <button class="library-footer-btn-cancel" onclick={handleClose}>Cancel</button>
+                    <template if:true={hasSelected}>
+                        <button class="library-footer-btn-add" onclick={handleAddSelected}>Add Selected ({selectedCount})</button>
+                    </template>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open library-backdrop"></div>
+    </template>
+</template>
