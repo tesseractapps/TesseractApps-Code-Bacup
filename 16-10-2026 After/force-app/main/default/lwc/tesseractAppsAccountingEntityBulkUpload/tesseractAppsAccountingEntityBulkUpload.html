@@ -1,0 +1,593 @@
+<template>
+    <template if:true={isHome}>
+        <div class="container-box">
+            <div class="header1">
+                <div style="display: flex; gap: 8px;">
+                    <lightning-button
+                        class="slds-m-right_small"
+                        variant="brand"
+                        label="Create Company"
+                        onclick={handleCreateCompany}
+                        disabled={disableCreateCompany}>
+                    </lightning-button>
+                     <lightning-button
+                        class="slds-m-right_small"
+                        variant="brand"
+                        label="Create Entity"
+                        onclick={handleCreateEntity}
+                        disabled={disableCreateEntity}>
+                    </lightning-button>
+
+                    <lightning-button
+                        class="slds-m-right_small"
+                        variant="brand"
+                        label="Instructions"
+                        onclick={handleInstructions}
+                        disabled={disableInstructions}>
+                    </lightning-button>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Download Template"
+                        onclick={handleDownloadTemplate}
+                        disabled={disableDownloadTemplate}>
+                    </lightning-button>
+ 
+                    <!--<lightning-button
+                        variant="brand"
+                        label="Back"
+                        title="Back(Ctrl + Shift + B)"
+                        onclick={navigateToFacility}>
+                    </lightning-button> -->
+                </div>
+            </div>
+            <div class="right-content custom-scroll">
+                <div class="content-wrapper-new">
+
+                    <!-- Upload Section -->
+                <template if:true={uploadBtnContainer}>
+                    <div class="upload-button-container">
+                        <label for="uploadPdf" class="upload-label">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p>Click here to upload a file</p>
+                        </label>
+                        <input type="file" id="uploadPdf" accept=".csv" onchange={handleUploadFinished} class="file-input">
+                    </div>
+                </template>
+                    <!-- Table Section -->
+                <template if:true={tableData.length}>
+                    <div class="slds-p-around_medium table-container">
+                    <span class="section-title">Entity List</span>
+                        <div class="table-scroll custom-scroll">
+                            <table class="slds-table slds-table_cell-buffer fixed-table">
+                                <thead>
+                                    <tr>
+                                        <th class="slds-text-align_left" style="width: 4%;">
+                                            <lightning-input type="checkbox"
+                                                onchange={handleSelectAll}
+                                                checked={isAllSelected}></lightning-input>
+                                        </th>
+                                        <th class="slds-text-align_left">Type</th>
+                                        <th class="slds-text-align_left">Name</th>
+                                        <th class="slds-text-align_left">First Name</th>
+                                        <th class="slds-text-align_left">Last Name</th>
+                                        <th class="slds-text-align_left">Contact Number</th>
+                                        <th class="slds-text-align_left">Email </th>
+                                        <!-- <th class="slds-text-align_left">To Email </th>
+                                        <th class="slds-text-align_left">Cc Email </th> -->
+                                         <th class="slds-text-align_left">Tax Code</th>
+                                        <th class="slds-text-align_left">Account List</th>
+                                         <th class="slds-text-align_left">Org Email</th>
+                                        <th class="slds-text-align_left">ABN</th>
+                                        <th class="slds-text-align_left">Action</th>
+                                        <template if:true={isProcessed}>
+                                            <th class="slds-text-align_left">Processed Status</th>
+                                        </template>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <template for:each={paginatedData} for:item="row">
+                                        <tr key={row.id} data-id={row.id} class="tr1">
+                                            <td>
+                                                <lightning-input type="checkbox" name="rowCheckbox"
+                                                    checked={row.isSelected}
+                                                    data-id={row.id}
+                                                    onchange={handleRowSelection}></lightning-input>
+                                            </td>
+
+                                            <!-- <td>{row.Type}</td>
+                                            <td>{row.Name}</td>
+                                            <td>{row.FirstName}</td>
+                                            <td>{row.LastName}</td>
+                                            <td>{row.ContactNumber}</td>
+                                            <td>{row.Email}</td>
+                                            <td>{row.ToEmail}</td>
+                                            <td>{row.CcEmail}</td>
+                                            <td>{row.ABN}</td> -->
+
+                                            <!-- <td>{row.EntityType}</td>
+                                            <td>{row.EntityName}</td>
+                                            <td>{row.EntityFirstName}</td>
+                                            <td>{row.EntityLastName}</td>
+                                            <td>{row.EntityContactNumber}</td>
+                                            <td>{row.EntityEmail}</td>
+                                            <td>{row.EntityToEmail}</td>
+                                            <td>{row.EntityCcEmail}</td>
+                                            <td>{row.EntityABN}</td> -->
+                                            <td>{row.Type}</td>
+                                            <td>{row.Name}</td>
+                                            <td>{row.FirstName}</td>
+                                            <td>{row.LastName}</td>
+                                            <td>{row.ContactNumber}</td>
+                                            <td>{row.Email}</td>
+                                            <!-- <td>{row.ToEmail}</td>
+                                            <td>{row.CcEmail}</td> -->
+                                            <td>{row.TaxCodeLabel}</td>
+                                            <td>{row.AccountDisplay}</td>
+                                             <td> <lightning-input
+                                                type="checkbox"
+                                                checked={row.IncludeOrgEmail}
+                                                disabled>
+                                            </lightning-input></td>
+                                            <td>{row.ABN}</td>
+                                            
+                                            <!-- <td>
+                                                 <a href="javascript:void(0)" data-id={row.Id}  onclick={handleEdit}
+                                                  title="Edit(Shortcut Press Enter)" style="text-decoration: none;">
+                                                        <i class="material-icons edit-icon" data-id={row.Id}>edit_document</i>
+                                                    </a> 
+                                            </td> -->
+
+                                            <td>
+                                                <a href="javascript:void(0)"
+                                                data-id={row.id}
+                                                onclick={handleEdit}
+                                                title="Edit">
+                                                    <i class="material-icons edit-icon">edit_document</i>
+                                                </a>
+                                            </td>
+                                            
+                                            <template if:true={isProcessed}>
+                                                <td>
+                                                    <a href="javascript:void(0);"
+                                                    onclick={handleErrorClick}>
+                                                    {row.ProcessedStatus}
+                                                    </a>
+                                                   
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <div class="footer-fixed">
+                <div class="actions-row">
+                <!-- Action Buttons -->
+                    <div class="slds-grid slds-align_absolute-center slds-m-top_medium" style="padding-bottom: 1%;">
+                        <lightning-button label="Cancel" variant="Brand-Outline" onclick={cancleTable}
+                            class="slds-m-around_small"></lightning-button>
+                        <lightning-button label="Submit" variant="brand" onclick={handleFinalSubmit}
+                            disabled={enableddisabled}></lightning-button>
+                    </div>
+                    <!-- Pagination Section -->
+            <!-- Fixed area (not scrollable) -->
+
+                        <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                                    <div class="slds-list_inline">
+                                        <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                                        <div class="slds-select_container"> 
+                                            <select class="slds-select" id="recordsPerPage" onchange={handleRecordsPerPage}>
+                                                <template for:each={pageSizeOptions} for:item="option">
+                                                <option key={option} value={option}>{option}</option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="slds-align_absolute-center">
+                                    <lightning-button disabled={bDisableFirst} icon-name="utility:jump_to_left" label="First"
+                                        onclick={firstPage} style="margin-right: 10px;" ></lightning-button>
+                                    <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous"
+                                        onclick={previousPage} style="margin-right: 5px;"></lightning-button>
+
+                                    <span class="slds-badge">Showing {pageNumber} of {totalPages} Page(s)</span>
+
+                                    <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next"
+                                        onclick={nextPage}></lightning-button>
+                                    <lightning-button disabled={bDisableLast} icon-name="utility:jump_to_right" label="Last"
+                                        onclick={lastPage} style="margin-left: 5px;"></lightning-button>
+                                    </div>
+
+                                <div class="slds-clearfix">
+                                    <div class="slds-float_right">
+                                        <span class="slds-badge">Total Records: {totalRecords}</span> 
+                                    </div>
+                                </div>
+
+                        </div>
+                    </div>
+                </div>
+                    
+                    <!-- <Edit Popup> -->
+
+                <template if:true={isEditModalOpen}>
+                    <section class="slds-modal slds-fade-in-open slds-modal_medium">
+                        <div class="slds-modal__container">
+
+                            <!-- Header -->
+                            <header class="slds-modal__header" style="background: #002a52">
+                                <!-- <button class="slds-button slds-button_icon slds-modal__close"
+                                        onclick={closeEditModal}>
+                                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                                </button> -->
+                                <h2 class="slds-text-heading_medium slds-hyphenate"
+              style="color: white; font-weight: bold; text-align: center">Edit Entity</h2>
+                                <!-- <p class="slds-text-body_small">
+                                    Enter Participant details and plan information
+                                </p> -->
+                            </header>
+
+                            <!-- Body -->
+                            <div class="slds-modal__content slds-p-around_medium">
+                                <div class="slds-grid slds-wrap slds-gutters">
+
+                                    <!-- <div class="slds-col slds-size_1-of-4">
+                                        <lightning-combobox
+                                            label="Type"
+                                            value={editRecord.EntityType}
+                                            options={entityTypeOptions}
+                                            data-field="EntityType"
+                                            onchange={handleEditChange}>
+                                        </lightning-combobox>
+                                    </div> -->
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>Type
+                                            </span>
+                                            <lightning-combobox
+                                                variant="label-hidden"
+                                                value={editRecord.Type}
+                                                options={entityTypeOptions}
+                                                data-field="Type"
+                                                onchange={handleEditChange}>
+                                            </lightning-combobox>
+                                        </div>
+                                    </div>
+
+                                   <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>Name
+                                            </span>
+                                            <!-- <EntityName> -->
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.Name}
+                                                data-field="Name"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                   <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>First Name
+                                            </span>
+                                            <!-- <EntityFirstName> -->
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.FirstName}
+                                                data-field="FirstName"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>Last Name
+                                            </span>
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.LastName}
+                                                data-field="LastName"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>Contact Number
+                                            </span>
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.ContactNumber}
+                                                data-field="ContactNumber"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">
+                                                <span style="color:red">*</span>Email
+                                            </span>
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.Email}
+                                                data-field="Email"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">To Email</span>
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.ToEmail}
+                                                data-field="ToEmail"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Cc Email</span>
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.CcEmail}
+                                                data-field="CcEmail"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                    <!-- <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Org Email</span>
+                                            <lightning-input
+                                            type="checkbox"
+                                            label="Org Email"
+                                            checked={includeOrgEmail}
+                                            onchange={handleIncludeOrgEmail}>
+                                        </lightning-input>
+                                        </div>
+                                    </div> -->
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <label style="display:flex; gap:5%; padding-top:2.5%;">
+                                            <lightning-input
+                                                type="checkbox"
+                                                label="Org Email"
+                                                checked={includeOrgEmail}
+                                                onchange={handleIncludeOrgEmail}>
+                                            </lightning-input>
+                                        </label>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">ABN</span>
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                value={editRecord.ABN}
+                                                data-field="ABN"
+                                                onchange={handleEditChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+<!-- 
+                                     <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Street</span>
+                                    <lightning-input
+                                           
+                                            value={editRecord.AddressStreet}
+                                            data-field="AddressStreet"
+                                            onchange={handleEditChange}>
+                                        </lightning-input>
+                                </div>
+                            </div>
+                                 <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                        <span class="label-text-drop">City</span>
+                                        <lightning-input
+                                           
+                                            value={editRecord.AddressCity}
+                                            data-field="AddressCity"
+                                            onchange={handleEditChange}>
+                                        </lightning-input>
+                                         </div></div>
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">State</span> 
+                                        <lightning-input
+                                           
+                                            value={editRecord.AddressState}
+                                            data-field="AddressState"
+                                            onchange={handleEditChange}>
+                                        </lightning-input>
+                                        </div>
+                                    </div>
+
+                                      
+                                    <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new"> 
+                                            <span class="label-text-drop">Postal Code</span> 
+                                        <lightning-input
+                                            
+                                            value={editRecord.AddressPostCode}
+                                            data-field="AddressPostCode"
+                                            onchange={handleEditChange}>
+                                        </lightning-input>
+                                      </div>
+                                    </div>  
+                                      
+                                      <div class="slds-col slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new">
+                                            <span class="label-text-drop">Country</span>  
+                                        <lightning-input
+                                           
+                                            value={editRecord.AddressCountry}
+                                            data-field="AddressCountry"
+                                            onchange={handleEditChange}>
+                                        </lightning-input>
+                                      </div>
+                                    </div>   -->
+
+                                    <div class="slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new1">
+                                            <span class="label-text-drop1">
+                                                <span style="color:red">*</span>Tax Code
+                                            </span>
+
+                                            <div class="dropdown">
+                                                <button
+                                                    type="button"
+                                                    title={selectedOption1}
+                                                    class="dropdown-button slds-truncate"
+                                                    onclick={toggleDropdown1}>
+                                                    {selectedOption1}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label-new1">
+                                            <span class="label-text-drop1">
+                                                <span style="color:red">*</span>Account List
+                                            </span>
+
+                                            <div class="dropdown">
+                                                <form autocomplete="off"
+                                                    style="margin:0; padding:0; display:contents;">
+                                                    <input
+                                                        type="text"
+                                                        class="dropdown-input"
+                                                        placeholder="Search Name or Number"
+                                                        value={customerSearchTerm}
+                                                        onclick={handleCustomerALClick}
+                                                        oninput={handleCustomerSearch} />
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <template if:true={customerFlag}>
+                                    <!-- Tax Code Table -->
+                                    <template if:true={isDropdownOpen1}>
+                                        <div data-id="taxTableSelling"
+                                            class="dropdown-flyout"
+                                            style={toggleDropdownAccount1}>
+                                            <table class="dropdown-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Code</th>
+                                                        <th>Description</th>
+                                                        <th>Rate</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={taxCodes} for:item="taxCode">
+                                                        <tr key={taxCode.id}
+                                                            data-value={taxCode.label}
+                                                            data-value1={taxCode.rate}
+                                                            onclick={handleSelection1}>
+                                                            <td>{taxCode.code}</td>
+                                                            <td>{taxCode.description}</td>
+                                                            <td>{taxCode.rate}</td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+
+                                    <!-- Account List Table -->
+                                    <template if:true={customerShowTable}>
+                                        <div data-id="accountListTableCustomer"
+                                            class="dropdown-flyout"
+                                            style={toggleDropdownAccount}>
+                                            <table class="dropdown-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Account Number</th>
+                                                        <th>Ledger Item Name</th>
+                                                        <th>Category</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={customerFilteredLedgerItems} for:item="item">
+                                                        <tr key={item.id}
+                                                            data-accno={item.accNo}
+                                                            data-value={item.itemName}
+                                                            data-id={item.id}
+                                                            onclick={handleCustomerSelection}>
+                                                            <td>{item.accNo}</td>
+                                                            <td>{item.itemName}</td>
+                                                            <td>{item.category}</td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+
+                            <!-- Footer -->
+                            <footer class="slds-modal__footer">
+                                <lightning-button label="Cancel"
+                                                onclick={closeEditModal} >
+                                </lightning-button>
+                                <lightning-button variant="brand"
+                                                class="slds-m-left_small"
+                                                label="Save"
+                                                onclick={handleSaveEdit}>
+                                </lightning-button>
+                            </footer>
+
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                </template>
+
+                      <!-- Error Popup -->
+                      <template if:true={isErrorPopupVisible}>
+                          <section class="slds-modal slds-fade-in-open" role="dialog" aria-modal="true" tabindex="-1">
+                              <div class="slds-modal__container modal-container" style="max-width: 25%;">
+                                  <header class="slds-modal__header" style="background: #002A52;">
+                                      <h2 class="slds-text-heading_medium slds-hyphenate"
+                                          style="color:white; font-weight:bold; text-align:center;">Error</h2>
+                                  </header>
+                                  <div class="slds-modal__content slds-p-around_medium modal-content">
+                                      <div class="slds-m-around_small" style="text-align: center;">
+                                          <p style="text-align: center;">{errorMessage}</p>
+                                          <div class="button-container slds-m-top_medium">
+                                              <lightning-button label="Cancel" variant="brand" onclick={handleClosePopup}
+                                                  class="slds-m-around_small"></lightning-button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </section>
+                             <div class="slds-backdrop slds-backdrop_open"></div>
+                      </template>
+                  </template>
+                    
+                </div>
+            </div>
+        </div>
+    </template>
+    <!-- <template if:true={createCompanyFlag}>
+         <c-create-company-lwc  orgidtrack={orgid} facility-id-from-facility={facilityId}  is-from-facility={isFromFacility} onhideaccountingsettings={handleHideManageInvoices}></c-create-company-lwc>
+    </template> -->
+   
+</template>
