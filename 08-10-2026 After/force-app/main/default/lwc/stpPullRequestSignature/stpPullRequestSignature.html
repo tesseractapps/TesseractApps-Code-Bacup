@@ -1,0 +1,144 @@
+<template>
+    <template if:true={displayActivity}>
+        <div style="margin-left:20px;margin-top:5px">
+            <a href="javascript:void(0)"  data-name="orgdetails" onclick={showActivity} >Show Activity
+            </a>
+        </div>
+    </template>
+    <template if:false={displayActivity}>
+        <div style="margin-left:20px;margin-top:5px">
+            <a href="javascript:void(0)"  data-name="orgdetails" onclick={closeActivity}  >Hide Activity
+            </a>
+        </div>
+    </template> 
+    <template if:true={showActivitytable}>
+       <!-- <div style="margin-left:20px">
+            <lightning-datatable
+            key-field="id"
+            data={activityData}
+            columns={columns}
+            hide-checkbox-column
+            onrowaction={handleRowAction}></lightning-datatable>
+        </div> -->
+
+        <div class="table-container activity-table" style="min-height: 0; display: flex; flex-direction: column;">
+            <!-- HEADER -->
+            <div class="header-wrapper">
+                <table class="staff-table fixed-table">
+                    <thead>
+                        <tr class="table-row">
+                            <th class="table-th" title="Submission Type">Submission Type</th>
+                            <th class="table-th" title="STP Response">Response</th>
+                            <th class="table-th" title="STP Ref ID">Ref ID</th>
+                            <th class="table-th" title="STP Date">Date</th>
+                            <th class="table-th" title="Payer Declaration Date">Payer Declaration Date</th>
+                            <th class="table-th" title="Actions">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <!-- BODY -->
+            <div class="table-body custom-scroll">
+                <table class="staff-table fixed-table">
+                    <tbody>
+                      <template for:each={activityData} for:item="item">
+                        <tr key={item.id} class="table-row">
+                          <td class="table-td" title={item.Type_of_Submission__c}>{item.Type_of_Submission__c}</td>
+                          <td class="table-td" title={item.stpoverallresponse}>{item.stpoverallresponse}</td>
+                          <td class="table-td" title={item.STP_Ref_ID__c}>{item.STP_Ref_ID__c}</td>
+                          <td class="table-td" title={item.STP_Date__c}>{item.STP_Date__c}</td>
+                          <td class="table-td" title={item.Payer_Declaration_Date__c}>{item.Payer_Declaration_Date__c}</td>
+                          <!-- <td class="table-td" title="Actions">
+                            <div>
+                              <a data-action="Show_Pull_Request_Response"  data-id={item.Id} onclick={handleAction}
+                              title="Show Response">Show Response</a>&nbsp;
+                              |&nbsp;
+                              <a data-action="Show_JSON_Data" data-id={item.Id} onclick={handleAction} target="_blank"
+                                title="View Payroll">Show JSON Data</a>&nbsp;
+                              |&nbsp;<br>
+                              <a data-action="Get_Pull_Request" data-id={item.Id} onclick={handleAction} target="_blank"
+                                title="View Payroll">Get Pull Request</a>
+                            </div>
+                          </td> -->
+                          <td class="table-td" title="Actions">
+                              <div>
+                                  <!-- Check if Type of Submission is Superannuation using a getter -->
+                                  <template if:true={item.isSuperannuation}>
+                                      <!-- Show "More Details" button for Superannuation -->
+                                      <a data-action="Show_More_Details" data-id={item.Id} onclick={handleAction}
+                                        title="Show More Details">More Details</a>
+                                  </template>
+                                  <template if:false={item.isSuperannuation}>
+                                      <!-- Show regular actions for other types -->
+                                      <a data-action="Show_Pull_Request_Response" data-id={item.Id} onclick={handleAction}
+                                        title="Show Response">Show Response</a>&nbsp;
+                                      |&nbsp;
+                                      <a data-action="Show_JSON_Data" data-id={item.Id} onclick={handleAction} target="_blank"
+                                        title="View Payroll">Show JSON Data</a>&nbsp;
+                                      |&nbsp;<br>
+                                      <a data-action="Get_Pull_Request" data-id={item.Id} onclick={handleAction} target="_blank"
+                                        title="View Payroll">Get Pull Request</a>
+                                  </template>
+                              </div>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+     </template>
+     
+     <div if:true={showProgressbar} >
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open ">
+          <div class="slds-modal__container ">
+            <div class="slds-modal__header">
+                <h1  class="slds-modal__title slds-hyphenate" tabindex="-1">Pull Request</h1>
+            </div>
+            <div class="slds-modal__content slds-p-around_medium slds-text-align_center" style="font-size: medium; " >
+                <b>Your STP pull request is in progress please wait for some time</b>
+            </div>
+            <div if:true={isProgressing} class="slds-modal__content slds-p-around_medium slds-text-align_center">        
+                <img class="slds-m-around_large" style="max-height: 95px; max-width: 95px"
+                    alt="STP" name="STP" src={STPloading} />
+            </div>      
+          </div>
+          </section>
+          <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+      </div>
+     <template if:true={showJsondata}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+              <div class="slds-modal__header">
+                <h1  class="slds-modal__title slds-hyphenate" tabindex="-1">Response Data</h1>
+              </div>
+              <div class="slds-modal__content slds-p-around_medium" >
+                <template if:false={isShowResponse}>
+                  <p> {datain}</p>
+                </template>
+                <template if:true={isShowResponse}>
+                  <div>
+                    <p><strong>Submission Type:</strong> {submissionType}</p>
+                    <p><strong>Response:</strong> {shortMessage}</p>
+                    <p><strong>STP Ref ID:</strong> {stpRefID}</p>
+                    <p><strong>Reported Date:</strong> {reportedDate}</p>
+                    <p><strong>Declaration Date:</strong> {declarationDate}</p>
+                    <p><strong>Status:</strong> {status}</p>                    
+                  </div>
+                </template>
+               
+               
+               
+              </div>
+              <div class="slds-modal__footer">
+                <button class="slds-button slds-button_neutral" aria-label="Cancel and close" onclick={closeJSonData}>Cancel</button>
+                <!-- <button class="slds-button slds-button_brand">Save</button> -->
+              </div>
+            </div>
+          </section>
+          <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+      </template>
+      
+   
+</template>
