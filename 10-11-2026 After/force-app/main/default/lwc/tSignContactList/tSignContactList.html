@@ -1,0 +1,403 @@
+<template>
+    <div class="page">
+        <!-- Header -->
+        <div class="topbar slds-grid slds-grid_vertical-align-center">
+            <div class="tab-title">{tabTitle}</div>
+
+            <div class="slds-col_bump-left slds-m-right_small">
+                <lightning-button
+                    class="archive-toggle-button"
+                    label={archiveToggleLabel}
+                    icon-name="utility:archive"
+                    icon-position="right"
+                    onclick={handleToggleArchive}>
+                </lightning-button>
+            </div>
+
+            <template if:false={showArchived}>
+                <div class="slds-m-right_small">
+                    <lightning-button
+                        variant="brand"
+                        label="Create Contact"
+                        icon-name="utility:add"
+                        icon-position="right"
+                        onclick={handleCreate}>
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+
+        <div class="body slds-p-around_medium">
+            <!-- Search and total -->
+            <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                <div class="search-box">
+                    <lightning-input
+                        type="search"
+                        variant="label-hidden"
+                        placeholder="Search contacts"
+                        value={searchKey}
+                        onchange={handleSearch}>
+                    </lightning-input>
+                </div>
+            </div>
+
+            <!-- Contacts table -->
+            <div class="table-container contactTable">
+                <lightning-spinner if:true={showSearchSpinner} size="small">
+                </lightning-spinner>
+
+                <template if:false={noRows}>
+                    <div class="header-wrapper">
+                        <table class="staff-table">
+                            <thead>
+                                <tr>
+                                    <th class="table-th">Contact Name</th>
+                                    <th class="table-th">Email</th>
+                                    <th class="table-th">Contact Number</th>
+                                    <th class="table-th">Contact Type</th>
+                                    <th class="table-th">Address</th>
+                                    <th class="table-th center">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div class="body-scroll custom-scroll contactTableHeight">
+                        <table class="staff-table">
+                            <tbody>
+                                <template for:each={rows} for:item="row">
+                                    <tr key={row.Id} class="tr1">
+                                        <td class="table-td">
+                                            <div class="name-cell">
+                                                <lightning-avatar
+                                                    variant="circle"
+                                                    src={row.avatarUrl}
+                                                    initials={row.initials}
+                                                    fallback-icon-name="standard:contact"
+                                                    alternative-text="image"
+                                                    size="small"
+                                                    class="name-avatar">
+                                                </lightning-avatar>
+                                                <span class="name-text" title={row.fullName}>{row.fullName}</span>
+                                            </div>
+                                        </td>
+                                        <td class="table-td" title={row.Email__c}>{row.Email__c}</td>
+                                        <td class="table-td">{row.Contact_Number__c}</td>
+                                        <td class="table-td">{row.Contact_Type__c}</td>
+                                        <td class="table-td" title={row.addressLabel}>{row.addressLabel}</td>
+                                        <td class="table-td center">
+                                            <a href="javascript:void(0)"
+                                               title="Edit"
+                                               data-id={row.Id}
+                                               data-action="edit"
+                                               onclick={handleRowAction}
+                                               class="action-link">
+                                                <i class="material-icons action-icon">edit</i>
+                                            </a>
+                                            <a href="javascript:void(0)"
+                                               title={archiveActionLabel}
+                                               data-id={row.Id}
+                                               data-action="archive"
+                                               onclick={handleRowAction}
+                                               class="action-link">
+                                                <i class="material-icons action-icon">{archiveMaterialIcon}</i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:true={noRows}>
+                    <div class="no-data">
+                        <p>No records found</p>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread -m-top_medium">
+                <div class="slds-list_inline">
+                    <span style="margin-right: 5px; margin-top: 5px;">
+                        Page Size:
+                    </span>
+
+                    <div class="slds-select_container">
+                        <select
+                            class="slds-select"
+                            id="recordsPerPage"
+                            onchange={handlePageSizeChange}>
+                            <template for:each={pageSizeOptions} for:item="option">
+                                <option
+                                    key={option.value}
+                                    value={option.value}
+                                    selected={option.selected}>
+                                    {option.label}
+                                </option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="slds-align_absolute-center">
+                    <lightning-button
+                        disabled={bDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        alternative-text="first page"
+                        onclick={firstPage}
+                        style="margin-right: 10px;">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={bDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        alternative-text="Previous"
+                        onclick={previousPage}
+                        style="margin-right: 5px;">
+                    </lightning-button>
+
+                    <span class="slds-badge">
+                        Showing {pageNumber} of {totalPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                        disabled={bDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        alternative-text="Next"
+                        onclick={nextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={bDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        alternative-text="last page"
+                        onclick={lastPage}
+                        icon-position="right">
+                    </lightning-button>
+                </div>
+
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge">
+                            Total Records: {totalRecords}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create / Edit / View / Clone modal -->
+    <template if:true={showModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container createEditModal">
+                <header class="slds-modal__header headercustom modal-header-custom">
+                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">
+                        {modalTitle}
+                    </h2>
+                    <button
+                        type="button"
+                        class="slds-button slds-button_icon close-btn"
+                        title="Close"
+                        onclick={closeModal}>
+                        <lightning-icon
+                            icon-name="utility:close"
+                            alternative-text="close"
+                            size="small">
+                        </lightning-icon>
+                    </button>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                    <lightning-spinner if:true={isSaving} size="small">
+                    </lightning-spinner>
+
+                    <!-- ========== Information ========== -->
+                    <div class="section-heading">
+                        <h3 class="section-title">Information</h3>
+                        <span class="section-line"></span>
+                    </div>
+
+                    <div class="slds-grid slds-wrap">
+                        <!-- Row 1 -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span class="required-mark">*</span>First Name</span>
+                                <lightning-input
+                                    class="field"
+                                    label="First Name"
+                                    variant="label-hidden"
+                                    data-field="First_Name__c"
+                                    value={form.First_Name__c}
+                                    placeholder="Enter First Name"
+                                    required
+                                    disabled={isView}
+                                    onchange={handleField}>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span class="required-mark">*</span>Last Name</span>
+                                <lightning-input
+                                    class="field"
+                                    label="Last Name"
+                                    variant="label-hidden"
+                                    data-field="Last_Name__c"
+                                    value={form.Last_Name__c}
+                                    placeholder="Enter Last Name"
+                                    required
+                                    disabled={isView}
+                                    onchange={handleField}>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span class="required-mark">*</span>Email ID</span>
+                                <lightning-input
+                                    class="field"
+                                    type="email"
+                                    label="Email ID"
+                                    variant="label-hidden"
+                                    data-field="Email__c"
+                                    value={form.Email__c}
+                                    placeholder="Enter Email ID"
+                                    required
+                                    disabled={isView}
+                                    onchange={handleField}>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop"><span class="required-mark">*</span>Contact Number</span>
+                                <lightning-input
+                                    class="field"
+                                    type="tel"
+                                    label="Contact Number"
+                                    variant="label-hidden"
+                                    data-field="Contact_Number__c"
+                                    value={form.Contact_Number__c}
+                                    placeholder="Enter Contact Number"
+                                    disabled={isView}
+                                    onchange={handleField}>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                            <div class="floating-label">
+                                <span class="label-text-drop">Contact Type</span>
+                                <lightning-combobox
+                                    class="field"
+                                    label="Contact Type"
+                                    variant="label-hidden"
+                                    data-field="Contact_Type__c"
+                                    value={form.Contact_Type__c}
+                                    options={typeOptions}
+                                    placeholder="Select*"
+                                    disabled={isView}
+                                    onchange={handleField}>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+
+                        <!-- Facility Hidden for Individual account type -->
+                        <template if:true={showFacility}>
+                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                <div class="floating-label">
+                                    <span class="label-text-drop"><span class="required-mark">*</span>Facility</span>
+                                    <c-tesseract-apps-single-combobox
+                                        data-field="TSign_Facility__c"
+                                        value={form.TSign_Facility__c}
+                                        options={facilityOptions}
+                                        placeholder="Enter Origination"
+                                        disabled={isView}
+                                        onchange={handleFacilityChange}>
+                                    </c-tesseract-apps-single-combobox>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small profile-pic-col">
+                                <c-t-signaws-batch-lwc
+                                    is-used-for-profile-pic
+                                    module-name="ContactProfile"
+                                    organisation-id={userDetails.currentUserOrgId}
+                                    onuploadsuccess={handleUplodadProfilePic}>
+                                </c-t-signaws-batch-lwc>
+                        </div>
+                    </div>
+
+                    <!-- ========== Address ========== -->
+                    <div class="section-heading slds-m-top_medium">
+                        <h3 class="section-title">Address</h3>
+                        <span class="section-line"></span>
+                    </div>
+
+                    <div class="slds-size_1-of-2">
+                        <div if:true={errorMessage} style="color:red;">
+                            {errorMessage}
+                        </div>
+
+                        <!-- Child must render Street*, Suburb*, State*, Post Code* in a 4-col row with floating labels -->
+                        <c-t-sign-address-selector
+                            class="field address-section"
+                            address={childAddress}
+                            disabled={isView}
+                            onaddresschange={addressInputChange}>
+                        </c-t-sign-address-selector>
+                    </div>
+                </div>
+
+                <footer class="slds-modal__footer slds-grid slds-grid_align-end slds-grid_vertical-align-center">
+                    <lightning-button
+                        variant="neutral"
+                        label="Cancel"
+                        onclick={closeModal}
+                        class="slds-m-right_small cancel-btn">
+                    </lightning-button>
+
+                    <lightning-button
+                        if:false={isView}
+                        variant="brand"
+                        label={saveLabel}
+                        disabled={saveDisabled}
+                        onclick={handleSave}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <!-- Loading spinner (same as Folders) -->
+    <template if:true={showPageSpinner}>
+        <div class="overlay-logo"></div>
+        <div class="spinner-wrapper">
+            <div class="loader-container">
+                <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                <img src={imageUrl} alt="T Logo" class="Tlogo" />
+            </div>
+            <p class="progress-text">Loading<br />Please Wait...</p>
+        </div>
+    </template>    
+</template>

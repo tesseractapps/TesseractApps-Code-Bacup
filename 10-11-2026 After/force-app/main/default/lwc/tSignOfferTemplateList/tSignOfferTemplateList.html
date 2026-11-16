@@ -1,0 +1,1568 @@
+<template>
+    <template if:true={imageSrc}>
+        <div class={hamburgerClass} style={hamburgerStyle} onclick={toggleSidebar}>
+            <i class="material-icons">
+                {hamburgerIcon}
+            </i>
+        </div>
+
+        <div class={sidebarClass}>
+
+            <div class="thumbnail-sidebar custom-scroll">
+                <!-- OLD UI START (H4: thumbnails loop)
+        <template for:each={thumbnails} for:item="thumb">
+            <div 
+                key={thumb.page}
+                class={thumb.className}
+                data-page={thumb.page}
+                onclick={handleThumbnailClick}
+            >
+                <img src={thumb.src} />
+                <div class="page-label">Page {thumb.page}</div>
+            </div>
+        </template>
+        OLD UI END (H4) -->
+                <!-- NEW UI (H4): pages rail with a fields-left pill per page -->
+                <div class="ui-rail-head">PAGES <span class="ui-rail-count">{totalPages}</span></div>
+                <template for:each={uiThumbnails} for:item="thumb">
+                    <div key={thumb.page} class={thumb.className} data-page={thumb.page} onclick={handleThumbnailClick}>
+                        <img src={thumb.src} alt="" />
+                        <div class="page-label">
+                            <span class="ui-thumb-page">Page {thumb.page}</span>
+                            <span class={thumb.uiPillClass}>{thumb.uiLeftText}</span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+    </template>
+    <!-- OLD UI START (H1: root lightning-card)
+    <lightning-card class="custom-card" icon-name="utility:document">
+    OLD UI END (H1) -->
+    <!-- NEW UI (H1): plain wrapper so the signing page can use the full width -->
+    <div class="custom-card ui-app">
+        <!-- OLD UI START (H2: logo section)
+        <!~~ Logo Section ~~>
+        <div class="logo-container">
+            <img src={logo} alt="Te_sign Logo" width="300px" height="300px" />
+        </div>
+        OLD UI END (H2) -->
+        <!-- NEW UI (H2): header bar -->
+        <header class="ui-header">
+            <div class="ui-header-brand">
+                <img src={logo} alt="Te_sign Logo" class="ui-header-logo" />
+            </div>
+            <template if:true={imageSrc}>
+                <div class="ui-header-divider"></div>
+                <div class="ui-header-doc">
+                    <!-- OLD UI: <div class="ui-header-doc-title">Your document</div> -->
+                    <div class="ui-header-doc-title" title={uiDocumentTitle}>{uiDocumentTitle}</div>
+                    <div class="ui-header-doc-meta">{totalPages} pages · {uiRequiredLeftText}</div>
+                </div>
+                <div class="ui-progress">
+                    <div class="ui-progress-top">
+                        <span class="ui-progress-text">{uiProgressText}</span>
+                        <span class="ui-progress-pct">{uiProgressPercent}%</span>
+                    </div>
+                    <div class="ui-progress-track">
+                        <div class="ui-progress-fill" style={uiProgressBarStyle}></div>
+                    </div>
+                </div>
+                <div class="ui-header-actions">
+                    <button type="button" class="ui-btn ui-btn--secondary ui-header-ask"
+                        onclick={openConversationModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path>
+                        </svg>
+                        <span>Ask a question</span>
+                    </button>
+                    <!-- NEW UI (H3): the Proceed button now lives here; same class and handler -->
+                    <button class="preview-confirmation-preview-button ui-btn ui-btn--primary"
+                        onclick={handlePreviewClick}>
+                        <span>Review &amp; submit</span>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 12h14M13 6l6 6-6 6"></path>
+                        </svg>
+                    </button>
+                </div>
+            </template>
+        </header>
+
+        <!-- Loading Animation -->
+        <template if:true={isLoading}>
+            <div class="loading-animation">
+                <div class="spinner"></div>
+                <!-- OLD UI START (H19: loading text)
+                <p>Loading Document, please wait...</p>
+                OLD UI END (H19) -->
+                <p class="ui-loading-title">Opening your document</p>
+                <p class="ui-loading-sub">This only takes a few seconds.</p>
+            </div>
+        </template>
+
+        <template if:true={isLoadingpop}>
+            <div class="load-overlay">
+                <div class="load-content">
+                    <div class="loading-animation">
+                        <div class="spinner"></div>
+                        <!-- OLD UI START (H19: loading overlay text)
+                        <p>Loading Document, please wait...</p>
+                        OLD UI END (H19) -->
+                        <p class="ui-loading-title">Opening your document</p>
+                        <p class="ui-loading-sub">This only takes a few seconds.</p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+
+
+
+        <!-- PDF Viewer Section -->
+        <template if:true={imageSrc}>
+            <!-- NEW UI (H5): workspace = stage (viewer + page bar) + fields panel -->
+            <div class="ui-workspace">
+                <div class="ui-stage">
+                    <div class="pdf-viewer-container">
+                        <template if:true={hasPages}>
+                            <!-- OLD UI START (H6: pages loop)
+                    <template for:each={renderedPages} for:item="page">
+                    OLD UI END (H6) -->
+                            <!-- NEW UI (H6): same pages, plus a status class and label per field -->
+                            <template for:each={uiRenderedPages} for:item="page">
+                                <div key={page.pageNumber} class="image-container" data-page-number={page.pageNumber}
+                                    style={page.containerStyle}>
+                                    <!-- FIELD GUIDE TAB FOR SIGNER -->
+                                    <template if:true={page.isGuidePage}>
+                                        <div class="fg-tab-wrapper" style={guideTabStyle} data-fg="tab"
+                                            onclick={handleGuideWrapperClick}>
+                                            <template if:true={showPrevButton}>
+                                                <button class="fg-prev-btn" onclick={handleGuidePrev}
+                                                    aria-label="Previous field" title="Previous field" data-fg="tab">
+                                                    <svg class="fg-prev-icon" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                        stroke-linejoin="round" data-fg="tab">
+                                                        <polyline points="18 15 12 9 6 15" data-fg="tab"></polyline>
+                                                    </svg>
+                                                </button>
+                                            </template>
+                                            <button class={guideTabClass} onclick={handleGuideClick}
+                                                aria-label={guideAriaLabel} title={guideTitle} data-fg="tab">
+                                                <template if:false={isGuideCompact}>
+                                                    <span class="fg-tab-label" data-fg="tab">{guideLabel}</span>
+                                                </template>
+                                                <template if:true={isGuideCompact}>
+                                                    <svg class="fg-arrow-icon" viewBox="0 0 24 24" fill="currentColor"
+                                                        data-fg="tab">
+                                                        <path d="M8 5v14l11-7z" data-fg="tab" />
+                                                    </svg>
+                                                </template>
+                                            </button>
+                                            <!-- NEW UI (H7): "5 of 7" counter under the guide tab -->
+                                            <template if:true={uiHasGuideCounter}>
+                                                <span class="ui-guide-counter" data-fg="tab">{uiGuideCounterText}</span>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <img src={page.imageSrc} alt={page.pageLabel} class="pdf-image" />
+                                    <div class="page-number-label">{page.pageLabel}</div>
+                                    <template for:each={page.placeholders} for:item="placeholder">
+                                        <!-- OLD UI START (H6: field container opening tag)
+                                <div
+                                    key={placeholder.id}
+                                    class="placeholder-container"
+                                    style={placeholder.style}
+                                    data-id={placeholder.id}
+                                    data-type={placeholder.type}
+                                    data-page-number={page.pageNumber}
+                                >
+                                OLD UI END (H6) -->
+                                        <!-- NEW UI (H6): same element and data attributes; class now carries the field state -->
+                                        <div key={placeholder.id} class={placeholder.uiContainerClass}
+                                            style={placeholder.style} data-id={placeholder.id}
+                                            data-type={placeholder.type} data-page-number={page.pageNumber}>
+                                            <!-- <span class="ui-field-label">{placeholder.uiLabel}</span> -->
+                                            <!-- FirstName Placeholder -->
+                                            <template if:true={placeholder.isName}>
+                                                <div class="name-placeholder text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" onclick={handleEditPlaceholder}
+                                                            data-id={placeholder.id} title="Edit">
+                                                            <lightning-icon icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit"
+                                                                onclick={handleEditOrg} size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <!-- Input Field -->
+                                                        <input type="text" class="placeholder-input"
+                                                            placeholder="First Name" value={placeholder.value}
+                                                            oninput={handleFNameInputChange} data-id={placeholder.id}
+                                                            aria-label="Enter Name" style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- Last Name -->
+                                            <template if:true={placeholder.isLastName}>
+                                                <div class="name-placeholder text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="text" class="placeholder-input"
+                                                            placeholder="Last Name" value={placeholder.value}
+                                                            oninput={handleLNameInputChange} data-id={placeholder.id}
+                                                            style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- Initials -->
+                                            <template if:true={placeholder.isInitials}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <select class="placeholder-dropdown initials-dropdown"
+                                                            onchange={handleInitialsInputChange}
+                                                            data-id={placeholder.id} aria-label="Select Title">
+                                                            <option value="">Title</option>
+                                                            <option value="Mr">Mr</option>
+                                                            <option value="Mrs">Mrs</option>
+                                                            <option value="Miss">Miss</option>
+                                                            <option value="Dr">Dr</option>
+                                                        </select>
+                                                    </template>
+
+
+                                                </div>
+                                            </template>
+
+                                            <!-- NameInitials -->
+                                            <template if:true={placeholder.isNameInitials}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="text" class="placeholder-input"
+                                                            placeholder="Initials" maxlength="60"
+                                                            title="Type your initials (e.g. SV) or your full name (e.g. Surya Vamsi)"
+                                                            aria-label="Initials: type your initials or full name"
+                                                            value={placeholder.initialsSource}
+                                                            oninput={handleNameInitialsInputChange}
+                                                            onblur={handleNameInitialsChange}
+                                                            onkeydown={handleNameInitialsKeyDown}
+                                                            data-id={placeholder.id} style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <!-- Full Name -->
+                                            <template if:true={placeholder.isFullName}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="text" class="placeholder-input"
+                                                            placeholder="Full Name" value={placeholder.value}
+                                                            oninput={handleFullNameInputChange} data-id={placeholder.id}
+                                                            style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- Email -->
+                                            <template if:true={placeholder.isEmail}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="email" class="placeholder-input"
+                                                            placeholder="Email" value={placeholder.value}
+                                                            oninput={handleEmailInputChange} data-id={placeholder.id}
+                                                            style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- Contact Number -->
+                                            <template if:true={placeholder.isContactNumber}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="tel" inputmode="numeric" pattern="[0-9]*"
+                                                            onkeypress={allowOnlyNumbers} class="placeholder-input"
+                                                            placeholder="Contact Number" value={placeholder.value}
+                                                            oninput={handlePhoneInputChange} data-id={placeholder.id}
+                                                            style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- Address -->
+                                            <template if:true={placeholder.isAddress}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <textarea class="placeholder-input" placeholder="Address"
+                                                            value={placeholder.value} oninput={handleAddressInputChange}
+                                                            data-id={placeholder.id}
+                                                            style={placeholder.inputStyle}></textarea>
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- ABN -->
+                                            <template if:true={placeholder.isABN}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;"></lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="text" class="placeholder-input"
+                                                            placeholder="ABN" value={placeholder.value}
+                                                            oninput={handleAbnInputChange} data-id={placeholder.id}
+                                                            inputmode="numeric" pattern="\d{11}" maxlength="11"
+                                                            aria-label="Enter ABN" style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+
+                                            <!-- Date -->
+                                            <template if:true={placeholder.isDate}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="date" class="placeholder-input"
+                                                            value={placeholder.value} oninput={handleDateInputChange}
+                                                            data-id={placeholder.id} style={placeholder.inputStyle} />
+
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <!-- Date of Signing -->
+                                            <template if:true={placeholder.isDateOfSigning}>
+                                                <div class="text-placeholder-wrapper">
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class="edit-icon" title="Edit">
+                                                            <lightning-icon onclick={handleEditPlaceholder}
+                                                                data-id={placeholder.id} icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <input type="date" class="placeholder-input"
+                                                            value={placeholder.value}
+                                                            oninput={handleDateOfSigningInputChange}
+                                                            data-id={placeholder.id} style={placeholder.inputStyle} />
+                                                    </template>
+                                                </div>
+                                            </template>
+
+
+
+
+
+                                            <!-- Signature Placeholder -->
+                                            <template if:true={placeholder.isSignature}>
+                                                <div class="signature-placeholder">
+                                                    <!-- If the image is uploaded -->
+                                                    <template if:true={placeholder.hasImage}>
+                                                        <div class={signatureImageContainerClass}>
+                                                            <img src={placeholder.imageSrc} alt="Uploaded Signature"
+                                                                class="signature-image" />
+                                                            <!-- Edit / Delete toolbar (Google Material icons) inside the box on hover -->
+                                                            <div class="signature-review-actions">
+                                                                <button type="button"
+                                                                    class="signature-review-btn signature-review-edit"
+                                                                    title="Edit Signature"
+                                                                    aria-label="Edit Signature"
+                                                                    data-id={placeholder.id}
+                                                                    onclick={handleUploadSignature}>
+                                                                    <svg class="signature-review-icon"
+                                                                        viewBox="0 0 24 24" aria-hidden="true">
+                                                                        <path
+                                                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM5.92 19H5v-.92l9.06-9.06.92.92L5.92 19zM20.71 5.63l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83a1 1 0 0 0 0-1.41z">
+                                                                        </path>
+                                                                    </svg>
+                                                                </button>
+                                                                <span class="signature-review-sep"></span>
+                                                                <button type="button"
+                                                                    class="signature-review-btn signature-review-delete"
+                                                                    title="Delete Signature"
+                                                                    aria-label="Delete Signature"
+                                                                    data-id={placeholder.id}
+                                                                    onclick={handleDeleteSignature}>
+                                                                    <svg class="signature-review-icon"
+                                                                        viewBox="0 0 24 24" aria-hidden="true">
+                                                                        <path
+                                                                            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z">
+                                                                        </path>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- <template if:true={placeholder.hasImage}>
+    <div class="esign-block">
+
+
+        <div class="esign-border"></div>
+
+      
+        <div class="esign-content">
+            <div class="esign-label">TSigned by:</div>
+
+            <img
+                src={placeholder.imageSrc}
+                alt="Signature"
+                class="esign-signature"
+            />
+
+            <div class="esign-guid">
+                {sessionGuid}
+            </div>
+        </div>
+
+    </div>
+</template> -->
+
+                                                    <!-- If the image is not uploaded -->
+                                                    <template if:false={placeholder.hasImage}>
+                                                        <!-- OLD UI START (H6: empty signature box text)
+                                        <div class="placeholder-sign" onclick={handleUploadSignature} data-id={placeholder.id}>
+                                            Upload Signature
+                                        </div>
+                                        OLD UI END (H6) -->
+                                                        <div class="placeholder-sign" onclick={handleUploadSignature}
+                                                            data-id={placeholder.id}>
+                                                            <svg class="placeholder-sign-icon" xmlns="http://www.w3.org/2000/svg"
+                                                                height="18px" viewBox="0 -960 960 960" width="18px"
+                                                                fill="currentColor" aria-hidden="true">
+                                                                <path d="M160-120v-80h640v80H160Zm320-160L280-480l56-56 104 104v-408h80v408l104-104 56 56-200 200Z" />
+                                                            </svg>
+                                                            Sign here
+                                                        </div>
+
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <!-- Custom Field Rendering -->
+                                            <template if:true={placeholder.isCustom}>
+                                                <div class="text-placeholder-wrapper"
+                                                    style="width: 100%; height: 100%;">
+                                                    <template if:true={placeholder.showCustomStatic}>
+                                                        <div class="edit-icon" onclick={handleEditPlaceholder}
+                                                            data-id={placeholder.id} title="Edit">
+                                                            <lightning-icon icon-name="action:edit"
+                                                                alternative-text="Edit" title="Edit" size="xx-small"
+                                                                style="cursor:pointer;color:white;background:#0099DE;">
+                                                            </lightning-icon>
+                                                        </div>
+                                                        <div style={placeholder.textStyleCss}
+                                                            class="rendered-native-text" data-id={placeholder.id}>
+                                                            {placeholder.displayValue}
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={placeholder.showCustomStatic}>
+                                                        <template if:true={placeholder.isCustomText}>
+                                                            <input type="text" class="placeholder-input"
+                                                                placeholder={placeholder.label}
+                                                                value={placeholder.value}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle} />
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomLongText}>
+                                                            <textarea class="placeholder-input"
+                                                                placeholder={placeholder.label}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle}>{placeholder.value}</textarea>
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomNumber}>
+                                                            <input type="number" class="placeholder-input"
+                                                                placeholder={placeholder.label}
+                                                                value={placeholder.value}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle} />
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomCurrency}>
+                                                            <input type="number" step="0.01" class="placeholder-input"
+                                                                placeholder={placeholder.label}
+                                                                value={placeholder.value}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle} />
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomDate}>
+                                                            <input type="date" class="placeholder-input"
+                                                                value={placeholder.value}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle} />
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomEmail}>
+                                                            <input type="email" class="placeholder-input"
+                                                                placeholder={placeholder.label}
+                                                                value={placeholder.value}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle} />
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomPhone}>
+                                                            <input type="tel" class="placeholder-input"
+                                                                placeholder={placeholder.label}
+                                                                value={placeholder.value}
+                                                                oninput={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id}
+                                                                style={placeholder.inputStyle} />
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomBoolean}>
+                                                            <div
+                                                                style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                                                                <input type="checkbox"
+                                                                    checked={placeholder.checkedValue}
+                                                                    onchange={handleCustomFieldInputChange}
+                                                                    data-id={placeholder.id}
+                                                                    style="transform: scale(1.3); cursor: pointer;" />
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={placeholder.isCustomPicklist}>
+                                                            <select class="placeholder-dropdown"
+                                                                onchange={handleCustomFieldInputChange}
+                                                                data-id={placeholder.id} style={placeholder.inputStyle}>
+                                                                <option value="">Select {placeholder.label}</option>
+                                                                <template for:each={placeholder.picklistOptions}
+                                                                    for:item="opt">
+                                                                    <option key={opt.value} value={opt.value}
+                                                                        selected={opt.selected}>{opt.label}</option>
+                                                                </template>
+                                                            </select>
+                                                        </template>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+
+                    <!-- OLD UI START (H8: page indicator)
+    <!~~ Page Indicator ~~>
+    <div class="pagination-controls">
+        <span>Page {currentPage} of {totalPages}</span>
+    </div>
+    OLD UI END (H8) -->
+                    <!-- NEW UI (H8): floating page bar (existing showPreviousPage / showNextPage) -->
+                    <div class="ui-page-bar">
+                        <button type="button" class="ui-icon-btn" aria-label="Previous page" title="Previous page"
+                            onclick={showPreviousPage} disabled={uiIsFirstPage}>
+                            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m15 6-6 6 6 6"></path>
+                            </svg>
+                        </button>
+                        <span class="ui-page-bar-text">Page {currentPage} <span class="ui-muted">of
+                                {totalPages}</span></span>
+                        <button type="button" class="ui-icon-btn" aria-label="Next page" title="Next page"
+                            onclick={showNextPage} disabled={uiIsLastPage}>
+                            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m9 6 6 6-6 6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- /ui-stage -->
+
+                <!-- NEW UI (H9): fields panel (wide screens only, see CSS) -->
+                <aside class="ui-fields-panel custom-scroll" aria-label="Your fields">
+                    <div class="ui-panel-head">
+                        <span class="ui-panel-title">Your fields</span>
+                        <span class="ui-panel-sub">{uiRequiredLeftText}</span>
+                    </div>
+                    <template for:each={uiFieldGroups} for:item="group">
+                        <div key={group.key} class="ui-field-group">
+                            <div class="ui-field-group-title">{group.pageLabel}</div>
+                            <template for:each={group.fields} for:item="field">
+                                <button type="button" key={field.key} class={field.rowClass} data-ui-field-id={field.id}
+                                    onclick={handleUiFieldJump}>
+                                    <span class="ui-field-row-icon" aria-hidden="true"></span>
+                                    <span class="ui-field-row-label">{field.label}</span>
+                                    <span class={field.pillClass}>{field.statusText}</span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <div class="ui-panel-foot">
+                        <button type="button" class="ui-btn ui-btn--outline ui-btn--block"
+                            onclick={handleGuideClick}>Next field</button>
+                        <div class="ui-panel-hint">Use the Edit button on a filled field to change it.</div>
+                    </div>
+                </aside>
+            </div>
+            <!-- /ui-workspace -->
+
+            <!-- NEW UI (H10): mobile bottom bar (small screens only, see CSS) -->
+            <div class="ui-mobile-bar">
+                <div class="ui-mobile-bar-info">
+                    <span class="ui-mobile-bar-field">{uiMobileFieldText}</span>
+                    <span>Page {currentPage} of {totalPages}</span>
+                </div>
+                <div class="ui-mobile-bar-actions">
+                    <button type="button" class="ui-icon-btn ui-icon-btn--boxed" aria-label="Previous field"
+                        onclick={handleGuidePrev} disabled={uiPrevFieldDisabled}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m15 6-6 6 6 6"></path>
+                        </svg>
+                    </button>
+                    <button type="button" class="ui-btn ui-btn--primary ui-mobile-bar-next"
+                        onclick={handleGuideClick}>{guideLabel}</button>
+                    <button type="button" class="ui-icon-btn ui-icon-btn--boxed" aria-label="Ask a question"
+                        onclick={openConversationModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Actions -->
+        <div class="action-buttons">
+
+
+            <!-- <button class="preview-confirmation-preview-button" onclick={handlePreviewClick}>
+                    Preview
+                </button> -->
+            <!-- OLD UI START (H3: Proceed button (moved to the header as Review & submit))
+                <template if:true={imageSrc}>
+                <button class="preview-confirmation-preview-button" onclick={handlePreviewClick}>
+                    Proceed
+                </button></template>
+                OLD UI END (H3) -->
+
+            <!-- Modal for Preview Confirmation -->
+            <template if:true={isPreviewModalVisible}>
+                <div class="preview-confirmation-modal-backdrop"></div>
+                <div class="preview-confirmation-modal">
+                    <div class="preview-confirmation-modal-header">
+                        <h2>Confirm Details</h2>
+                    </div>
+                    <div class="preview-confirmation-modal-body">
+                        <p>You have completed the required fields. Review your entries before submitting the document. Once submitted, your responses and signature will be saved.</p>
+                    </div>
+                    <div class="preview-confirmation-modal-footer">
+                        <button class="preview-confirmation-cancel-button" onclick={cancelPreview}>Edit Details</button>
+                        <button class="preview-confirmation-proceed-button"
+                            onclick={proceedWithPreview}>Proceed</button>
+
+                    </div>
+                </div>
+            </template>
+
+        </div>
+        <template if:true={isEditModalVisible}>
+            <div class="edit-modal">
+                <!-- OLD UI START (H15: edit modal header)
+                <div class="edit-modal-header">
+                    <h2>Edit {currentEditingLabel}</h2>
+                    <button class="close-button" onclick={closeEditModal}>✖</button>
+                </div>
+                OLD UI END (H15) -->
+                <div class="edit-modal-header">
+                    <h2>Edit {currentEditingLabel}</h2>
+                    <button type="button" class="close-button ui-dialog-close" aria-label="Close" title="Close"
+                        onclick={closeEditModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="edit-modal-body">
+                    <!-- <input
+                        type="text"
+                        class="edit-input"
+                        value={editableText}
+                        oninput={handleModalInputChange}
+                    /> -->
+                    <template if:true={isEditTextInput}>
+                        <input type={currentEditingType} class="edit-input" value={editableText}
+                            oninput={handleModalInputChange} onkeypress={preventNonNumericInput} />
+                    </template>
+
+                    <template if:true={isEditTextArea}>
+                        <textarea class="edit-input" oninput={handleModalInputChange}>{editableText}</textarea>
+                    </template>
+
+                    <template if:true={isEditDropdown}>
+                        <select class="edit-input" onchange={handleModalInputChange} value={editableText}>
+                            <option value="">Select Title</option>
+                            <option value="Mr">Mr</option>
+                            <option value="Mrs">Mrs</option>
+                            <option value="Miss">Miss</option>
+                            <option value="Dr">Dr</option>
+                        </select>
+                    </template>
+
+                    <!-- Custom Picklist Edit -->
+                    <template if:true={isEditCustomPicklist}>
+                        <select class="edit-input" onchange={handleModalInputChange} value={editableText}>
+                            <option value="">Select {currentEditingLabel}</option>
+                            <template for:each={currentEditingPicklistOptions} for:item="opt">
+                                <option key={opt} value={opt}>{opt}</option>
+                            </template>
+                        </select>
+                    </template>
+
+                    <!-- Custom Checkbox/Boolean Edit -->
+                    <template if:true={isEditCustomCheckbox}>
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; padding: 10px; width: 100%;">
+                            <input type="checkbox" checked={currentEditingCheckboxChecked}
+                                onchange={handleModalCheckboxChange} style="transform: scale(1.5); cursor: pointer;" />
+                        </div>
+                    </template>
+
+
+
+                </div>
+                <!-- OLD UI START (H15: edit modal footer)
+                <div class="edit-modal-footer">
+                    <lightning-button 
+                    class="slds-m-right_small"
+                    variant="brand" 
+                    label="Save" 
+                    onclick={saveEditedText}>
+                </lightning-button>
+
+                <lightning-button 
+                    class="slds-m-left_small"
+                    variant="brand-outline" 
+                    label="Cancel" 
+                    onclick={closeEditModal}>
+                </lightning-button>
+                </div>
+                OLD UI END (H15) -->
+                <div class="edit-modal-footer">
+                    <button type="button" class="ui-btn ui-btn--secondary" onclick={closeEditModal}>Cancel</button>
+                    <button type="button" class="ui-btn ui-btn--primary" onclick={saveEditedText}>Save</button>
+                </div>
+            </div>
+            <div class="edit-modal-backdrop"></div>
+        </template>
+
+        <!-- Modal for selecting upload or draw -->
+        <!-- OLD UI START (H11: choose signature action modal)
+<template if:true={isSignatureModalVisible}>
+    <div class="signature-modal-container">
+        <div class="signature-modal-header">
+            <span>Choose Signature Action</span>
+            <button onclick={closeSignatureModal} aria-label="Close Modal">&times;</button>
+        </div>
+        <div class="signature-modal-content">
+            <lightning-button
+                label="Upload Signature"
+                onclick={handleUploadOption}
+                variant="brand"
+            ></lightning-button>
+            <lightning-button
+                label="Draw Signature"
+                onclick={handleDrawOption}
+                variant="neutral"
+            ></lightning-button>
+            <lightning-button
+            label="Enter Name for Signature"
+            onclick={openNameSignatureModal}
+            variant="neutral"
+            ></lightning-button>
+        </div>
+    </div>
+    <div class="signature-modal-backdrop"></div>
+</template>
+OLD UI END (H11) -->
+        <!-- NEW UI (H11): adopt signature; each option opens the same existing modal/flow -->
+        <template if:true={isSignatureModalVisible}>
+            <div class="signature-modal-container ui-dialog ui-dialog--adopt" role="dialog" aria-modal="true"
+                aria-label="Adopt your signature">
+                <div class="ui-dialog-head">
+                    <div>
+                        <h2 class="ui-dialog-title">Adopt your signature</h2>
+                        <p class="ui-dialog-sub">Choose how you want to create the signature for this field.</p>
+                    </div>
+                    <button type="button" class="ui-dialog-close" aria-label="Close" title="Close"
+                        onclick={closeSignatureModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="ui-adopt-options">
+                    <button type="button" class="ui-adopt-option" onclick={openNameSignatureModal}>
+                        <span class="ui-adopt-icon ui-adopt-icon--type">Aa</span>
+                        <span class="ui-adopt-text">
+                            <span class="ui-adopt-name">Type</span>
+                            <span class="ui-adopt-desc">Type your name and pick a style</span>
+                        </span>
+                    </button>
+                    <button type="button" class="ui-adopt-option" onclick={handleDrawOption}>
+                        <span class="ui-adopt-icon"><svg class="ui-icon" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
+                                <path d="M3 21c3-1 5-4 6-7l8-8a2.8 2.8 0 0 1 4 4l-8 8c-3 1-6 3-7 6"></path>
+                            </svg></span>
+                        <span class="ui-adopt-text">
+                            <span class="ui-adopt-name">Draw</span>
+                            <span class="ui-adopt-desc">Draw with your mouse, trackpad or finger</span>
+                        </span>
+                    </button>
+                    <button type="button" class="ui-adopt-option" onclick={handleUploadOption}>
+                        <span class="ui-adopt-icon"><svg class="ui-icon" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
+                                <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path>
+                            </svg></span>
+                        <span class="ui-adopt-text">
+                            <span class="ui-adopt-name">Upload</span>
+                            <span class="ui-adopt-desc">Use a PNG or JPEG image of your signature</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+            <div class="signature-modal-backdrop"></div>
+        </template>
+
+        <!-- Apply signature to all signature fields popup -->
+        <!-- OLD UI START (H14: apply signature to all popup)
+<template if:true={isApplySignaturePopupVisible}>
+    <div class="apply-sig-modal" role="dialog" aria-modal="true">
+        <div class="apply-sig-check">
+            <lightning-icon icon-name="utility:check" alternative-text="Signed" size="small" variant="inverse"></lightning-icon>
+        </div>
+        <div class="apply-sig-title">Apply this signature to all your signature fields?</div>
+        <div class="apply-sig-subtitle">You have multiple signature fields in this document.</div>
+        <div class="apply-sig-options">
+            <label class="apply-sig-option">
+                <input type="radio" name="applySigChoice" value="all" checked={isApplyChoiceAll} onchange={handleApplySignatureChoice} />
+                <span>Yes, apply to all my signature fields</span>
+            </label>
+            <label class="apply-sig-option">
+                <input type="radio" name="applySigChoice" value="none" checked={isApplyChoiceNone} onchange={handleApplySignatureChoice} />
+                <span>No, keep signing individually</span>
+            </label>
+            <label class="apply-sig-option">
+                <input type="radio" name="applySigChoice" value="review" checked={isApplyChoiceReview} onchange={handleApplySignatureChoice} />
+                <span>Yes, but let me review each field</span>
+            </label>
+        </div>
+        <div class="apply-sig-footer">
+            <button class="apply-sig-btn apply-sig-cancel" onclick={handleApplySignatureCancel}>Cancel</button>
+            <button class="apply-sig-btn apply-sig-confirm" onclick={handleApplySignatureConfirm}>Confirm</button>
+        </div>
+    </div>
+    <div class="apply-sig-backdrop"></div>
+</template>
+OLD UI END (H14) -->
+        <!-- NEW UI (H14): same radio values and handlers, shown as option cards -->
+        <template if:true={isApplySignaturePopupVisible}>
+            <div class="apply-sig-modal" role="dialog" aria-modal="true" aria-label="Signature adopted">
+                <div class="ui-apply-head">
+                    <div class="apply-sig-check"><svg class="ui-icon" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="m5 12 4.5 4.5L19 7"></path>
+                        </svg></div>
+                    <div class="ui-apply-head-text">
+                        <div class="apply-sig-title">Signature adopted</div>
+                        <div class="apply-sig-subtitle">{uiOtherSignatureText}</div>
+                    </div>
+                </div>
+                <div class="ui-apply-question">Use it for your other signature fields?</div>
+                <div class="apply-sig-options">
+                    <label class={uiApplyAllClass}>
+                        <input type="radio" name="applySigChoice" value="all" checked={isApplyChoiceAll}
+                            onchange={handleApplySignatureChoice} />
+                        <span class="ui-option-text">
+                            <span class="ui-option-title">Apply to all my signature fields</span>
+                            <span class="ui-option-desc">Fills your other empty signature fields at once.</span>
+                        </span>
+                    </label>
+                    <label class={uiApplyNoneClass}>
+                        <input type="radio" name="applySigChoice" value="none" checked={isApplyChoiceNone}
+                            onchange={handleApplySignatureChoice} />
+                        <span class="ui-option-text">
+                            <span class="ui-option-title">No, I'll sign each one myself</span>
+                            <span class="ui-option-desc">The guide will take you to each field.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="apply-sig-footer">
+                    <button class="apply-sig-btn apply-sig-cancel" onclick={handleApplySignatureCancel}>Cancel</button>
+                    <button class="apply-sig-btn apply-sig-confirm"
+                        onclick={handleApplySignatureConfirm}>Continue</button>
+                </div>
+            </div>
+            <div class="apply-sig-backdrop"></div>
+        </template>
+
+        <!-- Modal for drawing signature -->
+        <!-- OLD UI START (H12: draw signature modal)
+<template if:true={isDrawingModalVisible}>
+    <div class="drawing-modal-container">
+        <div class="drawing-modal-header">
+            <span>Draw Your Signature</span>
+            <button onclick={closeDrawingModal} aria-label="Close Modal">&times;</button>
+        </div>
+        <div class="drawing-modal-content">
+            <canvas
+        class="signature-canvas"
+        style="width: 400px; height: 200px; border: 1px solid #ccc; touch-action: none;"
+        onpointerdown={startDrawing}
+        onpointermove={draw}
+        onpointerup={stopDrawing}
+        onpointerleave={stopDrawing}
+      ></canvas>
+        </div>
+        <div class="drawing-modal-footer">
+            <lightning-button
+                label="Save"
+                variant="brand"
+                onclick={saveDrawnSignature}
+            ></lightning-button>
+            <lightning-button
+                label="Clear"
+                variant="neutral"
+                onclick={clearCanvas}
+            ></lightning-button>
+        </div>
+    </div>
+    <div class="drawing-modal-backdrop"></div>
+</template>
+OLD UI END (H12) -->
+        <!-- NEW UI (H12): same canvas and handlers -->
+        <template if:true={isDrawingModalVisible}>
+            <div class="drawing-modal-container ui-dialog" role="dialog" aria-modal="true"
+                aria-label="Draw your signature">
+                <div class="ui-dialog-head">
+                    <div>
+                        <h2 class="ui-dialog-title">Draw your signature</h2>
+                        <p class="ui-dialog-sub">Draw with your mouse, trackpad or finger.</p>
+                    </div>
+                    <button type="button" class="ui-dialog-close" aria-label="Close" title="Close"
+                        onclick={closeDrawingModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="drawing-modal-content">
+                    <canvas class="signature-canvas"
+                        style="width: 400px; height: 200px; border: 1px solid #ccc; touch-action: none;"
+                        onpointerdown={startDrawing} onpointermove={draw} onpointerup={stopDrawing}
+                        onpointerleave={stopDrawing}></canvas>
+                </div>
+                <div class="drawing-modal-footer">
+                    <button type="button" class="ui-btn ui-btn--secondary" onclick={clearCanvas}>Clear</button>
+                    <button type="button" class="ui-btn ui-btn--primary" onclick={saveDrawnSignature}>Save</button>
+                </div>
+            </div>
+            <div class="drawing-modal-backdrop"></div>
+        </template>
+
+        <!-- Name Signature Modal -->
+        <!-- OLD UI START (H13: name signature modal)
+<template if:true={isNameSignatureModalVisible}>
+    <div class="signature-modal-container">
+        <div class="signature-modal-header">
+            <span>Enter Name for Signature</span>
+            <button class="close-button" onclick={closeNameSignatureModal}>&times;</button>
+        </div>
+        <div class="signature-modal-body">
+            <!~~ Name Input Field ~~>
+            <input
+                type="text"
+                placeholder="Enter Your Name"
+                oninput={handleNameInput}
+                class="signature-name-input"
+            />
+
+            <!~~ Font Previews Section ~~>
+            <div class="signature-font-previews">
+                <template for:each={styledPreviews} for:item="style">
+                    <div
+                        key={style.id}
+                        class="signature-font-style"
+                        data-id={style.id}
+                        onclick={handleStyleSelection}
+                    >
+                        <canvas data-id={style.id} class="signature-styled-canvas"></canvas>
+                    </div>
+                </template>
+            </div>
+        </div>
+        <div class="signature-modal-footer">
+            <lightning-button
+                label="Cancel"
+                variant="brand"
+                onclick={closeNameSignatureModal}
+            ></lightning-button>
+        </div>
+    </div>
+    <div class="signature-modal-backdrop"></div>
+</template>
+OLD UI END (H13) -->
+        <!-- NEW UI (H13): same input, previews and handlers -->
+        <template if:true={isNameSignatureModalVisible}>
+            <div class="signature-modal-container ui-dialog" role="dialog" aria-modal="true"
+                aria-label="Type your signature">
+                <div class="ui-dialog-head">
+                    <div>
+                        <h2 class="ui-dialog-title">Type your signature</h2>
+                        <p class="ui-dialog-sub">Type your name, then pick a style to sign.</p>
+                    </div>
+                    <button type="button" class="ui-dialog-close" aria-label="Close" title="Close"
+                        onclick={closeNameSignatureModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="signature-modal-body">
+                    <label class="ui-input-label">Full name</label>
+                    <input type="text" placeholder="Enter Your Name" oninput={handleNameInput}
+                        class="signature-name-input" />
+
+                    <div class="signature-font-previews">
+                        <template for:each={styledPreviews} for:item="style">
+                            <div key={style.id} class="signature-font-style" data-id={style.id}
+                                onclick={handleStyleSelection}>
+                                <canvas data-id={style.id} class="signature-styled-canvas"></canvas>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="signature-modal-footer">
+                    <button type="button" class="ui-btn ui-btn--secondary"
+                        onclick={closeNameSignatureModal}>Cancel</button>
+                </div>
+            </div>
+            <div class="signature-modal-backdrop"></div>
+        </template>
+        <!-- Comments Bubble -->
+        <!-- <div class="conversation-bubble-container">
+    <span class="bubble-text">Ask your doubts!</span>
+    <div class="conversation-bubble" onclick={openConversationModal}>
+        <lightning-icon icon-name="utility:chat" size="medium" alternative-text="Open Conversation"></lightning-icon>
+    </div>
+</div> -->
+
+
+        <template if:true={showConversationModal}>
+            <div class="conversation-modal">
+                <!-- OLD UI START (H18: chat header)
+        <div class="message-header">
+            <h2 class="header-title">Ask Your Doubts!</h2>
+            <span class="close-icon" onclick={closeConversationModal}>&#x2716;</span>
+        </div>
+        OLD UI END (H18) -->
+                <div class="message-header">
+                    <div class="ui-chat-icon"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path>
+                        </svg></div>
+                    <div class="ui-chat-head-text">
+                        <h2 class="header-title">Questions about this document</h2>
+                        <div class="ui-chat-sub">Ask the sender anything about this document.</div>
+                    </div>
+                    <button type="button" class="ui-dialog-close" aria-label="Close" title="Close"
+                        onclick={closeConversationModal}>
+                        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="messages-container">
+                    <template for:each={messages} for:item="message">
+                        <template if:true={message.isDateDivider}>
+                            <div key={message.date} class="date-divider">{message.date}</div>
+                        </template>
+                        <template if:false={message.isDateDivider}>
+                            <div key={message.id} class={message.class}>
+                                <div class="message-content">
+                                    <span class="text">{message.text}</span>
+                                    <span class="timestamp">
+                                        {message.timestamp}
+                                        <lightning-icon icon-name="utility:check" alternative-text="Saved"
+                                            size="x-small"></lightning-icon>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+                <!-- OLD UI START (H18: chat input)
+        <div class="input-container">
+            <textarea
+            class="message-input"
+            placeholder="Enter your message"
+            value={newMessage}
+            oninput={handleMessageInput}
+            onkeydown={handleKeyDown}>
+            </textarea>
+            <img
+                src={sendIcon}
+                alt="Send"
+                class="send-icon"
+                onclick={sendMessage}>
+            
+        </div>
+        OLD UI END (H18) -->
+                <div class="input-container">
+                    <div class="ui-chat-compose">
+                        <textarea class="message-input" placeholder="Type your question…" value={newMessage}
+                            oninput={handleMessageInput} onkeydown={handleKeyDown}>
+            </textarea>
+                        <button type="button" class="ui-chat-send" aria-label="Send" title="Send" onclick={sendMessage}>
+                            <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14M13 6l6 6-6 6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="ui-chat-hint">Enter to send · Shift + Enter for a new line</div>
+                </div>
+
+
+            </div>
+            <div class="modal-backdrop"></div>
+        </template>
+
+        <!-- OLD UI START (H17: PDF viewer modal)
+<template if:true={isConfirmationPopupVisible}>
+    <div class="custom-modal">
+        <div class="modal-content">
+            <!~~ Header ~~>
+            <div class="modal-header">
+                <h2>PDF Viewer</h2>
+                <!~~ <button class="close-button" onclick={closeConfirmationPopup}>X</button> ~~>
+            </div>
+
+            <!~~ Body ~~>
+            <div class="modal-body custom-scroll">
+                <template if:true={isLoading}>
+                    <div class="loading-container">
+                        <div class="spinner" style="--percentage: calc({loadingPercentage} / 100);">
+                            <div class="spinner-percentage">{loadingPercentage}%</div>
+                        </div>
+                        <p>Hold On,Your Document is getting Ready... {loadingPercentage}%</p>
+                    </div>
+                </template>
+                
+                <template if:false={isLoading}>
+                    <template for:each={confirmationPopupPages} for:item="page">
+                        <div key={page.id} class="preview-image-container">
+                            <img src={page.src} alt={page.alt} class="preview-image" />
+                            <p>{page.alt}</p>
+                        </div>
+                    </template>
+                </template>
+            </div>
+
+            <!~~ Footer ~~>
+            <div class="modal-footer">
+                <!~~ <button onclick={closeConfirmationPopup}>Close Viewer</button> ~~>
+                <button onclick={handleGeneratePDF}>Submit</button>
+            </div>
+        </div>
+    </div>
+</template>
+OLD UI END (H17) -->
+        <!-- NEW UI (H17): review before you submit; same pages, loading and Submit handler -->
+        <template if:true={isConfirmationPopupVisible}>
+            <div class="custom-modal">
+                <div class="modal-content ui-review">
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <h2>Review before you submit</h2>
+                        <span class="ui-review-badge">{uiRequiredLeftText}</span>
+                    </div>
+
+                    <div class="ui-review-body">
+                        <!-- Summary -->
+                        <aside class="ui-review-summary custom-scroll">
+                            <div class="ui-review-section">YOUR DETAILS</div>
+                            <template for:each={uiReviewDetails} for:item="row">
+                                <div key={row.key} class="ui-kv">
+                                    <span class="ui-kv-label">{row.label}</span>
+                                    <span class={row.valueClass}>{row.value}</span>
+                                </div>
+                            </template>
+                            <!-- <div class="ui-review-section">SIGNATURES</div>
+                    <div class="ui-kv">
+                        <span class="ui-kv-label">Signature fields</span>
+                        <span class="ui-kv-value">{uiReviewSignatureText}</span>
+                    </div> -->
+                            <template if:true={uiHasSignatureFields}>
+                                <div class="ui-review-section">SIGNATURES</div>
+                                <div class="ui-kv">
+                                    <span class="ui-kv-label">Signature fields</span>
+                                    <span class="ui-kv-value">{uiReviewSignatureText}</span>
+                                </div>
+                            </template>
+                        </aside>
+
+                        <!-- Body -->
+                        <div class="modal-body custom-scroll">
+                            <template if:true={isLoading}>
+                                <div class="loading-container">
+                                    <div class="spinner" style="--percentage: calc({loadingPercentage} / 100);">
+                                        <div class="spinner-percentage">{loadingPercentage}%</div>
+                                    </div>
+                                    <p>Hold On,Your Document is getting Ready... {loadingPercentage}%</p>
+                                </div>
+                            </template>
+
+                            <template if:false={isLoading}>
+                                <template for:each={confirmationPopupPages} for:item="page">
+                                    <div key={page.id} class="preview-image-container">
+                                        <img src={page.src} alt={page.alt} class="preview-image" />
+                                        <p>{page.alt}</p>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="modal-footer">
+                        <span class="ui-review-note">Review your completed fields and document details before submitting. Once submitted, your responses will be saved.</span>
+                        <button onclick={handleGeneratePDF}>Submit</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template if:true={showSuccessScreen}>
+
+            <!-- Success Popup -->
+            <div class="success-screen-container">
+                <div class="success-content">
+
+                    <!-- Green Circle Spinner -->
+                    <template if:true={isSpinning}>
+                        <div class="spinner-wrapper">
+                            <div class="spinner-circle"></div>
+                            <p>Generating your PDF... Please wait.</p>
+                        </div>
+                    </template>
+
+                    <!-- Green Checkmark -->
+                    <template if:false={isSpinning}>
+                        <div class="checkmark-wrapper">
+
+                            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                                <path class="checkmark-check" fill="none" d="M14 27l10 10L39 16" />
+                            </svg>
+                        </div>
+                        <!-- OLD UI START (H19: success texts)
+                <h1 class="success-title">Document Signed Successfully</h1>
+                <p class="success-description">Thank you for signing the document! <br>Your signature has been successfully recorded. You will receive a confirmation email shortly. </p>
+                OLD UI END (H19) -->
+                        <h1 class="success-title">Document signed</h1>
+                        <p class="success-description">Your signature has been recorded. A confirmation email is on its
+                            way.</p>
+                        <div class="logo-success">
+                            <img src={logo} alt="Te_sign Logo" />
+                        </div>
+
+                        <!-- OLD UI START (H19: download link)
+                <div class="download-icon-container">
+                    <a href={pdfUrl} target="_blank" download>
+                        <svg class="download-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M19 12l-7 7-7-7"/>
+                        </svg>
+                        <p>Download PDF</p>
+                    </a>
+                </div>
+                OLD UI END (H19) -->
+                        <!-- <div class="download-icon-container">
+                            <a href={pdfUrl} target="_blank" download class="ui-btn ui-btn--primary ui-download-btn">
+                                <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path d="M12 4v12M6 10l6 6 6-6M5 20h14"></path>
+                                </svg>
+                                <span>Download signed PDF</span>
+                            </a>
+                        </div> -->
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <template if:true={showFailureScreen}>
+            <!-- Failure Popup -->
+            <div class="failure-screen-container">
+                <div class="failure-content">
+
+                    <!-- Red Circle Spinner -->
+                    <template if:true={isSpinning}>
+                        <div class="spinner-wrapper">
+                            <div class="spinner-circle red-spinner"></div>
+                            <p>Processing your request... Please wait.</p>
+                        </div>
+                    </template>
+
+                    <!-- Red Cross Mark -->
+                    <template if:false={isSpinning}>
+                        <div class="crossmark-wrapper">
+                            <svg class="crossmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle class="crossmark-circle" cx="26" cy="26" r="25" fill="none" />
+                                <path class="crossmark-path" fill="none" d="M16 16l20 20M36 16l-20 20" />
+                            </svg>
+                        </div>
+                        <!-- OLD UI START (H19: failure texts)
+                <h1 class="failure-title">Document Signing Failed</h1>
+                <p class="failure-description">An error occurred while processing your document.<br>Please try again later.</p>
+                OLD UI END (H19) -->
+                        <h1 class="failure-title">We couldn't submit your document</h1>
+                        <p class="failure-description">Something went wrong while submitting.<br>Please try again.</p>
+
+                        <div class="logo-failure">
+                            <img src={logo} alt="Te_sign Logo" />
+                        </div>
+
+                        <div class="retry-button-container">
+                            <button class="retry-button" onclick={handleRetry}>Retry</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+
+
+
+        <!-- Error Message -->
+        <template if:true={errorMessage}>
+            <div class="error-message">
+                <lightning-icon icon-name="utility:error" alternative-text="Error"></lightning-icon>
+                <p>{errorMessage}</p>
+            </div>
+        </template>
+
+
+        <template if:true={isLinkExpired}>
+            <div class="expired-container">
+                <!-- OLD UI START (H19: expired content)
+                <div class="expired-icon">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L1 21H23L12 2Z" fill="#FFCC00"/>
+                        <path d="M12 8V13" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="12" cy="17" r="1" fill="#333"/>
+                    </svg>
+                </div>
+                <p class="expired-text">
+                    This link has expired. Please contact support for assistance.
+                </p>
+                OLD UI END (H19) -->
+                <div class="expired-icon">
+                    <svg class="ui-icon ui-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 7v5l3 2"></path>
+                    </svg>
+                </div>
+                <p class="ui-state-title">This signing link has expired</p>
+                <p class="expired-text">
+                    For your security, signing links stop working after their expiry date. Please contact the sender or
+                    support for a new link.
+                </p>
+            </div>
+        </template>
+
+        <!-- Invalid / tampered link -->
+        <template if:true={isLinkInvalid}>
+            <div class="expired-container">
+                <div class="expired-icon">
+                    <svg class="ui-icon ui-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 8v5"></path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                </div>
+                <p class="ui-state-title">This signing link isn't valid</p>
+                <p class="expired-text">
+                    The link may be incomplete, changed, or replaced by a newer email. Please open the latest email you
+                    received, or contact the sender for a new link.
+                </p>
+            </div>
+        </template>
+
+
+        <!-- ✅ Already Submitted Message -->
+        <template if:true={isAlreadySubmitted}>
+            <div class="submitted-container">
+                <!-- OLD UI START (H19: already submitted content)
+                <div class="submitted-icon">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#D4EDDA"/>
+                        <path d="M7 12L10 15L17 8" stroke="#155724" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <p class="submitted-text">
+                    This document has already been submitted.
+                </p>
+                OLD UI END (H19) -->
+                <div class="submitted-icon">
+                    <svg class="ui-icon ui-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="5" y="3" width="14" height="18" rx="2"></rect>
+                        <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                </div>
+                <p class="ui-state-title">Already submitted</p>
+                <p class="submitted-text">
+                    You've already signed this document, so there's nothing more to do here.
+                </p>
+            </div>
+        </template>
+
+        <!-- OLD UI START (H1: root lightning-card close)
+    </lightning-card>
+    OLD UI END (H1) -->
+        <!-- NEW UI (H1): closes the ui-app wrapper -->
+    </div>
+</template>

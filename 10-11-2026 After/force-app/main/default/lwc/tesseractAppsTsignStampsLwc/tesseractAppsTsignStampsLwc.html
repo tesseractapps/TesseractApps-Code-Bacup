@@ -1,0 +1,183 @@
+<template>
+    <div class="sig-wrapper">
+
+        <!-- Main Header -->
+        <header class="sig-header">
+            <div class="sig-header-left">
+                <div>
+                    <h2 class="sig-title">Stamps</h2>
+                    <p class="sig-subtitle">Add or update your stamps.</p>
+                </div>
+            </div>
+            <template if:false={showForm}>
+                <button class="sig-primary-btn" onclick={openForm}>+ Create Stamp</button>
+            </template>
+        </header>
+
+        <!-- ============ STAMP MODAL (UPLOAD & CROP) ============ -->
+        <dialog class="sig-modal" lwc:ref="stampModal" ontoggle={handleModalToggle}>
+            <div class="sig-modal-content">
+
+                <!-- Modal Header -->
+                <div class="sig-form-title">
+                    <h3>{modalTitle}</h3>
+                    <button class="sig-close-btn" onclick={handleCancel} aria-label="Close">&times;</button>
+                </div>
+
+                <!-- Scrollable Body -->
+                <div class="sig-modal-body">
+                    <div class="sig-form-content">
+
+                        <!-- Stamp Name Input -->
+                        <div class="sig-top-fields">
+                            <div class="sig-field-col">
+                                <label class="sig-label">Stamp Name <span class="req">*</span></label>
+                                <input type="text"
+                                       class="sig-text-input"
+                                       value={stampName}
+                                       oninput={handleNameChange}
+                                       placeholder="e.g. Approved Seal"
+                                       maxlength="50" />
+                            </div>
+                        </div>
+
+                        <!-- Crop Controls Toolbar -->
+                        <div class="crop-toolbar">
+                            <label class="crop-upload-btn">
+                                CHANGE IMAGE
+                                <input type="file" accept="image/png,image/jpeg"
+                                       onchange={handleFileUpload}
+                                       class="hidden-file-input" />
+                            </label>
+
+                            <select class="crop-select" onchange={handleCropTypeChange} value={cropType}>
+                                <option value="circle">Circle Crop</option>
+                                <option value="square">Square Crop</option>
+                                <option value="none">No Crop</option>
+                            </select>
+
+                            <button type="button" class="crop-reset-btn" onclick={handleResetCrop} title="Reset Zoom">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                    <path d="M3 3v5h5"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Crop Area -->
+                        <div class={cropAreaClass}>
+                            <template if:true={uploadedImageUrl}>
+                                <div class={maskClass}>
+                                    <img src={uploadedImageUrl}
+                                         class="crop-image"
+                                         style={imageStyle} />
+                                </div>
+                            </template>
+                            <template if:false={uploadedImageUrl}>
+                                <div class="crop-placeholder">
+                                    <p>No image selected.</p>
+                                    <p>Click "CHANGE IMAGE" to upload.</p>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Zoom Slider -->
+                        <template if:true={showZoom}>
+                            <div class="crop-zoom-container">
+                                <svg viewBox="0 0 24 24" width="16" height="16" class="zoom-icon"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                <input type="range" min="1" max="3" step="0.1"
+                                       value={zoomLevel}
+                                       oninput={handleZoomChange}
+                                       class="zoom-slider" />
+                                <svg viewBox="0 0 24 24" width="20" height="20" class="zoom-icon"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                            </div>
+                        </template>
+
+                        <!-- Uploading indicator -->
+                        <template if:true={isLogoLoading}>
+                            <div class="sig-upload-status">
+                                <lightning-spinner alternative-text="Uploading stamp..." size="small"></lightning-spinner>
+                                <span>Uploading image…</span>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="sig-footer-docusign">
+                    <div class="sig-footer-actions">
+                        <template if:true={isEditMode}>
+                            <button type="button" class="sig-primary-btn" onclick={handleSave} disabled={isSaveDisabled}>UPDATE</button>
+                        </template>
+                        <template if:false={isEditMode}>
+                            <button type="button" class="sig-primary-btn" onclick={handleSave} disabled={isSaveDisabled}>NEXT</button>
+                        </template>
+                        <button type="button" class="sig-cancel-btn" onclick={handleCancel} disabled={isLogoLoading}>CANCEL</button>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Hidden AWS uploader (same pipeline as the org logo) -->
+      <!--   <template if:true={isFileExpand}>
+            <c-document-office-service
+                record-id={uploadRecordId}
+                module-path-from-parent="profile"
+                allow-multiple="false"
+                onuploadcomplete={handleAwsUploadComplete}
+                onfiledeleted={handleFileDeleted}>
+            </c-document-office-service>
+        </template> -->
+        <!-- Hidden AWS uploader (same pipeline as the org logo) -->
+        <template if:true={isFileExpand}>
+            <div style="display: none;">
+                <c-t-signaws-batch-lwc
+                    module-name="TsignStamp"
+                    organisation-id={currentUserOrgId}
+                    existing-files-json={tempStampJson}
+                    onuploadsuccess={handleAwsUploadComplete}>
+                </c-t-signaws-batch-lwc>
+            </div>
+        </template>
+
+        <!-- ============ LIST OF SAVED STAMPS ============ -->
+        <template if:true={showListSection}>
+            <div class="sig-list">
+                <template for:each={stamps} for:item="stamp">
+                    <article key={stamp.id} class="sig-item">
+                        <div class="sig-item-thumb">
+                            <img src={stamp.dataUrl} alt="Stamp" />
+                        </div>
+                        <div class="sig-item-info">
+                            <div class="sig-item-name-row">
+                                <span class="sig-item-name">{stamp.displayName}</span>
+                                <template if:true={stamp.isDefault}>
+                                    <span class="sig-default-pill">Default</span>
+                                </template>
+                            </div>
+                            <span class="sig-item-meta">Stamp · {stamp.createdDate}</span>
+                        </div>
+                        <div class="sig-item-actions">
+                            <button type="button" class="sig-ghost-btn sig-small" data-id={stamp.id} onclick={handleEdit}>Edit</button>
+                            <template if:false={stamp.isDefault}>
+                                <button type="button" class="sig-ghost-btn sig-small" data-id={stamp.id} onclick={handleSetDefault}>Set Default</button>
+                            </template>
+                            <button type="button" class="sig-danger-btn sig-small" data-id={stamp.id} onclick={handleDelete}>Delete</button>
+                        </div>
+                    </article>
+                </template>
+            </div>
+        </template> 
+
+        <!-- ============ EMPTY STATE ============ -->
+        <template if:true={showEmptyState}>
+            <div class="sig-empty">
+                <h3 class="sig-empty-title">No stamps yet</h3>
+                <p class="sig-empty-text">Upload a custom stamp image to quickly mark your documents.</p>
+                <button type="button" class="sig-primary-btn" onclick={openForm}>+ Upload your first stamp</button>
+            </div>
+        </template>
+
+    </div>
+</template>

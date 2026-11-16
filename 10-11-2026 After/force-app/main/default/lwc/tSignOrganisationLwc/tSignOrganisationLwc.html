@@ -1,0 +1,493 @@
+<template>
+
+    <div class="invoice-page">
+
+        <!-- Page header: title on the left, actions on the right -->
+        <header class="invoice-header">
+            <h1 class="page-title">Organisation Subscription Details</h1>
+           <!--  <div class="header-actions" if:true={isViewMode}>
+              
+                <lightning-button label="Edit" variant="brand" onclick={handleEdit}></lightning-button>
+            </div> -->
+        </header>
+
+        <main class="invoice-scroll-area custom-scroll">
+
+            <!-- <div class="spinner-holder" if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </div> -->
+            <template if:true={isLoading}>
+                <div class="overlay-logo"></div>
+                <div class="spinner-wrapper">
+                    <div class="loader-container">
+                        <img src={logoUrl} alt="Breathing Frame" class="breathing-frame" />
+                        <img src={imageUrl} alt="T Logo" class="Tlogo" />
+                    </div>
+                    <p class="progress-text">Loading<br />Please Wait...</p>
+                </div>
+            </template>            
+
+            <div if:false={isLoading}>
+
+                <!-- ============ VIEW MODE ============ -->
+                <div if:true={showOrgView}>
+
+                    <!-- Summary: avatar, name, status -->
+                    <div class="org-summary">
+                        <div class="org-avatar">{viewData.initials}</div>
+                        <div class="org-summary-text">
+                            <p class="field-label">Organisation name</p>
+                            <div class="org-name-row">
+                                <h2 class="org-name">{viewData.orgName}</h2>
+                                <span class="ta-badge ta-badge-success" if:true={viewData.isActive}>Active</span>
+                            </div>
+                        </div>
+                        <p class="org-summary-meta">
+                            Active since {viewData.activeStartDate} • {viewData.interval} billing in {viewData.market}.
+                        </p>
+                    </div>
+
+                    <!-- Organisation details -->
+                    <section class="org-section">
+                        <h2 class="section-title">Organisation details</h2>
+                        <div class="field-grid">
+                            <div class="field">
+                                <p class="field-label">Email</p>
+                                <p class="field-value">{viewData.email}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Phone</p>
+                                <p class="field-value">{viewData.phone}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Legal organisation name</p>
+                                <p class="field-value">{viewData.legalName}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Business type</p>
+                                <p class="field-value">{viewData.businessType}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Market</p>
+                                <p class="field-value">{viewData.market}</p>
+                            </div>
+
+                            <!-- Australia -->
+                            <template if:true={isAustralia}>
+                                <div class="field">
+                                    <p class="field-label">ABN</p>
+                                    <p class="field-value">{viewData.abn}</p>
+                                </div>
+                                <div class="field">
+                                    <p class="field-label">ACN</p>
+                                    <p class="field-value">{viewData.acn}</p>
+                                </div>
+                            </template>
+
+                            <!-- India -->
+                            <template if:true={isIndia}>
+                                <div class="field">
+                                    <p class="field-label">PAN</p>
+                                    <p class="field-value">{viewData.pan}</p>
+                                </div>
+                                <div class="field">
+                                    <p class="field-label">GSTN</p>
+                                    <p class="field-value">{viewData.gstn}</p>
+                                </div>
+                            </template>
+
+                            <!-- USA -->
+                            <template if:true={isUSA}>
+                                <div class="field">
+                                    <p class="field-label">EIN</p>
+                                    <p class="field-value">{viewData.ein}</p>
+                                </div>
+                            </template>
+
+                            <!-- Canada -->
+                            <template if:true={isCanada}>
+                                <div class="field">
+                                    <p class="field-label">BN (Canada)</p>
+                                    <p class="field-value">{viewData.bnCanada}</p>
+                                </div>
+                                <div class="field">
+                                    <p class="field-label">GST/HST</p>
+                                    <p class="field-value">{viewData.gstHst}</p>
+                                </div>
+                            </template>
+
+                            <!-- Singapore -->
+                            <template if:true={isSingapore}>
+                                <div class="field">
+                                    <p class="field-label">UEN (Singapore)</p>
+                                    <p class="field-value">{viewData.uenSingapore}</p>
+                                </div>
+                                <div class="field">
+                                    <p class="field-label">GST (Singapore)</p>
+                                    <p class="field-value">{viewData.gstSingapore}</p>
+                                </div>
+                            </template>
+
+                            <div class="field field_wide">
+                                <p class="field-label">Address</p>
+                                <p class="field-value">{viewData.address}</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Primary contact -->
+                    <section class="org-section">
+                        <h2 class="section-title">Primary contact</h2>
+                        <template if:true={hasContacts}>
+                            <template for:each={primaryContacts} for:item="contact">
+                                <div key={contact.Id} class="field-grid contact-row">
+                                    <div class="field">
+                                        <p class="field-label">First name</p>
+                                        <p class="field-value">{contact.First_Name__c}</p>
+                                    </div>
+                                    <div class="field">
+                                        <p class="field-label">Last name</p>
+                                        <p class="field-value">{contact.Last_Name__c}</p>
+                                    </div>
+                                    <div class="field">
+                                        <p class="field-label">Email</p>
+                                        <p class="field-value">{contact.Email__c}</p>
+                                    </div>
+                                    <div class="field">
+                                        <p class="field-label">Phone</p>
+                                        <p class="field-value">{contact.Phone__c}</p>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+                        <template if:false={hasContacts}>
+                            <p class="field-value field-value_empty">-</p>
+                        </template>
+                    </section>
+
+                    <!-- Subscription -->
+                    <section class="org-section">
+                        <h2 class="section-title">Subscription</h2>
+                        <div class="field-grid">
+                            <div class="field">
+                                <p class="field-label">Account type</p>
+                                <p class="field-value">{viewData.accountType}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Status</p>
+                                <p class="field-value text-success" if:true={viewData.isActive}>{viewData.statusText}</p>
+                                <p class="field-value text-error" if:false={viewData.isActive}>{viewData.statusText}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Start date</p>
+                                <p class="field-value">{viewData.startDate}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">End date</p>
+                                <p class="field-value">{viewData.endDate}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Billing frequency</p>
+                                <p class="field-value">{viewData.interval}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Your current plan</p>
+                                <p class="field-value">
+                                    <a href="#" class="plan-link" onclick={handleOpenSubscription}>{viewData.planLinkText}</a>
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Billing information -->
+                    <section class="org-section">
+                        <h2 class="section-title">Billing information</h2>
+                        <div class="field-grid">
+                            <div class="field">
+                                <p class="field-label">Billing email</p>
+                                <p class="field-value">{viewData.billingEmail}</p>
+                            </div>
+                            <div class="field">
+                                <p class="field-label">Billing phone</p>
+                                <p class="field-value">{viewData.billingPhone}</p>
+                            </div>
+                            <div class="field field_wide">
+                                <p class="field-label">Billing address</p>
+                                <p class="field-value">{viewData.billingAddress}</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Payment history (NDIS history-table style) -->
+                    <section class="org-section">
+                        <h2 class="section-title">Payment history and Invoice</h2>
+                        <div class="table-container invoiceTable">
+                            <table class="staff-table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-th" title="Invoice No.">Invoice No.</th>
+                                        <th class="table-th" title="Date Issued">Date Issued</th>
+                                        <th class="table-th" title="Subscription Start Date">Period Start Date</th>
+                                        <th class="table-th" title="Subscription End Date">Period End Date</th>
+                                        <th class="table-th" title="Amount">Amount</th>
+                                        <th class="table-th center" title="Action">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template if:true={hasInvoices}>
+                                        <template for:each={invoices} for:item="inv">
+                                            <tr key={inv.Id}>
+                                                <td class="table-td" title={inv.Stripe_Invoice_Number__c}>{inv.Stripe_Invoice_Number__c}</td>
+                                                <td class="table-td" title={inv.formattedDateIssued}>{inv.formattedDateIssued}</td>
+                                                <td class="table-td" title={inv.SubscriptionStartDate}>{inv.SubscriptionStartDate}</td>
+                                                <td class="table-td" title={inv.SubscriptionEndDate}>{inv.SubscriptionEndDate}</td>
+                                               <!--  <td class="table-td" title={inv.Invoice_Amount__c}>{inv.Invoice_Amount__c}</td> -->
+                                               <td class="table-td">
+                                                    <lightning-formatted-number
+                                                        value={inv.Invoice_Amount__c}
+                                                        format-style="currency"
+                                                        currency-code={currencyCode}
+                                                        currency-display-as="symbol"
+                                                        maximum-fraction-digits="2">
+                                                    </lightning-formatted-number>
+                                                </td>
+                                                <td class="table-td center">
+                                                    <template if:true={inv.Invoice_URL__c}>
+                                                        <a href={inv.Invoice_URL__c} target="_blank" class="icon-link" title="View invoice">
+                                                            <i class="material-icons view-icon">visibility</i>
+                                                        </a>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template if:false={hasInvoices}>
+                                        <tr>
+                                            <td class="no-data">No invoices found.</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Invoice Preview Modal (NDIS popup style) -->
+                    <template if:true={isInvoiceModalOpen}>
+                        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                            <div class="slds-modal__container createEditModal">
+                                <header class="slds-modal__header headercustom modal-header-custom">
+                                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">Invoice Preview</h2>
+                                    <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleCloseInvoiceModal}>
+                                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                                    </button>
+                                </header>
+                                <div class="slds-modal__content slds-p-around_none invoice-frame-holder">
+                                    <template if:true={currentInvoiceUrl}>
+                                        <iframe src={currentInvoiceUrl} class="invoice-frame" title="Invoice Preview"></iframe>
+                                    </template>
+                                </div>
+                                <footer class="slds-modal__footer">
+                                    <lightning-button label="Close" onclick={handleCloseInvoiceModal}></lightning-button>
+                                </footer>
+                            </div>
+                        </section>
+                        <div class="slds-backdrop slds-backdrop_open"></div>
+                    </template>
+
+                </div>
+                <!-- End View Mode -->
+
+                <!-- ============ EDIT POPUP (NDIS "Edit Staff" style) ============ -->
+                <template if:true={isEditMode}>
+                    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container createEditModal">
+
+                            <header class="slds-modal__header headercustom modal-header-custom">
+                                <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">Edit Organisation</h2>
+                                <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleCancel}>
+                                    <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                                </button>
+                            </header>
+
+                            <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                                <h3 class="slds-text-title_bold modal-section-title">Organisation Details</h3>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop"><span class="required-mark">*</span>Organisation Name</span>
+                                            <lightning-input label="Organisation Name" variant="label-hidden" value={orgData.Name} onchange={handleFieldChange} data-field="Name" required></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop"><span class="required-mark">*</span>Email</span>
+                                            <lightning-input label="Email" variant="label-hidden" type="email" value={orgData.Email__c} onchange={handleFieldChange} disabled="true" data-field="Email__c"></lightning-input>
+                                        </div>
+                                    </div>
+                                     <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop"><span class="required-mark">*</span>Phone</span>
+                                            <lightning-input label="Phone" variant="label-hidden" type="text" value={orgData.Phone__c} onchange={handleFieldChange}  data-field="Phone__c" required></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Legal Name</span>
+                                            <lightning-input label="Legal Name" variant="label-hidden" value={orgData.Legal_Name__c} onchange={handleFieldChange} data-field="Legal_Name__c"></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Business Type</span>
+                                            <lightning-input label="Business Type" variant="label-hidden" value={orgData.Business_Type__c} onchange={handleFieldChange} data-field="Business_Type__c"></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Account Type</span>
+                                            <lightning-input label="Account Type" variant="label-hidden" value={orgData.Account_Type__c} onchange={handleFieldChange} data-field="Account_Type__c"></lightning-input>
+                                        </div>
+                                    </div>
+                                    <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                        <div class="floating-label">
+                                            <span class="label-text-drop">Market</span>
+                                            <lightning-input label="Market" variant="label-hidden" value={orgData.Market__c} onchange={handleFieldChange} data-field="Market__c"></lightning-input>
+                                        </div>
+                                    </div>
+
+                                    <!-- Australia -->
+                                    <template if:true={isAustralia}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">ABN</span>
+                                                <lightning-input label="ABN" variant="label-hidden" value={orgData.ABN__c} onchange={handleFieldChange} data-field="ABN__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">ACN</span>
+                                                <lightning-input label="ACN" variant="label-hidden" value={orgData.ACN__c} onchange={handleFieldChange} data-field="ACN__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- India -->
+                                    <template if:true={isIndia}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">PAN</span>
+                                                <lightning-input label="PAN" variant="label-hidden" value={orgData.PAN__c} onchange={handleFieldChange} data-field="PAN__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">GSTN</span>
+                                                <lightning-input label="GSTN" variant="label-hidden" value={orgData.GSTN__c} onchange={handleFieldChange} data-field="GSTN__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- USA -->
+                                    <template if:true={isUSA}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">EIN</span>
+                                                <lightning-input label="EIN" variant="label-hidden" value={orgData.EIN__c} onchange={handleFieldChange} data-field="EIN__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Canada -->
+                                    <template if:true={isCanada}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">BN (Canada)</span>
+                                                <lightning-input label="BN (Canada)" variant="label-hidden" value={orgData.BN_Canada__c} onchange={handleFieldChange} data-field="BN_Canada__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">GST/HST</span>
+                                                <lightning-input label="GST/HST" variant="label-hidden" value={orgData.GST_HST__c} onchange={handleFieldChange} data-field="GST_HST__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Singapore -->
+                                    <template if:true={isSingapore}>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">UEN (Singapore)</span>
+                                                <lightning-input label="UEN (Singapore)" variant="label-hidden" value={orgData.UEN_Singapore__c} onchange={handleFieldChange} data-field="UEN_Singapore__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">GST (Singapore)</span>
+                                                <lightning-input label="GST (Singapore)" variant="label-hidden" value={orgData.GST_Singapore__c} onchange={handleFieldChange} data-field="GST_Singapore__c"></lightning-input>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Address (the address component shows its own "Address" label) -->
+                                <div class="slds-grid slds-wrap slds-m-top_x-small">
+                                    <div class="slds-size_1-of-1 slds-large-size_1-of-2 slds-p-around_small">
+                                        <c-t-sign-address-selector
+                                            address={childAddress}
+                                            onaddresschange={handleAddressChange}>
+                                        </c-t-sign-address-selector>
+                                    </div>
+                                </div>
+
+                                <template if:true={hasContacts}>
+                                    <h3 class="slds-text-title_bold modal-section-title slds-m-top_small">Primary Contacts</h3>
+                                    <template for:each={primaryContacts} for:item="contact" for:index="index">
+                                        <div key={contact.Id} class="slds-grid slds-wrap">
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div class="floating-label">
+                                                    <span class="label-text-drop">First Name</span>
+                                                    <lightning-input label="First Name" variant="label-hidden" value={contact.First_Name__c} data-index={index} data-field="First_Name__c" onchange={handleContactChange}></lightning-input>
+                                                </div>
+                                            </div>
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div class="floating-label">
+                                                    <span class="label-text-drop">Last Name</span>
+                                                    <lightning-input label="Last Name" variant="label-hidden" value={contact.Last_Name__c} data-index={index} data-field="Last_Name__c" onchange={handleContactChange}></lightning-input>
+                                                </div>
+                                            </div>
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div class="floating-label">
+                                                    <span class="label-text-drop">Email</span>
+                                                    <lightning-input label="Email" variant="label-hidden" type="email" value={contact.Email__c} data-index={index} data-field="Email__c" onchange={handleContactChange}></lightning-input>
+                                                </div>
+                                            </div>
+                                            <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                                <div class="floating-label">
+                                                    <span class="label-text-drop">Phone</span>
+                                                    <lightning-input label="Phone" variant="label-hidden" type="tel" value={contact.Phone__c} data-index={index} data-field="Phone__c" onchange={handleContactChange}></lightning-input>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+
+                            <footer class="slds-modal__footer">
+                                <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+                                <lightning-button label="Update" variant="brand" onclick={handleSave} class="slds-m-left_x-small"></lightning-button>
+                            </footer>
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                </template>
+
+            </div>
+
+            <!-- <template if:true={showSubscriptionPanel}>
+                <c-t-sign-subscriptions-lwc subscriber-email={viewData.email} stripe-customer-id={viewData.stripeCustomerId}
+                    org-record-id={orgData.Id} onsubscriptionupdated={handleSubscriptionUpdated} onclosesubscription={handleCloseSubscription}></c-t-sign-subscriptions-lwc>
+            </template> -->
+        </main>
+    </div>
+</template>

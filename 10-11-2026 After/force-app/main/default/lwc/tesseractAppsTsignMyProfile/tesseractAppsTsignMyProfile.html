@@ -1,0 +1,352 @@
+<template>
+    <div class="profile-container">
+        <!-- Header Menu -->
+        <div class="menu-container">
+            <div class={templatesClass} onclick={handleTemplates}>My Profile</div>
+            <div class={createtemplatesClass} onclick={handleCreatedTemplates}>Signature</div>
+            <!-- <div class={stampClass} onclick={handleCreatesStamps}>Stamps</div> -->
+            <!-- Edit Button (Only shows in View Mode) -->
+            <div class="header-actions" if:true={showProfileView}>
+                <!-- <lightning-button label="Subscription" variant="brand" onclick={handleSubscription}></lightning-button> &nbsp; -->
+                <lightning-button 
+                    label="Edit" 
+                    variant="brand" 
+                    onclick={handleEdit} 
+                    title="Edit">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class={signatureClass}>
+
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <div class="slds-is-relative slds-p-around_xx-large">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Data State -->
+            <template if:false={isLoading}>
+                <template if:false={error}>
+
+                    <!-- ========================================== -->
+                    <!-- PROFILE TAB - VIEW MODE                    -->
+                    <!-- ========================================== -->
+                    <template if:true={showProfileDetails}>
+                        <!-- Profile Header: photo/initials, name + status badge, plan info -->
+                        <div class="profile-header">
+                            <div class="profile-header-main">
+                                <!-- Initials sit underneath; the photo covers them and is hidden if it fails to load -->
+                                <div class="profile-avatar-circle">
+                                    <div class="profile-avatar-initials">{userInitials}</div>
+                                    <template if:true={userDetails.profilePicUrl}>
+                                        <img src={userDetails.profilePicUrl} alt="Profile" class="profile-avatar-img" onerror={handleAvatarError} />
+                                    </template>
+                                </div>
+                                <div class="profile-header-text">
+                                    <div class="field-label">User Name</div>
+                                    <div class="profile-name-row">
+                                        <h1 class="profile-name">{userDetails.firstName} {userDetails.lastName}</h1>
+                                        <span class={statusBadgeClass}>{userDetails.statusText}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="profile-header-meta">
+                                Active since {userDetails.activeSince} • {userDetails.billingText}
+                            </span>
+                        </div>
+
+                        <div class="slds-box slds-box_xx-small custom-scroll-box">
+
+                            <!-- Personal Details Section -->
+                            <div class="section-container">
+                                <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">First Name</div>
+                                        <div class="field-value">{userDetails.firstName}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Last Name</div>
+                                        <div class="field-value">{userDetails.lastName}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Email ID</div>
+                                        <div class="field-value">{userDetails.email}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Contact</div>
+                                        <div class="field-value">{userDetails.phone}</div>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Address</div>
+                                        <div class="field-value">{userDetails.formattedAddress}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Country</div>
+                                        <div class="field-value">{userDetails.country}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subscription Section -->
+                            <div class="section-container">
+                                <h2 class="section-title">Subscription</h2>
+                                <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Account type</div>
+                                        <div class="field-value">{subscription.accountType}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Status</div>
+                                        <div class="field-value text-success">{subscription.status}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Start date</div>
+                                        <div class="field-value">{subscription.startDate}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Next billing date</div>
+                                        <div class="field-value">{subscription.nextBillingDate}</div>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <div class="field-label">Billing currency</div>
+                                        <div class="field-value">{subscription.billingCurrency}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+                                        <div class="field-label">Billing frequency</div>
+                                        <div class="field-value">{subscription.billingFrequency}</div> 
+                                    </div>
+                                </div>
+                            </div>
+                    <template if:true={showBillingAndInvoices}>
+                            <!-- Billing Information Section -->
+                            <div class="section-container">
+                                <h2 class="section-title">Billing information</h2>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Billing contact</div>
+                                        <div class="field-value">{billingInfo.contact}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Billing email</div>
+                                        <div class="field-value">{billingInfo.email}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Billing address</div>
+                                        <div class="field-value">{billingInfo.address}</div>
+                                    </div>
+                                   <!--  <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-bottom_small">
+                                        <div class="field-label">Tax information</div>
+                                        <div class="field-value">{billingInfo.taxInfo}</div>
+                                    </div> -->
+                                </div>
+                            </div>
+
+                            <!-- Payment History & Invoice (NDIS history-table style) -->
+                            <div class="section-container">
+                                <h2 class="section-title">Payment history and Invoice</h2>
+                                <div class="table-container invoiceTable">
+                                    <table class="staff-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="table-th" title="Invoice No.">Invoice No.</th>
+                                                <th class="table-th" title="Date Issued">Date Issued</th>
+                                                <th class="table-th" title="Subscription Start Date">Period Start Date</th>
+                                                <th class="table-th" title="Subscription End Date">Period End Date</th>
+                                                <th class="table-th" title="Amount">Amount</th>
+                                                <th class="table-th center" title="Action">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template if:true={hasInvoices}>
+                                                <template for:each={invoices} for:item="inv">
+                                                    <tr key={inv.id}>
+                                                        <td class="table-td" title={inv.id}>{inv.id}</td>
+                                                        <td class="table-td" title={inv.paymentDate}>{inv.paymentDate}</td>
+                                                        <td class="table-td" title={inv.SubscriptionStartDate}>{inv.SubscriptionStartDate}</td>
+                                                        <td class="table-td" title={inv.SubscriptionEndDate}>{inv.SubscriptionEndDate}</td>
+                                                       <!--  <td class="table-td" title={inv.invoiceGenerated}>{inv.invoiceGenerated}</td> -->
+
+                                                        <td class="table-td">
+                                                            <lightning-formatted-number
+                                                                value={inv.invoiceGenerated}
+                                                                format-style="currency"
+                                                                currency-code={currencyCode}
+                                                                currency-display-as="symbol"
+                                                                maximum-fraction-digits="2">
+                                                            </lightning-formatted-number>
+                                                        </td>
+                                                        <td class="table-td center">
+                                                            <template if:true={inv.invoiceUrl}>
+                                                                <a href={inv.invoiceUrl} target="_blank" class="icon-link" title="Preview">
+                                                                    <i class="material-icons view-icon">visibility</i>
+                                                                </a>
+                                                            </template>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </template>
+                                            <template if:false={hasInvoices}>
+                                                <tr>
+                                                    <td class="no-data">No invoices found.</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                 </template>
+
+                        </div>
+                    </template>
+
+                    <!-- ========================================== -->
+                    <!-- PROFILE TAB - EDIT POPUP (NDIS style)      -->
+                    <!-- ========================================== -->
+                    <template if:true={isEditMode}>
+                        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                            <div class="slds-modal__container createEditModal">
+
+                                <header class="slds-modal__header headercustom modal-header-custom">
+                                    <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">Edit Profile</h2>
+                                    <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleCancel}>
+                                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                                    </button>
+                                </header>
+
+                                <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                                    <h3 class="slds-text-title_bold modal-section-title">Personal Details</h3>
+                                    <div class="slds-grid slds-wrap">
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span class="required-mark">*</span>First Name</span>
+                                                <lightning-input label="First Name" variant="label-hidden" name="firstName" value={userDetails.firstName} onchange={handleInputChange} required></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span class="required-mark">*</span>Last Name</span>
+                                                <lightning-input label="Last Name" variant="label-hidden" name="lastName" value={userDetails.lastName} onchange={handleInputChange} required></lightning-input>
+                                            </div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop">Email ID</span>
+                                                <lightning-input label="Email ID" variant="label-hidden" name="email" type="email" value={userDetails.email} onchange={handleInputChange} disabled required></lightning-input>
+                                            </div>
+                                            <div class="field-hint">(Email cannot be edited here)</div>
+                                        </div>
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <div class="floating-label">
+                                                <span class="label-text-drop"><span class="required-mark">*</span>Contact</span>
+                                                <lightning-input label="Contact" variant="label-hidden" name="phone" type="tel" value={userDetails.phone} onchange={handleInputChange} required></lightning-input>
+                                            </div>
+                                        </div>
+
+                                        <!-- Profile picture -->
+                                        <div class="slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_small">
+                                            <!-- <input type="file" accept="image/png, image/jpeg, image/jpg" onchange={handleFileSelect} style="display:none;" class="hidden-profile-input" />
+                                            <lightning-button
+                                                label="Change Profile Picture"
+                                                icon-name="utility:upload"
+                                                onclick={triggerFileInput}
+                                                disabled={isUploading}
+                                                stretch
+                                                class="full-width-button">
+                                            </lightning-button> -->
+
+                                            <c-t-signaws-batch-lwc
+                                                is-used-for-profile-pic 
+                                                module-name="MyProfilePic"
+                                                organisation-id={userDetails.currentUserOrgId}
+                                                onuploadsuccess={handleUplodadProfilePic}
+                                                 existing-files-json={userDetails.profilePicJson}
+                                            >
+                                            </c-t-signaws-batch-lwc> 
+                                        </div>
+                                       <!--  <template if:true={isFileExpand}>
+                                            <div class="slds-size_1-of-1 slds-p-around_small">
+                                                <c-document-office-service
+                                                    record-id={userDetails.staffId}
+                                                    module-path-from-parent="profile"
+                                                    allow-multiple="false"
+                                                    onuploadcomplete={handleAwsUploadComplete}
+                                                    onfiledeleted={handleFileDeleted}>
+                                                </c-document-office-service>
+                                            </div>
+                                        </template> -->
+                                    </div>
+
+                                    <!-- Address (the address component shows its own "Address" label) -->
+                                    <div class="slds-grid slds-wrap slds-m-top_x-small">
+                                        <div class="slds-size_1-of-1 slds-large-size_1-of-2 slds-p-around_small">
+                                            <c-t-sign-address-selector
+                                                address={childAddress}
+                                                onaddresschange={handleAddressChange}>
+                                            </c-t-sign-address-selector>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <footer class="slds-modal__footer">
+                                    <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+                                    <lightning-button label="Update" variant="brand" onclick={handleSave} class="slds-m-left_x-small"></lightning-button>
+                                </footer>
+                            </div>
+                        </section>
+                        <div class="slds-backdrop slds-backdrop_open"></div>
+                    </template>
+
+                    <!-- ========================================== -->
+                    <!-- SIGNATURE TAB                              -->
+                    <!-- ========================================== -->
+                    <template if:true={showSignatureView}>
+                        <c-tesseract-apps-t-sign-signature-lwc></c-tesseract-apps-t-sign-signature-lwc>
+                    </template>
+
+                    <!-- ========================================== -->
+                    <!-- Stamp TAB                              -->
+                    <!-- ========================================== -->
+                    <template if:true={showStampView}>
+                        <c-tesseract-apps-tsign-stamps-lwc></c-tesseract-apps-tsign-stamps-lwc>
+                    </template>
+
+                    <!-- No Organisation message (shown only when subscription tab opened) -->
+                    <!-- <template if:true={showNoOrgMessage}>
+                        <div class="slds-box slds-m-top_medium">
+                            <p class="slds-text-color_error">Organisation details were not found for your user, so the subscription can't be loaded.</p>
+                            <lightning-button class="slds-m-top_small" label="Back" onclick={handleCloseSubscription}></lightning-button>
+                        </div>
+                    </template> -->
+
+                    <!-- Subscription panel -->
+                    <!-- <template if:true={showSubscriptionPanel}>
+                        <c-t-sign-subscriptions-lwc
+                            subscriber-email={orgEmail}
+                            stripe-customer-id={stripeCustomerId}
+                            org-record-id={orgRecordId}
+                            opened-from="profile"
+                            onsubscriptionupdated={handleSubscriptionUpdated}
+                            onclosesubscription={handleCloseSubscription}>
+                        </c-t-sign-subscriptions-lwc>
+                    </template> -->
+
+                </template>
+
+                <!-- Error state -->
+                <template if:true={error}>
+                    <div class="slds-box slds-m-top_medium">
+                        <p class="slds-text-color_error">{error.body.message}</p>
+                    </div>
+                </template>
+            </template>
+
+        </div>
+    </div>
+</template>
