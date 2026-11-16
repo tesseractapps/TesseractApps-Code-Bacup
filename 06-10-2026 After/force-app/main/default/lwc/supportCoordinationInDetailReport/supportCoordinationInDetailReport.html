@@ -1,0 +1,647 @@
+<template>
+    <div class="mainContainer">
+
+        <!-- Fixed Header -->
+        <div class="menu-container">
+            <div class="menu-left">
+                <div class={allParticipantClass} data-type="all">
+                    Reports
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="content-area custom-scroll">
+
+            <!-- Filters Row -->
+            <div class="slds-grid slds-gutters slds-m-around_medium">
+
+                <div class="slds-col">
+                    <lightning-combobox
+                        label="Report Type"
+                        value={reportType}
+                        options={reportTypeOptions}
+                        onchange={handleReportTypeChange}>
+                    </lightning-combobox>
+                </div>
+
+                <template if:true={participantflag}>
+                    <div class="slds-col">
+                        <c-tesseract-apps-multi-combobox
+                            label="Participant"
+                            options={participantOptions}
+                            value={selectedParticipant}
+                            onchange={handleParticipantChange}>
+                        </c-tesseract-apps-multi-combobox>
+                    </div>
+                </template>
+
+                <template if:true={reportCategoryflag}>
+                    <div class="slds-col">
+                        <lightning-combobox
+                            label="Report Category"
+                            value={selectedReport}
+                            options={reportOptions}
+                            onchange={handleReportChange}>
+                        </lightning-combobox>
+                    </div>
+                </template>
+
+                <template if:true={fromDateflag}>
+                    <div class="slds-col">
+                        <lightning-input
+                            type="date"
+                            label="From Date"
+                            value={fromDate}
+                            onchange={handleFromDateChange}>
+                        </lightning-input>
+                    </div>
+                </template>
+
+                <template if:true={toDateflag}>
+                    <div class="slds-col">
+                        <lightning-input
+                            type="date"
+                            label="To Date"
+                            value={toDate}
+                            onchange={handleToDateChange}>
+                        </lightning-input>
+                    </div>
+                </template>
+
+                <div class="slds-col slds-m-top_large slds-col_bump-left slds-text-align_right">
+                    <lightning-button
+                        label="Generate Report"
+                        variant="brand"
+                        onclick={handleGenerateReport}>
+                    </lightning-button>
+                </div>
+
+            </div>
+
+            <!-- Report Content -->
+            <div class="slds-p-around_medium">
+                <!-- Case Notes -->
+                <template if:true={caseNotesSearched}>
+                    <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <h2 class="slds-text-heading_large slds-text-title_bold">
+                                Case Notes Report
+                            </h2>
+                        </div>
+                        <template if:true={caseNotesData.length}>
+                            <div class="slds-grid slds-grid_vertical-align-center -gutters_small">
+                                <lightning-button label="Export PDF" variant="brand" class="export-btn" onclick={handleExportPdfCaseNotes}></lightning-button>
+                                <lightning-button label="Export CSV" variant="brand" class="export-btn slds-m-left_medium" onclick={handleExportCsvCaseNotes}></lightning-button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="table-container CaseNotesModal">
+                        <!-- HEADER -->
+                        <div class="header-wrapper">
+                            <table class="staff-table" role="table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-th">Date</th>
+                                        <th class="table-th">Participant Name</th>
+                                        <th class="table-th">Note Type</th>
+                                        <th class="table-th">Contact Method</th>
+                                        <th class="table-th">Billable</th>
+                                        <th class="table-th">Duration</th>
+                                        <th class="table-th">Rate</th>
+                                        <th class="table-th">Total Cost</th>
+                                        <th class="table-th">Service Item</th>
+                                        <th class="table-th">Activity Details</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+
+                        <!-- BODY -->
+                        <div class="body-scroll custom-scroll CaseNotesTableHeight">
+                            <table class="staff-table">
+                                <tbody>
+                                    <template if:true={caseNotesData.length}>
+                                        <template for:each={pagedCaseNotesData} for:item="participant">
+                                            <tr key={participant.id} class="table-row">
+                                                <td class="table-td">{participant.date}</td>
+                                                <td class="table-td">{participant.participantName}</td>
+                                                <td class="table-td">{participant.noteType}</td>
+                                                <td class="table-td">{participant.contactMethod}</td>
+                                                <td class="table-td">{participant.billable}</td>
+                                                <td class="table-td">
+                                                    <lightning-formatted-number value={participant.duration} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                                                </td>
+                                                <td class="table-td"><lightning-formatted-number value={participant.rate} format-style="currency" currency-code="AUD" minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                                <td class="table-td"><lightning-formatted-number value={participant.totalCost} format-style="currency" currency-code="AUD" minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                                                <td class="table-td" title={participant.serviceItem}>{participant.serviceItem}</td>
+                                                <td class="table-td" title={participant.activityDetails}>{participant.activityDetails}</td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template if:false={caseNotesData.length}>
+                                        <tr class="table-row">
+                                            <td class="table-td no-data">No Records Found</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+
+                <template if:true={providerSearched}>
+
+                    <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <h2 class="slds-text-heading_large slds-text-title_bold">
+                                Provider Report
+                            </h2>
+                        </div>
+                        <template if:true={providerData.length}>
+                            <div class="slds-grid slds-grid_vertical-align-center slds-gutters_small">
+                                <lightning-button label="Export PDF" variant="brand" class="export-btn" onclick={handleExportPdfProvider}></lightning-button>
+                                <lightning-button label="Export CSV" variant="brand" class="export-btn slds-m-left_medium" onclick={handleExportCsvProvider}></lightning-button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="table-container provideModal">
+                        <div class="header-wrapper">
+                            <table class="staff-table" role="table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-th">Provider</th>
+                                        <th class="table-th">Email</th>
+                                        <th class="table-th">Phone</th>
+                                        <th class="table-th">Service Type</th>
+                                        <th class="table-th">Status</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+
+                        <div class="body-scroll custom-scroll CaseNotesTableHeight">
+                            <table class="staff-table">
+                                <tbody>
+                                    <template if:true={providerData.length}>
+                                        <template for:each={pagedProviderData} for:item="participant">
+                                            <tr key={participant.id} class="table-row">
+                                                <td class="table-td">{participant.name}</td>
+                                                <td class="table-td">{participant.email}</td>
+                                                <td class="table-td">{participant.phone}</td>
+                                                <td class="table-td" title={participant.serviceType}>{participant.serviceType}</td>
+                                                <td class="table-td">{participant.status}</td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template if:false={providerData.length}>
+                                        <tr class="table-row">
+                                            <td class="table-td no-data">No Records Found</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </template>
+
+                <template if:true={utilizationSearched}>
+
+                    <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <h2 class="slds-text-heading_large slds-text-title_bold">
+                                utilization Report
+                            </h2>
+                        </div>
+                        <template if:true={utilizationRows.length}>
+                            <div class="slds-grid slds-grid_vertical-align-center slds-gutters_small">
+                                <lightning-button label="Export PDF" variant="brand" class="export-btn" onclick={handleExportPdfutilization}></lightning-button>
+                                <lightning-button label="Export CSV" variant="brand" class="export-btn slds-m-left_medium" onclick={handleExportCsvutilization}></lightning-button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="table-container utilizationModal">
+                        <div class="header-wrapper">
+                            <table class="staff-table" role="table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-th">Participant</th>
+                                        <th class="table-th">Support Item</th>
+                                        <th class="table-th">Planned</th>
+                                        <th class="table-th">Actual</th>
+                                        <th class="table-th">Variance</th>
+                                        <th class="table-th">Status</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+
+                        <div class="body-scroll custom-scroll CaseNotesTableHeight">
+                            <table class="staff-table">
+                                <tbody>
+                                    <template if:true={utilizationRows.length}>
+                                        <template for:each={pagedUtilizationRows} for:item="participant">
+                                            <tr key={participant.id} class="table-row">
+                                                <td class="table-td">{participant.participantName}</td>
+                                                <td class="table-td">{participant.supportItemName}</td>
+                                                <td class="table-td">${participant.planned}</td>
+                                                <td class="table-td">${participant.actual}</td>
+                                                <td class="table-td">${participant.variance}</td>
+                                                <td class="table-td">
+                                                    <span class={participant.statusClass}>
+                                                        {participant.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template if:false={utilizationRows.length}>
+                                        <tr class="table-row">
+                                            <td class="table-td no-data">No Records Found</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </template>
+
+                <template if:true={reconciliationSearched}>
+
+                    <div class="utilization-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_large slds-m-around_medium">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <h2 class="slds-text-heading_large slds-text-title_bold">
+                                Reconciliation Report
+                            </h2>
+                        </div>
+                        <template if:true={reconciliationData.length}>
+                            <div class="slds-grid slds-grid_vertical-align-center slds-gutters_small">
+                                <lightning-button label="Export PDF" variant="brand" class="export-btn" onclick={handleExportPdfreconciliation}></lightning-button>
+                                <lightning-button label="Export CSV" variant="brand" class="export-btn slds-m-left_medium" onclick={handleExportCsvreconciliation}></lightning-button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="table-container ReconciliationModal">
+                        <div class="header-wrapper">
+                            <table class="staff-table" role="table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-th">Date</th>
+                                        <th class="table-th">Support Item Name</th>
+                                        <th class="table-th">Planned</th>
+                                        <th class="table-th">Actual</th>
+                                        <th class="table-th">Variance</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+
+                        <div class="body-scroll custom-scroll CaseNotesTableHeight">
+                            <table class="staff-table">
+                                <tbody>
+                                    <template if:true={reconciliationData.length}>
+                                        <template for:each={pagedReconciliationData} for:item="participant">
+                                            <tr key={participant.id} class="table-row">
+                                                <td class="table-td">{participant.date}</td>
+                                                <td class="table-td">{participant.supportItemName}</td>
+                                                <td class="table-td">${participant.planned}</td>
+                                                <td class="table-td">${participant.actual}</td>
+                                                <td class="table-td">${participant.variance}</td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                    <template if:false={reconciliationData.length}>
+                                        <tr class="table-row">
+                                            <td class="table-td no-data">No Records Found</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </template>
+            </div>
+
+        </div>
+
+        <!-- Fixed Footer -->
+        <template if:true={caseNotesData.length}>
+            <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                <!-- Page Size -->
+                <div class="slds-list_inline">
+                    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                    <div class="slds-select_container">
+                        <select
+                            class="slds-select"
+                            id="CaseNotesModalrecordsPerPage"
+                            onchange={handleCaseNotesRecordsPerPageChange}>
+
+                            <template for:each={caseNotesPageSizeOptions} for:item="option">
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            </template>
+
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="slds-align_absolute-center">
+
+                    <lightning-button
+                        disabled={caseNotesDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        onclick={handleCaseNotesFirstPage}
+                        style="margin-right: 10px;">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={caseNotesDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        onclick={handleCaseNotesPreviousPage}
+                        style="margin-right: 5px;">
+                    </lightning-button>
+
+                    <span class="slds-badge">
+                        Showing {caseNotesPageNumber} of {caseNotesTotalPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                        disabled={caseNotesDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        onclick={handleCaseNotesNextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={caseNotesDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        onclick={handleCaseNotesLastPage}
+                        icon-position="right">
+                    </lightning-button>
+
+                </div>
+
+                <!-- Total -->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge">
+                            Total Records: {caseNotesTotalRecords}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+        <template if:true={providerData.length}>
+            <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                <!-- Page Size -->
+                <div class="slds-list_inline">
+                    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                    <div class="slds-select_container">
+                        <select
+                            class="slds-select"
+                            id="providerrecordsPerPage"
+                            onchange={handleProviderRecordsPerPageChange}>
+
+                            <template for:each={providerPageSizeOptions} for:item="option">
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            </template>
+
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="slds-align_absolute-center">
+
+                    <lightning-button
+                        disabled={providerDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        onclick={handleProviderFirstPage}
+                        style="margin-right: 10px;">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={providerDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        onclick={handleProviderPreviousPage}
+                        style="margin-right: 5px;">
+                    </lightning-button>
+
+                    <span class="slds-badge">
+                        Showing {providerPageNumber} of {providerTotalPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                        disabled={providerDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        onclick={handleProviderNextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={providerDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        onclick={handleProviderLastPage}
+                        icon-position="right">
+                    </lightning-button>
+
+                </div>
+
+                <!-- Total -->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge">
+                            Total Records: {providerTotalRecords}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+        <template if:true={utilizationRows.length}>
+            <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                <!-- Page Size -->
+                <div class="slds-list_inline">
+                    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                    <div class="slds-select_container">
+                        <select
+                            class="slds-select"
+                            id="utilizationPerPage"
+                            onchange={handleUtilizationRecordsPerPageChange}>
+
+                            <template for:each={utilizationPageSizeOptions} for:item="option">
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            </template>
+
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="slds-align_absolute-center">
+
+                    <lightning-button
+                        disabled={utilizationDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        onclick={handleUtilizationFirstPage}
+                        style="margin-right: 10px;">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={utilizationDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        onclick={handleUtilizationPreviousPage}
+                        style="margin-right: 5px;">
+                    </lightning-button>
+
+                    <span class="slds-badge">
+                        Showing {utilizationPageNumber} of {utilizationTotalPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                        disabled={utilizationDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        onclick={handleUtilizationNextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={utilizationDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        onclick={handleUtilizationLastPage}
+                        icon-position="right">
+                    </lightning-button>
+
+                </div>
+
+                <!-- Total -->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge">
+                            Total Records: {utilizationTotalRecords}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+        <template if:true={reconciliationData.length}>
+            <div class="pagination-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-m-around_medium">
+
+                <!-- Page Size -->
+                <div class="slds-list_inline">
+                    <span style="margin-right: 5px; margin-top: 5px;">Page Size:</span>
+                    <div class="slds-select_container">
+                        <select
+                            class="slds-select"
+                            id="reconciliationDataPerPage"
+                            onchange={handleReconciliationRecordsPerPageChange}>
+
+                            <template for:each={reconciliationPageSizeOptions} for:item="option">
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            </template>
+
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="slds-align_absolute-center">
+
+                    <lightning-button
+                        disabled={reconciliationDisableFirst}
+                        icon-name="utility:jump_to_left"
+                        label="First"
+                        onclick={handleReconciliationFirstPage}
+                        style="margin-right: 10px;">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={reconciliationDisableFirst}
+                        icon-name="utility:chevronleft"
+                        label="Previous"
+                        onclick={handleReconciliationPreviousPage}
+                        style="margin-right: 5px;">
+                    </lightning-button>
+
+                    <span class="slds-badge">
+                        Showing {reconciliationPageNumber} of {reconciliationTotalPages} Page(s)
+                    </span>
+
+                    <lightning-button
+                        disabled={reconciliationDisableLast}
+                        icon-name="utility:chevronright"
+                        label="Next"
+                        onclick={handleReconciliationNextPage}
+                        class="slds-p-horizontal_x-small"
+                        icon-position="right">
+                    </lightning-button>
+
+                    <lightning-button
+                        disabled={reconciliationDisableLast}
+                        icon-name="utility:jump_to_right"
+                        label="Last"
+                        onclick={handleReconciliationLastPage}
+                        icon-position="right">
+                    </lightning-button>
+
+                </div>
+
+                <!-- Total -->
+                <div class="slds-clearfix">
+                    <div class="slds-float_right">
+                        <span class="slds-badge">
+                            Total Records: {reconciliationTotalRecords}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+    </div>
+
+
+    <template if:true={isLoading}>
+        <div class="spinner-container">
+            <lightning-spinner
+                alternative-text="Loading"
+                size="large"
+                variant="brand">
+            </lightning-spinner>
+        </div>
+    </template>
+</template>
