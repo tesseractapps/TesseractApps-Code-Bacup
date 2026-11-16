@@ -1,0 +1,1255 @@
+<!--
+  @description       : 
+  @author            : Raja Sekhar Reddy
+  @group             :
+  @last modified by  : Praveen and Prashant
+-->
+<template>  
+  <template if:true={isHome}> 
+  <div class="rosterlayout" style="display: flex;">
+    <div class="left-side">
+      <div class="Team-Members-chat-Container" style="border-radius: 5px 5px 0 0;">
+        <!-- Facility Type here -->
+          <h5 class="facility-header">Facility Name</h5>
+            <div class="box-facility-role" style="margin-bottom:10px;">
+              <template if:true={facilityOptions}>
+                <lightning-checkbox-group label="" name="Facility" options={facilityOptions} value={facilityValue}
+                  onchange={handleChange1}>
+                </lightning-checkbox-group>
+              </template>
+            </div>
+      <!-- Role Type here -->
+          <h5 class="role-header">Select Role Type</h5>
+          <div class="box-facility-role">
+            <template if:true={OrgNisationRoles}>
+              <lightning-checkbox-group label="" 
+              name="progress" options={OrgNisationRoles} value={chosenRole}
+              onchange={handleChange1} ></lightning-checkbox-group>
+              
+            </template>
+          </div>
+      </div>
+<!-- Team members Container -->
+
+      <div class="Team-Members-chat-Container" style="border-radius: 0 0 5px 5px;">
+      <div class="search-bar">
+        <input type="text" placeholder="Search">
+        <span class="icons">≡</span> <span class="icons">⏷</span>
+      </div>
+      <!-- Team members here -->
+      <div class="staff-list">
+        <template if:true={staffHoursWagesDispaly}> 
+          <div class="staff-container">
+              <template for:each={staffHoursWagesDispaly} for:item="staff">
+                  <div class="staff-member" key={staff.id} draggable="true" data-id={staff.id} data-fname={staff.details.firstname} data-lname={staff.details.lastname} data-rolename={staff.details.Role} ondragstart={handleDragStart}>
+                    <div if:true={staff.details.picture}>
+                      <img src={staff.details.picture} alt={staff.details.firstname} class="staff-image" draggable="false"/>
+                    </div>
+                    <div if:false={staff.details.picture}>
+                      <lightning-icon icon-name="action:user" variant="error" size="small" style="background:#02275b;margin-right: 15px;"></lightning-icon>
+                    </div>
+                      <div class="staff-info">
+                          <div class="staff-name"><a href="#" draggable="false"> {staff.details.firstname}&nbsp;{staff.details.lastname} </a></div>
+                          <div class="staff-hours">
+                              <span class="fa fa-check-circle status-icon">&nbsp;</span>
+                              {staff.details.CompletedHours}/{staff.details.sethours}h&nbsp;${staff.details.earnedMoney} 
+                          </div>
+                      </div>
+                      <div class="more-menu">
+                          <button class="more-menu-button">⋮</button>
+                          <div class="more-menu-content">
+                              <a href={staff.Amazon_URL__c}>View Profile</a> <!-- Replace with actual link -->
+                          </div>
+                      </div>       
+                  </div>
+              </template>
+          </div>
+      </template>
+      </div>  
+        
+      </div>
+    </div>
+      <div class="right-side">
+        <div class="box"> <!-- Right Side top Container --> 
+          <div class="top-container">
+              <button class="toggle-button"  onclick={togglePopover}>≡⏷</button>
+              <div class="calendar-controls">
+                <lightning-button-icon   icon-name="utility:chevronleft" onclick={navigateToPrevious} style="background:white;color:red;border-radius:5px;"></lightning-button-icon>
+                <lightning-button  label="Today" onclick={navigateToToday}></lightning-button>
+                <lightning-button-icon  icon-name="utility:chevronright" onclick={navigateToNext} style="background:white;border-radius:5px;"></lightning-button-icon>
+                 
+                  <span class="Date-Calender"><lightning-input label="Date" type="date" name="select-date" variant="label-hidden"  
+                    class="lwc-datepicker" value={datePickerString} onchange={navigateToDay}></lightning-input></span>
+              </div>
+               <div class="right-icons">
+                  <!-- <span data-name="staffView" class={listViewClass}  onclick={handleParticipantViewchange}>
+                    <lightning-icon icon-name="utility:tile_card_list" size="x-small" ></lightning-icon>
+                    &nbsp;Staff&nbsp;View
+                </span>
+                <span data-name="participantView" class={cardViewClass} onclick={handleParticipantViewchange}>
+                    <lightning-icon icon-name="utility:list" size="x-small"></lightning-icon>
+                    &nbsp;Participant&nbsp;View
+                </span> -->
+              </div> 
+          </div>
+          </div>
+
+          <section if:true={isPopoverVisible} aria-describedby="dialog-body-id-119" aria-labelledby="dialog-heading-id-124" 
+          class="slds-popover slds-nubbin_left slds-popover_large slds-text-color_inverse" role="dialog">
+          <lightning-icon  class="slds-button slds-button_icon slds-button_icon-small slds-float_right slds-popover__close" icon-name="utility:close"  size="x-small" onclick={closePopover} >
+          </lightning-icon>
+              <div class="slds-popover__body" id="dialog-body-id-119">
+                  <div class="slds-media">
+                      <div class="slds-media__body">
+                        <div >
+                          <lightning-input  type="search" label="Search by Staff" name="searchStaff" value={staffvalue} onchange={handleStaffChange} disabled={disableInput} style="color:white;" ></lightning-input>
+                        </div>
+
+                        <div >
+                          <lightning-checkbox-group label="Select a Status"  name="searchStatus" options={options} value={statusValue} onchange={handleStaffChange} disabled={disableInput}></lightning-checkbox-group>
+                        </div>
+                        
+                        
+                        <div >
+                          <lightning-button variant="brand" label="Search" slot="actions" title="Search Issue" onclick={handleSearch} ></lightning-button>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+        </section>          
+            <div class="slds-scrollable_x"> 
+             
+            <div class="slds-grid lwc-timeline"> 
+                  <div class="slds-col">         
+                    <div class="slds-grid strong-text"> 
+                  <template for:each={dates} for:item="date">
+                    <div key={date.name} class="slds-col">
+                      <div class="slds-grid">
+                        <div class="slds-col slds-has-flexi-truncate">
+                          <div class="slds-p-around_small slds-theme_shade slds-text-align_center slds-text-color_default slds-text-body_small slds-truncate monthClass">
+                            <b>{date.name}</b>
+                          </div>
+                          <div class="slds-grid normal-text">
+                            <template for:each={date.days} for:item="day">
+                              <div key={day.label} class={day.class} style="width: 145px;">
+                                <div class="slds-col clearnace">
+                                  <template if:true={day.dayName}>
+                                    <div style="width: 145px;">{day.dayName}&nbsp;{day.label2}</div>
+                                  </template>
+                                 <!--  <div style="width: 145px;">{day.label2}</div> -->
+                                  <lightning-button 
+                                    variant="base" 
+                                    icon-name="utility:add" 
+                                    label="Add Shift" 
+                                    icon-position="right" 
+                                    onclick={openAddShift} 
+                                    data-id={day.label} 
+                                    data-dayname={day.dayName}>
+                                  </lightning-button>
+                                </div>
+                              </div>
+                            </template>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template> 
+                </div>
+              </div>
+            </div>
+
+            <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+              <template for:each={RolesDatesWisedata} for:item="rolewise">
+                  <lightning-accordion-section key={rolewise.roleName} label={rolewise.roleName} name={rolewise.roleName} > <!-- onclick={handleAccordian} -->
+                    <div class="slds-grid lwc-timeline rolewise-grid "  >
+                      <template for:each={rolewise.days} for:item="dayData">
+                        <div key={dayData.date} data-id={dayData.date} data-rolename={rolewise.roleName} ondrop={handleDrop} ondragover={handleDragOver1}>
+                          <div class="slds-grid" >
+                            <div>
+                                <div style="background-color:#bfbfbf;;width:145px;margin-left:2px;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);text-align:center;border-radius:3px">
+                                    Qty: {dayData.Quantity}&nbsp;&nbsp;<a href="javascript:void(0)" onclick={handleEditShift} data-rolename={rolewise.roleName} data-id={dayData.date1}>
+                                      Unallocated: {dayData.UnAllocated}
+                                  </a>
+
+                                </div>
+                              <template for:each={dayData.RolewiseStaff} for:item="shiftstaff">
+                                <div key={shiftstaff.shiftType} >
+                                  <template if:true={shiftstaff.staff}>
+                                    <div class="rosterAdminBoxSize bgcolour1" style={shiftstaff.cardcolor} ondrop={handleCardDrop} ondragover={handleDragOver2} data-shiftcreatedtime1={shiftstaff.shiftCreatedTime}  data-shiftdate1={shiftstaff.startdt} 
+                                    data-shiftid={shiftstaff.parentId} data-shifttype={shiftstaff.parentShiftType} data-shiftunalloc={shiftstaff.parentShiftUnallocated} data-shiftdayname={shiftstaff.parentdayname} data-shifteoi={shiftstaff.parentShiftEOI}>
+                                      <div class="rosterNameAlignTop">
+                                          <a href="javascript:void(0)" onclick={handleEditStaff} 
+                                                data-id={shiftstaff.Id} 
+                                                data-state={shiftstaff.state} 
+                                                data-shiftcreatedtime={shiftstaff.shiftCreatedTime} 
+                                                data-shiftendtime={shiftstaff.shiftEndTime} 
+                                                data-shiftduartion={shiftstaff.shiftDuartion} 
+                                                data-status={shiftstaff.status}
+                                                data-staffid={shiftstaff.staffID} 
+                                                data-shiftdate={shiftstaff.startdt} 
+                                                data-staffhoulryrate={shiftstaff.staffHoulryrate} 
+                                                data-shiftid={shiftstaff.parentId}
+                                                data-shifttype={shiftstaff.parentShiftType}
+                                                data-shiftdayname={shiftstaff.parentdayname}
+                                                data-shiftenddate={shiftstaff.shiftEndDate}
+                                                data-splitshift={shiftstaff.splitShifts}
+                                                style="font-size: smaller;display:inline-block;max-width:110px;overflow: hidden;
+text-overflow: ellipsis;">
+                                                <b>{shiftstaff.staff}</b>
+                                        </a> 
+                                        <a href="javascript:void(0)"   
+                                        onclick={handleGroupShiftStaff} data-id={shiftstaff.Id}>
+                                             <!-- <lightning-icon icon-name="utility:groups" size="x-small" title="Grouped Staffs" style="float:right;margin-right:5px;color:white;"  ></lightning-icon> -->
+                                        
+                                        <img src={groupicon} style="float:right;margin-right:5px;color:white;width:20px;height:20px;">
+                                            </a>     
+                                      </div>
+                                      <div class="rosterShiftDetailsLeft" style="font-size: smaller"><b>Time: {shiftstaff.time}</b></div>
+                                      <!-- <div class="rosterShiftDetailsLeft" style="font-size: smaller; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">Facility: {shiftstaff.facName}</div> -->
+                                      <div class="rosterShiftDetailsLeft" style="font-size: smaller">Location: {shiftstaff.locName}</div>
+                                      <template if:true={shiftstaff.visible}>
+                                          <div class="rosterShiftDetailsLeft" style="font-size: smaller;">
+                                              <span>Status:</span>
+                                              <span class={shiftstaff.status} style="margin-left:5px;"><b>{shiftstaff.uiStatus}</b></span>
+                                              <template if:true={shiftstaff.isDeleteIcon}>
+                                                <lightning-icon name="delete" icon-name="utility:delete" variant="error" size="xx-small"  onclick={handleDeleteShift} data-status={shiftstaff.status} data-id={shiftstaff.Id} style="width: 8px; height: 8px;margin-left: 15%;margin-bottom:2%;cursor:pointer"> </lightning-icon>
+                                              </template>
+                                              
+                                          </div>
+                                      </template>
+                                      
+                                      
+                                    </div>   
+                                  </template>       
+                                </div>
+                              </template>
+                          </div>
+                          </div>
+                          
+                        </div>  
+                      </template>
+                    </div>
+ 
+                  </lightning-accordion-section>
+              </template>  
+          </lightning-accordion>
+          </div>
+    </div>
+    </div>
+  </template>
+     <!--Edit or clone shift-->
+    <template if:true={editflag}>
+            <lightning-card>
+              <header >
+                <h1 style="font-weight:bold;margin-top:2px; margin-left:600px;font-size:15px">Select Shift</h1>
+              </header>
+              <lightning-datatable key-field="Id" data={shiftdata} columns={columns} hide-checkbox-column onrowaction={handleRowActions}></lightning-datatable>
+              <footer style="margin-left:600px;margin-top:20px"> 
+                <lightning-button variant="brand"  label="Cancel"  onclick={hideModalBox}></lightning-button>&nbsp;&nbsp;   
+             </footer>         
+         
+            </lightning-card>       
+           
+    </template>
+  <template if:true={isAddShift}>
+        <lightning-card>
+          <header >
+            <h1 style="font-weight:bold;margin-top:2px; margin-left:600px">Add New Shift</h1>
+          </header>
+          
+          <div class="slds-p-around_medium" style="margin-top: 1%;">
+          <lightning-record-edit-form object-api-name="Add_Shift__c" onsuccess={handleSuccess} onsubmit={handleSubmit}>
+          <lightning-messages></lightning-messages>
+              <div class="slds-grid">                  
+                <div class="slds-col slds-size_1-of-2">     
+                  <lightning-input-field field-name="Quantity__c"></lightning-input-field>
+                  <lightning-input-field field-name="Facility__c" onchange={handleFacilityChange} required="true"></lightning-input-field>
+                  <lightning-input-field field-name="Get_Facility__c" type="checkbox" checked={IsGetFacility}  onchange={handleCheckboxChange}></lightning-input-field>
+                    <lightning-input-address
+                    address-label="Address"
+                    street-label="Street"
+                    city-label="Suburb"
+                    country-label="Country"
+                    province-label="State"
+                    postal-code-label="Post Code"
+                    street={facilityStreet}
+                    city={facilityCity}
+                    country={facilityCountry}
+                    province={facilityProvince}
+                    postal-code={facilityPostalCode}
+                    onchange={addresschange}
+                    show-address-lookup required="true">
+                    </lightning-input-address>
+                    <p style="color:red">{errorMessage}</p>
+                    <div class="slds-grid">
+                      <lightning-input-field field-name="Send_Notification__c" name="sendNotification" onchange={handleRoleChange}></lightning-input-field>
+                      <template if:false={eoiInDragAndDrop}>
+                        
+                        <lightning-input-field field-name="Is_EOI__c" ></lightning-input-field>
+                      
+                    </template>
+                    
+                  </div>
+                    
+                </div> 
+                
+                <div class="slds-col slds-size_1-of-2">
+                  <div class="slds-m-right_medium slds-m-left_medium" >
+                    <lightning-input-field field-name="Start_Date__c" value={selectedShiftDate} readonly="true"></lightning-input-field>
+                  </div>
+                  <div class="slds-m-right_medium slds-m-left_medium" >
+                     <lightning-input-field field-name="Day_Name__c"  readonly="true" value={shiftDayName}></lightning-input-field>
+                  </div>
+                  <div class="slds-m-right_medium slds-m-left_medium" >
+                    <lightning-input-field field-name="Break__c" readonly="true" value={breakTime}></lightning-input-field> 
+                  </div>
+                  <div class="slds-m-right_medium slds-m-left_medium" >
+                    <lightning-input-field field-name="Shift_Type__c" required="true"  onchange={HandleShiftType}></lightning-input-field>
+                  </div>                  
+                  
+                  <div class="slds-m-right_medium slds-m-left_medium" >
+                    <lightning-input-field field-name="Start_time_picklist__c" value={startTimePickval} name ="startTime" onchange={timeChange}></lightning-input-field>
+                  </div>
+                  <div class="slds-m-right_medium slds-m-left_medium" >
+                    <lightning-input-field field-name="End_time_picklist__c" value={endTimePickval} name="endTime" onchange={timeChange}></lightning-input-field> 
+                  </div>
+                  <div class="slds-m-right_medium slds-m-left_medium">
+                    <label class="slds-form-element__label" style="margin-left: 3px;"  ><span style="color: red;">*</span>Role</label>
+                    <div class="combobox-container">  
+                        <lightning-combobox name="role" label="" value={createdShiftRole}  placeholder="-Select-" disabled={eoiInDragAndDrop}
+                            options={OrgNisationRoles} onchange={handleRoleChange} style="width:100%;margin-left:-3px;">
+                        </lightning-combobox>
+                    </div>
+                </div>
+                  
+                <div class="slds-grid slds-m-right_medium slds-m-left_medium custom-field-wrapper" data-field-name="Shift_Notes__c">
+                   <lightning-input-field field-name="Shift_Notes__c" name="shiftNotes" value={shiftNotes}  onchange={handleShiftNotes}
+                       placeholder="Enter your text here or start speaking..." style="width:90%"></lightning-input-field>
+                    
+                    <div class="slds-p-bottom_x-large  slds-m-top_medium">
+                      <lightning-icon
+                         icon-name={iconName}
+                         alternative-text={altText}
+                         onclick={toggleListening}
+                         if:true={showMuteIcon}
+                         class="slds-button slds-button_icon mute-icon" style="margin-left:5px;"
+                         size="small">
+                      </lightning-icon>
+                      <lightning-icon
+                         icon-name="utility:clear"
+                         alternative-text="Clear Text"
+                         onclick={clearText}
+                         if:true={showClearIcon}
+                         class="slds-button slds-button_icon clear-icon"
+                         size="small" >
+                      </lightning-icon>
+                    </div>
+                </div>
+                 
+                  
+                  <!-- <p> &nbsp;&nbsp;Shift Start Time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {startTimePickval}</p>
+                  <p> &nbsp;&nbsp;Shift End Time:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {endTimePickval}</p>   -->   
+                </div>   
+              </div>       
+              <footer style="margin-left:600px;margin-top:20px">       
+                <lightning-button type="submit" variant="brand" label="Save" disabled={saveButtonDisable}></lightning-button>&nbsp;
+                <lightning-button variant="brand"  label="Cancel"  onclick={closeModal}></lightning-button>&nbsp;&nbsp;
+              </footer>
+    
+          </lightning-record-edit-form> 
+        </div> 
+        </lightning-card>
+        
+  </template>
+
+  <!---edit shift-->
+  <!--Edit Modal-->
+  <template if:true={editshift}>
+    <lightning-card>
+      <header >
+        <h1 style="font-weight:bold;margin-top:2px; margin-left:600px">Edit Shift</h1>
+      </header>
+      
+      <div class="slds-p-around_medium" style="margin-top: 1%;">
+                <lightning-record-edit-form  data-recid="Edit" object-api-name="Add_Shift__c" onsuccess={handleSuccess} record-id={shiftId} onsubmit={handleSubmitEdit}>
+                    <lightning-messages></lightning-messages>
+                        <lightning-messages></lightning-messages>
+                        <div class="slds-grid">                  
+                          <div class="slds-col slds-size_1-of-2">     
+                            <lightning-input-field field-name="Quantity__c" name="quantityChange" onchange={handleRoleChange}></lightning-input-field>
+                            <lightning-input-field field-name="Facility__c" required="true"></lightning-input-field>
+                             <lightning-input-field field-name="Get_Facility__c" type="checkbox" checked={IsGetFacility} onchange={handleCheckboxChange}></lightning-input-field>
+                            <!--<template if:false={isLocationFieldVisible}>
+                              <lightning-input-field data-field="Address" field-name="Location__c"></lightning-input-field>
+                            </template> -->    
+                            <lightning-input-address
+                            address-label="Address"
+                            street-label="Street"
+                            city-label="Suburb"
+                            country-label="Country"
+                            province-label="State"
+                            postal-code-label="Post Code"
+                            street={facilityStreet}
+                            city={facilityCity}
+                            country={facilityCountry}
+                            province={facilityProvince}
+                            postal-code={facilityPostalCode}
+                            onchange={addresschange}
+                            show-address-lookup required="true">
+                            </lightning-input-address>  
+                            <div class="slds-grid">
+                              <lightning-input-field field-name="Send_Notification__c" name="sendNotification" onchange={handleRoleChange}></lightning-input-field>
+                              <template if:false={eoiInDragAndDrop}>
+                                
+                                <lightning-input-field field-name="Is_EOI__c" ></lightning-input-field>
+                              
+                            </template>
+                            
+                          </div>          
+                          </div> 
+                          
+                          <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Day_Name__c"  readonly="true" value={shiftDayName}></lightning-input-field>
+                            </div>
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Shift_Type__c" required="true" onchange={HandleShiftType} ></lightning-input-field>  
+                            </div>
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Break__c" readonly="true" value={breakTime}></lightning-input-field>
+                            </div>
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Start_Date__c" readonly="true"></lightning-input-field>
+                            </div>
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Start_time_picklist__c" name ="startTime" value={startTimePickval} onchange={timeChange}></lightning-input-field>
+                            </div>
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="End_time_picklist__c" name="endTime"  value={endTimePickval} onchange={timeChange}></lightning-input-field>
+                            </div>
+                            <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Role__c" onchange={handleRoleChange} style="width:100%;margin-left:-3px;" disabled="true"></lightning-input-field>
+                            </div>
+                            
+                            <!-- <div class="slds-m-right_medium slds-m-left_medium" >
+                              <lightning-input-field field-name="Shift_Notes__c" name="sendNotification" onchange={handleRoleChange}></lightning-input-field>
+                            </div> -->
+                            <div class="slds-grid slds-m-right_medium slds-m-left_medium custom-field-wrapper" data-field-name="Shift_Notes__c">
+                              <lightning-input-field field-name="Shift_Notes__c" name="shiftNotesEdit" value={shiftNotes}  onchange={handleShiftNotes}
+                                  placeholder="Enter your text here or start speaking..." style="width:90%"></lightning-input-field>
+                               
+                               <div class="slds-p-bottom_x-large  slds-m-top_medium">
+                                 <lightning-icon
+                                    icon-name={iconName}
+                                    alternative-text={altText}
+                                    onclick={toggleListening}
+                                    if:true={showMuteIcon}
+                                    class="slds-button slds-button_icon mute-icon" style="margin-left:5px;"
+                                    size="small">
+                                 </lightning-icon>
+                                 <lightning-icon
+                                    icon-name="utility:clear"
+                                    alternative-text="Clear Text"
+                                    onclick={clearText}
+                                    if:true={showClearIcon}
+                                    class="slds-button slds-button_icon clear-icon"
+                                    size="small" >
+                                 </lightning-icon>
+                               </div>
+                           </div>
+                            
+                          </div>   
+                        </div> <br/><br/>
+                   <!-- modal footer start-->
+                   <footer style="margin-left:600px;margin-top:20px"> 
+                    <lightning-button type="submit" variant="brand" label="Save"></lightning-button>&nbsp;&nbsp;         
+                      <lightning-button variant="brand"  label="Cancel"  onclick={closeModal}></lightning-button>&nbsp;&nbsp;
+                                        
+                    </footer>
+                </lightning-record-edit-form>  
+              </div> 
+            </lightning-card>
+  </template>
+ 
+  <template if:true={editStaff}>
+    <div class="rosterlayout">
+    <div>
+      <lightning-button  variant="brand" label="Back" onclick={closeModal} style="float: right;margin-right:5%"></lightning-button>
+      <header >
+        <h1 style="font-weight:bold;margin-top:2px; margin-left:48%">Edit Shift</h1>
+      </header>
+      <div  style="margin-top: 1%;">
+          <lightning-record-edit-form object-api-name="ShiftwithStaff__c" data-recid="shitWithStaff" onsuccess={handleShiftWithStaffSuccess} record-id={editStaffId}  ><!-- onsubmit={handleShiftWithStaff} -->
+            <lightning-messages></lightning-messages>
+            <div class="child-container">
+            <div class="slds-grid slds-wrap" style="height:fit-content">
+              <div style=" width:50%;box-shadow: 10px 0 10px -10px rgba(0, 0, 0, 0.1);">
+                <span style="font-weight:bold;margin-left:2%;">Shift Details</span>
+                <div class="slds-grid slds-wrap" >
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium">
+                      <lightning-input-field field-name="Date__c"></lightning-input-field> 
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium ">
+                      <lightning-input-field field-name="Staff__c" disabled={showLocation} name='staff' onchange={handleEditShiftStaffChange}> </lightning-input-field>      
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium">
+                      <lightning-input-field field-name="Facility_Names__c"></lightning-input-field>      
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium">
+                      <lightning-input-field field-name="Address__c"></lightning-input-field>      
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium">
+                      <lightning-input-field field-name="Start_Time__c"  ></lightning-input-field>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      <lightning-input-field field-name="End_Time__c" ></lightning-input-field>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium">
+                        <lightning-input-field field-name="Break__c" readonly="true" value={breakTime}></lightning-input-field>
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      <lightning-input-field field-name="Duration__c" ></lightning-input-field>      
+                    </div>
+                  </div>
+                  
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      <lightning-input-field field-name="Staff_Final_Hourly_Rate__c" disabled="true"></lightning-input-field> 
+                    </div>
+                  </div>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      <lightning-input-field field-name="Shift_Wage__c" ></lightning-input-field>    
+                    </div>
+                  </div>
+                  
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      <lightning-input-field 
+                      field-name="Do_you_want_to_set_this_Recurring_Roster__c" 
+                      onchange={HandleRecurrStaff} 
+                      name="recurrStaff">
+                  </lightning-input-field>
+                  <lightning-input-field 
+                      field-name="Include_Participants__c" 
+                      name="recurrParticipant" 
+                      onchange={HandleRecurrStaff} style="margin-left:50%;margin-top:-14%;"> 
+                  </lightning-input-field>
+    
+                    </div>
+                  </div>  
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      <lightning-input-field field-name="Comments__c"  name='comments' onchange={handleEditShiftStaffChange}></lightning-input-field>      
+                    </div>
+                  </div>
+                  <!-- <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium" >
+                      
+               
+                    </div>
+                  </div> -->
+                  <template if:true={staffrecurflag}>
+                  <div class="slds-size_1-of-2">
+                    <div class="slds-m-right_medium slds-grid" >
+                      <label class="slds-form-element__label" style="margin-left:1.5%;">Recurring End Date</label>
+                      <lightning-input 
+                          type="date" 
+                          label="" 
+                          onchange={HandlerecurringDateChnage} style="margin-top:-3%;">
+                      </lightning-input>
+                    </div>
+                  </div>
+                </template>
+                  
+                  
+                </div >
+                <!-- <div class="slds-grid">
+                  <div class="slds-col" style="width:37%;">
+                      
+                          
+                  </div>
+              
+                  <div class="slds-col" style="width:24%;">
+                      <div class="slds-p-around_x-small">
+                          
+                      </div>
+                  </div>
+              
+                  <div class="slds-col" style="width:37%">
+                      
+                          
+                  </div>
+              </div> -->
+              
+                  <div class="slds-align_absolute-center slds-m-around_medium">
+                    <lightning-button  variant="brand" label="Update Staff" onclick={handleShiftWithStaff}></lightning-button>&nbsp;<!--  type="submit" -->
+                      <!-- <lightning-button  variant="brand" label="Cancel" onclick={closeModal}></lightning-button> -->
+                  </div>
+              </div>
+              <div style="width:50% ">
+                <span style="font-weight:bold;margin-left:5%;">Add Staff/Participants</span>
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                      <div class="slds-grid slds-align-middle">
+                        <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_medium">Staff</label>
+                        <div class="slds-size_2-of-3">
+                            <lightning-combobox
+                                name="Staff"
+                                value={handleServiceStaffId}
+                                placeholder="Select Staff"
+                                options={ServiceStaffList}
+                                disabled={serviceStaffDisable}
+                                onchange={HandleServiceStaffChange} style="margin-top:-2%;"> 
+                            </lightning-combobox>
+                        </div>
+                      </div>
+
+                      <div class="slds-grid slds-align-middle">
+                        <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_medium">Split Shifts</label>
+                        <div class="slds-size_2-of-3 slds-m-top_medium">
+                          <lightning-input type="checkbox" label="" name="input2"  value={splitCheckbox} onchange={onSplitchange} disabled={disableSplitCheckBox}  ></lightning-input>
+                        </div>
+                      </div>
+
+        
+                        <div class="slds-grid slds-align-middle">
+                          <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_medium">Participants</label>
+                          <div class="slds-size_2-of-3">
+                              <lightning-combobox
+                                  name="participants"
+                                  value={particpantID}
+                                  placeholder="Select Participant"
+                                  options={ParticipantOptions}
+                                  disabled={disableAllserviceSection}
+                                  onchange={particapantChange} style="margin-top:-3%;">
+                              </lightning-combobox>
+                          </div>
+                           
+                        </div>
+            
+                        <div class="slds-grid slds-align-middle">
+
+                          <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_large">State</label>
+                          <div class="slds-size_2-of-3">
+                            
+                              <lightning-combobox
+                                  name="State"
+                                  value={stateValue}
+                                  placeholder="Select State"
+                                  options={stateOptions}
+                                  disabled={disableAllserviceSection}
+                                  onchange={HandlestateChange}
+                                  data-ref="increation">
+                              </lightning-combobox>
+                          </div>
+                        </div>
+                    </div>
+            
+                    <div class="slds-col slds-size_1-of-2 slds-p-around_small">
+                        <div class="slds-grid slds-align-middle ">
+                          <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_medium">Hourly Rate</label>
+                          <div class="slds-size_2-of-3">
+                              <lightning-input type="number" value={finalhourlyRate} disabled="true" style="width: 100%;margin-top:-2%;"></lightning-input>
+                          </div>
+                      </div>
+                      <div class="slds-grid slds-align-middle ">
+                        <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_medium">No. of Shifts</label>
+                        <div class="slds-size_2-of-3">    
+                        <lightning-combobox
+                              label=""
+                              value={numberOfShifts}
+                              options={shiftOptions}
+                              onchange={handleNumberOfShiftsChange}  disabled={isSplitShiftnumberDisable} style="margin-top:-2%;">
+                             
+                          </lightning-combobox>
+                        </div>
+                    </div>
+                    
+                        <div class="slds-grid slds-align-middle">
+                          <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_small">Service Type</label>
+                          <div class="slds-size_2-of-3">
+                              <lightning-combobox
+                                  name="ServiceType"
+                                  value={serviceTypeId}
+                                  placeholder="Select Service Type"
+                                  options={fundOption}
+                                  disabled={disableAllserviceSection}
+                                  onchange={handleServiceChange} style="margin-top:-4%;">
+                              </lightning-combobox>
+                          </div>
+                        </div>
+
+                        <div class="slds-grid slds-align-middle">
+                          <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_small">Plan Type</label>
+                          <div class="slds-size_2-of-3" >
+                            <lightning-input type="text" value={servicePlan} disabled="true" style="width: 100%;margin-top:-3%;"></lightning-input>
+                          </div>
+                      </div>
+
+                    </div>
+                </div>  
+            
+                <template if:true={NdisServiceGroupName}>
+                    <div   class="servicetable">
+                        <table   >
+                          <thead  >
+                              <tr>
+                                  <!-- Add a header for checkboxes -->
+                                  <th >Select</th>
+                                  <th  >Support Item Name</th>
+                                  <th >Support Item Number</th>
+                                  <th >Amount</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <!-- Iterate through `serviceGroupName` to display rows -->
+                              <template for:each={serviceGroupName} for:item="row">
+                                  <tr key={row.Id} class="tr1">
+                                      <!-- Checkbox for selection -->
+                                      <td  style="text-align: center; vertical-align: middle;padding-top: 5px;box-sizing: border-box;">
+                                          <input 
+                                              type="radio"  
+                                              data-id={row.Id} 
+                                              data-name={row.Name} 
+                                              onchange={handleCheckboxSelection}
+                                              checked={row.isSelected} 
+                                              />
+                                      </td>
+                                      <td >{row.Support_Item_Name__c}</td>
+                                      <td>{row.Support_Item_Number__c}</td>
+                                      <td>{row.amount}</td>
+                                  </tr>
+                              </template>
+                          </tbody>
+                      </table>
+                        
+                    </div>
+                </template>
+            
+                <div class="slds-align_absolute-center slds-m-around_medium">
+                 
+                    <lightning-button variant="brand" label="Create Service" onclick={handleServicecreate}  disabled={disableAllserviceSection} style="margin-right:1%;"></lightning-button>
+                    <!-- <lightning-button variant="brand" label="Cancel" onclick={closeModal}></lightning-button> -->
+                </div>
+            </div>
+            
+            </div>
+          </div>
+              
+            
+          <div style="width:95%;margin-left:2.5%;">  
+            <span style="font-weight:bold;margin-left:2%;margin-bottom:0.5%;">Service Summary</span>                          
+            <!-- <lightning-datatable  key-field="Id" data={servicesList} columns={serviceSupportColumns}  hide-checkbox-column="true" >
+               </lightning-datatable> -->
+               
+                <table class="slds-table slds-table_cell-buffer">
+                    <thead>
+                        <tr>
+                            <th>Staff Name</th>
+                            <th>Participant Name</th>
+                            <th>Service Type</th>
+                            <th>Line Item</th>
+                            <th>Available Funds</th>
+                            <th>Unit Price</th>
+                            <th>Amount</th>
+                            <template if:false={disableAllserviceSection}>
+                              <th>Action</th>
+                            </template>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={servicesList} for:item="service">
+                            <tr key={service.Id} class="tr1">
+                                <td>{service.Resource_Name__c}</td>
+                                <td>{service.Participant_Name__c}</td>
+                                <td>{service.Service_Type_Name__c}</td>
+                                <td>{service.Lineitem__c}</td>
+                                <td>{service.Available_Fund__c}</td>
+                                
+                                <td >{service.Unit_Price__c}</td>
+                                <td>{service.Amount__c}</td>
+                                <template if:false={disableAllserviceSection}>
+                                <td> 
+                                    <a href="javascript:void(0)" data-id={service.Id} data-participantid={service.Client__c} data-serviceid={service.Funds_Tracker__c} data-servicename={service.Service_Type_Name__c} 
+                                    onclick={HandleServiceEdit} title="Edit Repository"><lightning-icon icon-name="action:edit" size="xx-small" title="Edit"></lightning-icon></a>&nbsp; 
+                              </td>
+                            </template>
+                            </tr>
+                        </template>
+                        
+                    </tbody>
+                </table>
+            
+          </div>
+          <template if:true={showLocation}>
+            <a href="javascript:void(0)" onclick={handleGetlocation} style="margin-left: 5px;" >Get Locations</a>
+          </template>
+          <template if:true={hideLocation}>
+            <a href="javascript:void(0)" onclick={hideHandleLocation} >Hide Location</a>
+          </template>
+          <template if:true={isShowMap}>
+            <div class="map-container" style="height: 500px;width:50%;"></div>
+          </template>
+          
+          </lightning-record-edit-form>
+      </div> 
+    </div>
+  </div>
+       
+</template>
+
+    <!--Edit or clone shift-->
+    <template if:true={openStaff}>  
+   
+    <div class="rosterlayout">  
+        <h3 style="font-weight:bold;font-size:17px ;margin-top:2%;align-items:center">Select Staff</h3>
+        <div style="float:right;margin-bottom:30px;">
+          <lightning-button class="slds-m-left_medium" slot="footer" label="Back" variant="brand"
+          onclick={closeopenstaff} >
+          </lightning-button> 
+        </div>
+         
+      <!--   <div>
+          <p class="shiftWages">Total Wages={totalWages} </p>
+        </div>    -->   
+       <!--  <div class="container-wages">
+          <div class="circle-wages">
+          <div class="circle-content">
+          <p class="title-wages">Total Wages</p>
+          <p class="value-wages">${totalWages}</p>
+          </div>
+          </div>
+       </div>  --> 
+      <div style="margin-top:1%;">
+          <table class="slds-table slds-m-top_x-large" >
+            <thead>
+                <tr class="slds-text-title--caps">
+                    <th class="slds-cell-wrap th" style="text-align:center">S.No</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">First Name</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Last Name</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Role</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Facility</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Hourly Rate</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Shift Duration</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Shift Wages</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Allocate</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Is Recurring</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Recurring End Date</th>
+                    <th class="slds-cell-wrap th" style="text-align:center">Status</th>
+                </tr>
+            </thead>
+        <tbody>
+            <template for:each={availablestaffdata} for:item="rec">
+                <tr key={rec} class="slds-hint-parent tr1">
+                    <td style="font-weight: bold;text-align:center" >
+                        <lightning-formatted-number value={rec.index}></lightning-formatted-number>.
+                    </td>
+                    <td>
+                      <lightning-input type="text"   variant="label-hidden" label="" data-id={rec.index} name="Name" value={rec.Name} readonly></lightning-input>
+                    </td>
+                    <td>
+                        <lightning-input type="text"   variant="label-hidden" label="" data-id={rec.index} name="Last_Name__c" value={rec.Last_Name__c} onchange={handleInputChange} readonly ></lightning-input>
+                    </td>
+                    <td>
+                        <lightning-input type="text" variant="label-hidden" label="" data-id={rec.index} name="Role__c" value={rec.Role__c} onchange={handleInputChange} readonly></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="text" variant="label-hidden" label="" data-id={rec.index} name="Facility_Name__c" value={rec.Facility_Name__c} onchange={handleInputChange} readonly></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="text" variant="label-hidden" label="" data-id={rec.index} name="Final_Overall_Rate__c" value={rec.Final_Overall_Rate__c} onchange={handleInputChange} ></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="text" variant="label-hidden" label="" data-id={rec.index} name="shiftDuration" value={rec.shiftDuration} onchange={handleInputChange} readonly></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="text" variant="label-hidden" label="" data-id={rec.index} name="ShiftWages" value={rec.ShiftWages} onchange={handleInputChange} readonly></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="toggle" data-id={rec.index} label="" name="Attandance__c"  message-toggle-active="" message-toggle-inactive="" value={rec.Attandance__c} onchange={handleInputChange} disabled={rec.disableStatus} ></lightning-input>
+  
+                    </td>
+                    <td>
+                      <lightning-input type="toggle" data-id={rec.index} label=""  name="Is_Recurring__c"  message-toggle-active="" message-toggle-inactive="" value={rec.Is_Recurring__c} onchange={handleInputChange}  disabled={rec.disableStatus}></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="date" variant="label-hidden" label="" data-id={rec.index} name="Recurring_Till__c" value={rec.Recurring_Till__c} onchange={handleInputChange} required></lightning-input>
+                    </td>
+                    <td>
+                      <lightning-input type="text" variant="label-hidden" label="" data-id={rec.index} name="Active_or_Non_Active__c" value={rec.Active_or_Non_Active__c} readonly ></lightning-input>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+
+        </table>
+    
+        </div>
+        <div style="margin-top:30px;float:right">
+          <lightning-button   label="Allocate Staff" onclick={getConfirmation} variant="brand"></lightning-button>
+        </div>
+       
+
+    </div>     
+    </template>
+<template if:true={showSpinner}>
+  <div> 
+    <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+</div>
+</template>
+<template if:true={showcardPopOver}>
+  <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                  class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+              
+                  <div class="slds-modal__container" style="width:10%;">
+                   <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+                      
+                      <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Shift Allocation</h2>
+                  </header> 
+                  <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1" style="border-radius:0 0 15px 15px">                                
+                      <div class="slds-m-around_small">
+                          <div><h1>Are you sure about assigning <b>{draggedfullname}</b> to this shift?</h1></div>
+                          <div style="margin-top:10px;align-items:center;">
+                              <lightning-button label="Yes" variant="brand" onclick={handleCreateShiftWithStaff} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button>
+                              <lightning-button label="No" variant="brand" onclick={closePopover}
+                              class="slds-m-around_small"></lightning-button>
+                          </div>
+                      </div>
+                  </div>
+                  </div>
+              </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<template if:true={emptyShiftPopOver}>
+  <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+  class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+ 
+  <div class="slds-modal__container" style="width:10%;">
+   <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+      
+      <h2  class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Shift Allocation</h2>
+  </header> 
+  <div class="slds-modal__content slds-p-around_medium"  style="border-radius:0 0 15px 15px">                                
+      <div class="slds-m-around_small">
+          <div><h1>Shift added successfully. Do you want to assign this shift to <b>{draggedfullname}</b> as well?</h1></div>
+          <div style="margin-top:10px;align-items:center;">
+              <lightning-button label="Yes" variant="brand" onclick={handleCreateShiftWithStaff} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button>
+              <lightning-button label="No" variant="brand" onclick={closePopover}
+              class="slds-m-around_small"></lightning-button>
+          </div>
+      </div>
+  </div>
+  </div>
+ </section>
+ <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<template if:true={openRecurringModal}>
+  <section   role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+    <div class="slds-modal__container" style="width:20%;" >
+      <div class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0" >
+        <h1  class="slds-modal__title slds-hyphenate" tabindex="-1" style="color:white;font-weight:bold;text-align:left;" >Shift Allocation</h1>
+      </div>
+      <template if:true={ShowOnlyRecurrStaffSubmit}>
+        <div class="slds-modal__content slds-p-around_medium" style="border-radius:0 0 15px 15px" >
+          <p style="text-align:center;"> Are you sure ? You want to Recur this staff  </p>
+          <div style="margin-top:10px;align-items:center;">
+            <lightning-button label="Submit" variant="brand" onclick={handleAllocateRecurSatff} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button>
+            <lightning-button label="Cancel" variant="brand" onclick={closePopover}
+            class="slds-m-around_small"></lightning-button>
+        </div>
+
+
+          <!-- <button class="slds-button slds-button_brand" onclick={closePopover}>Cancel </button>
+          <button class="slds-button slds-button_brand" onclick={handleAllocateRecurSatff}>Submit</button> -->
+        </div>
+      </template>
+
+      <template if:true={ShowParticipnatRecurSubmit}>
+        <div class="slds-modal__content slds-p-around_medium" style="border-radius:0 0 15px 15px">
+          <p style="text-align:center;"> Are you sure you want to recur without including participants?</p>
+          <div style="margin-top:10px;align-items:center;">
+            <lightning-button label="Include & Submit " variant="brand" onclick={handleWithRecurParticipants} class="slds-m-around_small" style="margin-left:1rem;"></lightning-button>
+            <lightning-button label="Submit Only" variant="brand" onclick={handleWithoutRecurParticipants}
+          class="slds-m-around_small" style="margin-top:10px;"></lightning-button>
+            
+        </div>
+        <div style="margin-top:10px;align-items:center;">
+          <lightning-button label="Cancel" variant="brand" onclick={closePopover}
+            class="slds-m-around_small" style="margin-left:7rem;"></lightning-button>
+        </div>
+        </div>
+        <!-- <div class="slds-modal__footer slds-modal__footer_directional">
+          <button class="slds-button slds-button_brand" onclick={closePopover}>Cancel </button>
+          <button class="slds-button slds-button_brand" onclick={handleWithoutRecurParticipants}>Do not Include and Submit </button>
+          <button class="slds-button slds-button_brand" onclick={handleWithRecurParticipants}>Include and Submit</button>
+        </div> -->
+      </template>
+      
+    </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+</template>
+
+<template if:true={GroupedStaff}>
+  <!-- <section   role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+    <div class="slds-modal__container" >
+      <div class="slds-modal__header" style="background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(22,9,121,1) 35%, rgba(0,212,255,1) 100%);color:white;" >
+        <h1  class="slds-modal__title slds-hyphenate" tabindex="-1" >Group of Staff</h1>
+      </div>
+      <div class="slds-modal__content slds-p-around_medium" >
+        <p style="text-align:center;"> 
+          <template if:true={servicesList}>
+            <template for:each={servicesList} for:item="user">
+              <div key={user.Id} class="slds-m-around_medium">
+                  <lightning-avatar 
+                      alternative-text={user.Service_Users__r.Name} 
+                      src={user.Service_Users__r.picture__c} 
+                      fallback-icon-name="standard:avatar">
+                  </lightning-avatar>
+                  
+                  <div class="slds-p-left_medium">
+                      <strong>{user.Resource_Name__c}</strong>
+                  </div>
+              </div>
+          </template>
+          </template>
+          <template if:false={servicesList}>
+              No group of Staff Available
+          </template>
+          </p>
+        
+      </div>
+      <div class="slds-modal__footer slds-modal__footer_directional">
+        <button class="slds-button slds-button_brand" onclick={closePopover}>Cancel </button>
+      </div>
+    </div>
+  </section> -->
+
+
+
+  <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+      class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+  
+      <div class="slds-modal__container" style="width:10%;">
+       <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+          
+          <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Group of Staff</h2>
+      </header> 
+      <div class="slds-modal__content slds-p-around_medium" >
+        <p style="text-align:center;"> 
+          <template if:true={ShowGroupOfStaff}>
+            <template for:each={groupOfListOfStaff} for:item="user">
+              <div key={user.Id} class="slds-m-around_medium">
+                  <lightning-avatar 
+                      alternative-text={user.Service_Users__r.Name} 
+                      src={user.Service_Users__r.picture__c} 
+                      fallback-icon-name="standard:avatar">
+                  </lightning-avatar>
+                  
+                  <div class="slds-p-left_medium">
+                      <strong>{user.Resource_Name__c}</strong>
+                  </div>
+              </div>
+          </template>
+          </template>
+          <template if:false={ShowGroupOfStaff}>
+              No group of Staff Available
+          </template>
+          </p>
+        
+      </div>
+      <div class="slds-modal__footer slds-modal__footer_directional">
+        <button class="slds-button slds-button_brand" onclick={closePopover}>Cancel </button>
+      </div>
+      </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+
+  
+</template>
+
+<template if:true={confirmationFlag}>
+  <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+      class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+  
+      <div class="slds-modal__container" style="width:10%;">
+       <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+          
+          <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Please Confirm</h2>
+      </header> 
+      <div class="slds-modal__content slds-p-around_medium"  style="border-radius:0 0 15px 15px">                                
+          <div class="slds-m-around_small">
+              <div><h1>Are you sure to allocate the staff?</h1></div>
+              <div style="margin-top:10px;align-items:center;">
+                  <lightning-button label="Yes" variant="brand"  onclick={handleconfirmation} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button>
+                  <lightning-button label="No" variant="brand" onclick={handleconfirmationclose}
+                  class="slds-m-around_small"></lightning-button>
+              </div>
+          </div>
+      </div>
+      </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<template if:true={splitShiftNotification}>
+  <section aria-describedby="modal-content-id-1" aria-labelledby="modal-heading-01" aria-modal="true"
+      class="slds-modal slds-fade-in-open" role="dialog" tabindex="-1">
+  
+      <div class="slds-modal__container" style="width:10%;">
+       <header class="slds-modal__header" style="background:#124795;border-radius:15px 15px 0 0">
+          
+          <h2 class="slds-text-heading_medium slds-hyphenate" style="color:white;font-weight:bold;text-align:left;">Please Confirm</h2>
+      </header> 
+      <div class="slds-modal__content slds-p-around_medium"  style="border-radius:0 0 15px 15px">                                
+          <div class="slds-m-around_small">
+              <div><h1>You have <b>{numberOfShifts} </b>available shifts after splitting. To proceed, please click "Save." </h1></div>
+              <div style="margin-top:10px;align-items:center;">
+                  <lightning-button label="Save" variant="brand"  onclick={generateSplitShifts} class="slds-m-around_small" style="margin-left:4rem;"></lightning-button>
+                  <lightning-button label="Quit" variant="brand" onclick={closeModal}
+                  class="slds-m-around_small"></lightning-button>
+              </div>
+          </div>
+      </div>
+      </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+
+<template if:true={isServiceEdit}>
+  <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-02" aria-modal="true" aria-describedby="modal-content-id-2" class="slds-modal slds-fade-in-open slds-modal_medium">
+      <div class="slds-modal__container">
+          <!-- modal header start -->
+          <header class="slds-modal__header">
+              <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleHideServiceModal}>
+                  <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small" ></lightning-icon>
+                  <span class="slds-assistive-text">Close</span>
+              </button>
+                  <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">Update Support Plan</h2>
+          </header>
+          
+          <!-- modal body start -->
+          <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+              <lightning-record-edit-form object-api-name="Services_and_Support_Plan__c" data-recid="serviceEdit" onsuccess={handleServiceEditSuccess} onsubmit={handleServiceEditSubmit} record-id={serviceEditID}>
+                  <lightning-messages></lightning-messages>
+                  <div class="slds-grid">
+                      <div class="slds-col slds-size_1-of-2">  
+                          <!-- <lightning-input-field field-name="Funds_Tracker__c"  ></lightning-input-field> -->
+                         
+                          <lightning-input-field field-name="Service_Users__c" required="true" disabled="true"></lightning-input-field>
+                          <lightning-input-field field-name="Date_of_Service__c" name="date"  disabled="true" ></lightning-input-field>
+                              <lightning-input-field field-name="Start_Time__c" name ="startTime" disabled="true" ></lightning-input-field>
+                              <lightning-input-field field-name="End_Time__c" name="endTime" disabled="true" ></lightning-input-field> 
+                              <lightning-input-field field-name="Qty__c" disabled="true"></lightning-input-field>            
+                         
+                          <!-- <lightning-input-field field-name="Service_Type__c" ></lightning-input-field> -->
+                           <br/>
+                          </div>
+                          <div class="slds-col slds-size_1-of-2 slds-m-left_small">
+                                                                                   
+                            <lightning-input-field field-name="Plan_Type__c" disabled="true"></lightning-input-field>                                               
+                              <lightning-input-field field-name="GST__c" disabled="true" ></lightning-input-field> 
+                             <div class="slds-grid slds-align-middle">
+                              <label class="slds-form-element__label slds-size_1-of-3">Service Type</label>
+                              <div class="slds-size_2-of-3">
+                                  <lightning-combobox
+                                      name="ServiceType"
+                                      value={serviceTypeId}
+                                      placeholder="Select Service Type"
+                                      options={fundOption}
+                                      onchange={handleServiceChange} style="margin-top:-5%;">
+                                  </lightning-combobox>
+                              </div>
+                            </div>
+                             <div class="slds-grid slds-align-middle">
+
+                              <label class="slds-form-element__label slds-size_1-of-3 slds-m-top_medium">State</label>
+                              <div class="slds-size_2-of-3">
+                                
+                                  <lightning-combobox
+                                      name="State"
+                                      value={stateValue}
+                                      placeholder="Select State"
+                                      options={stateOptions}
+                                      onchange={HandlestateChange} 
+                                      data-ref="inedit">
+                                  </lightning-combobox>
+                              </div>
+                            </div>
+                          </div>
+                  </div>
+                  <template if:true={NdisServiceGroupNameinEdit}>
+                  <div  style="margin-bottom:4%;" class="servicetable">
+                   
+                      <table>
+                        <thead >
+                            <tr>
+                                <!-- Add a header for checkboxes -->
+                                <th>Select</th>
+                                <th>Support Item Name</th>
+                                <th>Support Item Number</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Iterate through `serviceGroupName` to display rows -->
+                            <template for:each={serviceGroupName} for:item="row">
+                                <tr key={row.Id} class="tr1">
+                                    <!-- Checkbox for selection -->
+                                    <td style="text-align: center; vertical-align: middle;padding-top: 5px;box-sizing: border-box;">
+                                        <input 
+                                            type="radio"  
+                                            data-id={row.Id} 
+                                            data-name={row.Name} 
+                                            onchange={handleCheckboxSelection}
+                                            checked={row.isSelected} 
+                                            
+                                            />
+                                    </td>
+                                    <td>{row.Support_Item_Name__c}</td>
+                                    <td>{row.Support_Item_Number__c}</td>
+                                    <td>{row.amount}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    
+                   
+                    
+                </div>
+              </template>
+              <!-- modal footer start-->
+              
+                  <lightning-button type="submit" variant="brand" label="Update" style="margin-left:45%;" ></lightning-button>&nbsp;&nbsp;
+                  <button class="slds-button slds-button_neutral" onclick={handleHideServiceModal}>Cancel</button>
+              
+              </lightning-record-edit-form>  
+          </div>
+      </div>
+  </section>
+  <div class="slds-backdrop slds-backdrop_open"></div>
+</template> 
+
+
+
+    
+</template>

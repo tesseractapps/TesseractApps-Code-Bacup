@@ -1,0 +1,235 @@
+<template>
+    <div class="widget-container"
+        style="position: relative; height: 100%; display: flex; flex-direction: column; min-height: 0;">
+        <!-- Dropdown for Funds Tracker -->
+        <template if:true={isFundWidget}>
+            <div class={participantDropdownClass}>
+                <label class="dropdown-label">Participants</label>
+                <select class="participant-select" onchange={handleParticipantChange}>
+                    <template for:each={participantOptions} for:item="opt">
+                        <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                    </template>
+                </select>
+            </div>
+        </template>
+
+        <!-- Dropdown/Period Selector for Roster Manager (shift) -->
+        <template if:true={isShiftWidget}>
+            <div class={shiftDropdownClass}>
+                <button onclick={handlePreviousPeriod} class="arrow-button">❮</button>
+                <select class="participant-select" onchange={handleTimePeriodChange}>
+                    <template for:each={timePeriodOptions} for:item="opt">
+                        <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                    </template>
+                </select>
+                <button onclick={handleNextPeriod} class="arrow-button">❯</button>
+            </div>
+        </template>
+
+
+        <!-- Dropdown for Sign In (date range) -->
+        <template if:true={isSigninWidget}>
+            <div class={signinDropdownClass}>
+                <label class="dropdown-label">Date Range</label>
+                <select class="participant-select" onchange={handleSignInDateRangeChange} onclick={handleSignInDateRangeClick}>
+                    <template for:each={signInDateOptions} for:item="opt">
+                        <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                    </template>
+                </select>
+
+                <!-- Custom Date Range Popover Dropdown -->
+                <template if:true={showCustomDatePicker}>
+                    <div class="custom-date-backdrop" onclick={handleCloseCustomDate}></div>
+                    <div class="custom-date-popover" onclick={handlePopoverClick}>
+                        <div class="custom-date-header">
+                            <span>Custom Date Range</span>
+                            <button class="custom-date-close-btn" onclick={handleCloseCustomDate} type="button">✕</button>
+                        </div>
+                        <div class="custom-date-body">
+                            <div class="custom-date-field">
+                                <label>From Date</label>
+                                <input type="date" class="custom-date-input custom-date-from-input" value={customStartDate} onchange={handleCustomStartDateChange} />
+                            </div>
+                            <div class="custom-date-field">
+                                <label>To Date</label>
+                                <input type="date" class="custom-date-input custom-date-to-input" value={customEndDate} onchange={handleCustomEndDateChange} />
+                            </div>
+                        </div>
+                        <div class="custom-date-footer">
+                            <button class="custom-date-cancel-btn" onclick={handleCloseCustomDate} type="button">Cancel</button>
+                            <button class="custom-date-apply-btn" onclick={handleApplyCustomDate} type="button">Apply</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Loading skeleton state -->
+        <template if:true={isLoading}>
+            <div class="widget-skeleton">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-subtitle"></div>
+                <div class="skeleton-block skeleton-chart"></div>
+            </div>
+        </template>
+
+        <!-- Loaded dashboard widgets visual content -->
+        <template if:false={isLoading}>
+            <template if:true={isChartOrKpiVisible}>
+                <!-- Graphical Charts visualization -->
+                <template if:false={isKpi}>
+                    <template if:true={hasDataset}>
+                        <c-dashboard-builder-chart chart-type={chartType} chart-data={dataset} options={chartOptions}
+                            onchartclick={handleChartClick}>
+                        </c-dashboard-builder-chart>
+                    </template>
+                </template>
+
+                <!-- KPI Metric visualization -->
+                <template if:true={isKpi}>
+                    <div class="kpi-card-content">
+                        <div class="kpi-metric-row">
+                            <div class="kpi-value-sec">
+                                <span class="kpi-value">{kpiValue}</span>
+                            </div>
+
+                            <!-- Trend badge indicator -->
+                            <div class={trendClass}>
+                                <lightning-icon icon-name={trendIcon} size="xx-small"
+                                    class="trend-icon-fill slds-m-right_xx-small"></lightning-icon>
+                                <span class="trend-pct">{trendPercentage}</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-footer-row">
+                            <!-- Target Progress percentage description -->
+                            <div class="kpi-target-area">
+                                <span class="target-pct-text">{targetPercentage}</span>
+                            </div>
+
+                            <!-- Custom Sparkline Trend Graph -->
+                            <div class="kpi-sparkline-area">
+                                <svg viewBox="0 0 120 30" class="sparkline-svg">
+                                    <path class="sparkline-fill" d={sparklineFillPath}></path>
+                                    <path class="sparkline-line" d={sparklinePath}></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Human Resources Redirection Widget -->
+            <template if:true={isHrWidget}>
+                <div class="hr-list-container">
+                    <ul class="hr-list">
+                        <li class="hr-list-item" data-name="Trainings" onclick={handleHrRedirect}>
+                            <div class="hr-list-icon-wrapper trainings-icon">
+                                <lightning-icon icon-name="utility:people" size="small"
+                                    class="hr-list-icon"></lightning-icon>
+                            </div>
+                            <span class="hr-list-link">Trainings</span>
+                        </li>
+                        <li class="hr-list-item" data-name="Awards" onclick={handleHrRedirect}>
+                            <div class="hr-list-icon-wrapper awards-icon">
+                                <lightning-icon icon-name="utility:settings" size="small"
+                                    class="hr-list-icon"></lightning-icon>
+                            </div>
+                            <span class="hr-list-link">Awards</span>
+                        </li>
+                    </ul>
+                </div>
+            </template>
+
+            <!-- Tasks List Widget Table -->
+            <template if:true={isTaskWidget}>
+                <div class="tasks-widget-container">
+                    <div class="table-scroll-container custom-scroll">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered tasks-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                    <th>Created by</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={taskDetailsValues} for:item="taskRec">
+                                    <tr key={taskRec.Id}>
+                                        <td>
+                                            <div class="slds-cell-wrap cell-text">{taskRec.Subject}</div>
+                                        </td>
+                                        <td>
+                                            <span class={taskRec.statusClass}>{taskRec.Status}</span>
+                                        </td>
+                                        <td>
+                                            <div class="cell-text">{taskRec.dueDate}</div>
+                                        </td>
+                                        <td>
+                                            <div class="slds-grid slds-grid_vertical-align-center">
+                                                <template if:true={taskRec.profileImage}>
+                                                    <img src={taskRec.profileImage} class="avatar-img" alt="Avatar" />
+                                                </template>
+                                                <template if:false={taskRec.profileImage}>
+                                                    <div class="initials-avatar" title={taskRec.staffName}>
+                                                        {taskRec.initials}
+                                                    </div>
+                                                </template>
+                                                <span class="cell-text slds-m-left_xx-small">{taskRec.staffName}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="text-align: center;">
+                                                <template if:true={taskRec.showEditIcon}>
+                                                    <button class="edit-task-btn" data-id={taskRec.Id}
+                                                        data-whatid={taskRec.WhatId} data-type={taskRec.Subject}
+                                                        onclick={handleTaskEditClick}>
+                                                        <lightning-icon icon-name="utility:edit" size="xx-small"
+                                                            class="edit-icon-fill"></lightning-icon>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Participant Schedule Widget -->
+            <template if:true={isParticipantScheduleWidget}>
+                <div class="schedule-widget-container"
+                    style="height: 100%; width: 100%; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+                    <c-participant-schedule-chart facility-id={facilityId}
+                        style="width: 100%; height: 100%; flex: 1; min-height: 0; display: block;">
+                    </c-participant-schedule-chart>
+                </div>
+            </template>
+
+            <!-- Staff Dashboard Widget -->
+            <template if:true={isStaffDashboardWidget}>
+                <div class="staff-dashboard-widget-container"
+                    style="height: 100%; width: 100%; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+                    <c-tesseract-apps-staff-dashboard-lwc facility-id={facilityId}
+                        style="width: 100%; height: 100%; flex: 1; min-height: 0; display: block;">
+                    </c-tesseract-apps-staff-dashboard-lwc>
+                </div>
+            </template>
+
+            <!-- ICT Timesheet Widget -->
+            <template if:true={isIctTimesheetWidget}>
+                <div class="ict-timesheet-widget-container"
+                    style="height: 100%; width: 100%; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+                    <c-ict-tmesheet-chart-lwc facility-id={facilityId}
+                        style="width: 100%; height: 100%; flex: 1; min-height: 0; display: block;">
+                    </c-ict-tmesheet-chart-lwc>
+                </div>
+            </template>
+
+        </template>
+    </div>
+</template>
