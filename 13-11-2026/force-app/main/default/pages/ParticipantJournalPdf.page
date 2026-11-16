@@ -1,0 +1,479 @@
+<apex:page controller="ParticipantJournalPdfController"
+           renderAs="pdf"
+           applyHtmlTag="false"
+           applyBodyTag="false"
+           showHeader="false"
+           sidebar="false">
+
+<html>
+
+<head>
+
+<style>
+
+@page {
+    size:A4;
+
+    @bottom-center{
+        content:"Page " counter(page) " of " counter(pages);
+        font-size:10px;
+        color:#666;
+    }
+}
+
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:11px;
+    color:#222;
+}
+
+.report-header{
+    width:100%;
+    border-bottom:2px solid #0d5cab;
+    padding-bottom:12px;
+    margin-bottom:18px;
+}
+
+.logo{
+    float:left;
+    width:25%;
+}
+
+.logo img{
+    width:120px;
+    max-height:70px;
+}
+
+.orgInfo{
+    float:right;
+    width:70%;
+    text-align:right;
+}
+
+.orgInfo h1{
+    margin:0;
+    font-size:18px;
+}
+
+.orgInfo p{
+    margin-top:4px;
+    font-size:10px;
+}
+
+.report-header:after{
+    content:"";
+    display:block;
+    clear:both;
+}
+
+.title{
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+    color:#0d5cab;
+    margin-top:18px;
+    margin-bottom:14px;
+}
+
+.participant{
+    font-size:12px;
+    margin-bottom:14px;
+}
+
+/* ---- Outer activity card ---- */
+
+.activity-card{
+    border:1px solid #e0e0e0;
+    margin-bottom:20px;
+    /* page-break-inside:avoid; */
+}
+
+/* ---- Info table (Type / Created By / Created On / Shift Details) ---- */
+
+.info-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+.info-table td{
+    border:1px solid #eaeaea;
+    padding:8px 12px;
+    vertical-align:top;
+ word-wrap:break-word;
+white-space:normal;
+overflow-wrap:break-word;
+    overflow-wrap:break-word;
+}
+
+.info-table tr:first-child td:first-child{
+    border-top-left-radius:8px;
+}
+.info-table tr:first-child td:nth-child(3){
+    border-top-right-radius:0;
+}
+
+.label{
+    font-weight:bold;
+    width:20%;
+}
+
+/* ---- Section banner (Description / History) ---- */
+
+.section-title{
+    background:#0d5cab;
+    color:#ffffff;
+    padding:8px 12px;
+    font-weight:bold;
+    font-size:12px;
+}
+
+.description-box{
+    padding:10px 12px;
+   word-wrap:break-word;
+white-space:normal;
+overflow-wrap:break-word;
+    overflow-wrap:break-word;
+}
+
+/* ---- "Updated Entry N" divider - table trick since VF PDF
+   engine doesn't reliably support flex centering ---- */
+
+/* .entry-divider{
+    width:100%;
+    margin:16px 0 10px;
+}
+
+.entry-divider td{
+    vertical-align:middle;
+}
+
+.entry-divider .line{
+    border-top:1px solid #0d5cab;
+    font-size:0;
+    line-height:0;
+}
+
+.entry-divider .label-cell{
+    text-align:center;
+    color:#0d5cab;
+    font-weight:bold;
+    font-size:13px;
+    white-space:nowrap;
+    padding:0 12px;
+} */
+ .entry-divider{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0 10px 0;
+}
+
+.entry-divider td{
+    padding:0;
+    vertical-align:middle;
+}
+
+.entry-divider .line{
+    border-top:1px solid #0d5cab;
+    height:1px;
+    font-size:0;
+    line-height:0;
+}
+
+.entry-divider .label-cell{
+    text-align:center;
+    color:#0d5cab;
+    font-weight:bold;
+    font-size:13px;
+    white-space:nowrap;
+}
+
+/* ---- History entry card: stacked full-width label/value rows,
+   no more squishing long Reason text against neighbor cells ---- */
+.history-card{
+    border:1px solid #e0e0e0;
+    margin:0 16px 16px;
+   page-break-inside: auto;
+}
+.history-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.history-table td{
+    border-bottom:1px solid #eee;
+    padding:7px 12px;
+    vertical-align:top;
+   word-wrap:break-word;
+white-space:normal;
+overflow-wrap:break-word;
+}
+
+.history-table tr:last-child td{
+    border-bottom:none;
+}
+
+.history-label{
+    font-weight:bold;
+    width:22%;
+}
+
+.correction-title{
+    color:#0d5cab;
+    font-weight:bold;
+    font-size:11px;
+    padding:10px 12px 4px;
+}
+
+.correction-box{
+    padding:0 12px 12px;
+   word-wrap:break-word;
+white-space:normal;
+overflow-wrap:break-word;
+    overflow-wrap:break-word;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="report-header">
+
+    <div class="logo">
+        <apex:outputText value="{!orgLogo}" escape="false"/>
+    </div>
+
+    <div class="orgInfo">
+        <h1>{!orgName}</h1>
+        <p>{!orgAddress}</p>
+    </div>
+
+</div>
+
+<div class="title">
+    Participant Activity Report
+</div>
+
+<div class="participant">
+    <b>Participant :</b> &#160;{!participantName}
+</div>
+
+<hr/>
+
+
+<apex:repeat value="{!activities}" var="activity">
+
+    <div class="activity-card">
+
+        <!-- ================= JOURNAL ================= -->
+
+        <apex:outputPanel rendered="{!!activity.isTask}">
+
+            
+
+            <table class="info-table">
+                <colgroup>
+                    <col style="width:20%"/>
+                    <col style="width:30%"/>
+                    <col style="width:20%"/>
+                    <col style="width:30%"/>
+                </colgroup>
+
+                <tr>
+                    <td class="label">Type</td>
+                    <td>{!activity.journal.Care_Notes__c}</td>
+
+                    <td class="label">Created By</td>
+                    <td>{!activity.journal.CreatedBy.Name}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">Created On</td>
+                    <td>{!activity.createdOnFormatted}</td>
+
+                    <td class="label">Shift Details</td>
+                 <td>
+
+    <apex:outputPanel rendered="{!NOT(ISBLANK(activity.journal.ShiftwithStaff__r.Shift_Start_End_Time__c))}">
+
+        <apex:outputText value="{0,date,dd/MM/yyyy}">
+            <apex:param value="{!activity.journal.ShiftwithStaff__r.Shift_Start_DateTime__c}"/>
+        </apex:outputText>
+
+        &nbsp;
+        ({!activity.journal.ShiftwithStaff__r.Shift_Start_End_Time__c})
+
+    </apex:outputPanel>
+
+</td>
+                </tr>
+
+            </table>
+
+            <div class="section-title">
+                Description
+            </div>
+
+            <div class="description-box">
+
+                <apex:outputText value="{!activity.journalDescription}"
+                    escape="false"/>
+
+            </div>
+
+            <apex:outputPanel rendered="{!activity.journal.Client_Journels__r.size > 0}">
+
+                <div class="section-title">
+                    History
+                </div>
+
+                <apex:variable var="entryNum" value="{!0}"/>
+
+                <apex:repeat value="{!activity.journal.Client_Journels__r}" var="history">
+
+                    <apex:variable var="entryNum" value="{!entryNum + 1}"/>
+
+                    <!-- <table class="entry-divider">
+                        <tr>
+                            <td class="line"></td>
+                            <td class="label-cell">Updated Entry {!entryNum}</td>
+                            <td class="line"></td>
+                        </tr>
+                    </table> -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                        style="border-collapse:collapse;margin:16px 0 10px 0;">
+                        <tr>
+
+                            <td width="42%">
+                                <hr style="border:0;border-top:1px solid #0d5cab;"/>
+                            </td>
+
+                            <td width="16%"
+                                style="text-align:center;
+                                    color:#0d5cab;
+                                    font-weight:bold;
+                                    white-space:nowrap;">
+
+                                Updated Entry {!entryNum}
+
+                            </td>
+
+                            <td width="42%">
+                                <hr style="border:0;border-top:1px solid #0d5cab;"/>
+                            </td>
+
+                        </tr>
+                    </table>
+
+                    <div class="history-card">
+
+                        <table class="history-table">
+                            <colgroup>
+                                <col style="width:22%"/>
+                                <col style="width:78%"/>
+                            </colgroup>
+
+                            <tr>
+                                <td class="history-label">Reason</td>
+                                <td>{!history.Reason__c}</td>
+                            </tr>
+                            <tr>
+                                <td class="history-label">Updated By</td>
+                                <td>{!history.CreatedBy.Name}</td>
+                            </tr>
+                            <tr>
+                                <td class="history-label">Updated On</td>
+                                <!-- <td>
+                                    <apex:outputText value="{0,date,dd/MM/yyyy hh:mm a}">
+                                        <apex:param value="{!history.CreatedDate}"/>
+                                    </apex:outputText>
+                                </td> -->
+                                 <td> 
+                                    {!activity.historyUpdatedOnMap[history.Id]}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div class="correction-title">Correction Description</div>
+
+                        <div class="correction-box">
+                            <apex:outputText value="{!history.Description__c}"
+                                escape="false"/>
+                        </div>
+
+                    </div>
+
+                </apex:repeat>
+
+            </apex:outputPanel>
+
+        </apex:outputPanel>
+
+        <!-- ================= TASK ================= -->
+
+        <apex:outputPanel rendered="{!activity.isTask}">
+
+            <table class="info-table">
+                <colgroup>
+                    <col style="width:20%"/>
+                    <col style="width:30%"/>
+                    <col style="width:20%"/>
+                    <col style="width:30%"/>
+                </colgroup>
+
+                <tr>
+                    <td class="label">Type</td>
+                    <td>Task</td>
+
+                    <td class="label">Created By</td>
+                    <!-- <td>{!activity.task.CreatedBy.Name}</td> -->
+                   <td> {!activity.taskCreatedBy}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">Created On</td>
+                    <td>{!activity.createdOnFormatted}</td>
+
+                    <td class="label">Priority</td>
+                    <!-- <td>{!activity.task.Priority}</td> -->
+                    <td> {!activity.taskPriority}</td>
+                </tr>
+
+                <tr>
+                    <td class="label">Status</td>
+                    <!-- <td>{!activity.task.Status}</td> -->
+                    <td>{!activity.taskStatusText}</td>
+                    <td class="label">Task Date</td>
+                    <td>
+                        <apex:outputText value="{0,date,dd/MM/yyyy}">
+                            <!-- <apex:param value="{!activity.task.Task_Date__c}"/> -->
+                            <apex:param value="{!activity.taskDate}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+
+            </table>
+
+            <div class="section-title">
+                Description
+            </div>
+
+            <div class="description-box">
+
+                <!-- {!activity.task.Description} -->
+              {!activity.taskDescription}
+
+            </div>
+
+        </apex:outputPanel>
+
+    </div>
+
+</apex:repeat>
+</body>
+
+</html>
+
+</apex:page>

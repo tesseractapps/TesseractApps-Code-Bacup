@@ -1,0 +1,1078 @@
+<template>
+   
+    <div class="-card -p-around_medium workspace-card">
+        <template if:false={isModalOpen}>
+            <!-- Metadata Header Panel -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium slds--align-center header-section">
+                <div class="slds-col slds-size_9-of-12">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small" style="gap: 12px;">
+                        <h2 class="title-text">Incident Details</h2>
+                        <!-- <span class="badge badge-medium slds-m-left_small">{severity}</span> -->
+                        <span class={priorityClass}>{severity}</span>
+                        <template if:true={isNdisReportable}>
+                            <span class="badge badge-ndis -m-left_small">NDIS Reportable</span>
+                        </template>
+                    </div>
+                    <!-- Metadata details row -->
+                    <div class="slds-grid slds-gutters meta-details-row">
+                        <div class="slds-col">
+                            <div class="meta-label">Participant</div>
+                            <div class="meta-val slds-truncate">
+                                <!-- <lightning-icon icon-name="utility:user" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                {participant} -->
+                                <!-- <template if:true={participantPhoto}>
+                                    <img
+                                        src={participantPhoto}
+                                        class="participant-avatar"
+                                        alt={participant}
+                                    />
+                                </template>
+
+                                <template if:false={participantPhoto}>
+                                    <div
+                                        class="participant-avatar initials-avatar"
+                                        style={participantAvatarStyle}>
+                                        {participantInitials}
+                                    </div>
+                                </template> -->
+
+                                <span class="participant-name">
+                                    {participant}
+                                </span>
+
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="meta-label">Incident Type</div>
+                            <div class="meta-val">{incidentType}</div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="meta-label">Reported On</div>
+                            <div class="meta-val">{reportedOn}</div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="meta-label">Reported By</div>
+                            <div class="meta-val slds-truncate">
+                                <!-- <lightning-icon icon-name="utility:user" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                {reportedBy} -->
+                                <!-- <div
+                                    class="participant-avatar initials-avatar"
+                                    style={reportedByAvatarStyle}>
+                                    {reportedByInitials}
+                                </div> -->
+
+                                <span class="participant-name">
+                                    {reportedBy}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="meta-label">Incident Location</div>
+                            <div class="meta-val">{incidentLocation}</div>
+                        </div>
+                        <!-- <div class="slds-col">
+                            <div class="meta-label">Attachments</div>
+                            <div class="meta-val attachments-val">
+                                <a href="javascript:void(0);" class="link-custom">{attachmentsSummary}</a>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+                <div class="slds-col slds-size_3-of-12 slds-text-align_right">
+                    <lightning-button label="Back" variant="brand" onclick={handleBack}></lightning-button>
+                </div>
+            </div>
+
+            <div class="workspace-scrollable-content custom-scroll">
+                <!-- Case Assessment Section -->
+            <h3 class="section-title">Case Assessment</h3>
+            <div class="slds-grid slds-gutters slds-m-bottom_medium input-grid">
+                <div class="slds-col slds-size_8-of-12">
+                    <div class="slds-grid slds-gutters slds-m-bottom_small">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-combobox 
+                                label="NDIS Reportable *" 
+                                data-field="ndisReportable"
+                                value={ndisReportableVal} 
+                                options={ndisOptions} 
+                                onchange={handleChange}
+                                disabled={isIncidentLocked}>  <!-- onchange={handleNdisChange}-->
+                            </lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-combobox 
+                                label="Status *" 
+                                value={statusVal} 
+                                options={statusOptions} 
+                                onchange={handleStatusChange}
+                                disabled={isIncidentLocked}> 
+                            </lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-combobox 
+                                label="Assigned To *" 
+                                data-field="assignedStaff"
+                                value={assignedStaff} 
+                                options={staffOptions} 
+                                onchange={handleChange}
+                                disabled={isIncidentLocked}>   <!--value={assignedInvestigator}  onchange={handleInvestigatorChange}-->
+                            </lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_2-of-3">
+                            <lightning-textarea 
+                                label="Assessment Notes" 
+                                data-field="assessmentNotes"
+                                value={assessmentNotes} 
+                                onchange={handleChange}
+                                class="textarea-custom"
+                                disabled={isIncidentLocked}>  
+                            </lightning-textarea>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-combobox 
+                                label="Priority" 
+                                data-field="severity"
+                                value={severity} 
+                                options={priorityOptions} 
+                                onchange={handleChange}
+                                disabled={isIncidentLocked}>
+                            </lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="last-updated-hint slds-m-top_x-small">
+                        <!-- Note: Last Updated on 29 May 2029 11:30 AM by Kate Brennan -->
+                        Note: Last Updated on {lastUpdated} by {lastUpdatedBy}
+                    </div>
+                </div>
+
+                <!-- NDIS Report Widget Timeline (Conditional) -->
+                <div class="slds-col slds-size_4-of-12">
+                    <template if:true={isNdisPanelVisible}>
+                        <div class="ndis-panel-card">
+                            <div class="ndis-panel-header">NDIS Report</div>
+                            <!-- <div class="ndis-panel-status">Current Status&nbsp;&nbsp;<span class="ndis-panel-status-val">{ndisCurrentStatusLabel}</span></div> -->
+                            <div class="ndis-panel-status">
+                                Current Status&nbsp;&nbsp;
+
+                                <span class="ndis-stage-name">
+                                    {ndisCurrentStageName}
+                                </span>
+
+                                <span class={ndisCurrentStatusClass}>
+                                    {ndisCurrentStatusText}
+                                </span>
+                            </div>
+                            
+                            <!-- Timeline Nodes -->
+                            <div class="ndis-timeline">
+                                <!-- Initial -->
+                                <div class="ndis-timeline-node">
+                                    <div class="node-dot-wrap">
+                                        <!-- <div class="node-dot dot-green"></div>
+                                        <div class="node-line line-green"></div> -->
+                                        <div class={initialNotificationDotClass}></div>
+                                        <div class={initialNotificationLineClass}></div>
+                                    </div>
+                                    <div class="node-content-wrap">
+                                        <div class="node-title">Initial Notification</div>
+                                        <!-- <div class="node-desc">Recorded on 29 May 2029</div> -->
+                                        <div class="node-desc">{initialNotificationDesc}</div>
+                                    </div>
+                                    <div class="node-action-wrap">
+                                        <!-- <lightning-button label="View" size="neutral" onclick={handleOpenViewNdisModal} data-type="Initial Notification" class="node-btn"></lightning-button> -->
+                                        <lightning-button
+                                            label={initialNotificationButtonLabel}
+                                            variant={initialNotificationButtonVariant}
+                                            onclick={handleInitialNotificationClick}
+                                            data-type="Initial Notification"
+                                            class="node-btn">
+                                        </lightning-button>
+                                    </div>
+                                </div>
+                                <!-- 5-Day -->
+                                <div class="ndis-timeline-node">
+                                    <div class="node-dot-wrap">
+                                        <!-- <div class="node-dot dot-blue"></div>
+                                        <div class="node-line line-grey"></div> -->
+                                        <div class={fiveDayReportDotClass}></div>
+                                    </div>
+                                    <div class="node-content-wrap">
+                                        <div class="node-title node-title-blue">5-Day Report</div>
+                                        <!-- <div class="node-desc">Due on 29 May 2026</div> -->
+                                        <div class="node-desc">{fiveDayReportDesc}</div>
+                                    </div>
+                                    <div class="node-action-wrap">
+                                        <!-- <lightning-button label="Record" variant="brand" onclick={handleOpenRecordNdisModal} data-type="5-Day Report" class="node-btn node-btn-blue"></lightning-button> -->
+                                        <lightning-button
+                                            label={fiveDayReportButtonLabel}
+                                            variant={fiveDayReportButtonVariant}
+                                            onclick={handleFiveDayReportClick}
+                                            disabled={fiveDayReportButtonDisabled}
+                                            data-type="5-Day Report"
+                                            class="node-btn">
+                                        </lightning-button>
+                                    </div>
+                                </div>
+                                <!-- Final -->
+                                <!-- <div class="ndis-timeline-node">
+                                    <div class="node-dot-wrap">
+                                        <div class="node-dot dot-grey"></div>
+                                    </div>
+                                    <div class="node-content-wrap">
+                                        <div class="node-title node-title-grey">Final Report</div>
+                                        <div class="node-desc">Pending</div>
+                                    </div>
+                                    <div class="node-action-wrap">
+                                        <lightning-button label="Record" variant="neutral" disabled class="node-btn"></lightning-button>
+                                    </div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={isNdisNotReportable}>
+                        <div class="ndis-panel-card">
+                            <div>
+                                <!-- <lightning-icon icon-name="utility:info" size="small" class="ndis-info-icon"></lightning-icon> -->
+                                <span class="ndis-panel-header">NDIS Reporting</span>
+                            </div>
+                            <div class="ndis-not-reportable-status">
+                                <lightning-icon icon-name="utility:check" size="xx-small" class="ndis-check-icon"></lightning-icon>
+                                <span class="ndis-not-reportable-status-text">Not Reportable</span>
+                            </div>
+                            <div class="ndis-not-reportable-body">
+                                This incident has been assessed as <strong>Not Reportable.</strong>
+                                <br /><br />
+                                The NDIS Reporting section will become available if the incident is reclassified as Reportable.
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="slds-grid slds-gutters workspace-middle-row">
+                <!-- Left inputs column -->
+                <div class="slds-col slds-size_8-of-12">
+                    <!-- Investigation Findings Section -->
+                    <h3 class="section-title">Investigation Findings</h3>
+                    <div class="slds-m-bottom_medium">
+                        <div class="section-hint">Describe what was found during the investigation, contributing factors and root cause.</div>
+                        <lightning-textarea 
+                            variant="label-hidden" 
+                            data-field="findings"
+                            value={findings} 
+                            onchange={handleChange} 
+                            class="textarea-findings"
+                            disabled={isIncidentLocked}>
+                        </lightning-textarea>
+                    </div>
+
+                    <!-- Evidence/Attachments Section -->
+                    <h3 class="section-title">Evidence/ Attachments</h3>
+                    <div class="slds-m-bottom_medium">
+                        <!-- <div class="section-hint">Upload photos, documents, witness notes or any supporting evidence</div> -->
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small slds-grid_vertical-align-center">
+                            <h3 class="section-hint">Upload photos, documents, witness notes or any supporting evidence</h3>
+                            <lightning-button label=" Add Evidence" variant="brand" onclick={handleAddEvidence} disabled={isIncidentLocked}></lightning-button>
+                        </div>
+                        <!-- <div class="upload-dropzone">
+                            <span class="upload-label">Attachments</span>
+                            
+                            <lightning-button label="Add Evidence" variant="brand" onclick={handleAddEvidence}></lightning-button>
+                        </div> -->
+                        <!-- <template if:true={showAwsBatchUpload}>
+                                <c-aws-batch-lwc
+                                    module-name="IncidentEvidance"
+                                    organisation-id={orgid}
+                                    onuploadsuccess={handleUploadSuccess}>
+                                </c-aws-batch-lwc>
+                        </template> -->
+
+                        <template if:true={showAwsBatchUpload}>
+                            <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                                <div class="slds-modal__container modal-custom">
+                                    <header class="slds-modal__header headercustom modal-header-custom">
+                                        <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">{evidenceTitle}</h2>
+                                        <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleEvidenceCloseModal}>
+                                            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                                        </button>
+                                    </header>
+                                    
+                                    <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                                        <div class="slds-form">
+                                            <div class="slds-form-element slds-m-bottom_medium">
+                                                <label class="slds-form-element__label"><strong>Attachment Name</strong></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" class="slds-input" placeholder="Enter Name.."
+                                                        value={attachmentNameValue} onchange={handleAttachmentNameChange}>
+                                                </div>
+                                            </div>
+
+                                                <c-aws-batch-lwc
+                                                    module-name="IncidentEvidance"
+                                                    organisation-id={orgid}
+                                                    existing-files-json="[]"
+                                                    onuploadsuccess={handleUploadSuccess}
+                                                    data-id="evidenceUploader">
+                                                </c-aws-batch-lwc>
+
+                                        </div>
+                                    </div>
+                                    <footer class="slds-modal__footer slds-grid slds-grid_align-end">
+                                        <lightning-button variant="neutral" label="Cancel" onclick={handleEvidenceCloseModal}></lightning-button>
+                                        <lightning-button variant="brand" label="Save" class="slds-m-left_small" onclick={handleSaveEvidenceAttachment} disabled={showSpinner}></lightning-button>
+                                    </footer>
+                                </div>
+                            </section>
+                            <div class="slds-backdrop slds-backdrop_open"></div>
+                        </template> 
+                        <!-- Files Table -->
+                        <!-- <table class="slds-table slds-table_cell-buffer slds-table_bordered file-table slds-m-top_small">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col"><div class="slds-truncate" title="Attachement Name">Attachement Name</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Type">Type</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Uploaded by">Uploaded by</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Submitted on">Submitted on</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Action">Action</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="slds-hint-parent">
+                                    <td><div class="slds-truncate font-semibold">Bathroom Floor Photo.jpg</div></td>
+                                    <td><div class="slds-truncate text-muted">Image</div></td>
+                                    <td><div class="slds-truncate">Emma Williamson</div></td>
+                                    <td><div class="slds-truncate">22/07/2024</div></td>
+                                    <td>
+                                        <lightning-button-icon icon-name="utility:preview" alternative-text="View" variant="bare" class="action-btn"></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" variant="bare" class="action-btn slds-m-left_small"></lightning-button-icon>
+                                    </td>
+                                </tr>
+                                <tr class="slds-hint-parent">
+                                    <td><div class="slds-truncate font-semibold">Participant Statement</div></td>
+                                    <td><div class="slds-truncate text-muted">PDF</div></td>
+                                    <td><div class="slds-truncate">Emma Williamson</div></td>
+                                    <td><div class="slds-truncate">22/07/2024</div></td>
+                                    <td>
+                                        <lightning-button-icon icon-name="utility:preview" alternative-text="View" variant="bare" class="action-btn"></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" variant="bare" class="action-btn slds-m-left_small"></lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table> -->
+
+                        <div class="table-container attachmentTable">
+                            <div class="header-wrapper">
+                                <table class="staff-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="table-th" title="Attachment Name">Attachment Name</th>
+                                            <th class="table-th" title="Type">Type</th>
+                                            <th class="table-th" title="Uploaded By">Uploaded By</th>
+                                            <th class="table-th" title="Submitted On">Submitted On</th>
+                                            <th class="table-th center action-column" title="Action">Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <div class="body-scroll custom-scroll attachmentTableHeight">
+                                <table class="staff-table">
+                                    <tbody>
+                                        <template if:true={generalEvidenceAttachments.length}>
+                                            <template for:each={generalEvidenceAttachments} for:item="file">
+                                                <tr key={file.Id} class="table-row">
+                                                    <td class="table-td" title={file.Attachment_Name__c}>
+                                                        {file.Attachment_Name__c}
+                                                    </td>
+
+                                                    <td class="table-td" title={file.Type__c}>
+                                                        {file.Type__c}
+                                                    </td>
+
+                                                    <td class="table-td" title={file.UploadedName}>
+                                                        {file.UploadedName}
+                                                    </td>
+
+                                                    <td class="table-td" title={file.Uploaded_On__c}>
+                                                        {file.Uploaded_On__c}
+                                                    </td>
+
+                                                    <td class="table-td center action-column" title="Actions">
+                                                        <div>
+                                                            <a 
+                                                                title="View"
+                                                                href="javascript:void(0)" 
+                                                                data-id={file.Id}
+                                                                data-url={file.AWS_File_URL__c}
+                                                                onclick={handleViewAttachment}
+                                                                
+                                                            >
+                                                                <i class="material-icons view-icon">visibility</i>
+                                                            </a>&nbsp;&nbsp;
+                                                            <a  
+                                                                href="javascript:void(0)" 
+                                                                title="Delete"
+                                                                data-id={file.Id}
+                                                                data-key={file.AWS_File_Key__c}
+                                                                onclick={handleDeleteAttachment}
+                                                                disabled={isIncidentLocked}
+                                                            >
+                                                                <i class="material-icons delete-icon">delete</i>
+                                                            </a> &nbsp;&nbsp;
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </template>
+                                        <template if:false={generalEvidenceAttachments.length}>
+                                            <tr class="no-data-border">
+                                                <td class="no-data" colspan="5">
+                                                    <p>No records found</p>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <!-- Action Register Section -->
+                    <!-- <div class="slds-m-bottom_medium">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small slds-grid_vertical-align-center">
+                            <h3 class="section-title">Corrective Actions</h3>
+                            <lightning-button label="+ Add Corrective Action" variant="neutral" onclick={handleOpenActionModal}></lightning-button>
+                        </div>
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered file-table">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col"><div class="slds-truncate" title="Action Title">Action Title</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Owner">Owner</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Due Date">Due Date</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Status">Status</div></th>
+                                    <th scope="col"><div class="slds-truncate" title="Action">Action</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={correctiveActions} for:item="action">
+                                    <tr key={action.tempId} class="slds-hint-parent">
+                                        <td><div class="slds-truncate font-semibold">{action.Action_Title__c}</div></td>
+                                        <td><div class="slds-truncate">{action.Assigned_Owner_Name}</div></td>
+                                        <td><div class="slds-truncate">{action.formattedDueDate}</div></td>
+                                        <td><span class="status-pill status-open">{action.Status__c}</span></td>
+                                        <td>
+                                            <lightning-button-icon icon-name="utility:preview" alternative-text="View" variant="bare" class="action-btn"  data-id={action.Id}
+                                                        data-temp-id={action.tempId} onclick={handleViewActionModal}></lightning-button-icon>
+                                        
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template if:false={correctiveActions.length}>
+                                    <tr>
+                                        <td colspan="4">
+                                            <div class="slds-align_absolute-center slds-m-around_small empty-text">No corrective actions logged.</div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div> -->
+                    <div class="slds-m-bottom_medium">
+                        <div class="slds-grid slds-grid_align-spread slds-m-bottom_small slds-grid_vertical-align-center">
+                            <h3 class="section-title">Corrective Actions</h3>
+                            <lightning-button label=" Add Corrective Action" variant="brand" onclick={handleOpenActionModal} disabled={isIncidentLocked}></lightning-button>
+                        </div>
+
+                        <div class="table-container correctiveActionTable">
+                            <!-- HEADER -->
+                            <div class="header-wrapper">
+                                <table class="staff-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="table-th" title="Action Title">Action Title</th>
+                                            <th class="table-th" title="Owner">Owner</th>
+                                            <th class="table-th" title="Due Date">Due Date</th>
+                                            <th class="table-th" title="Status">Status</th>
+                                            <th class="table-th center action-column" title="Action">Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+
+                            <!-- BODY -->
+                            <div class="body-scroll custom-scroll correctiveActionTableHeight">
+                                <table class="staff-table">
+                                    <tbody>
+                                        <template if:true={correctiveActions.length}>
+                                            <template for:each={correctiveActions} for:item="action">
+                                                <tr key={action.Id} class="table-row">
+                                                    <td class="table-td" title={action.Action_Title__c}>
+                                                        {action.Action_Title__c}
+                                                    </td>
+
+                                                    <td class="table-td" title={action.Assigned_Owner_Name}>
+                                                        {action.Assigned_Owner_Name}
+                                                    </td>
+
+                                                    <td class="table-td" title={action.formattedDueDate}>
+                                                        {action.formattedDueDate}
+                                                    </td>
+
+                                                    <td class="table-td" title={action.Status__c}>
+                                                        <span class="status-pill status-open">
+                                                            {action.Status__c}
+                                                        </span>
+                                                    </td>
+
+                                                    <td class="table-td center action-column" title="View Action">
+                                                        <!-- <lightning-button-icon
+                                                            icon-name="utility:preview"
+                                                            alternative-text="View"
+                                                            variant="bare"
+                                                            class="action-btn"
+                                                            data-id={action.Id}
+                                                            data-temp-id={action.tempId}
+                                                            onclick={handleViewActionModal}>
+                                                        </lightning-button-icon> -->
+                                                        <div>
+                                                        
+                                                            <a 
+                                                                title="View"
+                                                                href="javascript:void(0)" 
+                                                                data-id={action.Id}
+                                                                onclick={handleViewActionModal}
+                                                            >
+                                                                <i class="material-icons view-icon">visibility</i>
+                                                            </a>&nbsp;&nbsp;
+                                                            <a  
+                                                                href="javascript:void(0)" 
+                                                                title="Edit"
+                                                                data-id={action.Id}
+                                                                onclick={handleEditActionModal}
+                                                                disabled={isIncidentLocked}
+                                                            >
+                                                                <i class="material-icons view-icon">edit_document</i>
+                                                            </a> &nbsp;&nbsp;
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </template>
+
+                                        <template if:false={correctiveActions.length}>
+                                            <tr class="no-data-border">
+                                                <td class="no-data" colspan="5">
+                                                    <p>No records found</p>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Final Note / Acknowledgement Required Section -->
+                    <h3 class="section-title">Final Note / Acknowledgement Required</h3>
+                    <div class="slds-m-bottom_medium final-note-box">
+                        <div class="section-hint">Please review Incident details and provide your acknowledgement below.</div>
+                        <lightning-textarea 
+                            label="Your Comments *" 
+                            value={finalNotes} 
+                            data-field="finalNotes"
+                            onchange={handleChange}
+                            placeholder="Comments are required to complete the acknowledgement"
+                            disabled={isFinalSectionDisabled}
+                            class="textarea-notes">
+                        </lightning-textarea>
+                        
+                        <div class="slds-m-top_small checkbox-row">
+                            <lightning-input 
+                                type="checkbox" 
+                                label="I acknowledge that I have reviewed this incident report and understand the outcomes, action items, and expectations discussed." 
+                                checked={acknowledged} 
+                                disabled={isFinalSectionDisabled}
+                                onchange={handleAcknowledgementChange}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Logs row -->
+                    <!-- <div class="slds-grid slds-gutters slds-m-top_medium logs-footer-row">
+                        <div class="slds-col">
+                            <div class="log-label">Incident reported by:</div>
+                            <div class="log-val profile-info">
+                                <div class="participant-avatar initials-avatar" style={reportedByAvatarStyle}>
+                                    {reportedByInitials}
+                                </div>
+                                <span class="participant-name">{reportedBy}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="log-label">Reported On:</div>
+                            <div class="log-val">{reportedOn}</div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="log-label">Last Updated By:</div>
+                            <div class="log-val profile-info">
+                                <div class="participant-avatar initials-avatar" style={lastUpdatedByAvatarStyle}>
+                                    {lastUpdatedByInitials}
+                                </div>
+                                <span class="participant-name">{lastUpdatedBy}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="log-label">Last Updated:</div>
+                            <div class="log-val">{lastUpdated}</div>
+                        </div>
+                    </div> -->
+                    <div class="slds-grid slds-gutters slds-m-top_medium logs-footer-row">
+                        <div class="slds-col">
+                            <div class="log-label">Incident reported by:</div>
+                            <div class="log-val slds-truncate">
+                                <!-- <div class="participant-avatar initials-avatar" style={reportedByAvatarStyle}>
+                                    {reportedByInitials}
+                                </div> -->
+                                <span class="participant-name">{reportedBy}</span>
+                            </div>
+                        </div>
+
+                        <div class="slds-col">
+                            <div class="log-label">Reported On:</div>
+                            <div class="log-val">{reportedOn}</div>
+                        </div>
+
+                        <div class="slds-col">
+                            <div class="log-label">Last Updated By:</div>
+                            <div class="log-val slds-truncate">
+                                <!-- <div class="participant-avatar initials-avatar" style={lastUpdatedByAvatarStyle}>
+                                    {lastUpdatedByInitials}
+                                </div> -->
+                                <span class="participant-name">{lastUpdatedBy}</span>
+                            </div>
+                        </div>
+
+                        <div class="slds-col">
+                            <div class="log-label">Last Updated:</div>
+                            <div class="log-val">{lastUpdated}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right timeline widget column -->
+                <div class="slds-col slds-size_4-of-12 timeline-column">
+                    <c-activity-timeline activities={activities}></c-activity-timeline>
+                </div>
+            </div>
+            </div> <!-- end workspace-scrollable-content -->
+
+            <!-- Primary Footer Buttons -->
+            <div class="slds-grid slds-grid_align-end -m-top_large footer-section">
+                <lightning-button label="Close" variant="neutral" class="slds-m-right_small" onclick={handleBack}></lightning-button>
+                <!-- <lightning-button label="Resolve Incident" variant="brand" onclick={handleResolveClick} class="resolve-btn"></lightning-button> -->
+                <lightning-button label={actionButtonLabel} variant="brand" onclick={handleSave} disabled={isIncidentLocked} ></lightning-button>
+            </div>
+
+            <!-- Modals and overlays -->
+
+            <!-- 1. Resolved Warning Confirmation Modal -->
+            <!-- <template if:true={showResolvedModal}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_prompt">
+                    <div class="slds-modal__container resolved-modal-container">
+                        <div class="slds-modal__content slds-p-around_large slds-text-align_center modal-content-custom">
+                            <div class="modal-title-custom">Once change the status to resolved</div>
+                            <p class="modal-desc-custom">the final comments and acknowledgment becomes mandatory <span class="text-danger">*</span></p>
+                            <div class="slds-m-top_medium modal-buttons">
+                                <lightning-button label="Close" variant="neutral" onclick={handleCloseResolvedModal} class="slds-m-right_small"></lightning-button>
+                                <lightning-button label="Yes Change the Status" variant="brand" onclick={handleConfirmResolvedStatus} class="resolve-btn"></lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template> -->
+            <template if:true={showResolvedModal}>
+                <section
+                    aria-describedby="modal-content-id-1"
+                    aria-labelledby="modal-heading-01"
+                    aria-modal="true"
+                    class="slds-modal slds-fade-in-open"
+                    role="dialog"
+                    tabindex="-1"
+                >
+                    <div class="slds-modal__container modal-container" style="max-width: 25%">
+                        <header class="slds-modal__header" style="background: #002a52">
+                            <h2
+                                class="slds-text-heading_medium slds-hyphenate"
+                                style="color: white; font-weight: bold; text-align: center"
+                            >
+                                Please Confirm
+                            </h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium modal-content">
+                            <div class="slds-m-around_small" style="text-align: center">
+                                <div>
+                                    <h1>
+                                        Are you sure you want to change the status to resolved?
+                                    </h1>
+                                    <p class="slds-m-top_medium">
+                                        If you select <strong>Yes</strong>, Final Comments and
+                                        Acknowledgement will become mandatory.
+                                    </p>
+                                </div>
+                                <div class="button-container slds-m-top_medium">
+                                    <lightning-button
+                                        label="No"
+                                        variant="brand"
+                                        onclick={handleCloseResolvedModal}
+                                        class="slds-m-around_small"
+                                    ></lightning-button>
+                                    <lightning-button
+                                        label="Yes"
+                                        variant="brand"
+                                        onclick={handleConfirmResolvedStatus}
+                                        class="slds-m-around_small"
+                                    ></lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+   
+
+            <!-- 2. Add Corrective Action Popup Modal -->
+            <template if:true={showActionModal}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container popup-container">
+                        <header class="slds-modal__header headercustom modal-header-custom">
+                            <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">{actionModalTitle}</h2>
+                            <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleCloseActionModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                            </button>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                            <lightning-input label="Action Title *"   data-field="actionTitle" value={newActionTitle} onchange={handleCorrectiveActionChange} 
+                                    disabled={isViewAction}></lightning-input>
+                            <lightning-textarea label="Description" data-field="actionDescription" value={newActionDescription} onchange={handleCorrectiveActionChange} disabled={isViewAction}
+                                    class="slds-m-top_small"></lightning-textarea>
+                            <lightning-combobox label="Assigned Owner *"  data-field="actionOwner" value={newActionOwner} options={staffOptions} onchange={handleCorrectiveActionChange}  
+                                    disabled={isViewAction} class="slds-m-top_small"></lightning-combobox>
+                            <lightning-input type="date" label="Due Date *" data-field="actionDueDate" value={newActionDueDate} onchange={handleCorrectiveActionChange}
+                                    disabled={isViewAction} class="slds-m-top_small"></lightning-input>
+                        </div>
+                        <footer class="slds-modal__footer slds-grid slds-grid_align-end">
+                            <lightning-button label="Cancel" variant="neutral" onclick={handleCloseActionModal} class="slds-m-right_small"></lightning-button>
+                            <lightning-button label="Save Action" variant="brand" onclick={handleSaveCorrectiveAction}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+            <!-- 3. Record Submission Portal modal (Screen 4) -->
+            <template if:true={showRecordNdisModal}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container popup-container">
+                        <header class="slds-modal__header headercustom modal-header-custom">
+                            <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">Record NDIS {ndisStageType} Submission</h2>
+                            <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleCloseRecordNdisModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                            </button>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-combobox label="Submitted by *" value={ndisSubmittedBy} options={staffOptions} onchange={handleNdisSubByChange}></lightning-combobox>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input type="date" label="Date *" value={ndisSubDate} onchange={handleNdisSubDateChange}></lightning-input>
+                                </div>
+                            </div>
+                            <div class="slds-grid slds-gutters slds-m-top_small">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input type="time" label="Time *" value={ndisSubTime} onchange={handleNdisSubTimeChange}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-input label="Reference number *" value={ndisSubRef} onchange={handleNdisSubRefChange}></lightning-input>
+                                </div>
+                            </div>
+                            <!-- <div class="slds-m-top_small upload-dropzone"> -->
+                                <!-- <span class="upload-label">Upload Document</span>
+                                <lightning-button label="Choose File" icon-name="utility:upload" variant="brand-outline"></lightning-button> -->
+                                <!-- <template if:true={showNdisAwsBatchUpload}> -->
+                                    <div class="slds-form-element slds-m-top_small slds-m-bottom_medium">
+                                        <label class="slds-form-element__label"><strong>Attachment Name</strong></label>
+                                        <div class="slds-form-element__control">
+                                            <input type="text" class="slds-input" placeholder="Enter Name.."
+                                                value={attachmentNameValue} onchange={handleAttachmentNameChange}>
+                                        </div>
+                                    </div>
+                                    <c-aws-batch-lwc
+                                        module-name="IncidentEvidance"
+                                        organisation-id={orgid}
+                                        existing-files-json="[]"
+                                        onuploadsuccess={handleUploadSuccess}
+                                        data-id="ndisUploader">
+                                    </c-aws-batch-lwc>
+                                <!-- </template> -->
+                                <!-- <div  class="slds-modal__footer">
+                                <lightning-button label="Save Attachment" variant="neutral" class="slds-m-top_small" onclick={handleSaveNdisAttachment}></lightning-button>
+                            </div> -->
+                             <!-- <div class="slds-grid slds-grid_align-spread slds-m-bottom_small slds-grid_vertical-align-center">
+                            
+                            <lightning-button label="Save Attachment" variant="neutral" class="slds-m-top_small" onclick={handleSaveNdisAttachment}></lightning-button>
+                        </div> -->
+                        <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                            <lightning-button label="Save Attachment" variant="brand" onclick={handleSaveNdisAttachment}></lightning-button>
+                        </div>
+                            
+                            <template if:true={currentNdisStageAttachments.length}>
+                                <div class="table-container attachmentTable1 slds-m-top_small">
+                                    <div class="header-wrapper">
+                                        <table class="staff-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="table-th" title="Attachment Name">Attachment Name</th>
+                                                    <th class="table-th" title="Type">Type</th>
+                                                    <th class="table-th" title="Uploaded By">Uploaded By</th>
+                                                    <th class="table-th" title="Submitted On">Submitted On</th>
+                                                    <th class="table-th center action-column" title="Action">Action</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                    <div class="body-scroll custom-scroll attachmentTableHeight1">
+                                        <table class="staff-table">
+                                            <tbody>
+                                                <template for:each={currentNdisStageAttachments} for:item="file">
+                                                    <tr key={file.rowKey} class="table-row">
+                                                        <td class="table-td" title={file.Attachment_Name__c}>{file.Attachment_Name__c}</td>
+                                                        <td class="table-td" title={file.Type__c}>{file.Type__c}</td>
+                                                        <td class="table-td" title={file.UploadedName}>{file.UploadedName}</td>
+                                                        <td class="table-td" title={file.Uploaded_On__c}>{file.Uploaded_On__c}</td>
+                                                        <td class="table-td center action-column" title="View">
+                                                            <a title="View" href="javascript:void(0)"
+                                                            data-id={file.rowKey}  data-url={file.AWS_File_URL__c}
+                                                            onclick={handleViewAttachment}>
+                                                                <i class="material-icons view-icon">visibility</i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </template>
+                            <!-- <template if:false={currentNdisStageAttachments.length}>
+                                <div class="no-data slds-m-top_small">
+                                    <p>No Records found</p>
+                                </div>
+                            </template> -->
+                            <lightning-textarea label="Summary / Notes *" value={ndisSubNotes} onchange={handleNdisSubNotesChange} class="slds-m-top_small textarea-notes"></lightning-textarea>
+                        </div>
+                        <footer class="slds-modal__footer slds-grid slds-grid_align-end">
+                            <lightning-button label="Cancel" variant="neutral" onclick={handleCloseRecordNdisModal} class="slds-m-right_small"></lightning-button>
+                            <lightning-button label="Save" variant="brand" onclick={handleSaveNdisSubmission}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+            <!-- 4. View Submission Portal modal (Screen 4) -->
+            <template if:true={showViewNdisModal}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container popup-container">
+                        <header class="slds-modal__header headercustom modal-header-custom">
+                            <h2 class="slds-modal__title slds-text-heading_medium slds-hyphenate h2custom title-center">NDIS {ndisStageType} Submission (Recorded)</h2>
+                            <button class="slds-button slds-button_icon close-btn" title="Close" onclick={handleCloseViewNdisModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                            </button>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium custom-scroll">
+                            <div class="slds-m-bottom_medium">
+                                <div class="slds-grid slds-gutters">
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <div class="meta-label">Submitted by</div>
+                                        <div class="meta-val">{activeSubmission.userName}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <div class="meta-label">Date & Time</div>
+                                        <div class="meta-val">{activeSubmission.dateTimeStr}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <div class="meta-label">Reference Number</div>
+                                        <div class="meta-val">{activeSubmission.Reference_Number__c}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="qa-block">
+                                <div class="question-label">Summary / Notes</div>
+                                <div class="answer-text">{activeSubmission.Summary_Notes__c}</div>
+                            </div>
+                            <div class="qa-block slds-m-top_medium">
+                                <div class="question-label">Attachments</div>
+                                <div class="answer-text slds-m-bottom_small">{currentNdisStageAttachments.length}</div>
+
+                                <template if:true={currentNdisStageAttachments.length}>
+                                    <div class="table-container attachmentTable1">
+                                        <div class="header-wrapper">
+                                            <table class="staff-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="table-th" title="Attachment Name">Attachment Name</th>
+                                                        <th class="table-th" title="Type">Type</th>
+                                                        <th class="table-th" title="Uploaded By">Uploaded By</th>
+                                                        <th class="table-th" title="Submitted On">Submitted On</th>
+                                                        <th class="table-th center action-column" title="Action">Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div class="body-scroll custom-scroll attachmentTableHeight1">
+                                            <table class="staff-table">
+                                                <tbody>
+                                                    <template for:each={currentNdisStageAttachments} for:item="file">
+                                                        <tr key={file.Id} class="table-row">
+                                                            <td class="table-td" title={file.Attachment_Name__c}>{file.Attachment_Name__c}</td>
+                                                            <td class="table-td" title={file.Type__c}>{file.Type__c}</td>
+                                                            <td class="table-td" title={file.UploadedName}>{file.UploadedName}</td>
+                                                            <td class="table-td" title={file.Uploaded_On__c}>{file.Uploaded_On__c}</td>
+                                                            <td class="table-td center action-column" title="View">
+                                                                <a title="View" href="javascript:void(0)"
+                                                                data-id={file.Id}  data-url={file.AWS_File_URL__c}
+                                                                onclick={handleViewAttachment}>
+                                                                    <i class="material-icons view-icon">visibility</i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </template>
+                                 <!-- <template if:false={currentNdisStageAttachments.length}>
+                                    <div class="no-data slds-m-top_small">
+                                        <p>No records found</p>
+                                    </div>
+                                </template> -->
+                            </div>
+                        </div>
+                        <footer class="slds-modal__footer slds-grid slds-grid_align-end">
+                            <lightning-button label="Close" variant="neutral" onclick={handleCloseViewNdisModal}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+        </template>
+         <!-- <template if:true={isModalOpen}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="attachment-viewer-modal">
+
+            <div class="attachment-viewer-container">
+
+                <div class="attachment-viewer-header">
+                    <lightning-button
+                        label="Back"
+                        variant="brand"
+                        onclick={closepdf}>
+                    </lightning-button>
+                </div>
+
+                <div class="attachment-viewer-content">
+                    <iframe
+                        src={currentUrl}
+                        title="Attachment Preview"
+                        class="attachment-iframe">
+                    </iframe>
+                </div>
+
+            </div>
+        </section>
+    </template> -->
+
+     <template if:true={isModalOpen}>
+         <div class="attachment-viewer">
+
+            <div class="attachment-viewer-header">
+                <lightning-button
+                    class="slds-m-left_medium"
+                    slot="footer"
+                    label="Back"
+                    variant="brand"
+                    onclick={closepdf}
+                    style="float:right;margin-bottom:5px;">
+                </lightning-button>
+            </div>
+
+            <div class="attachment-viewer-body">
+                <iframe
+                    src={currentUrl}
+                    class="attachment-viewer-iframe"
+                    title="Attachment Preview">
+                </iframe>
+            </div>
+         </div>
+    </template>
+    <template if:true={handleDeleteEvidenceFlag}>
+        <section
+            aria-describedby="modal-content-id-1"
+            aria-labelledby="modal-heading-01"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open"
+            role="dialog"
+            tabindex="-1"
+        >
+            <div class="slds-modal__container modal-container" style="max-width: 25%">
+                <header class="slds-modal__header" style="background: #002a52">
+                    <h2
+                        class="slds-text-heading_medium slds-hyphenate"
+                        style="color: white; font-weight: bold; text-align: center"
+                    >
+                        Please Confirm
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content">
+                    <div class="slds-m-around_small" style="text-align: center">
+                        <div>
+                            <h1>
+                                Are you sure you want to delete the Evidence/Attachment?
+                            </h1>
+                        </div>
+                        <div class="button-container slds-m-top_medium">
+                            <lightning-button
+                                label="No"
+                                variant="brand"
+                                onclick={handleCancelDeleteAttachment}
+                                class="slds-m-around_small"
+                            ></lightning-button>
+                            <lightning-button
+                                label="Yes"
+                                variant="brand"
+                                onclick={handleConfirmDeleteAttachment}
+                                class="slds-m-around_small"
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+   
+    </div>
+    
+   
+</template>
